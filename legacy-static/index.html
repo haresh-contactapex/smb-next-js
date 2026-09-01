@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="light dark" />
+<title>Shop My Band — Admin Dashboard</title>
+
+<!-- Theme init: runs before paint to avoid flash of wrong theme -->
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('smb-theme');
+      var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var isDark = saved ? saved === 'dark' : prefersDark;
+      if (isDark) document.documentElement.classList.add('dark');
+      var collapsed = localStorage.getItem('smb-sidebar-collapsed') === '1';
+      if (collapsed) document.documentElement.classList.add('sidebar-collapsed-init');
+    } catch (e) {}
+  })();
+</script>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+
+</head>
+
+<body class="bg-slate-50 dark:bg-darkbg text-slate-800 dark:text-slate-200 antialiased">
+
+<!-- ============ SIDEBAR BACKDROP (mobile) ============ -->
+<div id="sidebarBackdrop" onclick="closeSidebar()"></div>
+
+<!-- ============ SIDEBAR ============ -->
+<aside id="sidebar" class="flex flex-col bg-white dark:bg-darksurface border-r border-slate-200 dark:border-white/5">
+  <!-- Brand -->
+  <div class="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-white/5 shrink-0">
+    <a href="#" class="sidebar-brand flex items-center gap-2.5 min-w-0">
+      <span class="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 flex items-center justify-center shrink-0 shadow-sm">
+        <span class="w-4 h-4 text-white" data-icon="gift"></span>
+      </span>
+      <span class="logo-text min-w-0">
+        <span class="block text-[15px] font-bold text-primary-700 dark:text-white leading-tight truncate">Shop My Band</span>
+        <span class="block text-[11px] text-slate-400 dark:text-slate-500 leading-tight">Admin Panel</span>
+      </span>
+    </a>
+    <button id="btnCloseSidebar" onclick="closeSidebar()" class="lg:hidden w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 shrink-0">
+      <span class="w-5 h-5" data-icon="x"></span>
+    </button>
+  </div>
+
+  <!-- Nav -->
+  <nav class="flex-1 overflow-y-auto custom-scroll px-3 py-4 space-y-1">
+
+    <a href="#" class="nav-link active nav-row flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+      <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="grid"></span>
+      <span class="nav-label truncate">Dashboard</span>
+    </a>
+
+    <div>
+      <button class="nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" data-target="submenu-account" onclick="toggleSubmenu(this)">
+        <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="user"></span>
+        <span class="nav-label truncate flex-1 text-left">My Account</span>
+        <span class="nav-chevron nav-badge w-4 h-4 shrink-0 text-slate-400" data-icon="chevron-down"></span>
+      </button>
+      <ul id="submenu-account" class="sidebar-submenu hidden mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3">
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Profile</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Address</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Payment</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <button class="nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" data-target="submenu-orders" onclick="toggleSubmenu(this)">
+        <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="shopping-bag"></span>
+        <span class="nav-label truncate flex-1 text-left">Orders</span>
+        <span class="nav-chevron nav-badge w-4 h-4 shrink-0 text-slate-400" data-icon="chevron-down"></span>
+      </button>
+      <ul id="submenu-orders" class="sidebar-submenu hidden mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3">
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">All Orders</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Pending</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Processing</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Completed</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Cancelled</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <button class="nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" data-target="submenu-catalog" onclick="toggleSubmenu(this)">
+        <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="layers"></span>
+        <span class="nav-label truncate flex-1 text-left">Categories / Products</span>
+        <span class="nav-chevron nav-badge w-4 h-4 shrink-0 text-slate-400" data-icon="chevron-down"></span>
+      </button>
+      <ul id="submenu-catalog" class="sidebar-submenu hidden mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3">
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Categories</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">All Products</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Add Product</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <button class="nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" data-target="submenu-coupons" onclick="toggleSubmenu(this)">
+        <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="tag"></span>
+        <span class="nav-label truncate flex-1 text-left">Vouchers / Coupons</span>
+        <span class="nav-chevron nav-badge w-4 h-4 shrink-0 text-slate-400" data-icon="chevron-down"></span>
+      </button>
+      <ul id="submenu-coupons" class="sidebar-submenu hidden mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3">
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">All Coupons</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Create Coupon</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <button class="nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" data-target="submenu-giftcards" onclick="toggleSubmenu(this)">
+        <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="gift"></span>
+        <span class="nav-label truncate flex-1 text-left">Gift Cards</span>
+        <span class="nav-chevron nav-badge w-4 h-4 shrink-0 text-slate-400" data-icon="chevron-down"></span>
+      </button>
+      <ul id="submenu-giftcards" class="sidebar-submenu hidden mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3">
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">All Gift Cards</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Create Gift Card</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Gift Card Transactions</a></li>
+      </ul>
+    </div>
+
+    <a href="#" class="nav-link nav-row flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+      <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="truck"></span>
+      <span class="nav-label truncate">Shipping &amp; Return Policy</span>
+    </a>
+
+    <div class="nav-section-label pt-3 pb-1 px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-600">System</div>
+
+    <div>
+      <button class="nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors" data-target="submenu-settings" onclick="toggleSubmenu(this)">
+        <span class="nav-icon w-5 h-5 shrink-0 text-slate-400" data-icon="settings"></span>
+        <span class="nav-label truncate flex-1 text-left">Settings</span>
+        <span class="nav-chevron nav-badge w-4 h-4 shrink-0 text-slate-400" data-icon="chevron-down"></span>
+      </button>
+      <ul id="submenu-settings" class="sidebar-submenu hidden mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3">
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">General Settings</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Notifications</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Security</a></li>
+        <li><a href="#" class="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5">Payment Settings</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Collapse toggle (desktop only) -->
+  <div class="hidden lg:flex items-center justify-center border-t border-slate-200 dark:border-white/5 p-3 shrink-0">
+    <button id="btnCollapseSidebar" onclick="toggleCollapse()" class="w-full flex items-center justify-center gap-2 py-2 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+      <span id="collapseIcon" class="w-4 h-4" data-icon="chevron-left"></span>
+      <span class="nav-label text-xs font-medium">Collapse</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ============ MAIN WRAP ============ -->
+<div id="mainWrap">
+
+  <!-- ============ HEADER ============ -->
+  <header class="sticky top-0 z-30 bg-white/85 dark:bg-darksurface/85 backdrop-blur border-b border-slate-200 dark:border-white/5">
+    <div class="h-16 px-4 sm:px-6 flex items-center gap-3">
+      <button onclick="openSidebar()" class="lg:hidden w-9 h-9 grid place-items-center rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 shrink-0">
+        <span class="w-5 h-5" data-icon="menu"></span>
+      </button>
+
+      <!-- Search fields -->
+      <div class="hidden md:flex items-center gap-2 flex-1 max-w-xl">
+        <div class="relative flex-1">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" data-icon="search"></span>
+          <input type="text" placeholder="Search orders…" class="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:bg-white dark:focus:bg-darksurface2 focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm placeholder:text-slate-400 transition-all" />
+        </div>
+        <div class="relative flex-1">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" data-icon="search"></span>
+          <input type="text" placeholder="Search products…" class="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:bg-white dark:focus:bg-darksurface2 focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm placeholder:text-slate-400 transition-all" />
+        </div>
+      </div>
+      <button class="md:hidden w-9 h-9 grid place-items-center rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 ml-auto md:ml-0">
+        <span class="w-5 h-5" data-icon="search"></span>
+      </button>
+
+      <div class="flex items-center gap-1.5 sm:gap-2 ml-auto md:ml-2 shrink-0">
+        <!-- Theme toggle -->
+        <button id="btnThemeToggle" onclick="toggleTheme()" title="Toggle theme" class="w-9 h-9 grid place-items-center rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+          <span class="w-[18px] h-[18px] dark:hidden" data-icon="moon"></span>
+          <span class="w-[18px] h-[18px] hidden dark:block text-accent-400" data-icon="sun"></span>
+        </button>
+
+        <!-- Notifications -->
+        <div class="relative">
+          <button id="btnNotif" onclick="toggleDropdown('panelNotif')" class="relative w-9 h-9 grid place-items-center rounded-lg text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+            <span class="w-[18px] h-[18px]" data-icon="bell"></span>
+            <span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error ring-2 ring-white dark:ring-darksurface pulse-dot"></span>
+          </button>
+          <div id="panelNotif" class="hidden absolute right-0 mt-2 w-80 max-w-[90vw] bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-2xl shadow-popover overflow-hidden z-40">
+            <div class="px-4 py-3 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+              <span class="text-sm font-semibold text-slate-700 dark:text-slate-200">Notifications</span>
+              <span class="text-[11px] font-semibold text-primary-600 dark:text-accent-400">4 new</span>
+            </div>
+            <div class="max-h-80 overflow-y-auto custom-scroll divide-y divide-slate-100 dark:divide-white/5">
+              <a href="#" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5">
+                <span class="w-8 h-8 rounded-lg bg-success/10 text-success grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="shopping-bag"></span></span>
+                <span class="min-w-0">
+                  <span class="block text-[13px] font-medium text-slate-700 dark:text-slate-200">New order #SMB-10482 received</span>
+                  <span class="block text-[11px] text-slate-400 mt-0.5">2 minutes ago</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5">
+                <span class="w-8 h-8 rounded-lg bg-error/10 text-error grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="alert-triangle"></span></span>
+                <span class="min-w-0">
+                  <span class="block text-[13px] font-medium text-slate-700 dark:text-slate-200">"Rose Gold Eternity Band" is out of stock</span>
+                  <span class="block text-[11px] text-slate-400 mt-0.5">28 minutes ago</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5">
+                <span class="w-8 h-8 rounded-lg bg-accent-500/10 text-accent-600 dark:text-accent-400 grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="gift"></span></span>
+                <span class="min-w-0">
+                  <span class="block text-[13px] font-medium text-slate-700 dark:text-slate-200">Gift card GC-2291 redeemed</span>
+                  <span class="block text-[11px] text-slate-400 mt-0.5">1 hour ago</span>
+                </span>
+              </a>
+              <a href="#" class="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5">
+                <span class="w-8 h-8 rounded-lg bg-info/10 text-info grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="dollar-sign"></span></span>
+                <span class="min-w-0">
+                  <span class="block text-[13px] font-medium text-slate-700 dark:text-slate-200">Payment received for order #SMB-10479</span>
+                  <span class="block text-[11px] text-slate-400 mt-0.5">3 hours ago</span>
+                </span>
+              </a>
+            </div>
+            <a href="#" class="block text-center text-[13px] font-semibold text-primary-600 dark:text-accent-400 py-3 border-t border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5">View all notifications</a>
+          </div>
+        </div>
+
+        <div class="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1 hidden sm:block"></div>
+
+        <!-- User menu -->
+        <div class="relative">
+          <button id="btnUser" onclick="toggleDropdown('panelUser')" class="flex items-center gap-2.5 pl-1.5 pr-2 sm:pr-3 h-10 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+            <span class="w-8 h-8 rounded-full bg-primary-500 text-white text-[13px] font-semibold grid place-items-center shrink-0">HA</span>
+            <span class="hidden sm:block text-left leading-tight">
+              <span class="block text-[13px] font-semibold text-slate-700 dark:text-slate-100">Welcome, Haresh!</span>
+              <span class="block text-[11px] text-slate-400">Store Admin</span>
+            </span>
+            <span class="hidden sm:block w-4 h-4 text-slate-400" data-icon="chevron-down"></span>
+          </button>
+          <div id="panelUser" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-2xl shadow-popover overflow-hidden z-40 py-1.5">
+            <a href="#" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5">
+              <span class="w-4 h-4 text-slate-400" data-icon="user"></span> My Profile
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5">
+              <span class="w-4 h-4 text-slate-400" data-icon="settings"></span> Account Settings
+            </a>
+            <a href="#" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5">
+              <span class="w-4 h-4 text-slate-400" data-icon="shield"></span> Security
+            </a>
+            <div class="my-1.5 border-t border-slate-100 dark:border-white/5"></div>
+            <a href="#" class="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-error hover:bg-error/5">
+              <span class="w-4 h-4" data-icon="log-out"></span> Logout
+            </a>
+          </div>
+        </div>
+
+        <button title="Logout" class="hidden sm:grid w-9 h-9 place-items-center rounded-lg text-slate-400 hover:text-error hover:bg-error/5 transition-colors">
+          <span class="w-[18px] h-[18px]" data-icon="log-out"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ MAIN CONTENT ============ -->
+  <main class="p-4 sm:p-6 space-y-6 max-w-[1600px]">
+
+    <!-- Welcome + date range -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div>
+        <h1 class="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">Welcome back, Haresh!</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Here's what's happening with your store today.</p>
+      </div>
+      <div class="relative shrink-0">
+        <button id="btnDateRange" onclick="toggleDropdown('panelDateRange')" class="flex items-center gap-2 h-10 pl-3.5 pr-3 rounded-xl bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 text-sm font-medium text-slate-600 dark:text-slate-300 shadow-sm hover:border-primary-300 dark:hover:border-accent-500/50 transition-colors">
+          <span class="w-4 h-4 text-slate-400" data-icon="calendar"></span>
+          <span id="dateRangeLabel">Last 7 Days</span>
+          <span class="w-4 h-4 text-slate-400" data-icon="chevron-down"></span>
+        </button>
+        <div id="panelDateRange" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-2xl shadow-popover overflow-hidden z-30 py-1.5">
+          <button onclick="pickDateRange('Today')" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5">Today</button>
+          <button onclick="pickDateRange('Last 7 Days')" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5">Last 7 Days</button>
+          <button onclick="pickDateRange('Last 30 Days')" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5">Last 30 Days</button>
+          <button onclick="pickDateRange('Custom Range')" class="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5">Custom Range…</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Store setup progress -->
+    <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div>
+          <h3 class="text-sm font-bold text-slate-700 dark:text-slate-100">Finish setting up your store</h3>
+          <p class="text-[12px] text-slate-400 mt-0.5">4 of 5 steps complete — you're almost live.</p>
+        </div>
+        <span class="text-[11px] font-bold text-primary-600 dark:text-accent-400 bg-primary-50 dark:bg-accent-500/10 px-2.5 py-1 rounded-full">80% complete</span>
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <div class="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">
+          <span class="w-7 h-7 rounded-full bg-success/10 text-success grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="check"></span></span>
+          <span class="text-[12px] font-medium text-slate-600 dark:text-slate-300">Store Profile</span>
+        </div>
+        <div class="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">
+          <span class="w-7 h-7 rounded-full bg-success/10 text-success grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="check"></span></span>
+          <span class="text-[12px] font-medium text-slate-600 dark:text-slate-300">Payment Connected</span>
+        </div>
+        <div class="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">
+          <span class="w-7 h-7 rounded-full bg-success/10 text-success grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="check"></span></span>
+          <span class="text-[12px] font-medium text-slate-600 dark:text-slate-300">First Product Added</span>
+        </div>
+        <div class="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">
+          <span class="w-7 h-7 rounded-full bg-success/10 text-success grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="check"></span></span>
+          <span class="text-[12px] font-medium text-slate-600 dark:text-slate-300">Shipping Policy</span>
+        </div>
+        <div class="flex sm:flex-col items-center sm:items-start gap-2 sm:gap-2">
+          <span class="w-7 h-7 rounded-full bg-warning/10 text-warning grid place-items-center shrink-0 ring-2 ring-warning/20"><span class="w-3.5 h-3.5" data-icon="alert-triangle"></span></span>
+          <span class="text-[12px] font-medium text-slate-700 dark:text-slate-200">Publish Store</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Orders stats ===== -->
+    <section>
+      <h2 class="text-[13px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-3">Orders</h2>
+      <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+
+        <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="w-10 h-10 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-300 grid place-items-center"><span class="w-5 h-5" data-icon="shopping-bag"></span></span>
+            <span class="flex items-center gap-0.5 text-[11px] font-bold text-success"><span class="w-3 h-3" data-icon="trending-up"></span>12.4%</span>
+          </div>
+          <p class="text-2xl font-bold text-slate-800 dark:text-white">1,248</p>
+          <p class="text-[12px] text-slate-400 mt-0.5">Total Orders</p>
+          <p class="text-[11px] text-slate-400 mt-2">vs last month</p>
+        </div>
+
+        <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="w-10 h-10 rounded-xl bg-warning/10 text-warning grid place-items-center"><span class="w-5 h-5" data-icon="clock"></span></span>
+            <span class="flex items-center gap-0.5 text-[11px] font-bold text-error"><span class="w-3 h-3" data-icon="trending-down"></span>3.1%</span>
+          </div>
+          <p class="text-2xl font-bold text-slate-800 dark:text-white">64</p>
+          <p class="text-[12px] text-slate-400 mt-0.5">Pending Orders</p>
+          <p class="text-[11px] text-slate-400 mt-2">vs last month</p>
+        </div>
+
+        <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="w-10 h-10 rounded-xl bg-info/10 text-info grid place-items-center"><span class="w-5 h-5" data-icon="refresh-cw"></span></span>
+            <span class="flex items-center gap-0.5 text-[11px] font-bold text-success"><span class="w-3 h-3" data-icon="trending-up"></span>8.7%</span>
+          </div>
+          <p class="text-2xl font-bold text-slate-800 dark:text-white">132</p>
+          <p class="text-[12px] text-slate-400 mt-0.5">Processing</p>
+          <p class="text-[11px] text-slate-400 mt-2">vs last month</p>
+        </div>
+
+        <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="w-10 h-10 rounded-xl bg-success/10 text-success grid place-items-center"><span class="w-5 h-5" data-icon="check-circle"></span></span>
+            <span class="flex items-center gap-0.5 text-[11px] font-bold text-success"><span class="w-3 h-3" data-icon="trending-up"></span>15.2%</span>
+          </div>
+          <p class="text-2xl font-bold text-slate-800 dark:text-white">1,018</p>
+          <p class="text-[12px] text-slate-400 mt-0.5">Completed</p>
+          <p class="text-[11px] text-slate-400 mt-2">vs last month</p>
+        </div>
+
+        <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <span class="w-10 h-10 rounded-xl bg-error/10 text-error grid place-items-center"><span class="w-5 h-5" data-icon="x-circle"></span></span>
+            <span class="flex items-center gap-0.5 text-[11px] font-bold text-error"><span class="w-3 h-3" data-icon="trending-down"></span>1.8%</span>
+          </div>
+          <p class="text-2xl font-bold text-slate-800 dark:text-white">34</p>
+          <p class="text-[12px] text-slate-400 mt-0.5">Cancelled</p>
+          <p class="text-[11px] text-slate-400 mt-2">vs last month</p>
+        </div>
+
+        <div class="bg-primary-500 dark:bg-primary-600 rounded-2xl shadow-card p-4 text-white relative overflow-hidden">
+          <div class="flex items-center justify-between mb-3">
+            <span class="w-10 h-10 rounded-xl bg-white/15 grid place-items-center"><span class="w-5 h-5" data-icon="dollar-sign"></span></span>
+            <span class="flex items-center gap-0.5 text-[11px] font-bold text-accent-300"><span class="w-3 h-3" data-icon="trending-up"></span>18.9%</span>
+          </div>
+          <p class="text-2xl font-bold">₹18,42,600</p>
+          <p class="text-[12px] text-white/70 mt-0.5">Total Sales</p>
+          <p class="text-[11px] text-white/50 mt-2">vs last month</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===== Products / Coupons / Gift Cards stats ===== -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+      <section>
+        <h2 class="text-[13px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-3">Products</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-300 grid place-items-center mb-3"><span class="w-4.5 h-4.5 w-[18px] h-[18px]" data-icon="package"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">386</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Total Products</p>
+          </div>
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-success/10 text-success grid place-items-center mb-3"><span class="w-[18px] h-[18px]" data-icon="check-circle"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">352</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Active Products</p>
+          </div>
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-error/10 text-error grid place-items-center mb-3"><span class="w-[18px] h-[18px]" data-icon="x-circle"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">9</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Out of Stock</p>
+          </div>
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-warning/10 text-warning grid place-items-center mb-3"><span class="w-[18px] h-[18px]" data-icon="alert-triangle"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">25</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Low Stock</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2 class="text-[13px] font-bold uppercase tracking-wide text-slate-400 dark:text-slate-500 mb-3">Coupons &amp; Gift Cards</h2>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-accent-500/10 text-accent-600 dark:text-accent-400 grid place-items-center mb-3"><span class="w-[18px] h-[18px]" data-icon="tag"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">42</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Total Coupons</p>
+          </div>
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-success/10 text-success grid place-items-center mb-3"><span class="w-[18px] h-[18px]" data-icon="check-circle"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">27</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Active Coupons</p>
+          </div>
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-info/10 text-info grid place-items-center mb-3"><span class="w-[18px] h-[18px]" data-icon="gift"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">118</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Total Gift Cards</p>
+          </div>
+          <div class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-4">
+            <span class="w-9 h-9 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-300 grid place-items-center mb-3"><span class="w-[18px] h-[18px]" data-icon="dollar-sign"></span></span>
+            <p class="text-xl font-bold text-slate-800 dark:text-white">₹4,86,200</p>
+            <p class="text-[12px] text-slate-400 mt-0.5">Gift Card Value</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== Sales Overview chart ===== -->
+    <section class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
+        <div>
+          <h3 class="text-base font-bold text-slate-800 dark:text-white">Sales Overview</h3>
+          <p class="text-[12px] text-slate-400 mt-0.5">Track sales and order volume over time</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-4 text-[12px] font-medium text-slate-500 dark:text-slate-400">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-primary-500"></span>Sales</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-accent-500"></span>Orders</span>
+          </div>
+          <div class="flex items-center bg-slate-100 dark:bg-darksurface2 rounded-lg p-1">
+            <button class="period-btn active px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-500 dark:text-slate-300 transition-colors" data-period="daily" onclick="setChartPeriod('daily', this)">Daily</button>
+            <button class="period-btn px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-500 dark:text-slate-300 transition-colors" data-period="weekly" onclick="setChartPeriod('weekly', this)">Weekly</button>
+            <button class="period-btn px-3 py-1.5 rounded-md text-[12px] font-semibold text-slate-500 dark:text-slate-300 transition-colors" data-period="monthly" onclick="setChartPeriod('monthly', this)">Monthly</button>
+          </div>
+        </div>
+      </div>
+      <div class="h-72 sm:h-80 mt-4">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </section>
+
+    <!-- ===== Recent Orders ===== -->
+    <section class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-slate-800 dark:text-white">Recent Orders</h3>
+        <a href="#" class="text-[13px] font-semibold text-primary-600 dark:text-accent-400 hover:underline">View All Orders →</a>
+      </div>
+      <div class="overflow-x-auto custom-scroll -mx-1">
+        <table class="w-full text-sm min-w-[820px]">
+          <thead>
+            <tr class="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+              <th class="py-3 px-1 font-semibold">Order ID</th>
+              <th class="py-3 px-1 font-semibold">Customer</th>
+              <th class="py-3 px-1 font-semibold">Date</th>
+              <th class="py-3 px-1 font-semibold">Products</th>
+              <th class="py-3 px-1 font-semibold">Amount</th>
+              <th class="py-3 px-1 font-semibold">Payment</th>
+              <th class="py-3 px-1 font-semibold">Status</th>
+              <th class="py-3 px-1 font-semibold text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1 font-semibold text-primary-700 dark:text-accent-400">#SMB-10482</td>
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-500/20 text-primary-700 dark:text-primary-300 text-[11px] font-bold grid place-items-center shrink-0">PN</span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Priya Nair</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Aug 26, 2026</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">2 items</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹42,500</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-success/10 text-success">Paid</span></td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-info/10 text-info">Processing</span></td>
+              <td class="py-3 px-1 text-right">
+                <div class="inline-flex items-center gap-1">
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="eye"></span></button>
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="edit-2"></span></button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1 font-semibold text-primary-700 dark:text-accent-400">#SMB-10481</td>
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-full bg-accent-100 dark:bg-accent-500/20 text-accent-700 dark:text-accent-300 text-[11px] font-bold grid place-items-center shrink-0">RK</span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Rohan Kulkarni</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Aug 25, 2026</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">1 item</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹28,900</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-success/10 text-success">Paid</span></td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-success/10 text-success">Completed</span></td>
+              <td class="py-3 px-1 text-right">
+                <div class="inline-flex items-center gap-1">
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="eye"></span></button>
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="edit-2"></span></button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1 font-semibold text-primary-700 dark:text-accent-400">#SMB-10480</td>
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-full bg-info/10 text-info text-[11px] font-bold grid place-items-center shrink-0">AS</span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Ananya Shah</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Aug 25, 2026</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">3 items</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹67,200</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-warning/10 text-warning">Unpaid</span></td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-warning/10 text-warning">Pending</span></td>
+              <td class="py-3 px-1 text-right">
+                <div class="inline-flex items-center gap-1">
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="eye"></span></button>
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="edit-2"></span></button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1 font-semibold text-primary-700 dark:text-accent-400">#SMB-10479</td>
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-full bg-success/10 text-success text-[11px] font-bold grid place-items-center shrink-0">VM</span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Vikram Mehta</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Aug 24, 2026</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">1 item</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹1,12,400</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-success/10 text-success">Paid</span></td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-success/10 text-success">Completed</span></td>
+              <td class="py-3 px-1 text-right">
+                <div class="inline-flex items-center gap-1">
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="eye"></span></button>
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="edit-2"></span></button>
+                </div>
+              </td>
+            </tr>
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1 font-semibold text-primary-700 dark:text-accent-400">#SMB-10478</td>
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-2.5">
+                  <span class="w-7 h-7 rounded-full bg-error/10 text-error text-[11px] font-bold grid place-items-center shrink-0">SD</span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Sonal Desai</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Aug 23, 2026</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">2 items</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹35,750</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-info/10 text-info">Refunded</span></td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-error/10 text-error">Cancelled</span></td>
+              <td class="py-3 px-1 text-right">
+                <div class="inline-flex items-center gap-1">
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="eye"></span></button>
+                  <button class="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"><span class="w-4 h-4" data-icon="edit-2"></span></button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== Product Performance ===== -->
+    <section class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-base font-bold text-slate-800 dark:text-white">Product Performance</h3>
+        <a href="#" class="text-[13px] font-semibold text-primary-600 dark:text-accent-400 hover:underline">View All Products →</a>
+      </div>
+      <div class="overflow-x-auto custom-scroll -mx-1">
+        <table class="w-full text-sm min-w-[760px]">
+          <thead>
+            <tr class="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+              <th class="py-3 px-1 font-semibold">Product</th>
+              <th class="py-3 px-1 font-semibold">Category</th>
+              <th class="py-3 px-1 font-semibold">Units Sold</th>
+              <th class="py-3 px-1 font-semibold">Revenue</th>
+              <th class="py-3 px-1 font-semibold">Stock</th>
+              <th class="py-3 px-1 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-3">
+                  <span class="w-10 h-10 rounded-xl bg-accent-100 dark:bg-accent-500/15 text-accent-600 dark:text-accent-400 grid place-items-center shrink-0"><span class="w-5 h-5" data-icon="gift"></span></span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Rose Gold Eternity Band</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Wedding Bands</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">142</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹6,03,800</td>
+              <td class="py-3 px-1 text-error font-medium">0 units</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-error/10 text-error">Out of Stock</span></td>
+            </tr>
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-3">
+                  <span class="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-500/15 text-primary-600 dark:text-primary-300 grid place-items-center shrink-0"><span class="w-5 h-5" data-icon="gift"></span></span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Classic Platinum Band</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Wedding Bands</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">98</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹8,82,000</td>
+              <td class="py-3 px-1 text-slate-600 dark:text-slate-300">64 units</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-success/10 text-success">Active</span></td>
+            </tr>
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-3">
+                  <span class="w-10 h-10 rounded-xl bg-success/10 text-success grid place-items-center shrink-0"><span class="w-5 h-5" data-icon="gift"></span></span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Diamond Pave Band</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Diamond Rings</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">76</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹11,40,000</td>
+              <td class="py-3 px-1 text-warning font-medium">6 units</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-warning/10 text-warning">Low Stock</span></td>
+            </tr>
+            <tr class="table-row transition-colors">
+              <td class="py-3 px-1">
+                <div class="flex items-center gap-3">
+                  <span class="w-10 h-10 rounded-xl bg-info/10 text-info grid place-items-center shrink-0"><span class="w-5 h-5" data-icon="gift"></span></span>
+                  <span class="font-medium text-slate-700 dark:text-slate-200">Brushed Titanium Band</span>
+                </div>
+              </td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">Men's Bands</td>
+              <td class="py-3 px-1 text-slate-500 dark:text-slate-400">61</td>
+              <td class="py-3 px-1 font-semibold text-slate-700 dark:text-slate-200">₹2,44,000</td>
+              <td class="py-3 px-1 text-slate-600 dark:text-slate-300">122 units</td>
+              <td class="py-3 px-1"><span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-success/10 text-success">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===== Quick Actions + Recent Activity ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <section class="lg:col-span-2 bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        <h3 class="text-base font-bold text-slate-800 dark:text-white mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <a href="#" class="flex flex-col items-center justify-center gap-2.5 text-center rounded-xl border border-slate-200 dark:border-white/10 p-4 hover:border-primary-300 dark:hover:border-accent-500/40 hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <span class="w-11 h-11 rounded-xl bg-primary-500/10 text-primary-600 dark:text-primary-300 grid place-items-center"><span class="w-5 h-5" data-icon="plus-circle"></span></span>
+            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Add Product</span>
+          </a>
+          <a href="#" class="flex flex-col items-center justify-center gap-2.5 text-center rounded-xl border border-slate-200 dark:border-white/10 p-4 hover:border-primary-300 dark:hover:border-accent-500/40 hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <span class="w-11 h-11 rounded-xl bg-accent-500/10 text-accent-600 dark:text-accent-400 grid place-items-center"><span class="w-5 h-5" data-icon="tag"></span></span>
+            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Create Coupon</span>
+          </a>
+          <a href="#" class="flex flex-col items-center justify-center gap-2.5 text-center rounded-xl border border-slate-200 dark:border-white/10 p-4 hover:border-primary-300 dark:hover:border-accent-500/40 hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <span class="w-11 h-11 rounded-xl bg-info/10 text-info grid place-items-center"><span class="w-5 h-5" data-icon="gift"></span></span>
+            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Create Gift Card</span>
+          </a>
+          <a href="#" class="flex flex-col items-center justify-center gap-2.5 text-center rounded-xl border border-slate-200 dark:border-white/10 p-4 hover:border-primary-300 dark:hover:border-accent-500/40 hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <span class="w-11 h-11 rounded-xl bg-success/10 text-success grid place-items-center"><span class="w-5 h-5" data-icon="shopping-bag"></span></span>
+            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200">View Orders</span>
+          </a>
+          <a href="#" class="flex flex-col items-center justify-center gap-2.5 text-center rounded-xl border border-slate-200 dark:border-white/10 p-4 hover:border-primary-300 dark:hover:border-accent-500/40 hover:shadow-md hover:-translate-y-0.5 transition-all sm:col-span-1 col-span-2">
+            <span class="w-11 h-11 rounded-xl bg-warning/10 text-warning grid place-items-center"><span class="w-5 h-5" data-icon="settings"></span></span>
+            <span class="text-[13px] font-semibold text-slate-700 dark:text-slate-200">Update Store Settings</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        <h3 class="text-base font-bold text-slate-800 dark:text-white mb-4">Recent Activity</h3>
+        <div class="space-y-4 max-h-[360px] overflow-y-auto custom-scroll pr-1">
+          <div class="flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-success/10 text-success grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="shopping-bag"></span></span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-medium text-slate-700 dark:text-slate-200">New order received from Priya Nair</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">2 minutes ago</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-error/10 text-error grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="alert-triangle"></span></span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-medium text-slate-700 dark:text-slate-200">"Rose Gold Eternity Band" went out of stock</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">28 minutes ago</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-accent-500/10 text-accent-600 dark:text-accent-400 grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="tag"></span></span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-medium text-slate-700 dark:text-slate-200">Coupon "WED26" created</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">1 hour ago</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-info/10 text-info grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="gift"></span></span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-medium text-slate-700 dark:text-slate-200">Gift card GC-2291 redeemed</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">2 hours ago</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-primary-500/10 text-primary-600 dark:text-primary-300 grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="dollar-sign"></span></span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-medium text-slate-700 dark:text-slate-200">Payment received for order #SMB-10479</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">3 hours ago</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <span class="w-8 h-8 rounded-lg bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-300 grid place-items-center shrink-0"><span class="w-4 h-4" data-icon="user"></span></span>
+            <div class="min-w-0">
+              <p class="text-[13px] font-medium text-slate-700 dark:text-slate-200">Vendor profile updated</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Yesterday, 6:42 PM</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="text-center text-[12px] text-slate-400 py-4">
+      © 2026 Shop My Band. All rights reserved.
+    </footer>
+
+  </main>
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
