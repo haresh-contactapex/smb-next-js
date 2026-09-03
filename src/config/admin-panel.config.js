@@ -22,9 +22,9 @@ export const adminPanelConfig = {
       label: "My Account",
       icon: "user",
       items: [
-        { id: "profile", label: "Profile", href: "#" },
-        { id: "address", label: "Address", href: "#" },
-        { id: "payment", label: "Payment", href: "#" },
+        { id: "profile", label: "Profile", href: "/profile" },
+        { id: "address", label: "Address", href: "/address" },
+        { id: "payment", label: "Payment", href: "/payment" },
       ],
     },
     {
@@ -57,8 +57,8 @@ export const adminPanelConfig = {
       label: "Vouchers / Coupons",
       icon: "tag",
       items: [
-        { id: "all-coupons", label: "All Coupons", href: "#" },
-        { id: "create-coupon", label: "Create Coupon", href: "#" },
+        { id: "all-coupons", label: "All Coupons", href: "/all-coupons" },
+        { id: "create-coupon", label: "Create Coupon", href: "/create-coupon" },
       ],
     },
     {
