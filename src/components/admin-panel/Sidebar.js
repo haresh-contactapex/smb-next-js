@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import Icon from "./Icon";
 import { closeSidebar, setActiveNav, toggleCollapse, toggleSubmenu } from "./adminPanelActions";
 
@@ -16,6 +17,8 @@ import { closeSidebar, setActiveNav, toggleCollapse, toggleSubmenu } from "./adm
  */
 export default function Sidebar({ brand, navItems }) {
   const [collapseIcon, setCollapseIcon] = useState("chevron-left");
+  const pathname = usePathname();
+  const isActiveHref = (href) => Boolean(href) && href !== "#" && href === pathname;
 
   // Sync the collapse icon with the persisted state once mounted (the layout is
   // collapsed pre-paint by ThemeInitScript; this just gets the icon to match).
@@ -82,10 +85,13 @@ export default function Sidebar({ brand, navItems }) {
 
             if (item.type === "submenu") {
               const targetId = `submenu-${item.id}`;
+              const hasActiveChild = item.items.some((sub) => isActiveHref(sub.href));
               return (
                 <div key={item.id}>
                   <button
-                    className="nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+                    className={`nav-toggle nav-row w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors${
+                      hasActiveChild ? " active open" : ""
+                    }`}
                     data-target={targetId}
                     onClick={(e) => toggleSubmenu(e.currentTarget)}
                   >
@@ -99,14 +105,18 @@ export default function Sidebar({ brand, navItems }) {
                   </button>
                   <ul
                     id={targetId}
-                    className="sidebar-submenu hidden mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3"
+                    className={`sidebar-submenu mt-1 ml-[34px] space-y-0.5 border-l border-slate-200 dark:border-white/10 pl-3${
+                      hasActiveChild ? "" : " hidden"
+                    }`}
                   >
                     {item.items.map((sub) => (
                       <li key={sub.id}>
                         <a
                           href={sub.href || "#"}
                           onClick={handleNavClick}
-                          className="nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                          className={`nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5${
+                            isActiveHref(sub.href) ? " active" : ""
+                          }`}
                         >
                           {sub.label}
                         </a>
@@ -123,7 +133,7 @@ export default function Sidebar({ brand, navItems }) {
                 href={item.href || "#"}
                 onClick={handleNavClick}
                 className={`nav-link nav-row flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors${
-                  item.active ? " active" : ""
+                  isActiveHref(item.href) ? " active" : ""
                 }`}
               >
                 <span className="nav-icon w-5 h-5 shrink-0 text-slate-400">

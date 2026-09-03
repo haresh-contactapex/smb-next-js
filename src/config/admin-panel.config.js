@@ -15,7 +15,7 @@ export const adminPanelConfig = {
   },
 
   navItems: [
-    { type: "link", id: "dashboard", label: "Dashboard", icon: "grid", href: "/", active: true },
+    { type: "link", id: "dashboard", label: "Dashboard", icon: "grid", href: "/" },
     {
       type: "submenu",
       id: "account",
@@ -46,9 +46,9 @@ export const adminPanelConfig = {
       label: "Categories / Products",
       icon: "layers",
       items: [
-        { id: "categories", label: "Categories", href: "#" },
-        { id: "all-products", label: "All Products", href: "#" },
-        { id: "add-product", label: "Add Product", href: "#" },
+        { id: "categories", label: "Categories", href: "/categories" },
+        { id: "all-products", label: "All Products", href: "/all-products" },
+        { id: "add-product", label: "Add Product", href: "/add-product" },
       ],
     },
     {
