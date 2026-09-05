@@ -1,6 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import AdminLayout from "@/components/admin-panel/AdminLayout";
+import ConditionalShell from "@/components/admin-panel/ConditionalShell";
 import ThemeInitScript from "@/components/admin-panel/ThemeInitScript";
 import { adminPanelConfig } from "@/config/admin-panel.config";
 
@@ -27,7 +27,7 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
       >
         <ThemeInitScript />
-        <AdminLayout config={adminPanelConfig}>{children}</AdminLayout>
+        <ConditionalShell config={adminPanelConfig}>{children}</ConditionalShell>
       </body>
     </html>
   );
