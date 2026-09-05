@@ -36,7 +36,7 @@ export default function DashboardPage() {
 
       <SalesChart />
 
-      <RecentOrdersTable orders={recentOrders} />
+      <RecentOrdersTable orders={recentOrders} viewAllHref="/orders" />
 
       <ProductPerformanceTable products={productPerformance} />
 

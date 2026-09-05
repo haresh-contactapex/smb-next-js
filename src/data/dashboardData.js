@@ -180,7 +180,7 @@ export const quickActions = [
   { icon: "plus-circle", iconColor: "primary", label: "Add Product", href: "#" },
   { icon: "tag", iconColor: "accent", label: "Create Coupon", href: "#" },
   { icon: "gift", iconColor: "info", label: "Create Gift Card", href: "#" },
-  { icon: "shopping-bag", iconColor: "success", label: "View Orders", href: "#" },
+  { icon: "shopping-bag", iconColor: "success", label: "View Orders", href: "/orders" },
   { icon: "settings", iconColor: "warning", label: "Update Store Settings", href: "#", wide: true },
 ];
 

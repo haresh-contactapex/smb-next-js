@@ -1,4 +1,4 @@
-export default function TextField({ id, label, value, onChange, type = "text", placeholder, error, hint }) {
+export default function TextField({ id, label, value, onChange, type = "text", placeholder, error, hint, disabled = false }) {
   return (
     <div>
       <label className="field-label" htmlFor={id}>
@@ -11,7 +11,8 @@ export default function TextField({ id, label, value, onChange, type = "text", p
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         aria-label={label}
-        className={`field-input${error ? " border-red-400" : ""}`}
+        disabled={disabled}
+        className={`field-input${error ? " border-red-400" : ""}${disabled ? " opacity-50 cursor-not-allowed" : ""}`}
       />
       {error && <p className="text-xs text-error mt-1">{error}</p>}
       {!error && hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}

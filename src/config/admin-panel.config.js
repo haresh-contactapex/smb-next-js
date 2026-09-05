@@ -34,11 +34,11 @@ export const adminPanelConfig = {
       label: "Orders",
       icon: "shopping-bag",
       items: [
-        { id: "all-orders", label: "All Orders", href: "#" },
-        { id: "pending", label: "Pending", href: "#" },
-        { id: "processing", label: "Processing", href: "#" },
-        { id: "completed", label: "Completed", href: "#" },
-        { id: "cancelled", label: "Cancelled", href: "#" },
+        { id: "all-orders", label: "All Orders", href: "/orders" },
+        { id: "pending", label: "Pending", href: "/orders/pending" },
+        { id: "processing", label: "Processing", href: "/orders/processing" },
+        { id: "completed", label: "Completed", href: "/orders/completed" },
+        { id: "cancelled", label: "Cancelled", href: "/orders/cancelled" },
       ],
     },
     {

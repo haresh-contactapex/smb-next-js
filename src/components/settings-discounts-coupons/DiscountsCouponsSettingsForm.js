@@ -9,6 +9,7 @@ import InfoSidebar from "@/components/settings-shared/InfoSidebar";
 import Toast from "@/components/settings-shared/Toast";
 
 const DEFAULT_SETTINGS = {
+  couponsEnabled: true,
   allowMultipleCoupons: false,
   maxDiscountPercent: "50",
   caseSensitiveCoupons: false,
@@ -46,11 +47,21 @@ export default function DiscountsCouponsSettingsForm() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
+          <SectionCard title="Coupon Codes">
+            <ToggleField
+              label="Enable the use of coupon codes"
+              description="Turn off to stop accepting any coupon code storewide, at checkout."
+              checked={settings.couponsEnabled}
+              onChange={(value) => setField("couponsEnabled", value)}
+            />
+          </SectionCard>
+
           <SectionCard title="Coupon Rules">
             <ToggleField
               label="Allow multiple coupons per order"
               checked={settings.allowMultipleCoupons}
               onChange={(value) => setField("allowMultipleCoupons", value)}
+              disabled={!settings.couponsEnabled}
             />
             <TextField
               id="f-max-discount"
@@ -59,11 +70,13 @@ export default function DiscountsCouponsSettingsForm() {
               value={settings.maxDiscountPercent}
               onChange={(value) => setField("maxDiscountPercent", value)}
               placeholder="50"
+              disabled={!settings.couponsEnabled}
             />
             <ToggleField
               label="Coupon codes are case-sensitive"
               checked={settings.caseSensitiveCoupons}
               onChange={(value) => setField("caseSensitiveCoupons", value)}
+              disabled={!settings.couponsEnabled}
             />
           </SectionCard>
 
@@ -72,6 +85,7 @@ export default function DiscountsCouponsSettingsForm() {
               label="Auto-apply best available discount"
               checked={settings.autoApplyBestDiscount}
               onChange={(value) => setField("autoApplyBestDiscount", value)}
+              disabled={!settings.couponsEnabled}
             />
             <TextField
               id="f-min-order-coupon"
@@ -80,6 +94,7 @@ export default function DiscountsCouponsSettingsForm() {
               value={settings.minOrderAmountForCoupon}
               onChange={(value) => setField("minOrderAmountForCoupon", value)}
               placeholder="0"
+              disabled={!settings.couponsEnabled}
             />
           </SectionCard>
         </div>
