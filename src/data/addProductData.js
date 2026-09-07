@@ -35,12 +35,10 @@ export const SAMPLE = {
     "\n<p>A premium everyday leather backpack designed for work, travel, and everyday use.</p>\n<p>Features a spacious interior, padded laptop compartment, adjustable shoulder straps, and durable metal hardware.</p>\n",
   product_type: "Backpacks",
   category: "Accessories > Gift Boxes",
-  vendor: "Example Brand",
   collections: ["New Arrivals", "Best Sellers"],
   tags: ["leather", "backpack", "travel", "test"],
   handle: "classic-leather-backpack",
   status: "ACTIVE",
-  publishing: { online_store: true, pos: true, shop: true },
   price: "149.00",
   compare_at_price: "189.00",
   charge_tax: true,
@@ -48,15 +46,10 @@ export const SAMPLE = {
   track_quantity: true,
   sku: "BAG-CLB-BLK",
   barcode: "123456789012",
-  locations: [
-    { name: "Shop location", available: 18 },
-    { name: "Warehouse", available: 42 },
-  ],
   physical_product: true,
   weight: "1.2",
   weight_unit: "kg",
   hs_code: "4202.92",
-  country_of_origin: "IT",
   options: [
     { id: "attr_color", name: "Color", values: ["Black", "Brown"] },
     { id: "attr_size", name: "Size", values: ["Small", "Medium", "Large"] },
@@ -75,20 +68,6 @@ export const SAMPLE = {
   ],
   variantDefaults: { price: "149.00", inventory_quantity: 10, weight: 1.2, weight_unit: "kg" },
 };
-
-export const COUNTRY_OPTIONS = [
-  { value: "", label: "Select country/region" },
-  { value: "US", label: "United States" },
-  { value: "IN", label: "India" },
-  { value: "CN", label: "China" },
-  { value: "IT", label: "Italy" },
-  { value: "GB", label: "United Kingdom" },
-  { value: "DE", label: "Germany" },
-  { value: "VN", label: "Vietnam" },
-  { value: "TR", label: "Turkey" },
-  { value: "MX", label: "Mexico" },
-  { value: "BR", label: "Brazil" },
-];
 
 export const WEIGHT_UNITS = ["kg", "g", "lb", "oz"];
 

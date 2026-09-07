@@ -1,16 +1,9 @@
 "use client";
 
 import Icon from "@/components/admin-panel/Icon";
-import { COUNTRY_OPTIONS, WEIGHT_UNITS } from "@/data/addProductData";
+import { WEIGHT_UNITS } from "@/data/addProductData";
 
-export default function ShippingSection({
-  physicalProduct,
-  weight,
-  weightUnit,
-  hsCode,
-  countryOfOrigin,
-  onFieldChange,
-}) {
+export default function ShippingSection({ physicalProduct, weight, weightUnit, hsCode, onFieldChange }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-4">Shipping</h2>
@@ -65,44 +58,19 @@ export default function ShippingSection({
             <h3 className="text-[12px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3 flex items-center gap-1.5">
               <Icon name="globe" className="w-3.5 h-3.5" /> Customs information
             </h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="field-label" htmlFor="f-hs-code">
-                  Harmonized System (HS) code
-                </label>
-                <input
-                  id="f-hs-code"
-                  type="text"
-                  placeholder="e.g. 7113.19"
-                  aria-label="HS code"
-                  value={hsCode}
-                  onChange={(e) => onFieldChange("hs_code", e.target.value)}
-                  className="field-input system-field"
-                />
-              </div>
-              <div>
-                <label className="field-label" htmlFor="f-origin">
-                  Country/Region of origin
-                </label>
-                <div className="relative">
-                  <select
-                    id="f-origin"
-                    aria-label="Country or region of origin"
-                    value={countryOfOrigin}
-                    onChange={(e) => onFieldChange("country_of_origin", e.target.value)}
-                    className="field-input appearance-none pr-8 cursor-pointer"
-                  >
-                    {COUNTRY_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">
-                    <Icon name="chevron-down" className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
+            <div>
+              <label className="field-label" htmlFor="f-hs-code">
+                Harmonized System (HS) code
+              </label>
+              <input
+                id="f-hs-code"
+                type="text"
+                placeholder="e.g. 7113.19"
+                aria-label="HS code"
+                value={hsCode}
+                onChange={(e) => onFieldChange("hs_code", e.target.value)}
+                className="field-input system-field"
+              />
             </div>
           </div>
         </div>

@@ -6,7 +6,6 @@ import { TAXONOMY, COLLECTIONS } from "@/data/addProductData";
 export default function OrganizationSidebar({
   category,
   productType,
-  vendor,
   collections,
   tags,
   onFieldChange,
@@ -132,21 +131,6 @@ export default function OrganizationSidebar({
             aria-label="Product type"
             value={productType}
             onChange={(e) => onFieldChange("product_type", e.target.value)}
-            className="field-input"
-          />
-        </div>
-
-        <div>
-          <label className="field-label" htmlFor="f-vendor">
-            Vendor
-          </label>
-          <input
-            id="f-vendor"
-            type="text"
-            placeholder="e.g. Example Brand"
-            aria-label="Vendor"
-            value={vendor}
-            onChange={(e) => onFieldChange("vendor", e.target.value)}
             className="field-input"
           />
         </div>

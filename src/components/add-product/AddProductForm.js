@@ -12,7 +12,6 @@ import ShippingSection from "./ShippingSection";
 import VariantsSection from "./VariantsSection";
 import SeoSection from "./SeoSection";
 import StatusSidebar from "./StatusSidebar";
-import PublishingSidebar from "./PublishingSidebar";
 import OrganizationSidebar from "./OrganizationSidebar";
 import JsonPayloadCard from "./JsonPayloadCard";
 import JsonModal from "./JsonModal";
@@ -54,18 +53,6 @@ export default function AddProductForm() {
 
   function handleBodyHtmlChange(html) {
     setField("body_html", html);
-  }
-
-  function handleLocationChange(index, available) {
-    setProduct((prev) => {
-      const locations = prev.locations.slice();
-      locations[index] = { ...locations[index], available };
-      return { ...prev, locations };
-    });
-  }
-
-  function handleChannelChange(channel, checked) {
-    setProduct((prev) => ({ ...prev, publishing: { ...prev.publishing, [channel]: checked } }));
   }
 
   function handleCategorySelect(path) {
@@ -194,9 +181,7 @@ export default function AddProductForm() {
             trackQuantity={product.track_quantity}
             sku={product.sku}
             barcode={product.barcode}
-            locations={product.locations}
             onFieldChange={setField}
-            onLocationChange={handleLocationChange}
           />
 
           <ShippingSection
@@ -204,7 +189,6 @@ export default function AddProductForm() {
             weight={product.weight}
             weightUnit={product.weight_unit}
             hsCode={product.hs_code}
-            countryOfOrigin={product.country_of_origin}
             onFieldChange={setField}
           />
 
@@ -233,12 +217,9 @@ export default function AddProductForm() {
             onHandleChange={handleHandleChange}
           />
 
-          <PublishingSidebar publishing={product.publishing} onChannelChange={handleChannelChange} />
-
           <OrganizationSidebar
             category={product.category}
             productType={product.product_type}
-            vendor={product.vendor}
             collections={product.collections}
             tags={product.tags}
             onFieldChange={setField}
