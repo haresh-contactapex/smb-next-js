@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "./Icon";
-import { closeSidebar, setActiveNav, toggleCollapse, toggleSubmenu } from "./adminPanelActions";
+import { closeSidebar, toggleCollapse, toggleSubmenu } from "./adminPanelActions";
 
 /**
  * Left nav shell. Fully driven by the `navItems` config array passed in, so a new
@@ -26,8 +27,7 @@ export default function Sidebar({ brand, navItems }) {
     setCollapseIcon(document.body.classList.contains("sidebar-collapsed") ? "chevron-right" : "chevron-left");
   }, []);
 
-  function handleNavClick(e) {
-    setActiveNav(e.currentTarget);
+  function handleNavClick() {
     if (window.innerWidth < 1024) closeSidebar();
   }
 
@@ -46,7 +46,7 @@ export default function Sidebar({ brand, navItems }) {
       >
         {/* Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-white/5 shrink-0">
-          <a href={brand.href || "/"} className="sidebar-brand flex items-center gap-2.5 min-w-0">
+          <Link href={brand.href || "/"} className="sidebar-brand flex items-center gap-2.5 min-w-0">
             <span className="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 flex items-center justify-center shrink-0 shadow-sm">
               <Icon name={brand.icon || "gift"} className="w-4 h-4 text-white" />
             </span>
@@ -60,7 +60,7 @@ export default function Sidebar({ brand, navItems }) {
                 </span>
               )}
             </span>
-          </a>
+          </Link>
           <button
             onClick={closeSidebar}
             className="lg:hidden w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 shrink-0"
@@ -111,7 +111,7 @@ export default function Sidebar({ brand, navItems }) {
                   >
                     {item.items.map((sub) => (
                       <li key={sub.id}>
-                        <a
+                        <Link
                           href={sub.href || "#"}
                           onClick={handleNavClick}
                           className={`nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5${
@@ -119,7 +119,7 @@ export default function Sidebar({ brand, navItems }) {
                           }`}
                         >
                           {sub.label}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                   </ul>
@@ -128,7 +128,7 @@ export default function Sidebar({ brand, navItems }) {
             }
 
             return (
-              <a
+              <Link
                 key={item.id}
                 href={item.href || "#"}
                 onClick={handleNavClick}
@@ -140,7 +140,7 @@ export default function Sidebar({ brand, navItems }) {
                   <Icon name={item.icon} className="w-5 h-5" />
                 </span>
                 <span className="nav-label truncate">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </nav>

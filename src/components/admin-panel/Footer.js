@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 /**
  * Simple admin-shell footer. Pass `companyName`; the year is always current.
  * Optional `links` renders a row of secondary links (Privacy, Terms, Support, …).
@@ -12,9 +14,9 @@ export default function Footer({ companyName, links = [] }) {
       {links.length > 0 && (
         <p className="flex items-center justify-center gap-3">
           {links.map((link, i) => (
-            <a key={i} href={link.href} className="hover:text-slate-600 dark:hover:text-slate-300 hover:underline">
+            <Link key={i} href={link.href} className="hover:text-slate-600 dark:hover:text-slate-300 hover:underline">
               {link.label}
-            </a>
+            </Link>
           ))}
         </p>
       )}

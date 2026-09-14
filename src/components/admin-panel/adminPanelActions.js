@@ -57,8 +57,3 @@ export function toggleDropdown(id) {
 export function closeAllDropdowns() {
   document.querySelectorAll('[id^="panel"]').forEach((p) => p.classList.add("hidden"));
 }
-
-export function setActiveNav(link) {
-  document.querySelectorAll(".nav-link").forEach((l) => l.classList.remove("active"));
-  link.classList.add("active");
-}

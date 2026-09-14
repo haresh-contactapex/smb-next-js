@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 
 export default function BillingAddressSidebar({ sameAsShipping, onSameAsShippingChange }) {
@@ -25,9 +26,9 @@ export default function BillingAddressSidebar({ sameAsShipping, onSameAsShipping
 
       <p className="text-[11px] text-slate-400">
         Manage saved addresses on the{" "}
-        <a href="/address" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
+        <Link href="/address" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
           Address
-        </a>{" "}
+        </Link>{" "}
         page.
       </p>
     </section>

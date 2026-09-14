@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES, BADGE_COLOR_CLASSES } from "./colorClasses";
 
@@ -6,9 +7,9 @@ export default function RecentOrdersTable({ orders, viewAllHref = "#" }) {
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-bold text-slate-800 dark:text-white">Recent Orders</h3>
-        <a href={viewAllHref} className="text-[13px] font-semibold text-primary-600 dark:text-accent-400 hover:underline">
+        <Link href={viewAllHref} className="text-[13px] font-semibold text-primary-600 dark:text-accent-400 hover:underline">
           View All Orders →
-        </a>
+        </Link>
       </div>
       <div className="overflow-x-auto custom-scroll -mx-1">
         <table className="w-full text-sm min-w-[820px]">

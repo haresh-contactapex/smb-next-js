@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import Icon from "./Icon";
 import { openSidebar, toggleDropdown, toggleTheme } from "./adminPanelActions";
 
@@ -91,7 +92,7 @@ export default function Header({ searchFields = [], notifications, user }) {
                 </div>
                 <div className="max-h-80 overflow-y-auto custom-scroll divide-y divide-slate-100 dark:divide-white/5">
                   {notifications.items.map((n, i) => (
-                    <a
+                    <Link
                       key={i}
                       href={n.href || "#"}
                       className="flex items-start gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5"
@@ -109,16 +110,16 @@ export default function Header({ searchFields = [], notifications, user }) {
                         </span>
                         <span className="block text-[11px] text-slate-400 mt-0.5">{n.time}</span>
                       </span>
-                    </a>
+                    </Link>
                   ))}
                 </div>
                 {notifications.viewAllHref && (
-                  <a
+                  <Link
                     href={notifications.viewAllHref}
                     className="block text-center text-[13px] font-semibold text-primary-600 dark:text-accent-400 py-3 border-t border-slate-100 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5"
                   >
                     View all notifications
-                  </a>
+                  </Link>
                 )}
               </div>
             </div>
@@ -152,7 +153,7 @@ export default function Header({ searchFields = [], notifications, user }) {
                 className="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-2xl shadow-popover overflow-hidden z-40 py-1.5"
               >
                 {(user.menu || []).map((item, i) => (
-                  <a
+                  <Link
                     key={i}
                     href={item.href || "#"}
                     className={`flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium hover:bg-slate-50 dark:hover:bg-white/5 ${
@@ -163,17 +164,17 @@ export default function Header({ searchFields = [], notifications, user }) {
                   >
                     <Icon name={item.icon} className={`w-4 h-4 ${item.variant === "danger" ? "" : "text-slate-400"}`} />
                     {item.label}
-                  </a>
+                  </Link>
                 ))}
                 {user.logoutHref && (
                   <>
                     <div className="my-1.5 border-t border-slate-100 dark:border-white/5" />
-                    <a
+                    <Link
                       href={user.logoutHref}
                       className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] font-medium text-error hover:bg-error/5"
                     >
                       <Icon name="log-out" className="w-4 h-4" /> Logout
-                    </a>
+                    </Link>
                   </>
                 )}
               </div>
@@ -181,13 +182,13 @@ export default function Header({ searchFields = [], notifications, user }) {
           )}
 
           {user?.logoutHref && (
-            <a
+            <Link
               href={user.logoutHref}
               title="Logout"
               className="hidden sm:grid w-9 h-9 place-items-center rounded-lg text-slate-400 hover:text-error hover:bg-error/5 transition-colors"
             >
               <Icon name="log-out" className="w-[18px] h-[18px]" />
-            </a>
+            </Link>
           )}
         </div>
       </div>
