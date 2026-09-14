@@ -17,7 +17,7 @@ flowchart LR
     SB --> ADDR["Address\n(/address)"]
     SB --> PAY["Payment\n(/payment)"]
 
-    PAY -- "\"Address\" link in\nBilling Address sidebar" --> ADDR
+    PAY -- "Address link in\nBilling Address sidebar" --> ADDR
 ```
 
 The sidebar auto-expands the "My Account" submenu and highlights the current
@@ -41,7 +41,7 @@ flowchart TD
     ValidEmail -- "Yes" --> ValidPW{"New password set\nand ≠ confirm?"}
     ValidPW -- "Yes (mismatch)" --> ErrPW["Show inline error\n+ toast, halt save"]
     ErrPW --> FillPW
-    ValidPW -- "No (blank or match)" --> Clear["Clear password fields,\nshow \"Profile saved\" toast"]
+    ValidPW -- "No (blank or match)" --> Clear["Clear password fields,\nshow Profile saved toast"]
 
     Discard(["Click Discard"]) --> Confirm{"Confirm\ndiscard?"}
     Confirm -- "No" --> Fill
@@ -73,9 +73,9 @@ flowchart TD
     Notes --> Save(["Click Save Address"])
 
     Save --> Valid{"Address Line 1 +\nCity filled in?"}
-    Valid -- "No" --> Err["Show toast: \"Add at least a\nstreet address and city\""]
+    Valid -- "No" --> Err["Show toast: Add at least a\nstreet address and city"]
     Err --> FillB
-    Valid -- "Yes" --> Toast["Show \"Address saved\" toast"]
+    Valid -- "Yes" --> Toast["Show Address saved toast"]
 
     Discard(["Click Discard"]) --> Confirm{"Confirm\ndiscard?"}
     Confirm -- "No" --> FillB
@@ -102,7 +102,7 @@ the page-level Save only covers one setting.
 flowchart TD
     Start(["Open /payment"]) --> List["View Saved Cards"]
 
-    List --> MakeDefault["Click \"Make Default\"\non a card"] --> ImmediateDefault["Card list updates\nimmediately + toast\n(no Save needed)"]
+    List --> MakeDefault["Click Make Default\non a card"] --> ImmediateDefault["Card list updates\nimmediately + toast\n(no Save needed)"]
     List --> Remove["Click remove icon"] --> ConfirmRemove{"Confirm\nremove?"}
     ConfirmRemove -- "No" --> List
     ConfirmRemove -- "Yes" --> ImmediateRemove["Card removed\nimmediately + toast"]
@@ -115,9 +115,9 @@ flowchart TD
     ValidCard -- "Yes" --> Detect["Derive brand + last4\nfrom the number\n(raw number/CVV discarded)"]
     Detect --> AddedImmediate["Card appended\nimmediately + toast\n(no Save needed)"]
 
-    List --> ToggleBilling["Toggle \"Same as shipping\naddress\" in sidebar"]
+    List --> ToggleBilling["Toggle Same as shipping\naddress in sidebar"]
     ToggleBilling --> ClickSave(["Click Save Changes"])
-    ClickSave --> ToastSave["Show \"Payment settings\nsaved\" toast"]
+    ClickSave --> ToastSave["Show Payment settings\nsaved toast"]
 
     Discard(["Click Discard"]) --> ConfirmD{"Confirm\ndiscard?"}
     ConfirmD -- "No" --> List
