@@ -79,7 +79,7 @@ flowchart TD
     Save --> Valid{"Title\nfilled in?"}
     Valid -- "No" --> Err["Show inline error\n+ toast, focus Title"]
     Err --> Fill
-    Valid -- "Yes" --> Toast["Show \"Category saved\" toast"]
+    Valid -- "Yes" --> Toast["Show 'Category saved' toast"]
 
     Discard(["Click Discard"]) --> Confirm{"Confirm\ndiscard?"}
     Confirm -- "No" --> Fill
