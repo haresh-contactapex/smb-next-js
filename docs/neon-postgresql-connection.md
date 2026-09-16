@@ -41,11 +41,11 @@ DATABASE_URL=postgresql://username:password@ep-dummy-project-123456.us-east-2.aw
 
 > The value above is a **dummy placeholder**. Replace it with your real Neon connection string before running against an actual database. Never commit real credentials — `.env*.local` is already excluded in `.gitignore`.
 
-A non-secret template is also provided in [`.env.example`](.env.example) so other developers know which variables are required.
+A non-secret template is also provided in [`.env.example`](../.env.example) so other developers know which variables are required.
 
 ## 5. Create the database client helper
 
-File: [`src/lib/db.js`](src/lib/db.js)
+File: [`src/lib/db.js`](../src/lib/db.js)
 
 ```js
 import { neon } from '@neondatabase/serverless';
@@ -61,7 +61,7 @@ export const sql = neon(process.env.DATABASE_URL);
 
 ## 6. Use it in a Next.js API route (App Router)
 
-File: [`src/app/api/db-test/route.js`](src/app/api/db-test/route.js)
+File: [`src/app/api/db-test/route.js`](../src/app/api/db-test/route.js)
 
 ```js
 import { NextResponse } from 'next/server';
@@ -107,7 +107,7 @@ Any Server Component, Route Handler, or Server Action can import `sql` from `@/l
 
 ## 8. (Optional) Run schema/migrations
 
-You can run the SQL files already in [`docs/`](docs/) against your Neon database using the Neon SQL Editor (Console → **SQL Editor**) or a CLI tool like `psql`:
+You can run the SQL files already in [`docs/`](.) against your Neon database using the Neon SQL Editor (Console → **SQL Editor**) or a CLI tool like `psql`:
 
 ```bash
 psql "postgresql://username:password@ep-dummy-project-123456.us-east-2.aws.neon.tech/neondb?sslmode=require" -f docs/auth/auth-database-schema.sql
@@ -127,4 +127,4 @@ psql "postgresql://username:password@ep-dummy-project-123456.us-east-2.aws.neon.
 | `.env.example` | Non-secret template showing required env vars. |
 | `src/lib/db.js` | Creates and exports the Neon `sql` client. |
 | `src/app/api/db-test/route.js` | Sample API route that queries the database to verify connectivity. |
-| `neon-postgresql-connection.md` | This guide. |
+| `docs/neon-postgresql-connection.md` | This guide. |
