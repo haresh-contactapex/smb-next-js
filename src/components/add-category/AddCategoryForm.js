@@ -16,15 +16,21 @@ const CATEGORY_OPTIONS = categories.map((cat) => cat.name).sort();
 export default function AddCategoryForm() {
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
   const [titleError, setTitleError] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false });
+  const [imageError, setImageError] = useState(false);
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const titleInputRef = useRef(null);
   const toastTimerRef = useRef(null);
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+  }
+
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
   }
 
   function setField(field, value) {
@@ -46,20 +52,40 @@ export default function AddCategoryForm() {
 
   function handleImagePicked(file) {
     setField("image", { url: URL.createObjectURL(file), name: file.name });
+    setImageError(false);
   }
 
   function handleImageRemoved() {
     setField("image", null);
   }
 
-  function handleSave() {
-    if (!category.title.trim()) {
-      setTitleError(true);
-      titleInputRef.current?.focus();
-      showToast("Add a category title before saving");
+  function handleImageRejected(message) {
+    showToast(message, "error");
+  }
+
+  function handleSave(e) {
+    e?.preventDefault();
+
+    const missingTitle = !category.title.trim();
+    const missingImage = !category.image;
+
+    setTitleError(missingTitle);
+    setImageError(missingImage);
+
+    if (missingTitle || missingImage) {
+      if (missingTitle) {
+        titleInputRef.current?.focus();
+      }
+      const message =
+        missingTitle && missingImage
+          ? "Image and Title required"
+          : missingTitle
+          ? "Title is required"
+          : "Image is required";
+      showToast(message, "error");
       return;
     }
-    setTitleError(false);
+
     showToast("Category saved");
   }
 
@@ -67,6 +93,7 @@ export default function AddCategoryForm() {
     if (!window.confirm("Discard all changes and start over?")) return;
     setCategory(DEFAULT_CATEGORY);
     setTitleError(false);
+    setImageError(false);
   }
 
   const previewTitle = category.seoTitle || `Shop My Band — ${category.title || "Category Title"}`;
@@ -75,8 +102,8 @@ export default function AddCategoryForm() {
     "Add a meta description to see how your category listing will look in search engine results.";
 
   return (
-    <>
-      <PageToolbar onDiscard={handleDiscard} onSave={handleSave} />
+    <form onSubmit={handleSave}>
+      <PageToolbar onDiscard={handleDiscard} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
@@ -86,10 +113,12 @@ export default function AddCategoryForm() {
             titleInputRef={titleInputRef}
             description={category.description}
             image={category.image}
+            imageError={imageError}
             onTitleChange={handleTitleChange}
             onDescriptionChange={(value) => setField("description", value)}
             onImagePicked={handleImagePicked}
             onImageRemoved={handleImageRemoved}
+            onImageRejected={handleImageRejected}
           />
 
           <CollectionItemsSection />
@@ -119,7 +148,7 @@ export default function AddCategoryForm() {
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} />
-    </>
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
+    </form>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import { validateImageFile } from "./helpers";
 
 export default function CategoryDetailsSection({
   title,
@@ -9,22 +10,32 @@ export default function CategoryDetailsSection({
   titleInputRef,
   description,
   image,
+  imageError,
   onTitleChange,
   onDescriptionChange,
   onImagePicked,
   onImageRemoved,
+  onImageRejected,
 }) {
   const fileInputRef = useRef(null);
 
   function handleFileChange(e) {
     const file = e.target.files?.[0];
-    if (file) onImagePicked(file);
+    if (file) {
+      const error = validateImageFile(file);
+      if (error) {
+        onImageRejected(error);
+      } else {
+        onImagePicked(file);
+      }
+    }
     e.target.value = "";
   }
 
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
       <div className="flex flex-col md:flex-row gap-5 items-start">
+        <div className="shrink-0">
         <div
           role="button"
           tabIndex={0}
@@ -36,7 +47,11 @@ export default function CategoryDetailsSection({
               fileInputRef.current?.click();
             }
           }}
-          className="relative w-full md:w-36 h-36 rounded-2xl border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary-400 dark:hover:border-accent-500/50 bg-slate-50 dark:bg-darksurface2/50 flex flex-col items-center justify-center cursor-pointer transition-colors group shrink-0 overflow-hidden"
+          className={`relative w-full md:w-36 h-36 rounded-2xl border-2 border-dashed ${
+            imageError
+              ? "border-red-400"
+              : "border-slate-200 dark:border-white/10 hover:border-primary-400 dark:hover:border-accent-500/50"
+          } bg-slate-50 dark:bg-darksurface2/50 flex flex-col items-center justify-center cursor-pointer transition-colors group overflow-hidden`}
         >
           {image ? (
             <>
@@ -68,11 +83,13 @@ export default function CategoryDetailsSection({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
             className="hidden"
             aria-hidden="true"
             onChange={handleFileChange}
           />
+        </div>
+        {imageError && <p className="text-xs text-error mt-1">Image is required.</p>}
         </div>
 
         <div className="flex-1 space-y-4 w-full">

@@ -1,6 +1,6 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function PageToolbar({ onDiscard, onSave }) {
+export default function PageToolbar({ onDiscard }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
@@ -21,8 +21,7 @@ export default function PageToolbar({ onDiscard, onSave }) {
           Discard
         </button>
         <button
-          type="button"
-          onClick={onSave}
+          type="submit"
           className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors"
         >
           Save Category
