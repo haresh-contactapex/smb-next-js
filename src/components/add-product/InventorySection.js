@@ -1,6 +1,6 @@
 "use client";
 
-export default function InventorySection({ trackQuantity, sku, barcode, onFieldChange }) {
+export default function InventorySection({ trackQuantity, sku, skuError, skuInputRef, barcode, onFieldChange }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-4">Inventory</h2>
@@ -20,14 +20,16 @@ export default function InventorySection({ trackQuantity, sku, barcode, onFieldC
             SKU (Stock Keeping Unit)
           </label>
           <input
+            ref={skuInputRef}
             id="f-sku"
             type="text"
             placeholder="e.g. BAG-BLK-001"
             aria-label="SKU"
             value={sku}
             onChange={(e) => onFieldChange("sku", e.target.value)}
-            className="field-input system-field"
+            className={`field-input system-field${skuError ? " border-red-400" : ""}`}
           />
+          {skuError && <p className="text-xs text-error mt-1">SKU is required.</p>}
         </div>
         <div>
           <label className="field-label" htmlFor="f-barcode">

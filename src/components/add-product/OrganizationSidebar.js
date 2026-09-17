@@ -5,6 +5,8 @@ import { TAXONOMY, COLLECTIONS } from "@/data/addProductData";
 
 export default function OrganizationSidebar({
   category,
+  categoryError,
+  categoryInputRef,
   productType,
   collections,
   tags,
@@ -78,6 +80,7 @@ export default function OrganizationSidebar({
             Product category
           </label>
           <input
+            ref={categoryInputRef}
             id="f-category"
             type="text"
             placeholder="Search category"
@@ -91,8 +94,9 @@ export default function OrganizationSidebar({
               setCategoryOpen(true);
             }}
             onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
-            className="field-input"
+            className={`field-input${categoryError ? " border-red-400" : ""}`}
           />
+          {categoryError && <p className="text-xs text-error mt-1">Category is required.</p>}
           {categoryOpen && categoryMatches.length > 0 && (
             <div className="suggest-panel bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-xl shadow-popover custom-scroll py-1">
               {categoryMatches.map((path) => {

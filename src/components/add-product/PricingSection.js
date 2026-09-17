@@ -1,8 +1,16 @@
 "use client";
 
-import { toNumber, fmtMoney } from "./helpers";
+import { toNumber, fmtMoney, sanitizeDecimal } from "./helpers";
 
-export default function PricingSection({ price, compareAtPrice, chargeTax, costPerItem, onFieldChange }) {
+export default function PricingSection({
+  price,
+  priceError,
+  priceInputRef,
+  compareAtPrice,
+  chargeTax,
+  costPerItem,
+  onFieldChange,
+}) {
   const priceNum = toNumber(price);
   const costNum = toNumber(costPerItem);
   const profit = priceNum - costNum;
@@ -20,16 +28,18 @@ export default function PricingSection({ price, compareAtPrice, chargeTax, costP
           <div className="prefix-wrap">
             <span className="prefix-sign">$</span>
             <input
+              ref={priceInputRef}
               id="f-price"
               type="text"
               inputMode="decimal"
               placeholder="0.00"
               aria-label="Price"
               value={price}
-              onChange={(e) => onFieldChange("price", e.target.value)}
-              className="field-input system-field"
+              onChange={(e) => onFieldChange("price", sanitizeDecimal(e.target.value))}
+              className={`field-input system-field${priceError ? " border-red-400" : ""}`}
             />
           </div>
+          {priceError && <p className="text-xs text-error mt-1">Enter a price greater than $0.</p>}
         </div>
         <div>
           <label className="field-label" htmlFor="f-compare">
@@ -44,7 +54,7 @@ export default function PricingSection({ price, compareAtPrice, chargeTax, costP
               placeholder="0.00"
               aria-label="Compare-at price"
               value={compareAtPrice}
-              onChange={(e) => onFieldChange("compare_at_price", e.target.value)}
+              onChange={(e) => onFieldChange("compare_at_price", sanitizeDecimal(e.target.value))}
               className="field-input system-field"
             />
           </div>
@@ -78,7 +88,7 @@ export default function PricingSection({ price, compareAtPrice, chargeTax, costP
                 placeholder="0.00"
                 aria-label="Cost per item"
                 value={costPerItem}
-                onChange={(e) => onFieldChange("cost_per_item", e.target.value)}
+                onChange={(e) => onFieldChange("cost_per_item", sanitizeDecimal(e.target.value))}
                 className="field-input system-field"
               />
             </div>

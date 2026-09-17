@@ -10,6 +10,7 @@ export default function ProductDetailsSection({
   title,
   titleError,
   titleInputRef,
+  descriptionError,
   editorRef,
   onTitleChange,
   onBodyHtmlChange,
@@ -42,7 +43,11 @@ export default function ProductDetailsSection({
 
       <div>
         <label className="field-label">Description</label>
-        <div className="border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden">
+        <div
+          className={`border rounded-xl overflow-hidden${
+            descriptionError ? " border-red-400" : " border-slate-200 dark:border-white/10"
+          }`}
+        >
           <div className="flex items-center gap-1 border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-darksurface2/50 px-2 py-1.5">
             {TOOLBAR_BUTTONS.map((btn) => (
               <button
@@ -101,6 +106,7 @@ export default function ProductDetailsSection({
             className="rte-editor px-3 py-2.5 text-sm leading-relaxed text-slate-800 dark:text-white bg-white dark:bg-darksurface [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
           />
         </div>
+        {descriptionError && <p className="text-xs text-error mt-1">Description is required.</p>}
       </div>
     </section>
   );

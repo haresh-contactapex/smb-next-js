@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 
-export default function MediaSection({ media, onAddFiles, onRemoveMedia }) {
+export default function MediaSection({ media, mediaError, sectionRef, onAddFiles, onRemoveMedia }) {
   const fileInputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -29,7 +29,7 @@ export default function MediaSection({ media, onAddFiles, onRemoveMedia }) {
   }
 
   return (
-    <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
+    <section ref={sectionRef} className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Media</h2>
 
       <div
@@ -47,7 +47,9 @@ export default function MediaSection({ media, onAddFiles, onRemoveMedia }) {
         onDragOver={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`media-dropzone${dragOver ? " drag-over" : ""} border-2 border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-slate-50 dark:bg-darksurface2/40 hover:border-primary-400 dark:hover:border-accent-500/50`}
+        className={`media-dropzone${dragOver ? " drag-over" : ""} border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-slate-50 dark:bg-darksurface2/40 hover:border-primary-400 dark:hover:border-accent-500/50${
+          mediaError ? " border-red-400" : " border-slate-200 dark:border-white/10"
+        }`}
       >
         <Icon name="upload-cloud" className="w-10 h-10 text-slate-400 mb-2" />
         <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
@@ -55,13 +57,13 @@ export default function MediaSection({ media, onAddFiles, onRemoveMedia }) {
         </p>
         <p className="text-xs text-slate-400 mt-1">
           or <span className="text-primary-600 dark:text-accent-400 font-semibold underline">browse files</span> —
-          accepts .jpg, .png, .mp4, .glb, .usdz
+          images (.jpg, .jpeg, .png, .webp, up to 5MB), video, .glb, .usdz
         </p>
         <input
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,video/*,.glb,.usdz"
+          accept="image/jpeg,image/png,image/webp,video/*,.glb,.usdz"
           className="hidden"
           aria-hidden="true"
           onChange={(e) => {
@@ -114,8 +116,10 @@ export default function MediaSection({ media, onAddFiles, onRemoveMedia }) {
         ))}
       </div>
       {media.length === 0 && (
-        <p className="text-xs text-slate-400 mt-3">
-          No media yet. Uploaded images, videos, and 3D models will appear here in a grid.
+        <p className={`text-xs mt-3${mediaError ? " text-error" : " text-slate-400"}`}>
+          {mediaError
+            ? "Add at least one image, video, or 3D model before saving."
+            : "No media yet. Uploaded images, videos, and 3D models will appear here in a grid."}
         </p>
       )}
     </section>

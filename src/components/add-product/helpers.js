@@ -16,6 +16,17 @@ export function toNumber(str) {
   return isNaN(n) ? 0 : n;
 }
 
+export function sanitizeDecimal(value) {
+  const digitsAndDots = String(value).replace(/[^0-9.]/g, "");
+  const firstDot = digitsAndDots.indexOf(".");
+  if (firstDot === -1) return digitsAndDots;
+  return digitsAndDots.slice(0, firstDot + 1) + digitsAndDots.slice(firstDot + 1).replace(/\./g, "");
+}
+
+export function sanitizeInteger(value) {
+  return String(value).replace(/[^0-9]/g, "");
+}
+
 export function fmtMoney(n) {
   return "$" + n.toFixed(2);
 }

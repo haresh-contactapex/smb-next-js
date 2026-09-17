@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 import { WEIGHT_UNITS } from "@/data/addProductData";
-import { slugify } from "./helpers";
+import { slugify, sanitizeDecimal, sanitizeInteger } from "./helpers";
 
 function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue }) {
   const [valueInput, setValueInput] = useState("");
@@ -55,7 +55,14 @@ function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue }
   );
 }
 
-export default function VariantsSection({ options, variants, onOptionsChange, onVariantsChange }) {
+export default function VariantsSection({
+  options,
+  variants,
+  variantErrors,
+  sectionRef,
+  onOptionsChange,
+  onVariantsChange,
+}) {
   const [bulkPrice, setBulkPrice] = useState("");
   const [bulkQty, setBulkQty] = useState("");
 
@@ -107,9 +114,13 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
   }
 
   const hasOptions = options.length > 0;
+  const hasVariantErrors = variantErrors?.some((err) => err.price || err.quantity);
 
   return (
-    <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
+    <section
+      ref={sectionRef}
+      className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5"
+    >
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Variants</h2>
 
       {!hasOptions && (
@@ -153,7 +164,7 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
                 <input
                   type="text"
                   value={bulkPrice}
-                  onChange={(e) => setBulkPrice(e.target.value)}
+                  onChange={(e) => setBulkPrice(sanitizeDecimal(e.target.value))}
                   placeholder="Price"
                   aria-label="Bulk price"
                   className="w-20 h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
@@ -161,7 +172,7 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
                 <input
                   type="text"
                   value={bulkQty}
-                  onChange={(e) => setBulkQty(e.target.value)}
+                  onChange={(e) => setBulkQty(sanitizeInteger(e.target.value))}
                   placeholder="Qty"
                   aria-label="Bulk quantity"
                   className="w-16 h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
@@ -191,6 +202,13 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
                   {variants.map((v, i) => {
                     const label = Object.values(v.options).join(" / ") || "Default";
+                    const rowError = variantErrors?.[i];
+                    const cellClass = (invalid) =>
+                      `variant-input w-full h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white${
+                        invalid
+                          ? " border-red-400"
+                          : " border-transparent focus:border-primary-400 dark:focus:border-accent-500"
+                      }`;
                     return (
                       <tr key={v.id}>
                         <td className="py-2 px-1 font-medium text-slate-700 dark:text-slate-200">{label}</td>
@@ -198,18 +216,20 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
                           <input
                             type="text"
                             value={v.price}
-                            onChange={(e) => updateVariantField(i, "price", e.target.value)}
+                            onChange={(e) => updateVariantField(i, "price", sanitizeDecimal(e.target.value))}
                             placeholder="0.00"
-                            className="variant-input w-full h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
+                            aria-label={`${label} price`}
+                            className={cellClass(rowError?.price)}
                           />
                         </td>
                         <td className="py-2 px-1">
                           <input
                             type="text"
                             value={v.compare_at_price}
-                            onChange={(e) => updateVariantField(i, "compare_at_price", e.target.value)}
+                            onChange={(e) => updateVariantField(i, "compare_at_price", sanitizeDecimal(e.target.value))}
                             placeholder="—"
-                            className="variant-input w-full h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
+                            aria-label={`${label} compare-at price`}
+                            className={cellClass(false)}
                           />
                         </td>
                         <td className="py-2 px-1">
@@ -217,15 +237,17 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
                             type="text"
                             value={v.sku}
                             onChange={(e) => updateVariantField(i, "sku", e.target.value)}
-                            className="variant-input w-full h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
+                            aria-label={`${label} SKU`}
+                            className={cellClass(false)}
                           />
                         </td>
                         <td className="py-2 px-1">
                           <input
                             type="text"
                             value={v.inventory_quantity}
-                            onChange={(e) => updateVariantField(i, "inventory_quantity", e.target.value)}
-                            className="variant-input w-full h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
+                            onChange={(e) => updateVariantField(i, "inventory_quantity", sanitizeInteger(e.target.value))}
+                            aria-label={`${label} quantity`}
+                            className={cellClass(rowError?.quantity)}
                           />
                         </td>
                         <td className="py-2 px-1 text-center">
@@ -241,7 +263,7 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
                             <input
                               type="text"
                               value={v.weight}
-                              onChange={(e) => updateVariantField(i, "weight", e.target.value)}
+                              onChange={(e) => updateVariantField(i, "weight", sanitizeDecimal(e.target.value))}
                               placeholder="0.0"
                               className="variant-input w-16 h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
                             />
@@ -264,6 +286,9 @@ export default function VariantsSection({ options, variants, onOptionsChange, on
                 </tbody>
               </table>
             </div>
+            {hasVariantErrors && (
+              <p className="text-xs text-error mt-2">Add a price and quantity for every variant.</p>
+            )}
           </div>
         </div>
       )}

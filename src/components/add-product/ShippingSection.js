@@ -2,6 +2,7 @@
 
 import Icon from "@/components/admin-panel/Icon";
 import { WEIGHT_UNITS } from "@/data/addProductData";
+import { sanitizeDecimal } from "./helpers";
 
 export default function ShippingSection({ physicalProduct, weight, weightUnit, hsCode, onFieldChange }) {
   return (
@@ -31,7 +32,7 @@ export default function ShippingSection({ physicalProduct, weight, weightUnit, h
                 placeholder="0.0"
                 aria-label="Weight"
                 value={weight}
-                onChange={(e) => onFieldChange("weight", e.target.value)}
+                onChange={(e) => onFieldChange("weight", sanitizeDecimal(e.target.value))}
                 className="field-input system-field flex-1"
               />
               <div className="relative w-24 shrink-0">

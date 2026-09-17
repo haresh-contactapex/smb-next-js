@@ -1,4 +1,4 @@
-export default function PageToolbar({ onLoadSample, onDiscard, onSave }) {
+export default function PageToolbar({ onLoadSample, onDiscard }) {
   return (
     <div className="sticky top-16 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3.5 bg-slate-50/90 dark:bg-darkbg/90 backdrop-blur-sm border-b border-slate-200/70 dark:border-white/5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
@@ -25,8 +25,7 @@ export default function PageToolbar({ onLoadSample, onDiscard, onSave }) {
           Discard
         </button>
         <button
-          type="button"
-          onClick={onSave}
+          type="submit"
           className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors"
         >
           Save product
