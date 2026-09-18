@@ -9,9 +9,11 @@ const THEME_TEMPLATES = [
 export default function HierarchySidebar({
   parentCategory,
   themeTemplate,
+  visible,
   categoryOptions,
   onParentChange,
   onThemeChange,
+  onVisibleChange,
 }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
@@ -30,9 +32,9 @@ export default function HierarchySidebar({
               className="field-input appearance-none pr-8 cursor-pointer"
             >
               <option value="none">None (Main Category)</option>
-              {categoryOptions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
+              {categoryOptions.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.parentPath ? `${cat.parentPath} > ${cat.name}` : cat.name}
                 </option>
               ))}
             </select>
@@ -67,6 +69,11 @@ export default function HierarchySidebar({
             </span>
           </div>
         </div>
+
+        <label className="toggle-row text-sm text-slate-700 dark:text-slate-200">
+          <input type="checkbox" checked={visible} onChange={(e) => onVisibleChange(e.target.checked)} />
+          Visible in storefront
+        </label>
       </div>
     </section>
   );

@@ -25,8 +25,56 @@ export const DEFAULT_CATEGORY = {
   image: null,
   parentCategory: "none",
   themeTemplate: "default",
+  visible: true,
   seoTitle: "",
   seoDescription: "",
   handle: "",
   handleTouched: false,
 };
+
+// Excludes the category itself and any of its descendants from a parent
+// picker, so a category can't be reparented under its own subtree.
+export function excludeDescendants(categories, categoryId) {
+  if (!categoryId) return categories;
+  const excluded = new Set([categoryId]);
+  let added = true;
+  while (added) {
+    added = false;
+    for (const cat of categories) {
+      if (excluded.has(cat.parentId) && !excluded.has(cat.id)) {
+        excluded.add(cat.id);
+        added = true;
+      }
+    }
+  }
+  return categories.filter((cat) => !excluded.has(cat.id));
+}
+
+export function buildCategoryFromData(data) {
+  return {
+    title: data.name || "",
+    description: data.description || "",
+    image: data.imageUrl ? { url: data.imageUrl, name: "" } : null,
+    parentCategory: data.parentId || "none",
+    themeTemplate: data.themeTemplate || "default",
+    visible: data.visible ?? true,
+    seoTitle: data.seoTitle || "",
+    seoDescription: data.seoDescription || "",
+    handle: data.slug || "",
+    handleTouched: true,
+  };
+}
+
+export function assembleCategory(category) {
+  return {
+    name: category.title.trim(),
+    slug: category.handle.trim() || slugify(category.title),
+    description: category.description || "",
+    imageUrl: category.image?.url || null,
+    parentId: category.parentCategory === "none" ? null : category.parentCategory,
+    themeTemplate: category.themeTemplate,
+    visible: category.visible,
+    seoTitle: category.seoTitle || "",
+    seoDescription: category.seoDescription || "",
+  };
+}

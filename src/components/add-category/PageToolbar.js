@@ -1,6 +1,6 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function PageToolbar({ onDiscard }) {
+export default function PageToolbar({ isEdit, saving, onDiscard }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
@@ -8,9 +8,13 @@ export default function PageToolbar({ onDiscard }) {
           <Icon name="tag" className="w-4 h-4" />
           <span>Categories</span>
           <span>/</span>
-          <span className="font-semibold text-slate-800 dark:text-white">Add Category</span>
+          <span className="font-semibold text-slate-800 dark:text-white">
+            {isEdit ? "Edit Category" : "Add Category"}
+          </span>
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">Add Category</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">
+          {isEdit ? "Edit Category" : "Add Category"}
+        </h1>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <button
@@ -22,9 +26,10 @@ export default function PageToolbar({ onDiscard }) {
         </button>
         <button
           type="submit"
-          className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors"
+          disabled={saving}
+          className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Save Category
+          {saving ? "Saving…" : isEdit ? "Update Category" : "Save Category"}
         </button>
       </div>
     </div>

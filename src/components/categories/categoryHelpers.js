@@ -1,18 +1,9 @@
-export function computeCategoryCounts(categories, products) {
-  const directCounts = new Map(
-    categories.map((cat) => [cat.id, products.filter((p) => p.category === cat.name).length])
-  );
+const ICON_COLORS = ["primary", "accent", "success", "info", "neutral"];
 
-  const isParent = (cat) =>
-    categories.some((c) => c.parentPath === cat.name || c.parentPath?.startsWith(`${cat.name} >`));
-
-  return categories.map((cat) => {
-    if (!isParent(cat)) return { ...cat, productCount: directCounts.get(cat.id) };
-    const productCount = categories
-      .filter((c) => c.parentPath === cat.name || c.parentPath?.startsWith(`${cat.name} >`))
-      .reduce((sum, c) => sum + directCounts.get(c.id), 0);
-    return { ...cat, productCount };
-  });
+export function pickIconColor(id) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0;
+  return ICON_COLORS[hash % ICON_COLORS.length];
 }
 
 export function computeCategoryStats(categoriesWithCounts) {

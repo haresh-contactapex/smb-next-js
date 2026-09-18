@@ -1,12 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import CategoriesFilters from "./CategoriesFilters";
 import CategoriesTable from "./CategoriesTable";
 
-export default function CategoriesListing({ categories }) {
+export default function CategoriesListing({ categories: initialCategories }) {
+  const router = useRouter();
+  const [categories, setCategories] = useState(initialCategories);
   const [search, setSearch] = useState("");
   const [showHiddenOnly, setShowHiddenOnly] = useState(false);
+
+  async function handleDelete(category) {
+    if (!window.confirm(`Delete "${category.name}"? This can't be undone.`)) return;
+    try {
+      const res = await fetch(`/api/categories/${category.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to delete category");
+      setCategories((prev) => prev.filter((c) => c.id !== category.id));
+      router.refresh();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -28,7 +44,7 @@ export default function CategoriesListing({ categories }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
-        <CategoriesTable categories={filtered} />
+        <CategoriesTable categories={filtered} onDelete={handleDelete} />
       </section>
     </>
   );

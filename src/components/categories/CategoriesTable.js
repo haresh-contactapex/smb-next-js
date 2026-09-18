@@ -1,8 +1,9 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { VISIBILITY_BADGE_CLASSES } from "./categoryHelpers";
 
-export default function CategoriesTable({ categories }) {
+export default function CategoriesTable({ categories, onDelete }) {
   if (categories.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No categories match your filters.</div>;
   }
@@ -55,12 +56,20 @@ export default function CategoriesTable({ categories }) {
                   >
                     <Icon name="eye" className="w-4 h-4" />
                   </button>
-                  <button
-                    type="button"
+                  <Link
+                    href={`/edit-category/${category.id}`}
                     title="Edit category"
                     className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                   >
                     <Icon name="edit-2" className="w-4 h-4" />
+                  </Link>
+                  <button
+                    type="button"
+                    title="Delete category"
+                    onClick={() => onDelete?.(category)}
+                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                  >
+                    <Icon name="trash-2" className="w-4 h-4" />
                   </button>
                 </div>
               </td>

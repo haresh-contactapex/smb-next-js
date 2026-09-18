@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { categories } from "@/data/categoriesData";
-import { slugify, DEFAULT_CATEGORY } from "./helpers";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { slugify, DEFAULT_CATEGORY, buildCategoryFromData, assembleCategory, excludeDescendants } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import CategoryDetailsSection from "./CategoryDetailsSection";
 import CollectionItemsSection from "./CollectionItemsSection";
@@ -11,16 +11,41 @@ import HierarchySidebar from "./HierarchySidebar";
 import ProductRulesSidebar from "./ProductRulesSidebar";
 import Toast from "./Toast";
 
-const CATEGORY_OPTIONS = categories.map((cat) => cat.name).sort();
-
-export default function AddCategoryForm() {
+export default function AddCategoryForm({ categoryId, categories = [] }) {
+  const isEdit = Boolean(categoryId);
+  const router = useRouter();
   const [category, setCategory] = useState(DEFAULT_CATEGORY);
+  const [loading, setLoading] = useState(isEdit);
+  const [saving, setSaving] = useState(false);
   const [titleError, setTitleError] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const titleInputRef = useRef(null);
   const toastTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (!categoryId) return;
+    let cancelled = false;
+    fetch(`/api/categories/${categoryId}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (!json.success) throw new Error(json.error || "Failed to load category");
+        setCategory(buildCategoryFromData(json.data));
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoading(false);
+        showToast(error.message, "error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId]);
+
+  const categoryOptions = excludeDescendants(categories, categoryId);
 
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
@@ -86,10 +111,35 @@ export default function AddCategoryForm() {
       return;
     }
 
-    showToast("Category saved");
+    persistCategory();
+  }
+
+  async function persistCategory() {
+    setSaving(true);
+    try {
+      const res = await fetch(isEdit ? `/api/categories/${categoryId}` : "/api/categories", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(assembleCategory(category)),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to save category");
+
+      showToast(isEdit ? "Category updated" : "Category saved");
+      router.push("/categories");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleDiscard() {
+    if (isEdit) {
+      if (!window.confirm("Discard changes and go back to Categories?")) return;
+      router.push("/categories");
+      return;
+    }
     if (!window.confirm("Discard all changes and start over?")) return;
     setCategory(DEFAULT_CATEGORY);
     setTitleError(false);
@@ -101,9 +151,13 @@ export default function AddCategoryForm() {
     category.seoDescription ||
     "Add a meta description to see how your category listing will look in search engine results.";
 
+  if (loading) {
+    return <div className="py-16 text-center text-sm text-slate-400">Loading category…</div>;
+  }
+
   return (
     <form onSubmit={handleSave}>
-      <PageToolbar onDiscard={handleDiscard} />
+      <PageToolbar isEdit={isEdit} saving={saving} onDiscard={handleDiscard} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
@@ -139,9 +193,11 @@ export default function AddCategoryForm() {
           <HierarchySidebar
             parentCategory={category.parentCategory}
             themeTemplate={category.themeTemplate}
-            categoryOptions={CATEGORY_OPTIONS}
+            visible={category.visible}
+            categoryOptions={categoryOptions}
             onParentChange={(value) => setField("parentCategory", value)}
             onThemeChange={(value) => setField("themeTemplate", value)}
+            onVisibleChange={(value) => setField("visible", value)}
           />
 
           <ProductRulesSidebar />
