@@ -1,6 +1,6 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function PageToolbar({ onDiscard, onSave }) {
+export default function PageToolbar({ isEdit, saving, onDiscard }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
@@ -8,9 +8,13 @@ export default function PageToolbar({ onDiscard, onSave }) {
           <Icon name="tag" className="w-4 h-4" />
           <span>Coupons</span>
           <span>/</span>
-          <span className="font-semibold text-slate-800 dark:text-white">Create Coupon</span>
+          <span className="font-semibold text-slate-800 dark:text-white">
+            {isEdit ? "Edit Coupon" : "Create Coupon"}
+          </span>
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">Create Coupon</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">
+          {isEdit ? "Edit Coupon" : "Create Coupon"}
+        </h1>
       </div>
       <div className="flex items-center gap-2 shrink-0">
         <button
@@ -21,11 +25,11 @@ export default function PageToolbar({ onDiscard, onSave }) {
           Discard
         </button>
         <button
-          type="button"
-          onClick={onSave}
-          className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors"
+          type="submit"
+          disabled={saving}
+          className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Save Coupon
+          {saving ? "Saving…" : isEdit ? "Update Coupon" : "Save Coupon"}
         </button>
       </div>
     </div>

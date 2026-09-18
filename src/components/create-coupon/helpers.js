@@ -29,5 +29,41 @@ export const DEFAULT_COUPON = {
   endDateEnabled: false,
   endDate: "",
   appliesTo: "all",
-  category: "",
+  categoryId: "",
 };
+
+export function buildCouponFromData(data) {
+  return {
+    code: data.code || "",
+    description: data.description || "",
+    type: data.type || "percentage",
+    value: data.value ?? "",
+    minPurchase: data.minPurchase ?? "",
+    usageLimitEnabled: data.usageLimit !== null && data.usageLimit !== undefined,
+    usageLimit: data.usageLimit ?? "",
+    onePerCustomer: data.onePerCustomer ?? true,
+    status: data.status || "ACTIVE",
+    startDate: data.startDate || "",
+    endDateEnabled: Boolean(data.endDate),
+    endDate: data.endDate || "",
+    appliesTo: data.appliesTo === "CATEGORY" ? "category" : "all",
+    categoryId: data.categoryId || "",
+  };
+}
+
+export function assembleCoupon(coupon) {
+  return {
+    code: formatCode(coupon.code),
+    description: coupon.description || "",
+    type: coupon.type,
+    value: coupon.type === "free_shipping" ? "" : coupon.value,
+    minPurchase: coupon.minPurchase,
+    usageLimit: coupon.usageLimitEnabled ? coupon.usageLimit : "",
+    onePerCustomer: coupon.onePerCustomer,
+    status: coupon.status,
+    startDate: coupon.startDate || "",
+    endDate: coupon.endDateEnabled ? coupon.endDate : "",
+    appliesTo: coupon.appliesTo === "category" ? "CATEGORY" : "ALL",
+    categoryId: coupon.appliesTo === "category" ? coupon.categoryId : "",
+  };
+}

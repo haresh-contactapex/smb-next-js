@@ -1,17 +1,33 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import CouponsFilters from "./CouponsFilters";
 import CouponsTable from "./CouponsTable";
 import Pagination from "./Pagination";
 
 const PAGE_SIZE = 8;
 
-export default function CouponsListing({ coupons }) {
+export default function CouponsListing({ coupons: initialCoupons }) {
+  const router = useRouter();
+  const [coupons, setCoupons] = useState(initialCoupons);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [type, setType] = useState("");
   const [page, setPage] = useState(1);
+
+  async function handleDelete(coupon) {
+    if (!window.confirm(`Delete coupon "${coupon.code}"? This can't be undone.`)) return;
+    try {
+      const res = await fetch(`/api/coupons/${coupon.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to delete coupon");
+      setCoupons((prev) => prev.filter((c) => c.id !== coupon.id));
+      router.refresh();
+    } catch (error) {
+      window.alert(error.message);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -58,7 +74,7 @@ export default function CouponsListing({ coupons }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
-        <CouponsTable coupons={pageItems} />
+        <CouponsTable coupons={pageItems} onDelete={handleDelete} />
         <Pagination
           page={currentPage}
           pageCount={pageCount}

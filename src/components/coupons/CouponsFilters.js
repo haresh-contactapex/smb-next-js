@@ -1,7 +1,7 @@
 import Icon from "@/components/admin-panel/Icon";
-import { TYPE_LABELS } from "./couponHelpers";
+import { TYPE_LABELS, STATUS_LABELS } from "./couponHelpers";
 
-const STATUS_OPTIONS = ["All statuses", "Active", "Scheduled", "Draft", "Expired"];
+const STATUS_OPTIONS = ["All statuses", ...Object.keys(STATUS_LABELS)];
 const TYPE_OPTIONS = ["All types", ...Object.keys(TYPE_LABELS)];
 
 export default function CouponsFilters({
@@ -41,7 +41,7 @@ export default function CouponsFilters({
           >
             {STATUS_OPTIONS.map((opt) => (
               <option key={opt} value={opt === "All statuses" ? "" : opt}>
-                {opt}
+                {opt === "All statuses" ? opt : STATUS_LABELS[opt]}
               </option>
             ))}
           </select>

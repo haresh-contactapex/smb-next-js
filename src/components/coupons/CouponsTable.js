@@ -1,8 +1,15 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
-import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
-import { formatINR, formatCouponValue, formatDateRange, STATUS_BADGE_CLASSES, TYPE_ICONS } from "./couponHelpers";
+import {
+  formatINR,
+  formatCouponValue,
+  formatDateRange,
+  STATUS_BADGE_CLASSES,
+  STATUS_LABELS,
+  TYPE_ICONS,
+} from "./couponHelpers";
 
-export default function CouponsTable({ coupons }) {
+export default function CouponsTable({ coupons, onDelete }) {
   if (coupons.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No coupons match your filters.</div>;
   }
@@ -52,7 +59,7 @@ export default function CouponsTable({ coupons }) {
                 <span
                   className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${STATUS_BADGE_CLASSES[coupon.status]}`}
                 >
-                  {coupon.status}
+                  {STATUS_LABELS[coupon.status] || coupon.status}
                 </span>
               </td>
               <td className="py-3 px-1 text-right">
@@ -64,12 +71,20 @@ export default function CouponsTable({ coupons }) {
                   >
                     <Icon name="eye" className="w-4 h-4" />
                   </button>
-                  <button
-                    type="button"
+                  <Link
+                    href={`/edit-coupon/${coupon.id}`}
                     title="Edit coupon"
                     className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                   >
                     <Icon name="edit-2" className="w-4 h-4" />
+                  </Link>
+                  <button
+                    type="button"
+                    title="Delete coupon"
+                    onClick={() => onDelete?.(coupon)}
+                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                  >
+                    <Icon name="trash-2" className="w-4 h-4" />
                   </button>
                 </div>
               </td>

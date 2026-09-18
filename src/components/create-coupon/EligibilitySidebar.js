@@ -1,6 +1,6 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function EligibilitySidebar({ appliesTo, category, categoryOptions, onFieldChange }) {
+export default function EligibilitySidebar({ appliesTo, categoryId, categoryOptions, onFieldChange }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-1">Eligibility</h2>
@@ -25,15 +25,15 @@ export default function EligibilitySidebar({ appliesTo, category, categoryOption
         {appliesTo === "category" && (
           <div className="relative">
             <select
-              value={category}
-              onChange={(e) => onFieldChange("category", e.target.value)}
+              value={categoryId}
+              onChange={(e) => onFieldChange("categoryId", e.target.value)}
               aria-label="Category"
               className="field-input appearance-none pr-8 cursor-pointer"
             >
               <option value="">Select a category…</option>
-              {categoryOptions.map((name) => (
-                <option key={name} value={name}>
-                  {name}
+              {categoryOptions.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
                 </option>
               ))}
             </select>

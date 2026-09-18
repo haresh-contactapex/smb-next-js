@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:migrate": "node scripts/migrate.mjs"
+    "db:migrate": "node scripts/migrate.mjs",
+    "db:migrate:coupons": "node scripts/migrate.mjs docs/vouchers-coupons/coupons-table-only.sql"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

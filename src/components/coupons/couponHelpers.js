@@ -24,17 +24,24 @@ export function formatDateRange(startDate, endDate) {
 export function computeCouponStats(coupons) {
   return {
     total: coupons.length,
-    active: coupons.filter((c) => c.status === "Active").length,
-    scheduled: coupons.filter((c) => c.status === "Scheduled").length,
-    expired: coupons.filter((c) => c.status === "Expired").length,
+    active: coupons.filter((c) => c.status === "ACTIVE").length,
+    scheduled: coupons.filter((c) => c.status === "SCHEDULED").length,
+    expired: coupons.filter((c) => c.status === "EXPIRED").length,
   };
 }
 
+export const STATUS_LABELS = {
+  ACTIVE: "Active",
+  SCHEDULED: "Scheduled",
+  DRAFT: "Draft",
+  EXPIRED: "Expired",
+};
+
 export const STATUS_BADGE_CLASSES = {
-  Active: "bg-success/10 text-success",
-  Scheduled: "bg-info/10 text-info",
-  Draft: "bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-300",
-  Expired: "bg-error/10 text-error",
+  ACTIVE: "bg-success/10 text-success",
+  SCHEDULED: "bg-info/10 text-info",
+  DRAFT: "bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-300",
+  EXPIRED: "bg-error/10 text-error",
 };
 
 export const TYPE_LABELS = {
