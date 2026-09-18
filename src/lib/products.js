@@ -1,4 +1,54 @@
-import { sql } from "./db";
+import { sql, sqlQuery } from "./db";
+
+// Inserts many rows in a single round trip (one INSERT ... VALUES (...),(...),...)
+// instead of one query per row — the sequential-await version of this loop is
+// what made saving a product with dozens of variants take a minute or more,
+// which in turn is what made an impatient re-click look necessary.
+async function batchInsert(table, columns, rows, returning) {
+  if (!rows.length) return [];
+  const valueGroups = [];
+  const params = [];
+  let paramIndex = 1;
+  for (const row of rows) {
+    const placeholders = row.map(() => `$${paramIndex++}`);
+    valueGroups.push(`(${placeholders.join(", ")})`);
+    params.push(...row);
+  }
+  const text = `INSERT INTO ${table} (${columns.join(", ")}) VALUES ${valueGroups.join(", ")}${
+    returning ? ` RETURNING ${returning}` : ""
+  }`;
+  return sqlQuery(text, params);
+}
+
+const MAX_SKU_LENGTH = 10;
+
+// product_variants.sku is unique *across every product*, not just within one —
+// so two products with similar auto-generated codes (e.g. same color/size
+// options) can collide even though each product's own variants are internally
+// unique. Reassign any SKU that's already taken by another product's variant.
+async function dedupeSkusGlobally(variants) {
+  const candidates = [...new Set(variants.map((v) => v.sku).filter(Boolean))];
+  const taken = new Set(
+    candidates.length ? (await sql`SELECT sku FROM product_variants WHERE sku = ANY(${candidates})`).map((r) => r.sku) : []
+  );
+  if (taken.size === 0) return variants;
+
+  return variants.map((variant) => {
+    if (!variant.sku || !taken.has(variant.sku)) {
+      if (variant.sku) taken.add(variant.sku);
+      return variant;
+    }
+    let sku = variant.sku;
+    let attempt = 0;
+    do {
+      attempt += 1;
+      const suffix = Math.random().toString(36).slice(2, 2 + Math.min(attempt + 1, 4)).toUpperCase();
+      sku = variant.sku.slice(0, MAX_SKU_LENGTH - suffix.length) + suffix;
+    } while (taken.has(sku) && attempt < 10);
+    taken.add(sku);
+    return { ...variant, sku };
+  });
+}
 
 function slugify(str) {
   return String(str)
@@ -226,67 +276,109 @@ async function replaceChildRows(productId, payload) {
   await sql`DELETE FROM product_collections WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_variants WHERE product_id = ${productId}`;
 
+  const options = payload.options || [];
   const optionIdByName = {};
-  for (let i = 0; i < (payload.options || []).length; i++) {
-    const option = payload.options[i];
-    const [row] = await sql`
-      INSERT INTO product_options (product_id, name, position) VALUES (${productId}, ${option.name}, ${i})
-      RETURNING id
-    `;
-    optionIdByName[option.name] = row.id;
 
-    const valueIdByValue = {};
-    for (let j = 0; j < option.values.length; j++) {
-      const [valueRow] = await sql`
-        INSERT INTO product_option_values (option_id, value, position)
-        VALUES (${row.id}, ${option.values[j]}, ${j})
-        RETURNING id
-      `;
-      valueIdByValue[option.values[j]] = valueRow.id;
+  if (options.length) {
+    const optionRows = await batchInsert(
+      "product_options",
+      ["product_id", "name", "position"],
+      options.map((o, i) => [productId, o.name, i]),
+      "id"
+    );
+    options.forEach((o, i) => {
+      optionIdByName[o.name] = { id: optionRows[i].id, valueIdByValue: {} };
+    });
+
+    const valueRowsMeta = [];
+    const valueTuples = [];
+    options.forEach((o) => {
+      o.values.forEach((value, j) => {
+        valueTuples.push([optionIdByName[o.name].id, value, j]);
+        valueRowsMeta.push({ optionName: o.name, value });
+      });
+    });
+
+    if (valueTuples.length) {
+      const valueRows = await batchInsert(
+        "product_option_values",
+        ["option_id", "value", "position"],
+        valueTuples,
+        "id"
+      );
+      valueRows.forEach((row, i) => {
+        const { optionName, value } = valueRowsMeta[i];
+        optionIdByName[optionName].valueIdByValue[value] = row.id;
+      });
     }
-    optionIdByName[option.name] = { id: row.id, valueIdByValue };
   }
 
-  for (const media of payload.media || []) {
-    await sql`
-      INSERT INTO product_media (product_id, type, url, name)
-      VALUES (${productId}, ${media.type}, ${media.url}, ${media.name || null})
-    `;
+  const media = payload.media || [];
+  if (media.length) {
+    await batchInsert(
+      "product_media",
+      ["product_id", "type", "url", "name"],
+      media.map((m) => [productId, m.type, m.url, m.name || null])
+    );
   }
 
   const tagIds = await upsertTags(payload.tags);
-  for (const tagId of tagIds) {
-    await sql`INSERT INTO product_tags (product_id, tag_id) VALUES (${productId}, ${tagId})`;
+  if (tagIds.length) {
+    await batchInsert(
+      "product_tags",
+      ["product_id", "tag_id"],
+      tagIds.map((tagId) => [productId, tagId])
+    );
   }
 
   const collectionIds = await upsertCollections(payload.collections);
-  for (const collectionId of collectionIds) {
-    await sql`INSERT INTO product_collections (product_id, collection_id) VALUES (${productId}, ${collectionId})`;
+  if (collectionIds.length) {
+    await batchInsert(
+      "product_collections",
+      ["product_id", "collection_id"],
+      collectionIds.map((collectionId) => [productId, collectionId])
+    );
   }
 
-  for (const variant of payload.variants || []) {
-    const [variantRow] = await sql`
-      INSERT INTO product_variants (
-        product_id, sku, price, compare_at_price, inventory_quantity,
-        inventory_management, weight, weight_unit
-      ) VALUES (
-        ${productId}, ${variant.sku || null}, ${variant.price || null},
-        ${variant.compare_at_price || null}, ${variant.inventory_quantity || 0},
-        ${variant.inventory_management}, ${variant.weight === "" ? null : variant.weight},
-        ${variant.weight_unit}
-      )
-      RETURNING id
-    `;
+  const variants = payload.variants || [];
+  if (variants.length) {
+    const dedupedVariants = await dedupeSkusGlobally(variants);
+    const variantRows = await batchInsert(
+      "product_variants",
+      [
+        "product_id",
+        "sku",
+        "price",
+        "compare_at_price",
+        "inventory_quantity",
+        "inventory_management",
+        "weight",
+        "weight_unit",
+      ],
+      dedupedVariants.map((v) => [
+        productId,
+        v.sku || null,
+        v.price || null,
+        v.compare_at_price || null,
+        v.inventory_quantity || 0,
+        v.inventory_management,
+        v.weight === "" ? null : v.weight,
+        v.weight_unit,
+      ]),
+      "id"
+    );
 
-    for (const [optionName, value] of Object.entries(variant.options || {})) {
-      const optionEntry = optionIdByName[optionName];
-      const valueId = optionEntry?.valueIdByValue?.[value];
-      if (valueId) {
-        await sql`
-          INSERT INTO variant_option_values (variant_id, option_value_id)
-          VALUES (${variantRow.id}, ${valueId})
-        `;
-      }
+    const linkTuples = [];
+    dedupedVariants.forEach((variant, i) => {
+      const variantId = variantRows[i].id;
+      Object.entries(variant.options || {}).forEach(([optionName, value]) => {
+        const valueId = optionIdByName[optionName]?.valueIdByValue?.[value];
+        if (valueId) linkTuples.push([variantId, valueId]);
+      });
+    });
+
+    if (linkTuples.length) {
+      await batchInsert("variant_option_values", ["variant_id", "option_value_id"], linkTuples);
     }
   }
 }
@@ -315,43 +407,71 @@ async function writeProductRow(id, payload, categoryId) {
   };
 
   if (id) {
-    await sql`
-      UPDATE products SET
-        title = ${values.title}, handle = ${values.handle}, description = ${values.description},
-        category_id = ${values.category_id}, product_type = ${values.product_type},
-        status = ${values.status}, price = ${values.price}, compare_at_price = ${values.compare_at_price},
-        cost_per_item = ${values.cost_per_item}, charge_tax = ${values.charge_tax},
-        track_quantity = ${values.track_quantity}, sku = ${values.sku}, barcode = ${values.barcode},
-        is_physical_product = ${values.is_physical_product}, weight = ${values.weight},
-        weight_unit = ${values.weight_unit}, hs_code = ${values.hs_code},
-        seo_title = ${values.seo_title}, seo_description = ${values.seo_description},
-        updated_at = now()
-      WHERE id = ${id}
-    `;
-    return id;
+    try {
+      await sql`
+        UPDATE products SET
+          title = ${values.title}, handle = ${values.handle}, description = ${values.description},
+          category_id = ${values.category_id}, product_type = ${values.product_type},
+          status = ${values.status}, price = ${values.price}, compare_at_price = ${values.compare_at_price},
+          cost_per_item = ${values.cost_per_item}, charge_tax = ${values.charge_tax},
+          track_quantity = ${values.track_quantity}, sku = ${values.sku}, barcode = ${values.barcode},
+          is_physical_product = ${values.is_physical_product}, weight = ${values.weight},
+          weight_unit = ${values.weight_unit}, hs_code = ${values.hs_code},
+          seo_title = ${values.seo_title}, seo_description = ${values.seo_description},
+          updated_at = now()
+        WHERE id = ${id}
+      `;
+      return id;
+    } catch (error) {
+      if (error.code === "23505" && error.constraint === "products_handle_key") {
+        throw new Error(
+          `A product with the handle "${values.handle}" already exists. Change the title or handle and try again.`
+        );
+      }
+      throw error;
+    }
   }
 
-  const [created] = await sql`
-    INSERT INTO products (
-      title, handle, description, category_id, product_type, status, price, compare_at_price,
-      cost_per_item, charge_tax, track_quantity, sku, barcode, is_physical_product, weight,
-      weight_unit, hs_code, seo_title, seo_description
-    ) VALUES (
-      ${values.title}, ${values.handle}, ${values.description}, ${values.category_id},
-      ${values.product_type}, ${values.status}, ${values.price}, ${values.compare_at_price},
-      ${values.cost_per_item}, ${values.charge_tax}, ${values.track_quantity}, ${values.sku},
-      ${values.barcode}, ${values.is_physical_product}, ${values.weight}, ${values.weight_unit},
-      ${values.hs_code}, ${values.seo_title}, ${values.seo_description}
-    )
-    RETURNING id
-  `;
-  return created.id;
+  try {
+    const [created] = await sql`
+      INSERT INTO products (
+        title, handle, description, category_id, product_type, status, price, compare_at_price,
+        cost_per_item, charge_tax, track_quantity, sku, barcode, is_physical_product, weight,
+        weight_unit, hs_code, seo_title, seo_description
+      ) VALUES (
+        ${values.title}, ${values.handle}, ${values.description}, ${values.category_id},
+        ${values.product_type}, ${values.status}, ${values.price}, ${values.compare_at_price},
+        ${values.cost_per_item}, ${values.charge_tax}, ${values.track_quantity}, ${values.sku},
+        ${values.barcode}, ${values.is_physical_product}, ${values.weight}, ${values.weight_unit},
+        ${values.hs_code}, ${values.seo_title}, ${values.seo_description}
+      )
+      RETURNING id
+    `;
+    return created.id;
+  } catch (error) {
+    if (error.code === "23505" && error.constraint === "products_handle_key") {
+      throw new Error(
+        `A product with the handle "${values.handle}" already exists. Change the title or handle and try again.`
+      );
+    }
+    throw error;
+  }
 }
 
 export async function createProduct(payload) {
   const categoryId = await upsertCategoryPath(payload.category);
   const id = await writeProductRow(null, payload, categoryId);
-  await replaceChildRows(id, payload);
+  try {
+    await replaceChildRows(id, payload);
+  } catch (error) {
+    // The HTTP driver can't wrap this in a real transaction (each statement
+    // is its own request), so if the children fail partway through, delete
+    // the product row we just created instead of leaving a variant-less
+    // "ghost" product behind — that's exactly the "error shown, but it saved
+    // anyway" symptom this whole fix pass is about.
+    await sql`DELETE FROM products WHERE id = ${id}`.catch(() => {});
+    throw error;
+  }
   return id;
 }
 

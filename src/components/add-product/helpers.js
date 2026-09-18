@@ -43,6 +43,54 @@ export function variantKey(optionsObj, orderedNames) {
   return orderedNames.map((n) => `${n}:${optionsObj[n]}`).join("|");
 }
 
+const MAX_SKU_LENGTH = 10;
+
+function shortCode(str, maxLen) {
+  return String(str || "")
+    .replace(/[^A-Za-z0-9]/g, "")
+    .toUpperCase()
+    .slice(0, maxLen);
+}
+
+// Abbreviates one option value (e.g. "14K White Gold") down to a few
+// characters: short/numeric-led words are kept whole (e.g. "14K"), other
+// words are reduced to their initial — except when the value is a single
+// word, where a few characters are kept so it stays recognizable.
+function abbreviateOptionValue(value) {
+  const words = String(value || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  return words
+    .map((word) => {
+      const alnum = word.replace(/[^A-Za-z0-9]/g, "");
+      if (!alnum) return "";
+      if (/^[0-9]/.test(alnum) || alnum.length <= 3) return alnum.toUpperCase();
+      return words.length === 1 ? alnum.slice(0, 4).toUpperCase() : alnum[0].toUpperCase();
+    })
+    .join("");
+}
+
+// Builds a short, human-readable SKU per combo (product prefix + each
+// option value's abbreviation, e.g. "BAG14KWG10"), capped at
+// MAX_SKU_LENGTH and de-duplicated within this batch so two combos never
+// produce the same code (product_variants.sku is globally unique).
+function buildVariantSkus(combos, orderedNames, handle) {
+  const prefix = shortCode(handle, 3) || "PRD";
+  const seen = new Map();
+
+  return combos.map((combo) => {
+    const optionCode = orderedNames.map((name) => abbreviateOptionValue(combo[name])).join("");
+    const base = (prefix + optionCode).slice(0, MAX_SKU_LENGTH);
+    const count = seen.get(base) || 0;
+    seen.set(base, count + 1);
+    if (count === 0) return base;
+
+    const suffix = String(count + 1);
+    return base.slice(0, MAX_SKU_LENGTH - suffix.length) + suffix;
+  });
+}
+
 export function regenerateVariants(options, existingVariants, handle) {
   const validOptions = options.filter((o) => o.name && o.values.length);
   const orderedNames = validOptions.map((o) => o.name);
@@ -60,23 +108,38 @@ export function regenerateVariants(options, existingVariants, handle) {
     combos = cartesian(valueSets).map((pairs) => Object.fromEntries(pairs));
   }
 
-  const handleUpper = (handle || "product").toUpperCase();
+  // Resolve which combos reuse an existing variant *before* minting ids for the
+  // rest, so a freshly-generated id can never collide with one a reused variant
+  // already holds (both are otherwise derived from the same index sequence).
+  const matched = combos.map((combo) => oldByKey[variantKey(combo, orderedNames)] || null);
+  const usedIds = new Set(matched.filter(Boolean).map((v) => v.id));
+
+  let counter = 0;
+  function nextId() {
+    let id;
+    do {
+      counter += 1;
+      id = "variant_" + String(counter).padStart(3, "0");
+    } while (usedIds.has(id));
+    usedIds.add(id);
+    return id;
+  }
+
+  const skus = buildVariantSkus(combos, orderedNames, handle);
   return combos.map((combo, i) => {
-    const key = variantKey(combo, orderedNames);
-    const existing = oldByKey[key];
-    return (
-      existing || {
-        id: "variant_" + String(i + 1).padStart(3, "0"),
-        options: combo,
-        price: "",
-        compare_at_price: "",
-        sku: `${handleUpper}-${i + 1}`,
-        inventory_quantity: 0,
-        inventory_management: true,
-        weight: "",
-        weight_unit: "kg",
-      }
-    );
+    const existing = matched[i];
+    if (existing) return existing;
+    return {
+      id: nextId(),
+      options: combo,
+      price: "",
+      compare_at_price: "",
+      sku: skus[i],
+      inventory_quantity: 0,
+      inventory_management: true,
+      weight: "",
+      weight_unit: "kg",
+    };
   });
 }
 

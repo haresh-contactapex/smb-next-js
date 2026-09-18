@@ -57,6 +57,7 @@ export default function AddProductForm({ productId }) {
   const priceInputRef = useRef(null);
   const variantsSectionRef = useRef(null);
   const toastTimerRef = useRef(null);
+  const savingRef = useRef(false);
 
   useEffect(() => {
     if (!productId) return;
@@ -219,6 +220,13 @@ export default function AddProductForm({ productId }) {
   }
 
   function handleSave() {
+    // Guards against a second submit landing while the first is still in
+    // flight — e.g. pressing Enter in any text field re-triggers this via
+    // handleFormKeyDown, and large variant sets can take a while to save.
+    // A ref (not state) is required here: it's read/written synchronously,
+    // so it closes the race a state flag would leave open across renders.
+    if (savingRef.current) return;
+
     const variantRowErrors = product.variants.map((v) => ({
       price: !v.price || toNumber(v.price) <= 0,
       quantity: String(v.inventory_quantity).trim() === "",
@@ -301,6 +309,7 @@ export default function AddProductForm({ productId }) {
   }
 
   async function persistProduct() {
+    savingRef.current = true;
     setSaving(true);
     try {
       const res = await fetch(isEdit ? `/api/products/${productId}` : "/api/products", {
@@ -316,6 +325,7 @@ export default function AddProductForm({ productId }) {
     } catch (error) {
       showToast(error.message, "error");
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }

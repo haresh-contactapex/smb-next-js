@@ -19,3 +19,9 @@ function getClient() {
 export function sql(strings, ...values) {
   return getClient()(strings, ...values);
 }
+
+// Raw parameterized query ($1, $2, ...) for cases the tagged-template form
+// can't express, such as a dynamically-sized multi-row INSERT.
+export function sqlQuery(text, params) {
+  return getClient().query(text, params);
+}
