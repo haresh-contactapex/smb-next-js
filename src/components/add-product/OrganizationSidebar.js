@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { TAXONOMY, COLLECTIONS } from "@/data/addProductData";
+import { COLLECTIONS } from "@/data/addProductData";
+
+// Turns a category row from GET /api/categories into the same "A > B > C"
+// display path used elsewhere (see add-category/HierarchySidebar.js) so it
+// matches the string format the rest of this form already stores/parses.
+function categoryPath(cat) {
+  return cat.parentPath ? `${cat.parentPath} > ${cat.name}` : cat.name;
+}
 
 export default function OrganizationSidebar({
   category,
@@ -18,6 +25,7 @@ export default function OrganizationSidebar({
 }) {
   const [categoryQuery, setCategoryQuery] = useState(category ? category.split(" > ").pop() : "");
   const [categoryOpen, setCategoryOpen] = useState(false);
+  const [categoryPaths, setCategoryPaths] = useState([]);
   const [collectionQuery, setCollectionQuery] = useState("");
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [tagInput, setTagInput] = useState("");
@@ -26,8 +34,22 @@ export default function OrganizationSidebar({
     setCategoryQuery(category ? category.split(" > ").pop() : "");
   }, [category]);
 
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled || !json.success) return;
+        setCategoryPaths(json.data.map(categoryPath).sort());
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const q = categoryQuery.trim().toLowerCase();
-  const categoryMatches = (q ? TAXONOMY.filter((c) => c.toLowerCase().includes(q)) : TAXONOMY).slice(0, 8);
+  const categoryMatches = (q ? categoryPaths.filter((c) => c.toLowerCase().includes(q)) : categoryPaths).slice(0, 8);
 
   const cq = collectionQuery.trim().toLowerCase();
   const collectionMatches = COLLECTIONS.filter(
