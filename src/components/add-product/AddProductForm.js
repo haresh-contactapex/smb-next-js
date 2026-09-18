@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { SAMPLE, DEFAULT_PRODUCT_SEED } from "@/data/addProductData";
 import { buildProductFromData, assembleProduct, regenerateVariants, slugify, stripHtml, toNumber } from "./helpers";
 import PageToolbar from "./PageToolbar";
@@ -31,8 +32,12 @@ function classifyMediaFile(file) {
   return null;
 }
 
-export default function AddProductForm() {
+export default function AddProductForm({ productId }) {
+  const isEdit = Boolean(productId);
+  const router = useRouter();
   const [product, setProduct] = useState(() => buildProductFromData(DEFAULT_PRODUCT_SEED));
+  const [loading, setLoading] = useState(isEdit);
+  const [saving, setSaving] = useState(false);
   const [titleError, setTitleError] = useState(false);
   const [categoryError, setCategoryError] = useState(false);
   const [descriptionError, setDescriptionError] = useState(false);
@@ -52,6 +57,38 @@ export default function AddProductForm() {
   const priceInputRef = useRef(null);
   const variantsSectionRef = useRef(null);
   const toastTimerRef = useRef(null);
+
+  useEffect(() => {
+    if (!productId) return;
+    let cancelled = false;
+    fetch(`/api/products/${productId}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (!json.success) throw new Error(json.error || "Failed to load product");
+        loadProduct(json.data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoading(false);
+        showToast(error.message, "error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [productId]);
+
+  // The description editor is an uncontrolled contentEditable div (see
+  // ProductDetailsSection) — while `loading` is true the form isn't mounted yet,
+  // so `loadProduct()`'s imperative innerHTML write above is a no-op. Sync it
+  // once the form mounts.
+  useEffect(() => {
+    if (!loading && editorRef.current) {
+      editorRef.current.innerHTML = product.body_html;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
 
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
@@ -260,8 +297,27 @@ export default function AddProductForm() {
       return;
     }
 
-    openModal();
-    showToast("Product ready — review the JSON payload");
+    persistProduct();
+  }
+
+  async function persistProduct() {
+    setSaving(true);
+    try {
+      const res = await fetch(isEdit ? `/api/products/${productId}` : "/api/products", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(assembleProduct(product)),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to save product");
+
+      showToast(isEdit ? "Product updated" : "Product created");
+      router.push("/all-products");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function loadProduct(data) {
@@ -278,6 +334,11 @@ export default function AddProductForm() {
   }
 
   function handleDiscard() {
+    if (isEdit) {
+      if (!window.confirm("Discard changes and go back to All Products?")) return;
+      router.push("/all-products");
+      return;
+    }
     if (!window.confirm("Discard all changes and start over?")) return;
     loadProduct(DEFAULT_PRODUCT_SEED);
   }
@@ -305,9 +366,13 @@ export default function AddProductForm() {
   const seoPreviewDesc =
     product.seo.description || stripHtml(product.body_html).slice(0, 160) || "Product description will appear here.";
 
+  if (loading) {
+    return <div className="py-16 text-center text-sm text-slate-400">Loading product…</div>;
+  }
+
   return (
     <form onSubmit={handleFormSubmit} onKeyDown={handleFormKeyDown} noValidate>
-      <PageToolbar onLoadSample={handleLoadSample} onDiscard={handleDiscard} />
+      <PageToolbar isEdit={isEdit} saving={saving} onLoadSample={handleLoadSample} onDiscard={handleDiscard} />
 
       <div className="grid lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">

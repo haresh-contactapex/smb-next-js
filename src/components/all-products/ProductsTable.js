@@ -1,8 +1,9 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { formatINR, getStockInfo, STOCK_TEXT_CLASSES, STATUS_BADGE_CLASSES } from "./productHelpers";
 
-export default function ProductsTable({ products }) {
+export default function ProductsTable({ products, onDelete }) {
   if (products.length === 0) {
     return (
       <div className="py-16 text-center text-sm text-slate-400">
@@ -70,12 +71,20 @@ export default function ProductsTable({ products }) {
                     >
                       <Icon name="eye" className="w-4 h-4" />
                     </button>
-                    <button
-                      type="button"
+                    <Link
+                      href={`/edit-product/${product.id}`}
                       title="Edit product"
                       className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                     >
                       <Icon name="edit-2" className="w-4 h-4" />
+                    </Link>
+                    <button
+                      type="button"
+                      title="Delete product"
+                      onClick={() => onDelete?.(product)}
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                    >
+                      <Icon name="trash-2" className="w-4 h-4" />
                     </button>
                   </div>
                 </td>

@@ -84,7 +84,7 @@ export function buildProductFromData(data = {}) {
   const title = data.title || "";
   const handle = data.handle || slugify(title);
   const options = (data.options || []).map((o) => ({ ...o, values: [...o.values] }));
-  let variants = regenerateVariants(options, [], handle);
+  let variants = regenerateVariants(options, data.variants || [], handle);
 
   if (data.variantDefaults) {
     variants = variants.map((v) => ({
