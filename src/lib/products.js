@@ -265,6 +265,7 @@ export async function getProductById(id) {
       inventory_management: v.inventory_management,
       weight: v.weight !== null ? String(v.weight) : "",
       weight_unit: v.weight_unit,
+      image: v.image_url ? { url: v.image_url, name: null } : null,
     })),
   };
 }
@@ -354,6 +355,7 @@ async function replaceChildRows(productId, payload) {
         "inventory_management",
         "weight",
         "weight_unit",
+        "image_url",
       ],
       dedupedVariants.map((v) => [
         productId,
@@ -364,6 +366,7 @@ async function replaceChildRows(productId, payload) {
         v.inventory_management,
         v.weight === "" ? null : v.weight,
         v.weight_unit,
+        v.image?.url || null,
       ]),
       "id"
     );

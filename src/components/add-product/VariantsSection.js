@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 import { WEIGHT_UNITS } from "@/data/addProductData";
 import { slugify, sanitizeDecimal, sanitizeInteger } from "./helpers";
 
-function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue }) {
+function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue, onReorderValues }) {
   const [valueInput, setValueInput] = useState("");
+  const [dragIndex, setDragIndex] = useState(null);
+  const [dropIndex, setDropIndex] = useState(null);
+  const draggedRef = useRef(null);
 
   function handleValueKeyDown(e) {
     if ((e.key === "Enter" || e.key === ",") && valueInput.trim()) {
@@ -15,6 +18,30 @@ function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue }
       if (val && !option.values.includes(val)) onAddValue(val);
       setValueInput("");
     }
+  }
+
+  function handleDragStart(vi) {
+    draggedRef.current = vi;
+    setDragIndex(vi);
+  }
+
+  function handleDragOver(e, vi) {
+    e.preventDefault();
+    if (vi !== dropIndex) setDropIndex(vi);
+  }
+
+  function handleDrop(vi) {
+    const from = draggedRef.current;
+    if (from !== null && from !== vi) onReorderValues(from, vi);
+    draggedRef.current = null;
+    setDragIndex(null);
+    setDropIndex(null);
+  }
+
+  function handleDragEnd() {
+    draggedRef.current = null;
+    setDragIndex(null);
+    setDropIndex(null);
   }
 
   return (
@@ -34,7 +61,18 @@ function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue }
       </div>
       <div className="flex flex-wrap gap-1.5 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus-within:border-primary-400 dark:focus-within:border-accent-500 px-2 py-1.5 min-h-[38px] transition-all">
         {option.values.map((val, vi) => (
-          <span key={val} className="chip">
+          <span
+            key={val}
+            draggable
+            onDragStart={() => handleDragStart(vi)}
+            onDragOver={(e) => handleDragOver(e, vi)}
+            onDrop={() => handleDrop(vi)}
+            onDragEnd={handleDragEnd}
+            title="Drag to reorder"
+            className={`chip cursor-grab active:cursor-grabbing transition-opacity${
+              dragIndex === vi ? " opacity-40" : ""
+            }${dropIndex === vi && dragIndex !== vi ? " ring-2 ring-primary-400 dark:ring-accent-500" : ""}`}
+          >
             <span>{val}</span>
             <button type="button" onClick={() => onRemoveValue(vi)}>
               &times;
@@ -51,6 +89,61 @@ function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue }
           className="flex-1 min-w-[90px] bg-transparent border-none focus:outline-none focus:ring-0 px-1 py-0.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400"
         />
       </div>
+      <p className="text-[11px] text-slate-400 mt-1.5">Drag a value to reorder — variants below follow this order.</p>
+    </div>
+  );
+}
+
+function VariantImageCell({ image, label, onChange, onRemove }) {
+  const inputRef = useRef(null);
+
+  function handleFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (file) onChange(file);
+    e.target.value = "";
+  }
+
+  return (
+    <div className="relative group w-9 h-9 shrink-0">
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        title={image ? "Change variant image" : "Add variant image"}
+        aria-label={`${label} image`}
+        className="w-9 h-9 rounded-lg border border-dashed border-slate-300 dark:border-white/15 overflow-hidden grid place-items-center bg-slate-50 dark:bg-darksurface2/60 hover:border-primary-400 dark:hover:border-accent-500/60 transition-colors"
+      >
+        {image ? (
+          // eslint-disable-next-line @next/next/no-img-element -- blob: object URL from a local upload
+          <img
+            src={image.url}
+            alt={image.name || label}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              e.currentTarget.style.opacity = 0.15;
+            }}
+          />
+        ) : (
+          <Icon name="upload-cloud" className="w-4 h-4 text-slate-400" />
+        )}
+      </button>
+      {image && (
+        <button
+          type="button"
+          aria-label={`Remove ${label} image`}
+          onClick={onRemove}
+          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-slate-900/80 text-white text-[10px] leading-none opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+        >
+          &times;
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        aria-hidden="true"
+        onChange={handleFileSelected}
+      />
     </div>
   );
 }
@@ -62,6 +155,8 @@ export default function VariantsSection({
   sectionRef,
   onOptionsChange,
   onVariantsChange,
+  onVariantImageChange,
+  onVariantImageRemove,
 }) {
   const [bulkPrice, setBulkPrice] = useState("");
   const [bulkQty, setBulkQty] = useState("");
@@ -92,6 +187,15 @@ export default function VariantsSection({
   function removeOptionValue(index, valueIndex) {
     const next = options.slice();
     next[index] = { ...next[index], values: next[index].values.filter((_, i) => i !== valueIndex) };
+    onOptionsChange(next);
+  }
+
+  function reorderOptionValues(index, fromIndex, toIndex) {
+    const next = options.slice();
+    const values = next[index].values.slice();
+    const [moved] = values.splice(fromIndex, 1);
+    values.splice(toIndex, 0, moved);
+    next[index] = { ...next[index], values };
     onOptionsChange(next);
   }
 
@@ -144,6 +248,7 @@ export default function VariantsSection({
                 onRemove={() => removeOption(oi)}
                 onAddValue={(val) => addOptionValue(oi, val)}
                 onRemoveValue={(vi) => removeOptionValue(oi, vi)}
+                onReorderValues={(from, to) => reorderOptionValues(oi, from, to)}
               />
             ))}
           </div>
@@ -187,9 +292,10 @@ export default function VariantsSection({
               </div>
             </div>
             <div className="overflow-x-auto custom-scroll -mx-1">
-              <table className="w-full text-sm min-w-[640px]">
+              <table className="w-full text-sm min-w-[700px]">
                 <thead>
                   <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+                    <th className="py-2 px-1 font-semibold w-12">Image</th>
                     <th className="py-2 px-1 font-semibold">Variant</th>
                     <th className="py-2 px-1 font-semibold w-24">Price</th>
                     <th className="py-2 px-1 font-semibold w-28">Compare-at</th>
@@ -211,6 +317,14 @@ export default function VariantsSection({
                       }`;
                     return (
                       <tr key={v.id}>
+                        <td className="py-2 px-1">
+                          <VariantImageCell
+                            image={v.image}
+                            label={label}
+                            onChange={(file) => onVariantImageChange(i, file)}
+                            onRemove={() => onVariantImageRemove(i)}
+                          />
+                        </td>
                         <td className="py-2 px-1 font-medium text-slate-700 dark:text-slate-200">{label}</td>
                         <td className="py-2 px-1">
                           <input

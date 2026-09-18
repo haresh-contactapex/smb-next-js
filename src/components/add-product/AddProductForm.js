@@ -201,6 +201,33 @@ export default function AddProductForm({ productId }) {
     setProduct((prev) => ({ ...prev, media: prev.media.filter((_, i) => i !== index) }));
   }
 
+  function handleVariantImageChange(index, file) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      showToast(`${file.name}: only JPG, PNG, or WEBP images are allowed`, "error");
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      showToast(`${file.name}: image must be 5MB or smaller`, "error");
+      return;
+    }
+    setProduct((prev) => {
+      const nextVariants = prev.variants.slice();
+      nextVariants[index] = {
+        ...nextVariants[index],
+        image: { url: URL.createObjectURL(file), name: file.name },
+      };
+      return { ...prev, variants: nextVariants };
+    });
+  }
+
+  function handleVariantImageRemove(index) {
+    setProduct((prev) => {
+      const nextVariants = prev.variants.slice();
+      nextVariants[index] = { ...nextVariants[index], image: null };
+      return { ...prev, variants: nextVariants };
+    });
+  }
+
   function openModal() {
     setJsonOutput(JSON.stringify(assembleProduct(product), null, 2));
     setModalOpen(true);
@@ -438,6 +465,8 @@ export default function AddProductForm({ productId }) {
             sectionRef={variantsSectionRef}
             onOptionsChange={handleOptionsChange}
             onVariantsChange={handleVariantsChange}
+            onVariantImageChange={handleVariantImageChange}
+            onVariantImageRemove={handleVariantImageRemove}
           />
 
           <SeoSection

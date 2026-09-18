@@ -130,6 +130,7 @@ option's values). Only exists for products that have at least one option.
 | `inventory_management`   | `BOOLEAN`       | NOT NULL, DEFAULT `true`                                    | "Track" checkbox per variant row |
 | `weight`                 | `DECIMAL(10,3)` | NULL                                                        |       |
 | `weight_unit`            | `VARCHAR(5)`    | NOT NULL, DEFAULT `'kg'`, CHECK IN (`kg`, `g`, `lb`, `oz`)  |       |
+| `image_url`              | `TEXT`          | NULL                                                        | Per-variant image, uploaded independently of the product's own media |
 | `created_at`             | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                   |       |
 | `updated_at`             | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                   |       |
 

@@ -103,6 +103,7 @@ CREATE TABLE product_variants (
     weight                DECIMAL(10, 3) NULL,
     weight_unit           VARCHAR(5) NOT NULL DEFAULT 'kg'
                           CHECK (weight_unit IN ('kg', 'g', 'lb', 'oz')),
+    image_url             TEXT NULL,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );

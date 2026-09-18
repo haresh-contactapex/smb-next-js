@@ -139,6 +139,7 @@ export function regenerateVariants(options, existingVariants, handle) {
       inventory_management: true,
       weight: "",
       weight_unit: "kg",
+      image: null,
     };
   });
 }
@@ -232,6 +233,7 @@ export function assembleProduct(product) {
       inventory_management: !!v.inventory_management,
       weight: v.weight === "" ? "" : Number(v.weight),
       weight_unit: v.weight_unit,
+      image: v.image ? { url: v.image.url, name: v.image.name || null } : null,
     })),
     seo: {
       title: product.seo.title || product.title,
