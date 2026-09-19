@@ -2,18 +2,24 @@
 
 import { useRef } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import { formatUsPhone } from "@/lib/phone";
 
 export default function ProfileDetailsSection({
-  avatar,
+  avatarUrl,
   firstName,
   lastName,
   email,
   emailError,
   phone,
+  phoneError,
   bio,
+  firstNameError,
+  lastNameError,
   onAvatarPicked,
   onAvatarRemoved,
   onFieldChange,
+  registerRef,
+  onEnter,
 }) {
   const fileInputRef = useRef(null);
 
@@ -21,6 +27,26 @@ export default function ProfileDetailsSection({
     const file = e.target.files?.[0];
     if (file) onAvatarPicked(file);
     e.target.value = "";
+  }
+
+  function handleKeyDown(e) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    onEnter?.();
+  }
+
+  function refFor(field) {
+    return registerRef ? registerRef(field) : undefined;
+  }
+
+  // `!`-prefixed (important) because .field-input's own border/background
+  // rules tie in specificity with plain Tailwind utilities and win on source
+  // order, so a plain "border-red-400 bg-red-50" is silently no-op'd.
+  function fieldClass(hasError) {
+    const errorClass = hasError
+      ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+      : "";
+    return `field-input${errorClass}`;
   }
 
   return (
@@ -41,10 +67,10 @@ export default function ProfileDetailsSection({
           }}
           className="relative w-24 h-24 rounded-full border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary-400 dark:hover:border-accent-500/50 bg-slate-50 dark:bg-darksurface2/50 flex flex-col items-center justify-center cursor-pointer transition-colors group shrink-0 overflow-hidden"
         >
-          {avatar ? (
+          {avatarUrl ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element -- blob: object URL from a local upload, not optimizable by next/image */}
-              <img src={avatar.url} alt={avatar.name || ""} className="w-full h-full object-cover" />
+              {/* eslint-disable-next-line @next/next/no-img-element -- uploaded avatar served from /uploads, not optimizable by next/image */}
+              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               <button
                 type="button"
                 aria-label="Remove photo"
@@ -81,13 +107,16 @@ export default function ProfileDetailsSection({
               </label>
               <input
                 id="f-first-name"
+                ref={refFor("firstName")}
                 type="text"
                 value={firstName}
                 onChange={(e) => onFieldChange("firstName", e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="First name"
                 aria-label="First name"
-                className="field-input"
+                className={fieldClass(firstNameError)}
               />
+              {firstNameError && <p className="text-xs text-error mt-1">Enter your first name.</p>}
             </div>
             <div>
               <label className="field-label" htmlFor="f-last-name">
@@ -95,13 +124,16 @@ export default function ProfileDetailsSection({
               </label>
               <input
                 id="f-last-name"
+                ref={refFor("lastName")}
                 type="text"
                 value={lastName}
                 onChange={(e) => onFieldChange("lastName", e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="Last name"
                 aria-label="Last name"
-                className="field-input"
+                className={fieldClass(lastNameError)}
               />
+              {lastNameError && <p className="text-xs text-error mt-1">Enter your last name.</p>}
             </div>
           </div>
 
@@ -112,12 +144,14 @@ export default function ProfileDetailsSection({
               </label>
               <input
                 id="f-email"
+                ref={refFor("email")}
                 type="email"
                 value={email}
                 onChange={(e) => onFieldChange("email", e.target.value)}
+                onKeyDown={handleKeyDown}
                 placeholder="you@example.com"
                 aria-label="Email address"
-                className={`field-input${emailError ? " border-red-400" : ""}`}
+                className={fieldClass(emailError)}
               />
               {emailError && <p className="text-xs text-error mt-1">Enter a valid email address.</p>}
             </div>
@@ -127,13 +161,17 @@ export default function ProfileDetailsSection({
               </label>
               <input
                 id="f-phone"
+                ref={refFor("phone")}
                 type="tel"
+                inputMode="numeric"
                 value={phone}
-                onChange={(e) => onFieldChange("phone", e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                onChange={(e) => onFieldChange("phone", formatUsPhone(e.target.value))}
+                onKeyDown={handleKeyDown}
+                placeholder="(555) 000-0000"
                 aria-label="Phone number"
-                className="field-input"
+                className={fieldClass(phoneError)}
               />
+              {phoneError && <p className="text-xs text-error mt-1">Enter a valid 10-digit US phone number.</p>}
             </div>
           </div>
 

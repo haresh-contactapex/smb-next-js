@@ -1,6 +1,14 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function AccountStatusSidebar({ twoFactorEnabled, onFieldChange }) {
+function formatDateTime(value) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
+export default function AccountStatusSidebar({ twoFactorEnabled, createdAt, lastLoginAt, onFieldChange }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Account Status</h2>
@@ -14,11 +22,11 @@ export default function AccountStatusSidebar({ twoFactorEnabled, onFieldChange }
         </div>
         <div className="flex items-center justify-between">
           <span className="text-slate-500 dark:text-slate-400">Member Since</span>
-          <span className="font-medium text-slate-700 dark:text-slate-200">Jan 12, 2024</span>
+          <span className="font-medium text-slate-700 dark:text-slate-200">{formatDateTime(createdAt)}</span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-slate-500 dark:text-slate-400">Last Login</span>
-          <span className="font-medium text-slate-700 dark:text-slate-200">Today, 9:41 AM</span>
+          <span className="font-medium text-slate-700 dark:text-slate-200">{formatDateTime(lastLoginAt)}</span>
         </div>
       </div>
 

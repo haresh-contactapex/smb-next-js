@@ -1,6 +1,6 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function PageToolbar({ onDiscard, onSave }) {
+export default function PageToolbar({ onDiscard, onSave, saving = false, disabled = false }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
@@ -16,16 +16,18 @@ export default function PageToolbar({ onDiscard, onSave }) {
         <button
           type="button"
           onClick={onDiscard}
-          className="px-4 h-9 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
+          disabled={disabled}
+          className="px-4 h-9 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
           Discard
         </button>
         <button
           type="button"
           onClick={onSave}
-          className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors"
+          disabled={disabled || saving}
+          className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
-          Save Address
+          {saving ? "Saving…" : "Save Address"}
         </button>
       </div>
     </div>

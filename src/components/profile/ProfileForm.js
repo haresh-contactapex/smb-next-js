@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { DEFAULT_PROFILE, isValidEmail } from "./helpers";
+import { useEffect, useRef, useState } from "react";
+import { EMPTY_PROFILE, toFormState, validateProfileForm } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import ProfileDetailsSection from "./ProfileDetailsSection";
 import PasswordSection from "./PasswordSection";
@@ -10,94 +10,183 @@ import PreferencesSidebar from "./PreferencesSidebar";
 import Toast from "./Toast";
 
 export default function ProfileForm() {
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
-  const [emailError, setEmailError] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false });
+  const [profile, setProfile] = useState(EMPTY_PROFILE);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const toastTimerRef = useRef(null);
+  const fieldRefs = useRef({});
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  function registerRef(field) {
+    return (el) => {
+      fieldRefs.current[field] = el;
+    };
+  }
+
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
   }
 
-  function setField(field, value) {
-    setProfile((prev) => ({ ...prev, [field]: value }));
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
   }
 
-  function handleAvatarPicked(file) {
-    setField("avatar", { url: URL.createObjectURL(file), name: file.name });
+  async function loadProfile() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/profile");
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to load profile");
+      setProfile(toFormState(json.data));
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function setField(field, value) {
+    setProfile((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  }
+
+  async function handleAvatarPicked(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/media", { method: "POST", body: formData });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to upload photo");
+      setField("avatarUrl", json.data.url);
+    } catch (error) {
+      showToast(error.message, "error");
+    }
   }
 
   function handleAvatarRemoved() {
-    setField("avatar", null);
+    setField("avatarUrl", null);
   }
 
-  function handleSave() {
-    if (!isValidEmail(profile.email)) {
-      setEmailError(true);
-      showToast("Enter a valid email address before saving");
+  async function handleSave() {
+    const result = validateProfileForm(profile);
+    setErrors(result.errors);
+
+    if (!result.valid) {
+      showToast(result.message, "error");
+      fieldRefs.current[result.firstErrorField]?.focus();
       return;
     }
-    setEmailError(false);
 
-    if (profile.newPassword || profile.confirmPassword) {
-      if (profile.newPassword !== profile.confirmPassword) {
-        setPasswordError(true);
-        showToast("New password and confirmation must match");
-        return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email,
+          phone: profile.phone,
+          bio: profile.bio,
+          avatarUrl: profile.avatarUrl,
+          language: profile.language,
+          timezone: profile.timezone,
+          twoFactorEnabled: profile.twoFactorEnabled,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to save profile");
+
+      if (profile.newPassword) {
+        const passwordRes = await fetch("/api/profile/password", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentPassword: profile.currentPassword,
+            newPassword: profile.newPassword,
+            confirmPassword: profile.confirmPassword,
+          }),
+        });
+        const passwordJson = await passwordRes.json();
+        if (!passwordRes.ok || !passwordJson.success) {
+          throw new Error(passwordJson.error || "Failed to update password");
+        }
       }
-    }
-    setPasswordError(false);
 
-    setProfile((prev) => ({ ...prev, currentPassword: "", newPassword: "", confirmPassword: "" }));
-    showToast("Profile saved");
+      setProfile(toFormState(json.data));
+      showToast("Profile saved");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleDiscard() {
-    if (!window.confirm("Discard all changes and start over?")) return;
-    setProfile(DEFAULT_PROFILE);
-    setEmailError(false);
-    setPasswordError(false);
+    if (!window.confirm("Discard all changes and reload your saved profile?")) return;
+    setErrors({});
+    loadProfile();
   }
 
   return (
     <>
-      <PageToolbar onDiscard={handleDiscard} onSave={handleSave} />
+      <PageToolbar onDiscard={handleDiscard} onSave={handleSave} saving={saving} disabled={loading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <ProfileDetailsSection
-            avatar={profile.avatar}
+            avatarUrl={profile.avatarUrl}
             firstName={profile.firstName}
             lastName={profile.lastName}
             email={profile.email}
-            emailError={emailError}
+            emailError={errors.email}
             phone={profile.phone}
+            phoneError={errors.phone}
+            firstNameError={errors.firstName}
+            lastNameError={errors.lastName}
             bio={profile.bio}
             onAvatarPicked={handleAvatarPicked}
             onAvatarRemoved={handleAvatarRemoved}
             onFieldChange={setField}
+            registerRef={registerRef}
+            onEnter={handleSave}
           />
 
           <PasswordSection
             currentPassword={profile.currentPassword}
             newPassword={profile.newPassword}
             confirmPassword={profile.confirmPassword}
-            passwordError={passwordError}
+            currentPasswordError={errors.currentPassword}
+            newPasswordError={errors.newPassword}
+            confirmPasswordError={errors.confirmPassword}
             onFieldChange={setField}
+            registerRef={registerRef}
+            onEnter={handleSave}
           />
         </div>
 
         <div className="space-y-6">
-          <AccountStatusSidebar twoFactorEnabled={profile.twoFactorEnabled} onFieldChange={setField} />
+          <AccountStatusSidebar
+            twoFactorEnabled={profile.twoFactorEnabled}
+            createdAt={profile.createdAt}
+            lastLoginAt={profile.lastLoginAt}
+            onFieldChange={setField}
+          />
           <PreferencesSidebar language={profile.language} timezone={profile.timezone} onFieldChange={setField} />
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );
 }

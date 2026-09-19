@@ -23,8 +23,15 @@ function toPublicStaffUser(row) {
     firstName: row.first_name,
     lastName: row.last_name,
     email: row.email,
+    phone: row.phone || "",
+    bio: row.bio || "",
     role: row.role,
     avatarUrl: row.avatar_url || null,
+    language: row.language,
+    timezone: row.timezone,
+    twoFactorEnabled: row.two_factor_enabled,
+    createdAt: row.created_at,
+    lastLoginAt: row.last_login_at,
   };
 }
 
@@ -44,6 +51,30 @@ export async function touchStaffLastLogin(id) {
 
 export async function updateStaffPassword(id, passwordHash) {
   await sql`UPDATE users SET password_hash = ${passwordHash}, updated_at = now() WHERE id = ${id}`;
+}
+
+export async function getStaffPasswordHash(id) {
+  const [row] = await sql`SELECT password_hash FROM users WHERE id = ${id}`;
+  return row?.password_hash || null;
+}
+
+export async function updateStaffProfile(id, { firstName, lastName, email, phone, bio, avatarUrl, language, timezone, twoFactorEnabled }) {
+  const [row] = await sql`
+    UPDATE users SET
+      first_name = ${firstName},
+      last_name = ${lastName},
+      email = ${email.trim().toLowerCase()},
+      phone = ${phone || null},
+      bio = ${bio || null},
+      avatar_url = ${avatarUrl || null},
+      language = ${language},
+      timezone = ${timezone},
+      two_factor_enabled = ${twoFactorEnabled},
+      updated_at = now()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return toPublicStaffUser(row);
 }
 
 export { toPublicStaffUser };
