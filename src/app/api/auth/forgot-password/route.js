@@ -1,0 +1,38 @@
+import { NextResponse } from "next/server";
+import { findCustomerByEmail } from "@/lib/customers";
+import { insertCustomerResetToken } from "@/lib/passwordResetTokens";
+import { createResetToken } from "@/lib/auth/resetToken";
+import { isValidEmail } from "@/components/auth/helpers";
+
+// Always responds with success (whether or not the email matches an account)
+// so this endpoint can't be used to enumerate registered customers.
+export async function POST(request) {
+  try {
+    const payload = await request.json();
+    const email = String(payload.email || "").trim();
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json({ success: false, error: "Enter a valid email address." }, { status: 400 });
+    }
+
+    const customer = await findCustomerByEmail(email);
+    if (customer) {
+      const { rawToken, tokenHash, expiresAt } = createResetToken();
+      await insertCustomerResetToken({
+        customerId: customer.id,
+        tokenHash,
+        requestedEmail: email,
+        expiresAt,
+      });
+
+      // No transactional email provider is configured yet (see auth-database-schema.md
+      // Design notes) — log the link so the flow is testable locally.
+      const resetLink = `${new URL(request.url).origin}/reset-password?token=${rawToken}`;
+      console.log(`[forgot-password] reset link for ${email}: ${resetLink}`);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

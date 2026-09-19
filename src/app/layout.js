@@ -3,6 +3,8 @@ import "./globals.css";
 import ConditionalShell from "@/components/admin-panel/ConditionalShell";
 import ThemeInitScript from "@/components/admin-panel/ThemeInitScript";
 import { adminPanelConfig } from "@/config/admin-panel.config";
+import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { roleLabel, initialsFor } from "@/lib/staff";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -19,7 +21,22 @@ export const viewport = {
   colorScheme: "light dark",
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const staffUser = await getCurrentStaffUser();
+
+  const config = staffUser
+    ? {
+        ...adminPanelConfig,
+        user: {
+          ...adminPanelConfig.user,
+          name: staffUser.firstName,
+          role: roleLabel(staffUser.role),
+          initials: initialsFor(staffUser.firstName, staffUser.lastName),
+          logoutHref: "/admin/logout",
+        },
+      }
+    : adminPanelConfig;
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body
@@ -27,7 +44,7 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
       >
         <ThemeInitScript />
-        <ConditionalShell config={adminPanelConfig}>{children}</ConditionalShell>
+        <ConditionalShell config={config}>{children}</ConditionalShell>
       </body>
     </html>
   );

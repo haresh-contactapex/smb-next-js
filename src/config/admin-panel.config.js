@@ -146,7 +146,7 @@ export const adminPanelConfig = {
     name: "Haresh",
     role: "Store Admin",
     initials: "HA",
-    logoutHref: "/login",
+    logoutHref: "/admin/logout",
     menu: [
       { icon: "user", label: "My Profile", href: "#" },
       { icon: "settings", label: "Account Settings", href: "#" },

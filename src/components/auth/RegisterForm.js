@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { DEFAULT_REGISTER, isValidEmail, isValidPassword } from "./helpers";
@@ -10,7 +9,6 @@ import AuthLayout from "./AuthLayout";
 import Toast from "./Toast";
 
 export default function RegisterForm() {
-  const router = useRouter();
   const [form, setForm] = useState(DEFAULT_REGISTER);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -28,7 +26,7 @@ export default function RegisterForm() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
 
     const nextErrors = {
@@ -46,10 +44,31 @@ export default function RegisterForm() {
     }
 
     setSubmitting(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          password: form.password,
+          agreeTerms: form.agreeTerms,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "Unable to create your account.");
+      }
+      // There's no customer-facing storefront page in this app yet to send
+      // them to (only these auth pages exist) — staying put with the cookie
+      // set avoids bouncing a signed-in customer into the gated admin panel.
       showToast("Account created — welcome!");
-      router.push("/");
-    }, 600);
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (

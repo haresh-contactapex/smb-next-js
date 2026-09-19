@@ -1,15 +1,17 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
-import { DEFAULT_LOGIN, isValidEmail } from "./helpers";
-import PasswordField from "./PasswordField";
-import AuthLayout from "./AuthLayout";
-import Toast from "./Toast";
+import { isValidEmail } from "@/components/auth/helpers";
+import PasswordField from "@/components/auth/PasswordField";
+import Toast from "@/components/auth/Toast";
+import AdminAuthLayout from "./AdminAuthLayout";
 
-export default function LoginForm() {
-  const [form, setForm] = useState(DEFAULT_LOGIN);
+export default function AdminLoginForm() {
+  const router = useRouter();
+  const [form, setForm] = useState({ email: "", password: "" });
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -41,23 +43,18 @@ export default function LoginForm() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/admin-auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-          rememberMe: form.rememberMe,
-        }),
+        body: JSON.stringify({ email: form.email, password: form.password }),
       });
       const result = await res.json();
       if (!res.ok || !result.success) {
         throw new Error(result.error || "Unable to sign in.");
       }
-      // There's no customer-facing storefront page in this app yet to send
-      // them to (only these auth pages exist) — staying put with the cookie
-      // set avoids bouncing a signed-in customer into the gated admin panel.
       showToast("Signed in successfully");
+      router.push("/");
+      router.refresh();
     } catch (error) {
       showToast(error.message);
     } finally {
@@ -66,21 +63,10 @@ export default function LoginForm() {
   }
 
   return (
-    <AuthLayout
-      title="Welcome back"
-      subtitle="Sign in to manage your orders, wishlist and account details."
-      footer={
-        <>
-          New to Shop My Band?{" "}
-          <Link href="/register" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
-            Create an account
-          </Link>
-        </>
-      }
-    >
+    <AdminAuthLayout title="Admin Sign In" subtitle="Sign in to manage the store.">
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         <div>
-          <label className="field-label" htmlFor="login-email">
+          <label className="field-label" htmlFor="admin-login-email">
             Email Address
           </label>
           <div className="relative">
@@ -88,11 +74,11 @@ export default function LoginForm() {
               <Icon name="mail" className="w-4 h-4" />
             </span>
             <input
-              id="login-email"
+              id="admin-login-email"
               type="email"
               value={form.email}
               onChange={(e) => setField("email", e.target.value)}
-              placeholder="you@example.com"
+              placeholder="you@shopmyband.com"
               aria-label="Email address"
               autoComplete="email"
               className={`field-input pl-10${emailError ? " border-red-400" : ""}`}
@@ -102,7 +88,7 @@ export default function LoginForm() {
         </div>
 
         <PasswordField
-          id="login-password"
+          id="admin-login-password"
           label="Password"
           placeholder="Enter your password"
           value={form.password}
@@ -111,17 +97,9 @@ export default function LoginForm() {
           autoComplete="current-password"
         />
 
-        <div className="flex items-center justify-between">
-          <label className="toggle-row text-sm text-slate-600 dark:text-slate-300">
-            <input
-              type="checkbox"
-              checked={form.rememberMe}
-              onChange={(e) => setField("rememberMe", e.target.checked)}
-            />
-            Remember me
-          </label>
+        <div className="flex justify-end">
           <Link
-            href="/forgot-password"
+            href="/admin/forgot-password"
             className="text-sm font-semibold text-primary-600 dark:text-accent-400 hover:underline"
           >
             Forgot password?
@@ -135,25 +113,9 @@ export default function LoginForm() {
         >
           {submitting ? "Signing in…" : "Sign In"}
         </button>
-
-        <div className="flex items-center gap-3 pt-1">
-          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-          <span className="text-xs font-medium text-slate-400">OR</span>
-          <div className="h-px flex-1 bg-slate-200 dark:bg-white/10" />
-        </div>
-
-        <button
-          type="button"
-          className="w-full h-11 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-center gap-2.5 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-        >
-          <span className="w-4 h-4 rounded-full bg-slate-200 dark:bg-white/10 grid place-items-center text-[10px] font-bold text-slate-500 dark:text-slate-300">
-            G
-          </span>
-          Continue with Google
-        </button>
       </form>
 
       <Toast message={toast.message} visible={toast.visible} />
-    </AuthLayout>
+    </AdminAuthLayout>
   );
 }

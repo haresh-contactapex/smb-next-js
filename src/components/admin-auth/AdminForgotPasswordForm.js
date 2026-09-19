@@ -3,11 +3,11 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
-import { isValidEmail } from "./helpers";
-import AuthLayout from "./AuthLayout";
-import Toast from "./Toast";
+import { isValidEmail } from "@/components/auth/helpers";
+import Toast from "@/components/auth/Toast";
+import AdminAuthLayout from "./AdminAuthLayout";
 
-export default function ForgotPasswordForm() {
+export default function AdminForgotPasswordForm() {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -34,7 +34,7 @@ export default function ForgotPasswordForm() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      const res = await fetch("/api/admin-auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -54,21 +54,21 @@ export default function ForgotPasswordForm() {
 
   if (sent) {
     return (
-      <AuthLayout
+      <AdminAuthLayout
         title="Check your email"
         footer={
-          <Link href="/login" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
+          <Link href="/admin/login" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
             Back to sign in
           </Link>
         }
       >
         <div className="text-center space-y-5">
-          <span className="inline-flex w-14 h-14 rounded-2xl bg-primary-500/10 dark:bg-accent-500/10 text-primary-600 dark:text-accent-400 items-center justify-center">
+          <span className="inline-flex w-14 h-14 rounded-2xl bg-primary-500/10 dark:bg-accent-500/10 text-primary-600 dark:text-accent-400 items-center justify-center mx-auto">
             <Icon name="mail" className="w-6 h-6" />
           </span>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            We sent a password reset link to <span className="font-semibold text-slate-800 dark:text-white">{email}</span>.
-            Follow the instructions in that email to choose a new password.
+            If <span className="font-semibold text-slate-800 dark:text-white">{email}</span> matches a staff account,
+            we sent a password reset link to it.
           </p>
           <button
             type="button"
@@ -80,23 +80,23 @@ export default function ForgotPasswordForm() {
         </div>
 
         <Toast message={toast.message} visible={toast.visible} />
-      </AuthLayout>
+      </AdminAuthLayout>
     );
   }
 
   return (
-    <AuthLayout
+    <AdminAuthLayout
       title="Forgot your password?"
-      subtitle="Enter the email linked to your account and we'll send you a reset link."
+      subtitle="Enter your staff email and we'll send you a reset link."
       footer={
-        <Link href="/login" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
+        <Link href="/admin/login" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
           Back to sign in
         </Link>
       }
     >
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         <div>
-          <label className="field-label" htmlFor="forgot-email">
+          <label className="field-label" htmlFor="admin-forgot-email">
             Email Address
           </label>
           <div className="relative">
@@ -104,11 +104,11 @@ export default function ForgotPasswordForm() {
               <Icon name="mail" className="w-4 h-4" />
             </span>
             <input
-              id="forgot-email"
+              id="admin-forgot-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder="you@shopmyband.com"
               aria-label="Email address"
               autoComplete="email"
               className={`field-input pl-10${emailError ? " border-red-400" : ""}`}
@@ -127,6 +127,6 @@ export default function ForgotPasswordForm() {
       </form>
 
       <Toast message={toast.message} visible={toast.visible} />
-    </AuthLayout>
+    </AdminAuthLayout>
   );
 }

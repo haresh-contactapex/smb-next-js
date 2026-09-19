@@ -18,7 +18,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto; -- provides gen_random_uuid()
 -- =========================================================================
 -- password_reset_tokens
 -- =========================================================================
-CREATE TABLE password_reset_tokens (
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     customer_id         UUID NOT NULL REFERENCES customers (id) ON DELETE CASCADE,
     token_hash          VARCHAR(255) NOT NULL,
@@ -35,5 +35,5 @@ COMMENT ON COLUMN password_reset_tokens.requested_email IS 'Snapshot of the emai
 COMMENT ON COLUMN password_reset_tokens.expires_at IS 'Reset links are time-limited, e.g. created_at + 1 hour.';
 COMMENT ON COLUMN password_reset_tokens.used_at IS 'Set once the link is used to change the password; NULL = still valid/pending. A used token must be rejected on any further attempt.';
 
-CREATE INDEX password_reset_tokens_customer_id_idx ON password_reset_tokens (customer_id);
-CREATE INDEX password_reset_tokens_expires_at_idx ON password_reset_tokens (expires_at);
+CREATE INDEX IF NOT EXISTS password_reset_tokens_customer_id_idx ON password_reset_tokens (customer_id);
+CREATE INDEX IF NOT EXISTS password_reset_tokens_expires_at_idx ON password_reset_tokens (expires_at);

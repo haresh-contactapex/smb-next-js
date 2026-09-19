@@ -3,7 +3,16 @@
 import { usePathname } from "next/navigation";
 import AdminLayout from "./AdminLayout";
 
-const STANDALONE_ROUTES = ["/login", "/register", "/forgot-password"];
+const STANDALONE_ROUTES = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/admin/login",
+  "/admin/logout",
+  "/admin/forgot-password",
+  "/admin/reset-password",
+];
 
 /**
  * Standalone routes (auth pages) render without the sidebar/header/footer shell;

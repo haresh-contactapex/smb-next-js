@@ -25,7 +25,7 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
-const SCHEMA_FILE = path.join(
+const DEFAULT_SCHEMA_FILE = path.join(
   __dirname,
   "..",
   "docs",
@@ -33,15 +33,51 @@ const SCHEMA_FILE = path.join(
   "category-product-catalog-database-schema.sql"
 );
 
-function splitStatements(sql) {
-  const withoutComments = sql
+const SCHEMA_FILE = process.argv[2]
+  ? path.resolve(process.cwd(), process.argv[2])
+  : DEFAULT_SCHEMA_FILE;
+
+function stripLineComments(sql) {
+  return sql
     .split("\n")
     .map((line) => line.replace(/--.*$/, ""))
     .join("\n");
-  return withoutComments
-    .split(";")
-    .map((s) => s.trim())
-    .filter(Boolean);
+}
+
+// A naive split(";") breaks on any semicolon inside a single-quoted string
+// literal (e.g. a COMMENT ON ... IS '...; ...' with punctuation in the text),
+// so this walks the source tracking string state and only splits outside one.
+// '' inside a string is SQL's escaped single quote, not a terminator.
+function splitStatements(sql) {
+  const source = stripLineComments(sql);
+  const statements = [];
+  let current = "";
+  let inString = false;
+
+  for (let i = 0; i < source.length; i++) {
+    const char = source[i];
+    current += char;
+
+    if (char === "'") {
+      if (inString && source[i + 1] === "'") {
+        current += source[++i];
+        continue;
+      }
+      inString = !inString;
+      continue;
+    }
+
+    if (char === ";" && !inString) {
+      const trimmed = current.slice(0, -1).trim();
+      if (trimmed) statements.push(trimmed);
+      current = "";
+    }
+  }
+
+  const trailing = current.trim();
+  if (trailing) statements.push(trailing);
+
+  return statements;
 }
 
 async function main() {
