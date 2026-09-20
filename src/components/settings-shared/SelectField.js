@@ -1,6 +1,12 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function SelectField({ id, label, value, options, onChange, hint }) {
+export default function SelectField({ id, label, value, options, onChange, hint, error, inputRef, onEnter }) {
+  function handleKeyDown(e) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    onEnter?.();
+  }
+
   return (
     <div>
       <label className="field-label" htmlFor={id}>
@@ -9,10 +15,16 @@ export default function SelectField({ id, label, value, options, onChange, hint 
       <div className="relative">
         <select
           id={id}
+          ref={inputRef}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onEnter ? handleKeyDown : undefined}
           aria-label={label}
-          className="field-input appearance-none pr-8 cursor-pointer"
+          className={`field-input appearance-none pr-8 cursor-pointer${
+            error
+              ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+              : ""
+          }`}
         >
           {options.map((opt) => {
             const optValue = typeof opt === "string" ? opt : opt.value;
@@ -28,7 +40,8 @@ export default function SelectField({ id, label, value, options, onChange, hint 
           <Icon name="chevron-down" className="w-4 h-4" />
         </span>
       </div>
-      {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
+      {error && <p className="text-xs text-error mt-1">{error}</p>}
+      {!error && hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
     </div>
   );
 }
