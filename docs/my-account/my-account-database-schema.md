@@ -40,6 +40,9 @@ Preferences) and the Payment page's billing-address toggle.
 | `password_hash`             | `VARCHAR(255)`  | NOT NULL                                                     | Bcrypt/argon2 hash; see Design notes                 |
 | `billing_same_as_shipping`  | `BOOLEAN`       | NOT NULL, DEFAULT `true`                                     | "Same as shipping address" toggle on the Payment page |
 | `last_login_at`             | `TIMESTAMPTZ`   | NULL                                                         | "Last Login" in Account Status                       |
+| `password_changed_at`       | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                     | Backs Settings -> Security "Password Expiry (days)"  |
+| `failed_login_attempts`     | `SMALLINT`      | NOT NULL, DEFAULT `0`                                        | Backs Settings -> Security "Max Login Attempts"      |
+| `locked_until`              | `TIMESTAMPTZ`   | NULL                                                         | Set once `failed_login_attempts` reaches the configured max |
 | `created_at`                | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                     | "Member Since" in Account Status                     |
 | `updated_at`                | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                     |                                                       |
 

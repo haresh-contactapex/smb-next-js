@@ -11,6 +11,7 @@ export const GENERAL_SETTINGS_DEFAULTS = {
   faviconUrl: null,
   currency: "USD",
   skuPrefix: "",
+  enableRecaptcha: false,
 };
 
 const GeneralSettingsContext = createContext(GENERAL_SETTINGS_DEFAULTS);
@@ -28,8 +29,9 @@ export function GeneralSettingsProvider({ value, children }) {
 }
 
 // Store name/logo/favicon (Settings -> General), currency (Settings ->
-// Currency & Tax) and SKU prefix (Settings -> Products), available to any
-// client component without prop-drilling.
+// Currency & Tax), SKU prefix (Settings -> Products) and the reCAPTCHA
+// toggle (Settings -> Security), available to any client component without
+// prop-drilling.
 export function useGeneralSettings() {
   return useContext(GeneralSettingsContext);
 }

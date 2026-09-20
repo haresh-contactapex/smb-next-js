@@ -3,6 +3,7 @@ import { findStaffResetToken, markStaffResetTokenUsed } from "@/lib/passwordRese
 import { updateStaffPassword } from "@/lib/staff";
 import { hashPassword } from "@/lib/auth/password";
 import { hashResetToken } from "@/lib/auth/resetToken";
+import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { isValidPassword, getPasswordErrorMessage } from "@/components/auth/helpers";
 
 export async function POST(request) {
@@ -17,6 +18,14 @@ export async function POST(request) {
     if (!isValidPassword(password)) {
       return NextResponse.json(
         { success: false, error: getPasswordErrorMessage(password) || "Enter a valid password." },
+        { status: 400 }
+      );
+    }
+
+    const recaptcha = await checkRecaptchaIfEnabled(payload.recaptchaToken);
+    if (recaptcha.required && !recaptcha.valid) {
+      return NextResponse.json(
+        { success: false, error: "reCAPTCHA verification failed. Please try again." },
         { status: 400 }
       );
     }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findCustomerByEmail } from "@/lib/customers";
 import { insertCustomerResetToken } from "@/lib/passwordResetTokens";
 import { createResetToken } from "@/lib/auth/resetToken";
+import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { isValidEmail } from "@/components/auth/helpers";
 
 // Always responds with success (whether or not the email matches an account)
@@ -13,6 +14,14 @@ export async function POST(request) {
 
     if (!isValidEmail(email)) {
       return NextResponse.json({ success: false, error: "Enter a valid email address." }, { status: 400 });
+    }
+
+    const recaptcha = await checkRecaptchaIfEnabled(payload.recaptchaToken);
+    if (recaptcha.required && !recaptcha.valid) {
+      return NextResponse.json(
+        { success: false, error: "reCAPTCHA verification failed. Please try again." },
+        { status: 400 }
+      );
     }
 
     const customer = await findCustomerByEmail(email);

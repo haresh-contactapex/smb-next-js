@@ -3,12 +3,15 @@
 import { useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { isValidPassword } from "@/components/auth/helpers";
 import PasswordField from "@/components/auth/PasswordField";
 import Toast from "@/components/auth/Toast";
+import Recaptcha from "@/components/auth/Recaptcha";
 import AdminAuthLayout from "./AdminAuthLayout";
 
 export default function AdminResetPasswordForm() {
+  const { enableRecaptcha } = useGeneralSettings();
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") || "";
@@ -16,6 +19,8 @@ export default function AdminResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState({});
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaKey, setRecaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
@@ -45,13 +50,17 @@ export default function AdminResetPasswordForm() {
       showToast("Please fix the highlighted fields", "error");
       return;
     }
+    if (enableRecaptcha && !recaptchaToken) {
+      showToast("Please complete the reCAPTCHA verification.", "error");
+      return;
+    }
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin-auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, recaptchaToken }),
       });
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -61,6 +70,8 @@ export default function AdminResetPasswordForm() {
       showToast("Password updated");
     } catch (error) {
       showToast(error.message, "error");
+      setRecaptchaToken("");
+      setRecaptchaKey((k) => k + 1);
     } finally {
       setSubmitting(false);
     }
@@ -142,6 +153,8 @@ export default function AdminResetPasswordForm() {
           error={errors.confirmPassword ? "Passwords do not match." : null}
           autoComplete="new-password"
         />
+
+        {enableRecaptcha && <Recaptcha key={recaptchaKey} onChange={setRecaptchaToken} />}
 
         <button
           type="submit"

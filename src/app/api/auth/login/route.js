@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findCustomerByEmail, toPublicCustomer } from "@/lib/customers";
 import { verifyPassword } from "@/lib/auth/password";
 import { createCustomerSession } from "@/lib/auth/customerSession";
+import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { isValidEmail } from "@/components/auth/helpers";
 
 const INVALID_CREDENTIALS_ERROR = "Incorrect email or password.";
@@ -14,6 +15,14 @@ export async function POST(request) {
 
     if (!isValidEmail(email) || !password) {
       return NextResponse.json({ success: false, error: INVALID_CREDENTIALS_ERROR }, { status: 400 });
+    }
+
+    const recaptcha = await checkRecaptchaIfEnabled(payload.recaptchaToken);
+    if (recaptcha.required && !recaptcha.valid) {
+      return NextResponse.json(
+        { success: false, error: "reCAPTCHA verification failed. Please try again." },
+        { status: 400 }
+      );
     }
 
     const customer = await findCustomerByEmail(email);

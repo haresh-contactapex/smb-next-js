@@ -1,19 +1,24 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { isValidEmail } from "@/components/auth/helpers";
 import PasswordField from "@/components/auth/PasswordField";
 import Toast from "@/components/auth/Toast";
+import Recaptcha from "@/components/auth/Recaptcha";
 import AdminAuthLayout from "./AdminAuthLayout";
 
 export default function AdminLoginForm() {
+  const { enableRecaptcha } = useGeneralSettings();
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaKey, setRecaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
@@ -30,6 +35,18 @@ export default function AdminLoginForm() {
     setToast((t) => ({ ...t, visible: false }));
   }
 
+  // Reads the redirect reason from the URL directly (rather than
+  // next/navigation's useSearchParams) so this page never needs a Suspense
+  // boundary just to show a one-off notice.
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    if (reason === "timeout") {
+      showToast("Your session timed out and you were signed out.", "error");
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function setField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
@@ -45,13 +62,17 @@ export default function AdminLoginForm() {
       showToast("Enter a valid email and password to continue", "error");
       return;
     }
+    if (enableRecaptcha && !recaptchaToken) {
+      showToast("Please complete the reCAPTCHA verification.", "error");
+      return;
+    }
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/admin-auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: form.email, password: form.password }),
+        body: JSON.stringify({ email: form.email, password: form.password, recaptchaToken }),
       });
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -62,6 +83,8 @@ export default function AdminLoginForm() {
       router.refresh();
     } catch (error) {
       showToast(error.message, "error");
+      setRecaptchaToken("");
+      setRecaptchaKey((k) => k + 1);
     } finally {
       setSubmitting(false);
     }
@@ -114,6 +137,8 @@ export default function AdminLoginForm() {
             Forgot password?
           </Link>
         </div>
+
+        {enableRecaptcha && <Recaptcha key={recaptchaKey} onChange={setRecaptchaToken} />}
 
         <button
           type="submit"

@@ -3,13 +3,18 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { isValidEmail } from "./helpers";
 import AuthLayout from "./AuthLayout";
 import Toast from "./Toast";
+import Recaptcha from "./Recaptcha";
 
 export default function ForgotPasswordForm() {
+  const { enableRecaptcha } = useGeneralSettings();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaKey, setRecaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
@@ -36,13 +41,17 @@ export default function ForgotPasswordForm() {
       showToast("Enter a valid email address", "error");
       return;
     }
+    if (enableRecaptcha && !recaptchaToken) {
+      showToast("Please complete the reCAPTCHA verification.", "error");
+      return;
+    }
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, recaptchaToken }),
       });
       const result = await res.json();
       if (!res.ok || !result.success) {
@@ -52,6 +61,8 @@ export default function ForgotPasswordForm() {
       showToast("Reset link sent");
     } catch (error) {
       showToast(error.message, "error");
+      setRecaptchaToken("");
+      setRecaptchaKey((k) => k + 1);
     } finally {
       setSubmitting(false);
     }
@@ -125,6 +136,8 @@ export default function ForgotPasswordForm() {
           </div>
           {emailError && <p className="text-xs text-error mt-1">Enter a valid email address.</p>}
         </div>
+
+        {enableRecaptcha && <Recaptcha key={recaptchaKey} onChange={setRecaptchaToken} />}
 
         <button
           type="submit"

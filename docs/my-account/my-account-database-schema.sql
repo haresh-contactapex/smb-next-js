@@ -22,6 +22,9 @@ CREATE TABLE users (
     password_hash               VARCHAR(255) NOT NULL,
     billing_same_as_shipping    BOOLEAN NOT NULL DEFAULT true,
     last_login_at               TIMESTAMPTZ NULL,
+    password_changed_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    failed_login_attempts       SMALLINT NOT NULL DEFAULT 0,
+    locked_until                TIMESTAMPTZ NULL,
     created_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now(),
 

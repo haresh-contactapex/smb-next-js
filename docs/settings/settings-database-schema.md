@@ -137,7 +137,7 @@ Backs the Settings → Orders page.
 | `id`                             | `SMALLINT`    | PK, CHECK (`id = 1`)                                                       |       |
 | `order_number_prefix`           | `VARCHAR(20)` | NOT NULL, DEFAULT `'SMB-'`                                                 |       |
 | `starting_order_number`         | `INTEGER`     | NOT NULL, DEFAULT `10000`                                                  | Seed value for the next generated order number |
-| `auto_cancel_hours`             | `SMALLINT`    | NOT NULL, DEFAULT `24`                                                     | Auto-cancel unpaid orders after this many hours |
+| `auto_cancel_hours`             | `SMALLINT`    | NOT NULL, DEFAULT `24`, CHECK (`auto_cancel_hours >= 24`)                  | Auto-cancel unpaid orders after this many hours; minimum 24 |
 | `default_order_status`          | `VARCHAR(20)` | NOT NULL, DEFAULT `'Pending'`, CHECK IN (`Pending`, `Processing`, `Completed`) |    |
 | `require_confirmation_email`    | `BOOLEAN`     | NOT NULL, DEFAULT `true`                                                   |       |
 | `allow_order_edits`             | `BOOLEAN`     | NOT NULL, DEFAULT `false`                                                  | Whether admins can edit an order after it's placed |
@@ -276,10 +276,10 @@ Backs the Settings → Security page.
 | ----------------------------- | ------------- | ------------------------------- | ----- |
 | `id`                           | `SMALLINT`    | PK, CHECK (`id = 1`)             |       |
 | `require_two_factor_auth`     | `BOOLEAN`     | NOT NULL, DEFAULT `false`        | Store-wide 2FA requirement; distinct from the per-user `users.two_factor_enabled` toggle on the My Account Profile page |
-| `session_timeout_minutes`     | `INTEGER`     | NULL                             |       |
-| `password_expiry_days`        | `INTEGER`     | NULL                             | NULL = passwords never expire      |
-| `max_login_attempts`          | `SMALLINT`    | NULL                             | NULL = no lockout limit             |
-| `ip_allowlist`                | `TEXT`        | NULL                             | Newline-separated IPs/CIDRs; see Design notes |
+| `session_timeout_minutes`     | `SMALLINT`    | NOT NULL, DEFAULT `30`, CHECK (`>= 1`) | Required in the UI |
+| `password_expiry_days`        | `SMALLINT`    | NOT NULL, DEFAULT `90`, CHECK (`>= 1`) | Required in the UI |
+| `max_login_attempts`          | `SMALLINT`    | NOT NULL, DEFAULT `5`, CHECK (`>= 1`)  | Required in the UI |
+| `ip_allowlist`                | `TEXT`        | NULL                             | Optional. Newline-separated IPs/CIDRs; see Design notes |
 | `enable_recaptcha`            | `BOOLEAN`     | NOT NULL, DEFAULT `true`         |       |
 | `updated_at`                  | `TIMESTAMPTZ` | NOT NULL, DEFAULT `now()`        |       |
 
@@ -331,10 +331,9 @@ Backs the Settings → Integrations page.
 | `meta_pixel_id`                | `VARCHAR(30)`  | NULL                             |       |
 | `mailchimp_enabled`            | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
 | `mailchimp_api_key`            | `VARCHAR(255)` | NULL                             | See Design notes                      |
-| `slack_enabled`                | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
-| `slack_webhook_url`            | `VARCHAR(255)` | NULL                             |       |
-| `zapier_enabled`               | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
-| `zapier_api_key`               | `VARCHAR(255)` | NULL                             |       |
+| `google_recaptcha_enabled`     | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
+| `google_recaptcha_site_key`    | `VARCHAR(255)` | NULL                             | Required when `google_recaptcha_enabled` is true |
+| `google_recaptcha_secret_key`  | `VARCHAR(255)` | NULL                             | Server-side verification key; required when `google_recaptcha_enabled` is true. See Design notes |
 | `updated_at`                   | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`        |       |
 
 ### `social_media_settings`
@@ -437,11 +436,14 @@ editable settings — see Design notes.
   becomes `ACCEPTED`), while the boolean permission matrix below it is still
   a singleton (`role_permissions_settings`) since the page only ever edits
   one shared set of role capabilities, not per-admin overrides.
-- `mailchimp_api_key` / `zapier_api_key` / gateway `public_key` /
-  `secret_key` are exactly the fields the Integrations and Payment forms
-  collect today; a production system would likely route these through a
-  secrets manager rather than a plain settings table, but that's out of
-  scope for a schema that mirrors the current UI.
+- `mailchimp_api_key` / `google_recaptcha_site_key` / `google_recaptcha_secret_key`
+  / gateway `public_key` / `secret_key` are exactly the fields the
+  Integrations and Payment forms collect today; a production system would
+  likely route these through a secrets manager rather than a plain settings
+  table, but that's out of scope for a schema that mirrors the current UI.
+  `google_recaptcha_secret_key` in particular is a server-side verification
+  credential (like `secret_key` on `payment_settings`) and must be stored
+  encrypted at rest, never in plaintext.
 - The System & Maintenance page's "System Info" (App Version, Environment,
   Last Backup) and its Back Up Now / Clear Cache buttons are not modeled as
   columns — they're read-only operational/reporting data (version info,

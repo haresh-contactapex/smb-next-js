@@ -3,14 +3,19 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { DEFAULT_REGISTER, isValidEmail, isValidPassword } from "./helpers";
 import PasswordField from "./PasswordField";
 import AuthLayout from "./AuthLayout";
 import Toast from "./Toast";
+import Recaptcha from "./Recaptcha";
 
 export default function RegisterForm() {
+  const { enableRecaptcha } = useGeneralSettings();
   const [form, setForm] = useState(DEFAULT_REGISTER);
   const [errors, setErrors] = useState({});
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaKey, setRecaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
@@ -47,6 +52,10 @@ export default function RegisterForm() {
       showToast("Please fix the highlighted fields", "error");
       return;
     }
+    if (enableRecaptcha && !recaptchaToken) {
+      showToast("Please complete the reCAPTCHA verification.", "error");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -59,6 +68,7 @@ export default function RegisterForm() {
           email: form.email,
           password: form.password,
           agreeTerms: form.agreeTerms,
+          recaptchaToken,
         }),
       });
       const result = await res.json();
@@ -71,6 +81,8 @@ export default function RegisterForm() {
       showToast("Account created — welcome!");
     } catch (error) {
       showToast(error.message, "error");
+      setRecaptchaToken("");
+      setRecaptchaKey((k) => k + 1);
     } finally {
       setSubmitting(false);
     }
@@ -193,6 +205,8 @@ export default function RegisterForm() {
           </label>
           {errors.agreeTerms && <p className="text-xs text-error mt-1">You must accept the terms to continue.</p>}
         </div>
+
+        {enableRecaptcha && <Recaptcha key={recaptchaKey} onChange={setRecaptchaToken} />}
 
         <button
           type="submit"

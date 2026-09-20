@@ -50,7 +50,38 @@ export async function touchStaffLastLogin(id) {
 }
 
 export async function updateStaffPassword(id, passwordHash) {
-  await sql`UPDATE users SET password_hash = ${passwordHash}, updated_at = now() WHERE id = ${id}`;
+  await sql`
+    UPDATE users SET password_hash = ${passwordHash}, password_changed_at = now(), updated_at = now()
+    WHERE id = ${id}
+  `;
+}
+
+// Lockout is time-based rather than permanent, so a staff member is never
+// locked out of the admin panel for good.
+const LOCKOUT_MINUTES = 15;
+
+export function isAccountLocked(row) {
+  return Boolean(row.locked_until && new Date(row.locked_until).getTime() > Date.now());
+}
+
+// Increments the failed-attempt counter and locks the account once it
+// reaches Settings -> Security's "Max Login Attempts Before Lockout".
+export async function registerFailedLogin(id, maxLoginAttempts) {
+  const [row] = await sql`
+    UPDATE users SET failed_login_attempts = failed_login_attempts + 1
+    WHERE id = ${id}
+    RETURNING failed_login_attempts
+  `;
+  if (maxLoginAttempts > 0 && row.failed_login_attempts >= maxLoginAttempts) {
+    await sql`
+      UPDATE users SET failed_login_attempts = 0, locked_until = now() + make_interval(mins => ${LOCKOUT_MINUTES})
+      WHERE id = ${id}
+    `;
+  }
+}
+
+export async function resetLoginAttempts(id) {
+  await sql`UPDATE users SET failed_login_attempts = 0, locked_until = NULL WHERE id = ${id}`;
 }
 
 export async function getStaffPasswordHash(id) {

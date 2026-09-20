@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { findCustomerByEmail, createCustomer } from "@/lib/customers";
 import { hashPassword } from "@/lib/auth/password";
 import { createCustomerSession } from "@/lib/auth/customerSession";
+import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { isValidEmail, isValidPassword } from "@/components/auth/helpers";
 
 export async function POST(request) {
@@ -21,6 +22,14 @@ export async function POST(request) {
     if (!payload.agreeTerms) {
       return NextResponse.json(
         { success: false, error: "You must accept the terms to continue." },
+        { status: 400 }
+      );
+    }
+
+    const recaptcha = await checkRecaptchaIfEnabled(payload.recaptchaToken);
+    if (recaptcha.required && !recaptcha.valid) {
+      return NextResponse.json(
+        { success: false, error: "reCAPTCHA verification failed. Please try again." },
         { status: 400 }
       );
     }

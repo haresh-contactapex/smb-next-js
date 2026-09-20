@@ -1,4 +1,5 @@
 import AdminPanelInit from "./AdminPanelInit";
+import SessionExpiredWatcher from "./SessionExpiredWatcher";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import Footer from "./Footer";
@@ -13,6 +14,7 @@ export default function AdminLayout({ config, children }) {
   return (
     <>
       <AdminPanelInit />
+      <SessionExpiredWatcher />
       <Sidebar brand={config.brand} navItems={config.navItems} />
 
       <div id="mainWrap">

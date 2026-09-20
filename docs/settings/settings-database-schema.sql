@@ -137,7 +137,7 @@ CREATE TABLE orders_settings (
     id                        SMALLINT PRIMARY KEY CHECK (id = 1),
     order_number_prefix       VARCHAR(20) NOT NULL DEFAULT 'SMB-',
     starting_order_number     INTEGER     NOT NULL DEFAULT 10000,
-    auto_cancel_hours         SMALLINT    NOT NULL DEFAULT 24,
+    auto_cancel_hours         SMALLINT    NOT NULL DEFAULT 24 CHECK (auto_cancel_hours >= 24),
     default_order_status      VARCHAR(20) NOT NULL DEFAULT 'Pending'
         CHECK (default_order_status IN ('Pending', 'Processing', 'Completed')),
     require_confirmation_email BOOLEAN    NOT NULL DEFAULT true,
@@ -146,7 +146,7 @@ CREATE TABLE orders_settings (
 );
 COMMENT ON TABLE orders_settings IS 'Backs the Settings -> Orders page. Singleton row (id = 1).';
 COMMENT ON COLUMN orders_settings.starting_order_number IS 'Seed value for the next generated order number.';
-COMMENT ON COLUMN orders_settings.auto_cancel_hours IS 'Auto-cancel unpaid orders after this many hours.';
+COMMENT ON COLUMN orders_settings.auto_cancel_hours IS 'Auto-cancel unpaid orders after this many hours. Minimum 24.';
 COMMENT ON COLUMN orders_settings.allow_order_edits IS 'Whether admins can edit an order after it''s placed.';
 
 -- ----------------------------------------------------------------------------
@@ -295,18 +295,19 @@ COMMENT ON TABLE seo_settings IS 'Backs the Settings -> SEO page. Singleton row 
 CREATE TABLE security_settings (
     id                      SMALLINT PRIMARY KEY CHECK (id = 1),
     require_two_factor_auth BOOLEAN     NOT NULL DEFAULT false,
-    session_timeout_minutes INTEGER,
-    password_expiry_days    INTEGER,
-    max_login_attempts      SMALLINT,
+    session_timeout_minutes SMALLINT    NOT NULL DEFAULT 30 CHECK (session_timeout_minutes >= 1),
+    password_expiry_days    SMALLINT    NOT NULL DEFAULT 90 CHECK (password_expiry_days >= 1),
+    max_login_attempts      SMALLINT    NOT NULL DEFAULT 5  CHECK (max_login_attempts >= 1),
     ip_allowlist            TEXT,
     enable_recaptcha        BOOLEAN     NOT NULL DEFAULT true,
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE security_settings IS 'Backs the Settings -> Security page. Singleton row (id = 1).';
 COMMENT ON COLUMN security_settings.require_two_factor_auth IS 'Store-wide 2FA requirement; distinct from the per-user users.two_factor_enabled toggle.';
-COMMENT ON COLUMN security_settings.password_expiry_days IS 'NULL = passwords never expire.';
-COMMENT ON COLUMN security_settings.max_login_attempts IS 'NULL = no lockout limit.';
-COMMENT ON COLUMN security_settings.ip_allowlist IS 'Newline-separated IPs/CIDRs, mirroring the textarea in the UI ("one per line").';
+COMMENT ON COLUMN security_settings.session_timeout_minutes IS 'Required in the UI. Minutes of inactivity before an admin session expires.';
+COMMENT ON COLUMN security_settings.password_expiry_days IS 'Required in the UI. Days before an admin password must be changed.';
+COMMENT ON COLUMN security_settings.max_login_attempts IS 'Required in the UI. Failed sign-in attempts allowed before lockout.';
+COMMENT ON COLUMN security_settings.ip_allowlist IS 'Optional. Newline-separated IPs/CIDRs, mirroring the textarea in the UI ("one per line").';
 
 -- ----------------------------------------------------------------------------
 -- Admin & Roles: invitations (non-singleton) + role permission matrix (singleton)
@@ -346,21 +347,24 @@ COMMENT ON TABLE role_permissions_settings IS 'Backs the Role Permissions toggle
 -- Integrations
 -- ----------------------------------------------------------------------------
 CREATE TABLE integrations_settings (
-    id                       SMALLINT PRIMARY KEY CHECK (id = 1),
-    google_analytics_enabled BOOLEAN     NOT NULL DEFAULT true,
-    google_analytics_id      VARCHAR(30),
-    meta_pixel_enabled       BOOLEAN     NOT NULL DEFAULT false,
-    meta_pixel_id            VARCHAR(30),
-    mailchimp_enabled        BOOLEAN     NOT NULL DEFAULT false,
-    mailchimp_api_key        VARCHAR(255),
-    slack_enabled            BOOLEAN     NOT NULL DEFAULT false,
-    slack_webhook_url        VARCHAR(255),
-    zapier_enabled           BOOLEAN     NOT NULL DEFAULT false,
-    zapier_api_key           VARCHAR(255),
-    updated_at               TIMESTAMPTZ NOT NULL DEFAULT now()
+    id                        SMALLINT PRIMARY KEY CHECK (id = 1),
+    google_analytics_enabled  BOOLEAN     NOT NULL DEFAULT true,
+    google_analytics_id       VARCHAR(30),
+    meta_pixel_enabled        BOOLEAN     NOT NULL DEFAULT false,
+    meta_pixel_id             VARCHAR(30),
+    mailchimp_enabled         BOOLEAN     NOT NULL DEFAULT false,
+    mailchimp_api_key         VARCHAR(255),
+    google_recaptcha_enabled    BOOLEAN     NOT NULL DEFAULT false,
+    google_recaptcha_site_key   VARCHAR(255),
+    google_recaptcha_secret_key VARCHAR(255),
+    updated_at                  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE integrations_settings IS 'Backs the Settings -> Integrations page. Singleton row (id = 1).';
-COMMENT ON COLUMN integrations_settings.google_analytics_id IS 'Measurement ID, e.g. G-XXXXXXXXXX.';
+COMMENT ON COLUMN integrations_settings.google_analytics_id IS 'Measurement ID, e.g. G-XXXXXXXXXX. Required when google_analytics_enabled is true.';
+COMMENT ON COLUMN integrations_settings.meta_pixel_id IS 'Numeric Pixel ID. Required when meta_pixel_enabled is true.';
+COMMENT ON COLUMN integrations_settings.mailchimp_api_key IS 'Mailchimp API key, e.g. {32 hex chars}-us21. Required when mailchimp_enabled is true.';
+COMMENT ON COLUMN integrations_settings.google_recaptcha_site_key IS 'Google reCAPTCHA site key. Required when google_recaptcha_enabled is true.';
+COMMENT ON COLUMN integrations_settings.google_recaptcha_secret_key IS 'Google reCAPTCHA secret key, used server-side to verify challenge responses. Required when google_recaptcha_enabled is true; should be stored encrypted, not plaintext.';
 
 -- ----------------------------------------------------------------------------
 -- Social Media

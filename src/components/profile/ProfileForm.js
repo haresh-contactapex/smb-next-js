@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Icon from "@/components/admin-panel/Icon";
 import { EMPTY_PROFILE, toFormState, validateProfileForm } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import ProfileDetailsSection from "./ProfileDetailsSection";
@@ -15,9 +16,21 @@ export default function ProfileForm() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const [passwordExpiredNotice, setPasswordExpiredNotice] = useState(false);
 
   const toastTimerRef = useRef(null);
   const fieldRefs = useRef({});
+
+  // Reads the redirect reason from the URL directly (rather than
+  // next/navigation's useSearchParams) so this page never needs a Suspense
+  // boundary just to show a one-off notice.
+  useEffect(() => {
+    const reason = new URLSearchParams(window.location.search).get("reason");
+    if (reason === "password-expired") {
+      setPasswordExpiredNotice(true);
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, []);
 
   function registerRef(field) {
     return (el) => {
@@ -124,6 +137,7 @@ export default function ProfileForm() {
       }
 
       setProfile(toFormState(json.data));
+      if (profile.newPassword) setPasswordExpiredNotice(false);
       showToast("Profile saved");
     } catch (error) {
       showToast(error.message, "error");
@@ -140,6 +154,19 @@ export default function ProfileForm() {
 
   return (
     <>
+      {passwordExpiredNotice && (
+        <div
+          role="alert"
+          className="mb-6 flex items-start gap-3 rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm text-warning"
+        >
+          <Icon name="alert-triangle" className="w-4 h-4 mt-0.5 shrink-0" />
+          <p>
+            <span className="font-bold">Your password has expired.</span> Set a new one below to continue using the
+            admin panel.
+          </p>
+        </div>
+      )}
+
       <PageToolbar onDiscard={handleDiscard} onSave={handleSave} saving={saving} disabled={loading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

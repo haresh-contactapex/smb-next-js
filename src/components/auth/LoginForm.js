@@ -3,15 +3,20 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { DEFAULT_LOGIN, isValidEmail } from "./helpers";
 import PasswordField from "./PasswordField";
 import AuthLayout from "./AuthLayout";
 import Toast from "./Toast";
+import Recaptcha from "./Recaptcha";
 
 export default function LoginForm() {
+  const { enableRecaptcha } = useGeneralSettings();
   const [form, setForm] = useState(DEFAULT_LOGIN);
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaKey, setRecaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
@@ -43,6 +48,10 @@ export default function LoginForm() {
       showToast("Enter a valid email and password to continue", "error");
       return;
     }
+    if (enableRecaptcha && !recaptchaToken) {
+      showToast("Please complete the reCAPTCHA verification.", "error");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -53,6 +62,7 @@ export default function LoginForm() {
           email: form.email,
           password: form.password,
           rememberMe: form.rememberMe,
+          recaptchaToken,
         }),
       });
       const result = await res.json();
@@ -65,6 +75,10 @@ export default function LoginForm() {
       showToast("Signed in successfully");
     } catch (error) {
       showToast(error.message, "error");
+      // The token is single-use, and a failed submit likely means it's
+      // already been spent (or expired) — force a fresh widget/token.
+      setRecaptchaToken("");
+      setRecaptchaKey((k) => k + 1);
     } finally {
       setSubmitting(false);
     }
@@ -136,6 +150,8 @@ export default function LoginForm() {
             Forgot password?
           </Link>
         </div>
+
+        {enableRecaptcha && <Recaptcha key={recaptchaKey} onChange={setRecaptchaToken} />}
 
         <button
           type="submit"

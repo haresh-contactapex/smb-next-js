@@ -9,6 +9,7 @@ import { roleLabel, initialsFor } from "@/lib/staff";
 import { getGeneralSettings } from "@/lib/generalSettings";
 import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 import { getProductsSettings } from "@/lib/productsSettings";
+import { getSecuritySettings } from "@/lib/securitySettings";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,6 +52,16 @@ async function loadProductsSettings() {
   }
 }
 
+// The reCAPTCHA toggle lives on Settings -> Security — same fallback-to-null
+// treatment as loadGeneralSettings() above.
+async function loadSecuritySettings() {
+  try {
+    return await getSecuritySettings();
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata() {
   const settings = await loadGeneralSettings();
   return {
@@ -61,11 +72,12 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const [staffUser, settings, currencyTaxSettings, productsSettings] = await Promise.all([
+  const [staffUser, settings, currencyTaxSettings, productsSettings, securitySettings] = await Promise.all([
     getCurrentStaffUser(),
     loadGeneralSettings(),
     loadCurrencyTaxSettings(),
     loadProductsSettings(),
+    loadSecuritySettings(),
   ]);
 
   const config = staffUser
@@ -95,6 +107,7 @@ export default async function RootLayout({ children }) {
             faviconUrl: settings?.faviconUrl,
             currency: currencyTaxSettings?.currency,
             skuPrefix: productsSettings?.skuPrefix,
+            enableRecaptcha: securitySettings?.enableRecaptcha,
           }}
         >
           <ConditionalShell config={config}>{children}</ConditionalShell>
