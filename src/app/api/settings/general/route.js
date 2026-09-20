@@ -42,7 +42,6 @@ export async function PUT(request) {
       timezone: String(payload.timezone || "UTC+05:30").trim(),
       dateTimeFormat: String(payload.dateTimeFormat || "MM/DD/YYYY 12h").trim(),
       language: String(payload.language || "en").trim(),
-      currency: String(payload.currency || "USD").trim(),
     };
 
     if (!settings.storeName) {

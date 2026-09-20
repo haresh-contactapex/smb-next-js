@@ -1,6 +1,6 @@
 // Single shared money formatter so every feature displays amounts in
-// whatever currency is configured on Settings -> General, instead of each
-// component hardcoding its own symbol/locale.
+// whatever currency is configured on Settings -> Currency & Tax, instead of
+// each component hardcoding its own symbol/locale.
 export function formatCurrency(amount, currencyCode = "USD") {
   const value = Number(amount);
   try {

@@ -15,7 +15,6 @@ function toPublicSettings(row) {
     timezone: row.timezone,
     dateTimeFormat: row.date_time_format,
     language: row.language,
-    currency: row.currency,
   };
 }
 
@@ -40,7 +39,6 @@ export async function updateGeneralSettings(settings) {
       timezone = ${settings.timezone},
       date_time_format = ${settings.dateTimeFormat},
       language = ${settings.language},
-      currency = ${settings.currency},
       updated_at = now()
     WHERE id = 1
     RETURNING *

@@ -204,7 +204,6 @@ export default function GeneralSettingsForm() {
             timezone={settings.timezone}
             dateTimeFormat={settings.dateTimeFormat}
             language={settings.language}
-            currency={settings.currency}
             onFieldChange={setField}
           />
         </div>

@@ -1,5 +1,5 @@
 import Icon from "@/components/admin-panel/Icon";
-import { CURRENCIES, DATE_TIME_FORMATS, LANGUAGES, TIMEZONES } from "@/data/accountData";
+import { DATE_TIME_FORMATS, LANGUAGES, TIMEZONES } from "@/data/accountData";
 
 function SelectField({ id, label, value, options, onChange }) {
   return (
@@ -29,7 +29,7 @@ function SelectField({ id, label, value, options, onChange }) {
   );
 }
 
-export default function LocalizationSidebar({ timezone, dateTimeFormat, language, currency, onFieldChange }) {
+export default function LocalizationSidebar({ timezone, dateTimeFormat, language, onFieldChange }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3 flex items-center gap-1.5">
@@ -57,13 +57,6 @@ export default function LocalizationSidebar({ timezone, dateTimeFormat, language
           value={language}
           options={LANGUAGES}
           onChange={(value) => onFieldChange("language", value)}
-        />
-        <SelectField
-          id="f-currency"
-          label="Default Currency"
-          value={currency}
-          options={CURRENCIES}
-          onChange={(value) => onFieldChange("currency", value)}
         />
       </div>
     </section>

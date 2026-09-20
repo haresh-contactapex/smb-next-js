@@ -16,7 +16,6 @@ export const DEFAULT_GENERAL_SETTINGS = {
   timezone: "UTC+05:30",
   dateTimeFormat: "MM/DD/YYYY 12h",
   language: "en",
-  currency: "USD",
 };
 
 export function isValidEmail(value) {
@@ -39,7 +38,6 @@ export function toFormSettings(data) {
     timezone: data.timezone || "UTC+05:30",
     dateTimeFormat: data.dateTimeFormat || "MM/DD/YYYY 12h",
     language: data.language || "en",
-    currency: data.currency || "USD",
   };
 }
 
@@ -58,7 +56,6 @@ export function toSavePayload(settings) {
     timezone: settings.timezone,
     dateTimeFormat: settings.dateTimeFormat,
     language: settings.language,
-    currency: settings.currency,
   };
 }
 

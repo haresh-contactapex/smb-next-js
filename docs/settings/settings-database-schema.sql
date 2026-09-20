@@ -84,7 +84,7 @@ CREATE TABLE currency_tax_settings (
     updated_at               TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE currency_tax_settings IS 'Backs the Settings -> Currency & Tax page. Singleton row (id = 1).';
-COMMENT ON COLUMN currency_tax_settings.currency IS 'Independent of general_settings.currency; two separate form fields in the current UI.';
+COMMENT ON COLUMN currency_tax_settings.currency IS 'The store-wide currency, applied globally across the app. general_settings.currency is unused.';
 
 -- ----------------------------------------------------------------------------
 -- Payment
