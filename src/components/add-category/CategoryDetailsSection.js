@@ -47,11 +47,11 @@ export default function CategoryDetailsSection({
               fileInputRef.current?.click();
             }
           }}
-          className={`relative w-full md:w-36 h-36 rounded-2xl border-2 border-dashed ${
+          className={`relative w-full md:w-36 h-36 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors group overflow-hidden ${
             imageError
-              ? "border-red-400"
-              : "border-slate-200 dark:border-white/10 hover:border-primary-400 dark:hover:border-accent-500/50"
-          } bg-slate-50 dark:bg-darksurface2/50 flex flex-col items-center justify-center cursor-pointer transition-colors group overflow-hidden`}
+              ? "border-red-400 bg-red-50 dark:bg-red-500/10"
+              : "border-slate-200 dark:border-white/10 hover:border-primary-400 dark:hover:border-accent-500/50 bg-slate-50 dark:bg-darksurface2/50"
+          }`}
         >
           {image ? (
             <>
@@ -104,7 +104,11 @@ export default function CategoryDetailsSection({
               onChange={(e) => onTitleChange(e.target.value)}
               placeholder="e.g. Wedding Bands, Diamond Rings"
               aria-label="Category title"
-              className={`field-input h-11${titleError ? " border-red-400" : ""}`}
+              className={`field-input h-11${
+                titleError
+                  ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                  : ""
+              }`}
             />
             {titleError && <p className="text-xs text-error mt-1">Title is required.</p>}
           </div>
