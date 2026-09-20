@@ -12,14 +12,19 @@ export default function RegisterForm() {
   const [form, setForm] = useState(DEFAULT_REGISTER);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false });
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const toastTimerRef = useRef(null);
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+  }
+
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
   }
 
   function setField(field, value) {
@@ -39,7 +44,7 @@ export default function RegisterForm() {
     setErrors(nextErrors);
 
     if (Object.values(nextErrors).some(Boolean)) {
-      showToast("Please fix the highlighted fields");
+      showToast("Please fix the highlighted fields", "error");
       return;
     }
 
@@ -65,7 +70,7 @@ export default function RegisterForm() {
       // set avoids bouncing a signed-in customer into the gated admin panel.
       showToast("Account created — welcome!");
     } catch (error) {
-      showToast(error.message);
+      showToast(error.message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -98,8 +103,13 @@ export default function RegisterForm() {
               placeholder="Jane"
               aria-label="First name"
               autoComplete="given-name"
-              className={`field-input${errors.firstName ? " border-red-400" : ""}`}
+              className={`field-input${
+                errors.firstName
+                  ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                  : ""
+              }`}
             />
+            {errors.firstName && <p className="text-xs text-error mt-1">First name is required.</p>}
           </div>
           <div>
             <label className="field-label" htmlFor="reg-last-name">
@@ -134,7 +144,11 @@ export default function RegisterForm() {
               placeholder="you@example.com"
               aria-label="Email address"
               autoComplete="email"
-              className={`field-input pl-10${errors.email ? " border-red-400" : ""}`}
+              className={`field-input pl-10${
+                errors.email
+                  ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                  : ""
+              }`}
             />
           </div>
           {errors.email && <p className="text-xs text-error mt-1">Enter a valid email address.</p>}
@@ -146,8 +160,9 @@ export default function RegisterForm() {
           placeholder="At least 8 characters"
           value={form.password}
           onChange={(v) => setField("password", v)}
-          error={errors.password ? "Password must be at least 8 characters." : null}
+          error={errors.password && !form.password ? "Password is required." : null}
           autoComplete="new-password"
+          showStrength
         />
 
         <PasswordField
@@ -204,7 +219,7 @@ export default function RegisterForm() {
         </button>
       </form>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </AuthLayout>
   );
 }

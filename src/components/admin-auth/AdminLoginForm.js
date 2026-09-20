@@ -15,14 +15,19 @@ export default function AdminLoginForm() {
   const [emailError, setEmailError] = useState(false);
   const [passwordError, setPasswordError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false });
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const toastTimerRef = useRef(null);
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+  }
+
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
   }
 
   function setField(field, value) {
@@ -37,7 +42,7 @@ export default function AdminLoginForm() {
     setEmailError(emailInvalid);
     setPasswordError(passwordInvalid);
     if (emailInvalid || passwordInvalid) {
-      showToast("Enter a valid email and password to continue");
+      showToast("Enter a valid email and password to continue", "error");
       return;
     }
 
@@ -56,7 +61,7 @@ export default function AdminLoginForm() {
       router.push("/");
       router.refresh();
     } catch (error) {
-      showToast(error.message);
+      showToast(error.message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -81,7 +86,11 @@ export default function AdminLoginForm() {
               placeholder="you@shopmyband.com"
               aria-label="Email address"
               autoComplete="email"
-              className={`field-input pl-10${emailError ? " border-red-400" : ""}`}
+              className={`field-input pl-10${
+                emailError
+                  ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                  : ""
+              }`}
             />
           </div>
           {emailError && <p className="text-xs text-error mt-1">Enter a valid email address.</p>}
@@ -115,7 +124,7 @@ export default function AdminLoginForm() {
         </button>
       </form>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </AdminAuthLayout>
   );
 }

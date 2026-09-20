@@ -18,14 +18,19 @@ export default function AdminResetPasswordForm() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false });
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const toastTimerRef = useRef(null);
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+  }
+
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
   }
 
   async function handleSubmit(e) {
@@ -37,7 +42,7 @@ export default function AdminResetPasswordForm() {
     };
     setErrors(nextErrors);
     if (Object.values(nextErrors).some(Boolean)) {
-      showToast("Please fix the highlighted fields");
+      showToast("Please fix the highlighted fields", "error");
       return;
     }
 
@@ -55,7 +60,7 @@ export default function AdminResetPasswordForm() {
       setDone(true);
       showToast("Password updated");
     } catch (error) {
-      showToast(error.message);
+      showToast(error.message, "error");
     } finally {
       setSubmitting(false);
     }
@@ -101,7 +106,7 @@ export default function AdminResetPasswordForm() {
           Sign In
         </button>
 
-        <Toast message={toast.message} visible={toast.visible} />
+        <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
       </AdminAuthLayout>
     );
   }
@@ -123,8 +128,9 @@ export default function AdminResetPasswordForm() {
           placeholder="At least 8 characters"
           value={password}
           onChange={setPassword}
-          error={errors.password ? "Password must be at least 8 characters." : null}
+          error={errors.password && !password ? "Password is required." : null}
           autoComplete="new-password"
+          showStrength
         />
 
         <PasswordField
@@ -146,7 +152,7 @@ export default function AdminResetPasswordForm() {
         </button>
       </form>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </AdminAuthLayout>
   );
 }

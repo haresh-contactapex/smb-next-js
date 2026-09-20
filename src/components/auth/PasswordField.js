@@ -2,9 +2,27 @@
 
 import { useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import { getPasswordErrorMessage } from "./helpers";
+import PasswordStrengthMeter from "./PasswordStrengthMeter";
 
-export default function PasswordField({ id, label, placeholder, value, onChange, error, autoComplete }) {
+// showStrength opts a field into live requirement checking + a strength
+// meter as the user types, for a "new password" field (Register, Reset).
+// Leave it off for a "current password" field (Login) or a Confirm field,
+// where strength/requirements aren't meaningful.
+export default function PasswordField({
+  id,
+  label,
+  placeholder,
+  value,
+  onChange,
+  error,
+  autoComplete,
+  showStrength = false,
+}) {
   const [visible, setVisible] = useState(false);
+
+  const liveMessage = showStrength && value ? getPasswordErrorMessage(value) : null;
+  const displayError = error || liveMessage;
 
   return (
     <div>
@@ -23,7 +41,11 @@ export default function PasswordField({ id, label, placeholder, value, onChange,
           placeholder={placeholder}
           aria-label={label}
           autoComplete={autoComplete}
-          className={`field-input pl-10 pr-10${error ? " border-red-400" : ""}`}
+          className={`field-input pl-10 pr-10${
+            displayError
+              ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+              : ""
+          }`}
         />
         <button
           type="button"
@@ -34,7 +56,8 @@ export default function PasswordField({ id, label, placeholder, value, onChange,
           <Icon name={visible ? "eye-off" : "eye"} className="w-full h-full" />
         </button>
       </div>
-      {error && <p className="text-xs text-error mt-1">{error}</p>}
+      {showStrength && <PasswordStrengthMeter value={value} />}
+      {displayError && <p className="text-xs text-error mt-1">{displayError}</p>}
     </div>
   );
 }

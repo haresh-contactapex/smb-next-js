@@ -3,7 +3,7 @@ import { findStaffResetToken, markStaffResetTokenUsed } from "@/lib/passwordRese
 import { updateStaffPassword } from "@/lib/staff";
 import { hashPassword } from "@/lib/auth/password";
 import { hashResetToken } from "@/lib/auth/resetToken";
-import { isValidPassword } from "@/components/auth/helpers";
+import { isValidPassword, getPasswordErrorMessage } from "@/components/auth/helpers";
 
 export async function POST(request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request) {
     }
     if (!isValidPassword(password)) {
       return NextResponse.json(
-        { success: false, error: "Password must be at least 8 characters." },
+        { success: false, error: getPasswordErrorMessage(password) || "Enter a valid password." },
         { status: 400 }
       );
     }
