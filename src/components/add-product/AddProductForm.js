@@ -37,9 +37,13 @@ function classifyMediaFile(file) {
 export default function AddProductForm({ productId }) {
   const isEdit = Boolean(productId);
   const router = useRouter();
-  const { currency } = useGeneralSettings();
+  const { currency, skuPrefix } = useGeneralSettings();
   const currencySymbol = getCurrencySymbol(currency);
-  const [product, setProduct] = useState(() => buildProductFromData(DEFAULT_PRODUCT_SEED));
+  // New products start pre-filled with the store's configured SKU prefix
+  // (Settings -> Products); editing an existing product loads its real SKU
+  // instead, once the fetch below resolves.
+  const blankProductSeed = skuPrefix ? { ...DEFAULT_PRODUCT_SEED, sku: skuPrefix } : DEFAULT_PRODUCT_SEED;
+  const [product, setProduct] = useState(() => buildProductFromData(isEdit ? DEFAULT_PRODUCT_SEED : blankProductSeed));
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [titleError, setTitleError] = useState(false);
@@ -152,7 +156,7 @@ export default function AddProductForm({ productId }) {
     setProduct((prev) => ({
       ...prev,
       options: nextOptions,
-      variants: regenerateVariants(nextOptions, prev.variants, prev.handle),
+      variants: regenerateVariants(nextOptions, prev.variants, prev.sku),
     }));
     setVariantErrors([]);
   }
@@ -381,7 +385,7 @@ export default function AddProductForm({ productId }) {
       return;
     }
     if (!window.confirm("Discard all changes and start over?")) return;
-    loadProduct(DEFAULT_PRODUCT_SEED);
+    loadProduct(blankProductSeed);
   }
 
   function handleLoadSample() {

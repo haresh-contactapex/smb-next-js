@@ -7,6 +7,8 @@ import { adminPanelConfig } from "@/config/admin-panel.config";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { roleLabel, initialsFor } from "@/lib/staff";
 import { getGeneralSettings } from "@/lib/generalSettings";
+import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
+import { getProductsSettings } from "@/lib/productsSettings";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,6 +31,26 @@ async function loadGeneralSettings() {
   }
 }
 
+// The store-wide currency lives on Settings -> Currency & Tax (not General)
+// — same fallback-to-null treatment as loadGeneralSettings() above.
+async function loadCurrencyTaxSettings() {
+  try {
+    return await getCurrencyTaxSettings();
+  } catch {
+    return null;
+  }
+}
+
+// The SKU prefix lives on Settings -> Products — same fallback-to-null
+// treatment as loadGeneralSettings() above.
+async function loadProductsSettings() {
+  try {
+    return await getProductsSettings();
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata() {
   const settings = await loadGeneralSettings();
   return {
@@ -39,7 +61,12 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const [staffUser, settings] = await Promise.all([getCurrentStaffUser(), loadGeneralSettings()]);
+  const [staffUser, settings, currencyTaxSettings, productsSettings] = await Promise.all([
+    getCurrentStaffUser(),
+    loadGeneralSettings(),
+    loadCurrencyTaxSettings(),
+    loadProductsSettings(),
+  ]);
 
   const config = staffUser
     ? {
@@ -66,7 +93,8 @@ export default async function RootLayout({ children }) {
             storeName: settings?.storeName,
             logoUrl: settings?.logoUrl,
             faviconUrl: settings?.faviconUrl,
-            currency: settings?.currency,
+            currency: currencyTaxSettings?.currency,
+            skuPrefix: productsSettings?.skuPrefix,
           }}
         >
           <ConditionalShell config={config}>{children}</ConditionalShell>
