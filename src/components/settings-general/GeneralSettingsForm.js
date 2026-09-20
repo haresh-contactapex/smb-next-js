@@ -1,7 +1,13 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { DEFAULT_GENERAL_SETTINGS, isValidEmail } from "./helpers";
+import { useEffect, useRef, useState } from "react";
+import {
+  DEFAULT_GENERAL_SETTINGS,
+  toFormSettings,
+  toSavePayload,
+  updateLocationField,
+  validateGeneralSettingsForm,
+} from "./helpers";
 import PageToolbar from "./PageToolbar";
 import StoreIdentitySection from "./StoreIdentitySection";
 import StoreContactSection from "./StoreContactSection";
@@ -10,71 +16,186 @@ import Toast from "./Toast";
 
 export default function GeneralSettingsForm() {
   const [settings, setSettings] = useState(DEFAULT_GENERAL_SETTINGS);
-  const [emailError, setEmailError] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const toastTimerRef = useRef(null);
+  const storeNameInputRef = useRef(null);
+  const identitySectionRef = useRef(null);
+  const storeEmailInputRef = useRef(null);
+  const phoneInputRef = useRef(null);
+  const addressInputRef = useRef(null);
+  const countryInputRef = useRef(null);
+  const stateInputRef = useRef(null);
+  const cityInputRef = useRef(null);
+  const zipInputRef = useRef(null);
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  const fieldRefs = {
+    storeName: storeNameInputRef,
+    storeEmail: storeEmailInputRef,
+    phone: phoneInputRef,
+    address: addressInputRef,
+    country: countryInputRef,
+    state: stateInputRef,
+    city: cityInputRef,
+    zip: zipInputRef,
+  };
+
+  function focusField(field) {
+    if (field === "logo" || field === "favicon") {
+      identitySectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    fieldRefs[field]?.current?.focus();
+  }
+
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
   }
 
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
+  }
+
+  async function loadSettings() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/settings/general");
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to load general settings");
+      setSettings(toFormSettings(json.data));
+      setErrors({});
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function setField(field, value) {
-    setSettings((prev) => ({ ...prev, [field]: value }));
+    setSettings((prev) =>
+      field === "country" || field === "state" ? updateLocationField(prev, field, value) : { ...prev, [field]: value }
+    );
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   }
 
-  function handleLogoPicked(file) {
-    setField("logo", { url: URL.createObjectURL(file), name: file.name });
+  async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/media", { method: "POST", body: formData });
+    const json = await res.json();
+    if (!res.ok || !json.success) throw new Error(json.error || "Failed to upload image");
+    return { url: json.data.url, name: json.data.fileName };
   }
 
-  function handleFaviconPicked(file) {
-    setField("favicon", { url: URL.createObjectURL(file), name: file.name });
+  async function handleLogoPicked(file) {
+    try {
+      const uploaded = await uploadImage(file);
+      setField("logo", uploaded);
+    } catch (error) {
+      showToast(error.message, "error");
+    }
   }
 
-  function handleSave() {
-    if (!isValidEmail(settings.storeEmail)) {
-      setEmailError(true);
-      showToast("Enter a valid store email address before saving");
+  async function handleFaviconPicked(file) {
+    try {
+      const uploaded = await uploadImage(file);
+      setField("favicon", uploaded);
+    } catch (error) {
+      showToast(error.message, "error");
+    }
+  }
+
+  async function handleSave() {
+    const result = validateGeneralSettingsForm(settings);
+    setErrors(result.errors);
+
+    if (!result.valid) {
+      showToast(result.message, "error");
+      focusField(result.firstErrorField);
       return;
     }
-    setEmailError(false);
-    showToast("General settings saved");
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings/general", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toSavePayload(settings)),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to save general settings");
+      setSettings(toFormSettings(json.data));
+      showToast("General settings saved");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleDiscard() {
-    if (!window.confirm("Discard all changes and start over?")) return;
-    setSettings(DEFAULT_GENERAL_SETTINGS);
-    setEmailError(false);
+    if (!window.confirm("Discard all changes and reload your saved settings?")) return;
+    loadSettings();
   }
 
   return (
     <>
-      <PageToolbar onDiscard={handleDiscard} onSave={handleSave} />
+      <PageToolbar onDiscard={handleDiscard} onSave={handleSave} saving={saving} disabled={loading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <StoreIdentitySection
+            sectionRef={identitySectionRef}
             storeName={settings.storeName}
+            storeNameError={errors.storeName}
+            storeNameInputRef={storeNameInputRef}
             logo={settings.logo}
+            logoError={errors.logo}
             favicon={settings.favicon}
+            faviconError={errors.favicon}
             onFieldChange={setField}
             onLogoPicked={handleLogoPicked}
             onLogoRemoved={() => setField("logo", null)}
             onFaviconPicked={handleFaviconPicked}
             onFaviconRemoved={() => setField("favicon", null)}
+            onEnter={handleSave}
           />
 
           <StoreContactSection
             storeEmail={settings.storeEmail}
-            emailError={emailError}
+            storeEmailError={errors.storeEmail}
+            storeEmailInputRef={storeEmailInputRef}
             phone={settings.phone}
+            phoneError={errors.phone}
+            phoneInputRef={phoneInputRef}
             address={settings.address}
+            addressError={errors.address}
+            addressInputRef={addressInputRef}
             country={settings.country}
+            countryError={errors.country}
+            countryInputRef={countryInputRef}
             state={settings.state}
+            stateError={errors.state}
+            stateInputRef={stateInputRef}
             city={settings.city}
+            cityError={errors.city}
+            cityInputRef={cityInputRef}
+            zip={settings.zip}
+            zipError={errors.zip}
+            zipInputRef={zipInputRef}
             onFieldChange={setField}
+            onEnter={handleSave}
           />
         </div>
 
@@ -89,7 +210,7 @@ export default function GeneralSettingsForm() {
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );
 }

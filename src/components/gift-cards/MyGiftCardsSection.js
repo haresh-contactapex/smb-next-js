@@ -1,7 +1,11 @@
 import Icon from "@/components/admin-panel/Icon";
-import { formatCurrency, STATUS_LABELS } from "./helpers";
+import { STATUS_LABELS } from "./helpers";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { formatCurrency } from "@/lib/currency";
 
 export default function MyGiftCardsSection({ cards }) {
+  const { currency } = useGeneralSettings();
+
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-4">Your Gift Cards</h2>
@@ -34,8 +38,8 @@ export default function MyGiftCardsSection({ cards }) {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-bold text-slate-800 dark:text-white">{formatCurrency(card.balance)}</p>
-                  <p className="text-[11px] text-slate-400">of {formatCurrency(card.initialValue)}</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-white">{formatCurrency(card.balance, currency)}</p>
+                  <p className="text-[11px] text-slate-400">of {formatCurrency(card.initialValue, currency)}</p>
                 </div>
               </div>
             );

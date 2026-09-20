@@ -1,9 +1,5 @@
 const CODE_PATTERN = /^GC-[A-Z0-9]{4}-[A-Z0-9]{4}$/;
 
-export function formatCurrency(amount) {
-  return amount.toLocaleString("en-US", { style: "currency", currency: "USD" });
-}
-
 export function normalizeGiftCardCode(value) {
   const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
   const body = (cleaned.startsWith("GC") ? cleaned.slice(2) : cleaned).slice(0, 8);

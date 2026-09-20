@@ -1,6 +1,8 @@
 "use client";
 
-import { toNumber, fmtMoney, sanitizeDecimal } from "./helpers";
+import { toNumber, sanitizeDecimal } from "./helpers";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 export default function PricingSection({
   price,
@@ -11,10 +13,12 @@ export default function PricingSection({
   costPerItem,
   onFieldChange,
 }) {
+  const { currency } = useGeneralSettings();
   const priceNum = toNumber(price);
   const costNum = toNumber(costPerItem);
   const profit = priceNum - costNum;
   const margin = priceNum > 0 ? (profit / priceNum) * 100 : 0;
+  const currencySymbol = getCurrencySymbol(currency);
 
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
@@ -26,7 +30,7 @@ export default function PricingSection({
             Price
           </label>
           <div className="prefix-wrap">
-            <span className="prefix-sign">$</span>
+            <span className="prefix-sign">{currencySymbol}</span>
             <input
               ref={priceInputRef}
               id="f-price"
@@ -36,17 +40,23 @@ export default function PricingSection({
               aria-label="Price"
               value={price}
               onChange={(e) => onFieldChange("price", sanitizeDecimal(e.target.value))}
-              className={`field-input system-field${priceError ? " border-red-400" : ""}`}
+              className={`field-input system-field${
+                priceError
+                  ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                  : ""
+              }`}
             />
           </div>
-          {priceError && <p className="text-xs text-error mt-1">Enter a price greater than $0.</p>}
+          {priceError && (
+            <p className="text-xs text-error mt-1">Enter a price greater than {currencySymbol}0.</p>
+          )}
         </div>
         <div>
           <label className="field-label" htmlFor="f-compare">
             Compare-at price
           </label>
           <div className="prefix-wrap">
-            <span className="prefix-sign">$</span>
+            <span className="prefix-sign">{currencySymbol}</span>
             <input
               id="f-compare"
               type="text"
@@ -80,7 +90,7 @@ export default function PricingSection({
               Cost per item
             </label>
             <div className="prefix-wrap">
-              <span className="prefix-sign">$</span>
+              <span className="prefix-sign">{currencySymbol}</span>
               <input
                 id="f-cost"
                 type="text"
@@ -101,7 +111,7 @@ export default function PricingSection({
                 profit < 0 ? " text-error" : ""
               }`}
             >
-              {fmtMoney(profit)}
+              {formatCurrency(profit, currency)}
             </div>
           </div>
           <div>

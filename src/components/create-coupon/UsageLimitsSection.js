@@ -1,5 +1,8 @@
 "use client";
 
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
+
 export default function UsageLimitsSection({
   minPurchase,
   usageLimitEnabled,
@@ -7,6 +10,8 @@ export default function UsageLimitsSection({
   onePerCustomer,
   onFieldChange,
 }) {
+  const { currency } = useGeneralSettings();
+
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-4">Minimum Purchase &amp; Usage Limits</h2>
@@ -16,7 +21,7 @@ export default function UsageLimitsSection({
           Minimum purchase amount
         </label>
         <div className="prefix-wrap">
-          <span className="prefix-sign">₹</span>
+          <span className="prefix-sign">{getCurrencySymbol(currency)}</span>
           <input
             id="f-min-purchase"
             type="text"

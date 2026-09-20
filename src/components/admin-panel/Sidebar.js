@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "./Icon";
 import { closeSidebar, toggleCollapse, toggleSubmenu } from "./adminPanelActions";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 /**
  * Left nav shell. Fully driven by the `navItems` config array passed in, so a new
@@ -19,6 +20,7 @@ import { closeSidebar, toggleCollapse, toggleSubmenu } from "./adminPanelActions
 export default function Sidebar({ brand, navItems }) {
   const [collapseIcon, setCollapseIcon] = useState("chevron-left");
   const pathname = usePathname();
+  const { storeName, logoUrl } = useGeneralSettings();
   const isActiveHref = (href) => Boolean(href) && href !== "#" && href === pathname;
 
   // Sync the collapse icon with the persisted state once mounted (the layout is
@@ -47,12 +49,21 @@ export default function Sidebar({ brand, navItems }) {
         {/* Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-white/5 shrink-0">
           <Link href={brand.href || "/"} className="sidebar-brand flex items-center gap-2.5 min-w-0">
-            <span className="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 flex items-center justify-center shrink-0 shadow-sm">
-              <Icon name={brand.icon || "gift"} className="w-4 h-4 text-white" />
-            </span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image
+              <img
+                src={logoUrl}
+                alt={storeName}
+                className="w-9 h-9 rounded-xl object-contain shrink-0 bg-white dark:bg-darksurface2 shadow-sm"
+              />
+            ) : (
+              <span className="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 flex items-center justify-center shrink-0 shadow-sm">
+                <Icon name={brand.icon || "gift"} className="w-4 h-4 text-white" />
+              </span>
+            )}
             <span className="logo-text min-w-0">
               <span className="block text-[15px] font-bold text-primary-700 dark:text-white leading-tight truncate">
-                {brand.name}
+                {storeName || brand.name}
               </span>
               {brand.subtitle && (
                 <span className="block text-[11px] text-slate-400 dark:text-slate-500 leading-tight">

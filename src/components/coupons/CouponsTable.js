@@ -1,15 +1,18 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import {
-  formatINR,
   formatCouponValue,
   formatDateRange,
   STATUS_BADGE_CLASSES,
   STATUS_LABELS,
   TYPE_ICONS,
 } from "./couponHelpers";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { formatCurrency } from "@/lib/currency";
 
 export default function CouponsTable({ coupons, onDelete }) {
+  const { currency } = useGeneralSettings();
+
   if (coupons.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No coupons match your filters.</div>;
   }
@@ -44,9 +47,9 @@ export default function CouponsTable({ coupons, onDelete }) {
                   </span>
                 </div>
               </td>
-              <td className="py-3 px-1 text-slate-600 dark:text-slate-300">{formatCouponValue(coupon)}</td>
+              <td className="py-3 px-1 text-slate-600 dark:text-slate-300">{formatCouponValue(coupon, currency)}</td>
               <td className="py-3 px-1 text-slate-500 dark:text-slate-400">
-                {coupon.minPurchase ? formatINR(coupon.minPurchase) : "—"}
+                {coupon.minPurchase ? formatCurrency(coupon.minPurchase, currency) : "—"}
               </td>
               <td className="py-3 px-1 text-slate-500 dark:text-slate-400">
                 {coupon.usageCount}

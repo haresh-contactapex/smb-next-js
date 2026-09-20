@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 const FEATURES = [
   { icon: "truck", text: "Free shipping on every order, no minimum" },
@@ -8,6 +11,8 @@ const FEATURES = [
 ];
 
 export default function AuthLayout({ title, subtitle, children, footer }) {
+  const { storeName, logoUrl } = useGeneralSettings();
+
   return (
     <div className="min-h-screen grid lg:grid-cols-2 bg-slate-50 dark:bg-darkbg">
       <div className="hidden lg:flex flex-col justify-between p-10 xl:p-14 bg-gradient-to-br from-primary-600 to-primary-800 text-white relative overflow-hidden">
@@ -15,11 +20,16 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         <div className="absolute -left-16 -bottom-24 w-64 h-64 rounded-full bg-white/5" />
 
         <Link href="/" className="flex items-center gap-2.5 relative">
-          <span className="w-10 h-10 rounded-xl bg-white/10 grid place-items-center shrink-0">
-            <Icon name="gift" className="w-5 h-5" />
-          </span>
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image
+            <img src={logoUrl} alt={storeName} className="w-10 h-10 rounded-xl object-contain shrink-0 bg-white/10" />
+          ) : (
+            <span className="w-10 h-10 rounded-xl bg-white/10 grid place-items-center shrink-0">
+              <Icon name="gift" className="w-5 h-5" />
+            </span>
+          )}
           <span className="leading-tight">
-            <span className="block font-bold text-lg">Shop My Band</span>
+            <span className="block font-bold text-lg">{storeName}</span>
             <span className="block text-xs text-white/70">Rings &amp; Bands Boutique</span>
           </span>
         </Link>
@@ -40,16 +50,21 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
           </ul>
         </div>
 
-        <p className="relative text-xs text-white/60">© {new Date().getFullYear()} Shop My Band. All rights reserved.</p>
+        <p className="relative text-xs text-white/60">© {new Date().getFullYear()} {storeName}. All rights reserved.</p>
       </div>
 
       <div className="flex flex-col justify-center items-center p-6 sm:p-10">
         <div className="w-full max-w-sm">
           <Link href="/" className="flex lg:hidden items-center gap-2.5 mb-8">
-            <span className="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 text-white grid place-items-center shrink-0">
-              <Icon name="gift" className="w-4 h-4" />
-            </span>
-            <span className="font-bold text-slate-800 dark:text-white">Shop My Band</span>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image
+              <img src={logoUrl} alt={storeName} className="w-9 h-9 rounded-xl object-contain shrink-0 bg-white" />
+            ) : (
+              <span className="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 text-white grid place-items-center shrink-0">
+                <Icon name="gift" className="w-4 h-4" />
+              </span>
+            )}
+            <span className="font-bold text-slate-800 dark:text-white">{storeName}</span>
           </Link>
 
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{title}</h1>

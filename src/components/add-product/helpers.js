@@ -27,10 +27,6 @@ export function sanitizeInteger(value) {
   return String(value).replace(/[^0-9]/g, "");
 }
 
-export function fmtMoney(n) {
-  return "$" + n.toFixed(2);
-}
-
 export function stripHtml(html) {
   return html ? html.replace(/<[^>]*>/g, "") : "";
 }

@@ -1,9 +1,13 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
-import { formatINR, getStockInfo, STOCK_TEXT_CLASSES, STATUS_BADGE_CLASSES } from "./productHelpers";
+import { getStockInfo, STOCK_TEXT_CLASSES, STATUS_BADGE_CLASSES } from "./productHelpers";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { formatCurrency } from "@/lib/currency";
 
 export default function ProductsTable({ products, onDelete }) {
+  const { currency } = useGeneralSettings();
+
   if (products.length === 0) {
     return (
       <div className="py-16 text-center text-sm text-slate-400">
@@ -47,10 +51,12 @@ export default function ProductsTable({ products, onDelete }) {
                 </td>
                 <td className="py-3 px-1 text-slate-500 dark:text-slate-400">{product.category}</td>
                 <td className="py-3 px-1">
-                  <span className="font-semibold text-slate-700 dark:text-slate-200">{formatINR(product.price)}</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-200">
+                    {formatCurrency(product.price, currency)}
+                  </span>
                   {product.compareAtPrice && (
                     <span className="block text-[11px] text-slate-400 line-through">
-                      {formatINR(product.compareAtPrice)}
+                      {formatCurrency(product.compareAtPrice, currency)}
                     </span>
                   )}
                 </td>

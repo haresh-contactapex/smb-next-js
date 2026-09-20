@@ -3,7 +3,7 @@
 import { useRef } from "react";
 import Icon from "@/components/admin-panel/Icon";
 
-function ImageDropTarget({ label, shape, image, onPicked, onRemoved, dimensionsHint }) {
+function ImageDropTarget({ label, shape, image, error, onPicked, onRemoved, dimensionsHint }) {
   const fileInputRef = useRef(null);
 
   function handleFileChange(e) {
@@ -27,7 +27,11 @@ function ImageDropTarget({ label, shape, image, onPicked, onRemoved, dimensionsH
               fileInputRef.current?.click();
             }
           }}
-          className={`relative w-20 h-20 ${shape === "square" ? "rounded-xl" : "rounded-2xl"} border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary-400 dark:hover:border-accent-500/50 bg-slate-50 dark:bg-darksurface2/50 flex flex-col items-center justify-center cursor-pointer transition-colors group shrink-0 overflow-hidden`}
+          className={`relative w-20 h-20 ${shape === "square" ? "rounded-xl" : "rounded-2xl"} border-2 border-dashed hover:border-primary-400 dark:hover:border-accent-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors group shrink-0 overflow-hidden${
+            error
+              ? " border-red-400 bg-red-50 dark:bg-red-500/10"
+              : " border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-darksurface2/50"
+          }`}
         >
           {image ? (
             <>
@@ -60,24 +64,42 @@ function ImageDropTarget({ label, shape, image, onPicked, onRemoved, dimensionsH
             onChange={handleFileChange}
           />
         </div>
-        <p className="text-xs text-slate-400">{dimensionsHint}</p>
+        <div>
+          <p className="text-xs text-slate-400">{dimensionsHint}</p>
+          {error && <p className="text-xs text-error mt-1">{error}</p>}
+        </div>
       </div>
     </div>
   );
 }
 
 export default function StoreIdentitySection({
+  sectionRef,
   storeName,
+  storeNameError,
+  storeNameInputRef,
   logo,
+  logoError,
   favicon,
+  faviconError,
   onFieldChange,
   onLogoPicked,
   onLogoRemoved,
   onFaviconPicked,
   onFaviconRemoved,
+  onEnter,
 }) {
+  function handleKeyDown(e) {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    onEnter?.();
+  }
+
   return (
-    <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+    <section
+      ref={sectionRef}
+      className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6"
+    >
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-4">Store Identity</h2>
 
       <div className="space-y-4">
@@ -87,13 +109,20 @@ export default function StoreIdentitySection({
           </label>
           <input
             id="f-store-name"
+            ref={storeNameInputRef}
             type="text"
             value={storeName}
             onChange={(e) => onFieldChange("storeName", e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Your store name"
             aria-label="Store name"
-            className="field-input"
+            className={`field-input${
+              storeNameError
+                ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                : ""
+            }`}
           />
+          {storeNameError && <p className="text-xs text-error mt-1">{storeNameError}</p>}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -101,6 +130,7 @@ export default function StoreIdentitySection({
             label="Store Logo"
             shape="rounded"
             image={logo}
+            error={logoError}
             onPicked={onLogoPicked}
             onRemoved={onLogoRemoved}
             dimensionsHint="Recommended 512×512px, PNG or SVG."
@@ -109,6 +139,7 @@ export default function StoreIdentitySection({
             label="Favicon"
             shape="square"
             image={favicon}
+            error={faviconError}
             onPicked={onFaviconPicked}
             onRemoved={onFaviconRemoved}
             dimensionsHint="Recommended 32×32px, PNG or ICO."

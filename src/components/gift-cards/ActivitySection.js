@@ -1,7 +1,10 @@
 import Icon from "@/components/admin-panel/Icon";
-import { formatCurrency } from "./helpers";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { formatCurrency } from "@/lib/currency";
 
 export default function ActivitySection({ transactions }) {
+  const { currency } = useGeneralSettings();
+
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-4 flex items-center gap-1.5">
@@ -20,7 +23,7 @@ export default function ActivitySection({ transactions }) {
               </div>
               <p className={`text-sm font-bold shrink-0 ${tx.amount < 0 ? "text-slate-500 dark:text-slate-400" : "text-success"}`}>
                 {tx.amount < 0 ? "-" : "+"}
-                {formatCurrency(Math.abs(tx.amount))}
+                {formatCurrency(Math.abs(tx.amount), currency)}
               </p>
             </div>
           ))}

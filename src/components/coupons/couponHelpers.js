@@ -1,16 +1,8 @@
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
+import { formatCurrency } from "@/lib/currency";
 
-export function formatINR(amount) {
-  return inr.format(amount);
-}
-
-export function formatCouponValue(coupon) {
+export function formatCouponValue(coupon, currency) {
   if (coupon.type === "percentage") return `${coupon.value}% off`;
-  if (coupon.type === "fixed") return `${formatINR(coupon.value)} off`;
+  if (coupon.type === "fixed") return `${formatCurrency(coupon.value, currency)} off`;
   return "Free shipping";
 }
 

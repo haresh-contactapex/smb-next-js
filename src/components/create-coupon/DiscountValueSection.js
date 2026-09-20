@@ -1,6 +1,11 @@
 "use client";
 
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
+
 export default function DiscountValueSection({ type, value, valueError, onValueChange }) {
+  const { currency } = useGeneralSettings();
+
   if (type === "free_shipping") {
     return (
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
@@ -35,7 +40,7 @@ export default function DiscountValueSection({ type, value, valueError, onValueC
           </div>
         ) : (
           <div className="prefix-wrap">
-            <span className="prefix-sign">₹</span>
+            <span className="prefix-sign">{getCurrencySymbol(currency)}</span>
             <input
               id="f-value"
               type="text"

@@ -1,13 +1,3 @@
-const inr = new Intl.NumberFormat("en-IN", {
-  style: "currency",
-  currency: "INR",
-  maximumFractionDigits: 0,
-});
-
-export function formatINR(amount) {
-  return inr.format(amount);
-}
-
 export function getStockInfo(inventory) {
   if (inventory <= 0) return { label: "Out of stock", level: "out" };
   if (inventory <= 10) return { label: `${inventory} in stock`, level: "low" };

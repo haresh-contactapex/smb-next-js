@@ -17,6 +17,8 @@ import OrganizationSidebar from "./OrganizationSidebar";
 import JsonPayloadCard from "./JsonPayloadCard";
 import JsonModal from "./JsonModal";
 import Toast from "./Toast";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 
 const ENTER_SUBMIT_INPUT_TYPES = ["text", "search", "email", "tel", "url", "number", "password"];
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -35,6 +37,8 @@ function classifyMediaFile(file) {
 export default function AddProductForm({ productId }) {
   const isEdit = Boolean(productId);
   const router = useRouter();
+  const { currency } = useGeneralSettings();
+  const currencySymbol = getCurrencySymbol(currency);
   const [product, setProduct] = useState(() => buildProductFromData(DEFAULT_PRODUCT_SEED));
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
@@ -302,7 +306,7 @@ export default function AddProductForm({ productId }) {
         onFail: () => {
           priceInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
           priceInputRef.current?.focus();
-          showToast("Enter a price greater than $0 before saving", "error");
+          showToast(`Enter a price greater than ${currencySymbol}0 before saving`, "error");
         },
       },
       {
