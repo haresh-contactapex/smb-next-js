@@ -1,53 +1,112 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextField from "@/components/settings-shared/TextField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
-import Toast from "@/components/settings-shared/Toast";
-
-const DEFAULT_SETTINGS = {
-  googleAnalyticsEnabled: true,
-  googleAnalyticsId: "",
-  metaPixelEnabled: false,
-  metaPixelId: "",
-  mailchimpEnabled: false,
-  mailchimpApiKey: "",
-  slackEnabled: false,
-  slackWebhookUrl: "",
-  zapierEnabled: false,
-  zapierApiKey: "",
-};
+import Toast from "./Toast";
+import { DEFAULT_INTEGRATIONS_SETTINGS, toFormSettings, toSavePayload, validateIntegrationsSettingsForm } from "./helpers";
 
 export default function IntegrationsSettingsForm() {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [toast, setToast] = useState({ message: "", visible: false });
-  const toastTimerRef = useRef(null);
+  const [settings, setSettings] = useState(DEFAULT_INTEGRATIONS_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  const toastTimerRef = useRef(null);
+  const googleAnalyticsIdInputRef = useRef(null);
+  const metaPixelIdInputRef = useRef(null);
+  const mailchimpApiKeyInputRef = useRef(null);
+  const googleRecaptchaSiteKeyInputRef = useRef(null);
+  const googleRecaptchaSecretKeyInputRef = useRef(null);
+
+  const fieldRefs = {
+    googleAnalyticsId: googleAnalyticsIdInputRef,
+    metaPixelId: metaPixelIdInputRef,
+    mailchimpApiKey: mailchimpApiKeyInputRef,
+    googleRecaptchaSiteKey: googleRecaptchaSiteKeyInputRef,
+    googleRecaptchaSecretKey: googleRecaptchaSecretKeyInputRef,
+  };
+
+  function focusField(field) {
+    fieldRefs[field]?.current?.focus();
+  }
+
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
   }
 
-  function setField(field, value) {
-    setSettings((prev) => ({ ...prev, [field]: value }));
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
   }
 
-  function handleSave() {
-    showToast("Integrations settings saved");
+  async function loadSettings() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/settings/integrations");
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to load integrations settings");
+      setSettings(toFormSettings(json.data));
+      setErrors({});
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function setField(field, value) {
+    setSettings((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  }
+
+  async function handleSave() {
+    const result = validateIntegrationsSettingsForm(settings);
+    setErrors(result.errors);
+
+    if (!result.valid) {
+      showToast(result.message, "error");
+      focusField(result.firstErrorField);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings/integrations", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toSavePayload(settings)),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to save integrations settings");
+      setSettings(toFormSettings(json.data));
+      showToast("Integrations settings saved");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleDiscard() {
-    if (!window.confirm("Discard all changes and start over?")) return;
-    setSettings(DEFAULT_SETTINGS);
+    if (!window.confirm("Discard all changes and reload your saved settings?")) return;
+    loadSettings();
   }
 
   return (
     <>
-      <PageToolbar icon="link" title="Integrations" onDiscard={handleDiscard} onSave={handleSave} />
+      <PageToolbar icon="link" title="Integrations" onDiscard={handleDiscard} onSave={handleSave} saving={saving} disabled={loading} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
@@ -56,6 +115,7 @@ export default function IntegrationsSettingsForm() {
               label="Google Analytics"
               checked={settings.googleAnalyticsEnabled}
               onChange={(value) => setField("googleAnalyticsEnabled", value)}
+              disabled={loading}
             />
             <TextField
               id="f-ga-id"
@@ -63,12 +123,17 @@ export default function IntegrationsSettingsForm() {
               value={settings.googleAnalyticsId}
               onChange={(value) => setField("googleAnalyticsId", value)}
               placeholder="G-XXXXXXXXXX"
+              error={errors.googleAnalyticsId}
+              inputRef={googleAnalyticsIdInputRef}
+              onEnter={handleSave}
+              disabled={loading}
             />
 
             <ToggleField
               label="Meta / Facebook Pixel"
               checked={settings.metaPixelEnabled}
               onChange={(value) => setField("metaPixelEnabled", value)}
+              disabled={loading}
             />
             <TextField
               id="f-meta-pixel-id"
@@ -76,12 +141,17 @@ export default function IntegrationsSettingsForm() {
               value={settings.metaPixelId}
               onChange={(value) => setField("metaPixelId", value)}
               placeholder="123456789012345"
+              error={errors.metaPixelId}
+              inputRef={metaPixelIdInputRef}
+              onEnter={handleSave}
+              disabled={loading}
             />
 
             <ToggleField
               label="Mailchimp"
               checked={settings.mailchimpEnabled}
               onChange={(value) => setField("mailchimpEnabled", value)}
+              disabled={loading}
             />
             <TextField
               id="f-mailchimp-key"
@@ -89,35 +159,39 @@ export default function IntegrationsSettingsForm() {
               value={settings.mailchimpApiKey}
               onChange={(value) => setField("mailchimpApiKey", value)}
               placeholder="Enter API key"
-            />
-          </SectionCard>
-
-          <SectionCard title="Productivity">
-            <ToggleField
-              label="Slack notifications"
-              checked={settings.slackEnabled}
-              onChange={(value) => setField("slackEnabled", value)}
-            />
-            <TextField
-              id="f-slack-webhook"
-              label="Webhook URL"
-              type="url"
-              value={settings.slackWebhookUrl}
-              onChange={(value) => setField("slackWebhookUrl", value)}
-              placeholder="https://hooks.slack.com/services/..."
+              error={errors.mailchimpApiKey}
+              inputRef={mailchimpApiKeyInputRef}
+              onEnter={handleSave}
+              disabled={loading}
             />
 
             <ToggleField
-              label="Zapier"
-              checked={settings.zapierEnabled}
-              onChange={(value) => setField("zapierEnabled", value)}
+              label="Google reCAPTCHA"
+              checked={settings.googleRecaptchaEnabled}
+              onChange={(value) => setField("googleRecaptchaEnabled", value)}
+              disabled={loading}
             />
             <TextField
-              id="f-zapier-key"
-              label="API Key"
-              value={settings.zapierApiKey}
-              onChange={(value) => setField("zapierApiKey", value)}
-              placeholder="Enter API key"
+              id="f-google-recaptcha-site-key"
+              label="Site Key"
+              value={settings.googleRecaptchaSiteKey}
+              onChange={(value) => setField("googleRecaptchaSiteKey", value)}
+              placeholder="Enter reCAPTCHA site key"
+              error={errors.googleRecaptchaSiteKey}
+              inputRef={googleRecaptchaSiteKeyInputRef}
+              onEnter={handleSave}
+              disabled={loading}
+            />
+            <TextField
+              id="f-google-recaptcha-secret-key"
+              label="Secret Key"
+              value={settings.googleRecaptchaSecretKey}
+              onChange={(value) => setField("googleRecaptchaSecretKey", value)}
+              placeholder="Enter reCAPTCHA secret key"
+              error={errors.googleRecaptchaSecretKey}
+              inputRef={googleRecaptchaSecretKeyInputRef}
+              onEnter={handleSave}
+              disabled={loading}
             />
           </SectionCard>
         </div>
@@ -128,14 +202,14 @@ export default function IntegrationsSettingsForm() {
             title="About Integrations"
             points={[
               "Connect third-party analytics and marketing tools to track storefront activity.",
-              "API keys and webhook URLs are only used by the integrations you enable above.",
+              "API keys and site keys are only used by the integrations you enable above.",
               "Disabling an integration stops new data from being sent, but does not delete existing data.",
             ]}
           />
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );
 }
