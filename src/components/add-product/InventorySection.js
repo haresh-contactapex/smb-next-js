@@ -27,7 +27,11 @@ export default function InventorySection({ trackQuantity, sku, skuError, skuInpu
             aria-label="SKU"
             value={sku}
             onChange={(e) => onFieldChange("sku", e.target.value)}
-            className={`field-input system-field${skuError ? " border-red-400" : ""}`}
+            className={`field-input system-field${
+              skuError
+                ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                : ""
+            }`}
           />
           {skuError && <p className="text-xs text-error mt-1">SKU is required.</p>}
         </div>

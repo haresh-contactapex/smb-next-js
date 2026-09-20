@@ -47,8 +47,10 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
         onDragOver={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`media-dropzone${dragOver ? " drag-over" : ""} border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-slate-50 dark:bg-darksurface2/40 hover:border-primary-400 dark:hover:border-accent-500/50${
-          mediaError ? " border-red-400" : " border-slate-200 dark:border-white/10"
+        className={`media-dropzone${dragOver ? " drag-over" : ""} border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors hover:border-primary-400 dark:hover:border-accent-500/50${
+          mediaError
+            ? " border-red-400 bg-red-50 dark:bg-red-500/10"
+            : " border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-darksurface2/40"
         }`}
       >
         <Icon name="upload-cloud" className="w-10 h-10 text-slate-400 mb-2" />

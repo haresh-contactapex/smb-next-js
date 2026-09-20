@@ -36,7 +36,11 @@ export default function ProductDetailsSection({
           placeholder="e.g. Classic Leather Backpack"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
-          className={`field-input h-11 text-base${titleError ? " border-red-400" : ""}`}
+          className={`field-input h-11 text-base${
+            titleError
+              ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+              : ""
+          }`}
         />
         {titleError && <p className="text-xs text-error mt-1">Title is required.</p>}
       </div>

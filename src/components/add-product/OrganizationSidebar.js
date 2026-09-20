@@ -116,7 +116,11 @@ export default function OrganizationSidebar({
               setCategoryOpen(true);
             }}
             onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
-            className={`field-input${categoryError ? " border-red-400" : ""}`}
+            className={`field-input${
+              categoryError
+                ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                : ""
+            }`}
           />
           {categoryError && <p className="text-xs text-error mt-1">Category is required.</p>}
           {categoryOpen && categoryMatches.length > 0 && (

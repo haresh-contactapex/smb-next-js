@@ -310,10 +310,10 @@ export default function VariantsSection({
                     const label = Object.values(v.options).join(" / ") || "Default";
                     const rowError = variantErrors?.[i];
                     const cellClass = (invalid) =>
-                      `variant-input w-full h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white${
+                      `variant-input w-full h-8 px-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white${
                         invalid
-                          ? " border-red-400"
-                          : " border-transparent focus:border-primary-400 dark:focus:border-accent-500"
+                          ? " border-red-400 bg-red-50 dark:bg-red-500/10 focus:border-red-400"
+                          : " border-transparent bg-slate-100 dark:bg-darksurface2 focus:border-primary-400 dark:focus:border-accent-500"
                       }`;
                     return (
                       <tr key={v.id}>
