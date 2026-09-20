@@ -22,3 +22,7 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# uploaded media (persisted to disk at runtime, not committed)
+/public/uploads/*
+!/public/uploads/.gitkeep
