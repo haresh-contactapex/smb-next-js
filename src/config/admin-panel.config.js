@@ -73,6 +73,7 @@ export const adminPanelConfig = {
         { id: "giftcard-transactions", label: "Gift Card Transactions", href: "#" },
       ],
     },
+    { type: "link", id: "media", label: "Media", icon: "image", href: "/media" },
     { type: "link", id: "shipping", label: "Shipping & Return Policy", icon: "truck", href: "#" },
     { type: "section", label: "System" },
     {
