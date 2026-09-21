@@ -87,6 +87,11 @@ export async function middleware(request) {
 
 // API routes are left ungated here (they're not reachable through the UI
 // without first passing a gated page) — only page navigation is protected.
+// /uploads is also excluded: it's served straight out of public/uploads
+// (store logos, product/media images) and must stay publicly reachable —
+// gating it meant every <img> request got redirected to an HTML login page
+// instead of the image, breaking the logo and any uploaded media everywhere
+// it's displayed.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|uploads/|api/).*)"],
 };
