@@ -1,4 +1,7 @@
 import { formatCurrency } from "@/lib/currency";
+import { STATUS_LABELS, STATUS_BADGE_CLASSES } from "@/lib/couponStatus";
+
+export { STATUS_LABELS, STATUS_BADGE_CLASSES };
 
 export function formatCouponValue(coupon, currency) {
   if (coupon.type === "percentage") return `${coupon.value}% off`;
@@ -21,20 +24,6 @@ export function computeCouponStats(coupons) {
     expired: coupons.filter((c) => c.status === "EXPIRED").length,
   };
 }
-
-export const STATUS_LABELS = {
-  ACTIVE: "Active",
-  SCHEDULED: "Scheduled",
-  DRAFT: "Draft",
-  EXPIRED: "Expired",
-};
-
-export const STATUS_BADGE_CLASSES = {
-  ACTIVE: "bg-success/10 text-success",
-  SCHEDULED: "bg-info/10 text-info",
-  DRAFT: "bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-300",
-  EXPIRED: "bg-error/10 text-error",
-};
 
 export const TYPE_LABELS = {
   percentage: "Percentage",

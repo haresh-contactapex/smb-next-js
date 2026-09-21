@@ -1,11 +1,27 @@
 import { sql } from "./db";
+import { todayISODate, computeCouponStatus } from "./couponStatus";
 
-// Coupons don't have a scheduler, so overdue ACTIVE/SCHEDULED coupons are
-// flipped to EXPIRED lazily, right before they're read.
-async function expireOverdueCoupons() {
+// Status is fully date-driven (never a manual admin choice) and can go
+// stale purely from time passing — a SCHEDULED coupon becomes ACTIVE once
+// its start date arrives, an ACTIVE one becomes EXPIRED once its end date
+// passes — with no write happening in between. Resync every row's status
+// against today's date right before it's read. `today` is computed in Node
+// (not Postgres's CURRENT_DATE) so it matches the app-server-local calendar
+// date used everywhere else dates are compared in this file.
+async function syncCouponStatuses() {
+  const today = todayISODate();
   await sql`
-    UPDATE coupons SET status = 'EXPIRED', updated_at = now()
-    WHERE status IN ('ACTIVE', 'SCHEDULED') AND end_date IS NOT NULL AND end_date < CURRENT_DATE
+    WITH computed AS (
+      SELECT id, CASE
+        WHEN end_date IS NOT NULL AND end_date < ${today} THEN 'EXPIRED'
+        WHEN start_date IS NOT NULL AND start_date > ${today} THEN 'SCHEDULED'
+        ELSE 'ACTIVE'
+      END AS new_status
+      FROM coupons
+    )
+    UPDATE coupons c SET status = computed.new_status, updated_at = now()
+    FROM computed
+    WHERE c.id = computed.id AND c.status IS DISTINCT FROM computed.new_status
   `;
 }
 
@@ -14,7 +30,7 @@ async function expireOverdueCoupons() {
 // shifts the calendar date for any non-UTC-offset timezone. Casting to text
 // in SQL keeps them as plain, timezone-independent "YYYY-MM-DD" strings.
 export async function listCoupons() {
-  await expireOverdueCoupons();
+  await syncCouponStatuses();
   const rows = await sql`
     SELECT
       c.id, c.code, c.description, c.discount_type, c.discount_value, c.min_purchase_amount,
@@ -29,7 +45,7 @@ export async function listCoupons() {
 }
 
 export async function getCouponById(id) {
-  await expireOverdueCoupons();
+  await syncCouponStatuses();
   const [row] = await sql`
     SELECT
       c.id, c.code, c.description, c.discount_type, c.discount_value, c.min_purchase_amount,
@@ -67,6 +83,12 @@ function mapCoupon(row) {
 function couponValues(payload) {
   const type = payload.type;
   const appliesTo = payload.appliesTo === "CATEGORY" ? "CATEGORY" : "ALL";
+  const startDate = payload.startDate || null;
+  const endDate = payload.endDate || null;
+
+  if (startDate && endDate && endDate < startDate) {
+    throw new Error("End date can't be before the start date.");
+  }
 
   return {
     code: String(payload.code || "")
@@ -79,9 +101,11 @@ function couponValues(payload) {
     min_purchase_amount: toNumberOrNull(payload.minPurchase),
     usage_limit: toIntOrNull(payload.usageLimit),
     one_per_customer: payload.onePerCustomer ?? true,
-    status: payload.status || "DRAFT",
-    start_date: payload.startDate || null,
-    end_date: payload.endDate || null,
+    // Status is never taken from the client: it's always derived from the
+    // date range so it can never drift out of sync with it.
+    status: computeCouponStatus(startDate, endDate),
+    start_date: startDate,
+    end_date: endDate,
     applies_to: appliesTo,
     category_id: appliesTo === "CATEGORY" ? payload.categoryId || null : null,
   };

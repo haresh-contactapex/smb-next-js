@@ -1,44 +1,32 @@
 "use client";
 
-import Icon from "@/components/admin-panel/Icon";
-
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "SCHEDULED", label: "Scheduled" },
-  { value: "DRAFT", label: "Draft" },
-  { value: "EXPIRED", label: "Expired" },
-];
+import { STATUS_LABELS, STATUS_BADGE_CLASSES } from "@/lib/couponStatus";
 
 export default function ActiveDatesSidebar({
   status,
   startDate,
   endDateEnabled,
   endDate,
+  dateRangeError,
+  onStartDateChange,
+  onEndDateChange,
   onFieldChange,
 }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
-      <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Status &amp; Active Dates</h2>
-
-      <div className="relative">
-        <select
-          aria-label="Coupon status"
-          value={status}
-          onChange={(e) => onFieldChange("status", e.target.value)}
-          className="field-input appearance-none pr-8 cursor-pointer"
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-white">Status &amp; Active Dates</h2>
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${STATUS_BADGE_CLASSES[status]}`}
         >
-          {STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">
-          <Icon name="chevron-down" className="w-4 h-4" />
+          {STATUS_LABELS[status] || status}
         </span>
       </div>
+      <p className="text-[11px] text-slate-400 -mt-1 mb-3">
+        Status is calculated automatically from the dates below.
+      </p>
 
-      <div className="border-t border-slate-100 dark:border-white/5 mt-4 pt-4 space-y-4">
+      <div className="space-y-4">
         <div>
           <label className="field-label" htmlFor="f-start-date">
             Start date
@@ -48,7 +36,7 @@ export default function ActiveDatesSidebar({
             type="date"
             aria-label="Start date"
             value={startDate}
-            onChange={(e) => onFieldChange("startDate", e.target.value)}
+            onChange={(e) => onStartDateChange(e.target.value)}
             className="field-input system-field"
           />
         </div>
@@ -63,13 +51,17 @@ export default function ActiveDatesSidebar({
             Set an end date
           </label>
           {endDateEnabled && (
-            <input
-              type="date"
-              aria-label="End date"
-              value={endDate}
-              onChange={(e) => onFieldChange("endDate", e.target.value)}
-              className="field-input system-field"
-            />
+            <>
+              <input
+                type="date"
+                aria-label="End date"
+                value={endDate}
+                min={startDate || undefined}
+                onChange={(e) => onEndDateChange(e.target.value)}
+                className={`field-input system-field${dateRangeError ? " border-red-400" : ""}`}
+              />
+              {dateRangeError && <p className="text-xs text-error mt-1">End date can&apos;t be before the start date.</p>}
+            </>
           )}
         </div>
       </div>

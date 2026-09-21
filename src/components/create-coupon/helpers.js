@@ -24,7 +24,6 @@ export const DEFAULT_COUPON = {
   usageLimitEnabled: false,
   usageLimit: "",
   onePerCustomer: true,
-  status: "ACTIVE",
   startDate: "",
   endDateEnabled: false,
   endDate: "",
@@ -42,7 +41,6 @@ export function buildCouponFromData(data) {
     usageLimitEnabled: data.usageLimit !== null && data.usageLimit !== undefined,
     usageLimit: data.usageLimit ?? "",
     onePerCustomer: data.onePerCustomer ?? true,
-    status: data.status || "ACTIVE",
     startDate: data.startDate || "",
     endDateEnabled: Boolean(data.endDate),
     endDate: data.endDate || "",
@@ -51,6 +49,8 @@ export function buildCouponFromData(data) {
   };
 }
 
+// Status isn't included: it's derived server-side from the date range on
+// every create/update, never taken from the client.
 export function assembleCoupon(coupon) {
   return {
     code: formatCode(coupon.code),
@@ -60,7 +60,6 @@ export function assembleCoupon(coupon) {
     minPurchase: coupon.minPurchase,
     usageLimit: coupon.usageLimitEnabled ? coupon.usageLimit : "",
     onePerCustomer: coupon.onePerCustomer,
-    status: coupon.status,
     startDate: coupon.startDate || "",
     endDate: coupon.endDateEnabled ? coupon.endDate : "",
     appliesTo: coupon.appliesTo === "category" ? "CATEGORY" : "ALL",

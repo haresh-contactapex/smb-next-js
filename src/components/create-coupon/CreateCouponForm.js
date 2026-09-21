@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { computeCouponStatus } from "@/lib/couponStatus";
 import { DEFAULT_COUPON, buildCouponFromData, assembleCoupon } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import CouponDetailsSection from "./CouponDetailsSection";
@@ -9,7 +10,11 @@ import DiscountValueSection from "./DiscountValueSection";
 import UsageLimitsSection from "./UsageLimitsSection";
 import ActiveDatesSidebar from "./ActiveDatesSidebar";
 import EligibilitySidebar from "./EligibilitySidebar";
-import Toast from "./Toast";
+import Toast from "@/components/add-product/Toast";
+
+// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
+// also drives the progress-bar animation for both success and error messages.
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function CreateCouponForm({ couponId, categories = [] }) {
   const isEdit = Boolean(couponId);
@@ -45,10 +50,19 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
     };
   }, [couponId]);
 
+  // Status is always derived from the date range — recalculated on every
+  // render, never stored or chosen manually.
+  const effectiveEndDate = coupon.endDateEnabled ? coupon.endDate : "";
+  const displayStatus = computeCouponStatus(coupon.startDate, effectiveEndDate);
+  const dateRangeError = Boolean(effectiveEndDate && coupon.startDate && effectiveEndDate < coupon.startDate);
+
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      TOAST_AUTO_DISMISS_MS,
+    );
   }
 
   function dismissToast() {
@@ -75,6 +89,22 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
     setValueError(false);
   }
 
+  // Changing the start date can invalidate an already-picked end date —
+  // clear it rather than leave a range that no longer makes sense.
+  function handleStartDateChange(value) {
+    setCoupon((prev) => {
+      const next = { ...prev, startDate: value };
+      if (prev.endDateEnabled && prev.endDate && value && prev.endDate < value) {
+        next.endDate = "";
+      }
+      return next;
+    });
+  }
+
+  function handleEndDateChange(value) {
+    setField("endDate", value);
+  }
+
   function handleSave(e) {
     e?.preventDefault();
 
@@ -84,9 +114,14 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
     setCodeError(missingCode);
     setValueError(missingValue);
 
-    if (missingCode || missingValue) {
+    if (missingCode || missingValue || dateRangeError) {
       if (missingCode) codeInputRef.current?.focus();
-      showToast("Fill in the required fields before saving", "error");
+      showToast(
+        dateRangeError && !missingCode && !missingValue
+          ? "End date can't be before the start date"
+          : "Fill in the required fields before saving",
+        "error",
+      );
       return;
     }
 
@@ -164,10 +199,13 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
 
         <div className="space-y-6">
           <ActiveDatesSidebar
-            status={coupon.status}
+            status={displayStatus}
             startDate={coupon.startDate}
             endDateEnabled={coupon.endDateEnabled}
             endDate={coupon.endDate}
+            dateRangeError={dateRangeError}
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
             onFieldChange={setField}
           />
 
