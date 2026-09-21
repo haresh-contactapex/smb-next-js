@@ -39,7 +39,7 @@ export function variantKey(optionsObj, orderedNames) {
   return orderedNames.map((n) => `${n}:${optionsObj[n]}`).join("|");
 }
 
-const MAX_SKU_LENGTH = 10;
+const MAX_SKU_LENGTH = 12;
 
 function shortCode(str, maxLen) {
   return String(str || "")
@@ -67,12 +67,13 @@ function abbreviateOptionValue(value) {
     .join("");
 }
 
-// Builds a short, human-readable SKU per combo (product prefix + each
-// option value's abbreviation, e.g. "BAG14KWG10"), capped at
-// MAX_SKU_LENGTH and de-duplicated within this batch so two combos never
-// produce the same code (product_variants.sku is globally unique).
-function buildVariantSkus(combos, orderedNames, handle) {
-  const prefix = shortCode(handle, 3) || "PRD";
+// Builds a short, human-readable SKU per combo (the product's own SKU
+// field, first 4 characters, + each option value's abbreviation, e.g.
+// main SKU "BAG-001" + "14K White Gold" + "5" -> "BAG014KWG5"), capped
+// at MAX_SKU_LENGTH and de-duplicated within this batch so two combos
+// never produce the same code (product_variants.sku is globally unique).
+function buildVariantSkus(combos, orderedNames, productSku) {
+  const prefix = shortCode(productSku, 4) || "PRD";
   const seen = new Map();
 
   return combos.map((combo) => {
@@ -87,7 +88,7 @@ function buildVariantSkus(combos, orderedNames, handle) {
   });
 }
 
-export function regenerateVariants(options, existingVariants, handle) {
+export function regenerateVariants(options, existingVariants, productSku) {
   const validOptions = options.filter((o) => o.name && o.values.length);
   const orderedNames = validOptions.map((o) => o.name);
 
@@ -121,7 +122,7 @@ export function regenerateVariants(options, existingVariants, handle) {
     return id;
   }
 
-  const skus = buildVariantSkus(combos, orderedNames, handle);
+  const skus = buildVariantSkus(combos, orderedNames, productSku);
   return combos.map((combo, i) => {
     const existing = matched[i];
     if (existing) return existing;
@@ -144,7 +145,7 @@ export function buildProductFromData(data = {}) {
   const title = data.title || "";
   const handle = data.handle || slugify(title);
   const options = (data.options || []).map((o) => ({ ...o, values: [...o.values] }));
-  let variants = regenerateVariants(options, data.variants || [], handle);
+  let variants = regenerateVariants(options, data.variants || [], data.sku || "");
 
   if (data.variantDefaults) {
     variants = variants.map((v) => ({

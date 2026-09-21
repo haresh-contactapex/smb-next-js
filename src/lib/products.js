@@ -20,7 +20,7 @@ async function batchInsert(table, columns, rows, returning) {
   return sqlQuery(text, params);
 }
 
-const MAX_SKU_LENGTH = 10;
+const MAX_SKU_LENGTH = 12;
 
 // product_variants.sku is unique *across every product*, not just within one —
 // so two products with similar auto-generated codes (e.g. same color/size
