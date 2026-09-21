@@ -40,7 +40,7 @@ Backs the All Coupons listing and the Create Coupon form.
 | `usage_limit`           | `INTEGER`       | NULL                                                                    | "Limit number of times this coupon can be used in total"; NULL = unlimited |
 | `usage_count`           | `INTEGER`       | NOT NULL, DEFAULT `0`                                                   | Running redemption counter; see Design notes                        |
 | `one_per_customer`      | `BOOLEAN`       | NOT NULL, DEFAULT `true`                                                | "Limit to one use per customer" toggle                              |
-| `status`                | `VARCHAR(10)`   | NOT NULL, DEFAULT `'DRAFT'`, CHECK IN (`ACTIVE`, `SCHEDULED`, `DRAFT`, `EXPIRED`) | Set directly by the admin, not derived from the dates below         |
+| `status`                | `VARCHAR(10)`   | NOT NULL, DEFAULT `'DRAFT'`, CHECK IN (`ACTIVE`, `SCHEDULED`, `DRAFT`, `EXPIRED`) | Set directly by the admin (ACTIVE/SCHEDULED/DRAFT); EXPIRED is also applied lazily when an ACTIVE or SCHEDULED coupon's `end_date` has passed |
 | `start_date`            | `DATE`          | NULL                                                                    | NULL alongside `end_date` shows as "Not scheduled" on the listing    |
 | `end_date`              | `DATE`          | NULL                                                                    | NULL = runs indefinitely ("Set an end date" left unchecked)          |
 | `applies_to`            | `VARCHAR(8)`    | NOT NULL, DEFAULT `'ALL'`, CHECK IN (`ALL`, `CATEGORY`)                 | "Applies to" select on the Eligibility sidebar                       |

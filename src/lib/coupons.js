@@ -1,8 +1,26 @@
 import { sql } from "./db";
 
+// Coupons don't have a scheduler, so overdue ACTIVE/SCHEDULED coupons are
+// flipped to EXPIRED lazily, right before they're read.
+async function expireOverdueCoupons() {
+  await sql`
+    UPDATE coupons SET status = 'EXPIRED', updated_at = now()
+    WHERE status IN ('ACTIVE', 'SCHEDULED') AND end_date IS NOT NULL AND end_date < CURRENT_DATE
+  `;
+}
+
+// DATE columns come back from the driver as JS Date objects constructed in
+// the server's local timezone; JSON-serializing them converts to UTC, which
+// shifts the calendar date for any non-UTC-offset timezone. Casting to text
+// in SQL keeps them as plain, timezone-independent "YYYY-MM-DD" strings.
 export async function listCoupons() {
+  await expireOverdueCoupons();
   const rows = await sql`
-    SELECT c.*, cat.name AS category_name
+    SELECT
+      c.id, c.code, c.description, c.discount_type, c.discount_value, c.min_purchase_amount,
+      c.usage_limit, c.usage_count, c.one_per_customer, c.status,
+      c.start_date::text AS start_date, c.end_date::text AS end_date,
+      c.applies_to, c.category_id, cat.name AS category_name
     FROM coupons c
     LEFT JOIN categories cat ON cat.id = c.category_id
     ORDER BY c.created_at DESC
@@ -11,8 +29,13 @@ export async function listCoupons() {
 }
 
 export async function getCouponById(id) {
+  await expireOverdueCoupons();
   const [row] = await sql`
-    SELECT c.*, cat.name AS category_name
+    SELECT
+      c.id, c.code, c.description, c.discount_type, c.discount_value, c.min_purchase_amount,
+      c.usage_limit, c.usage_count, c.one_per_customer, c.status,
+      c.start_date::text AS start_date, c.end_date::text AS end_date,
+      c.applies_to, c.category_id, cat.name AS category_name
     FROM coupons c
     LEFT JOIN categories cat ON cat.id = c.category_id
     WHERE c.id = ${id}

@@ -52,7 +52,7 @@ COMMENT ON COLUMN coupons.code IS 'Uppercase A-Z0-9 only (formatCode); "Generate
 COMMENT ON COLUMN coupons.discount_value IS 'Percentage points or a currency amount; NULL when discount_type = ''free_shipping''.';
 COMMENT ON COLUMN coupons.usage_limit IS 'NULL = unlimited.';
 COMMENT ON COLUMN coupons.usage_count IS 'Denormalized redemption counter; see coupon_redemptions.';
-COMMENT ON COLUMN coupons.status IS 'Set directly by the admin, not derived from start_date/end_date.';
+COMMENT ON COLUMN coupons.status IS 'Set directly by the admin (ACTIVE/SCHEDULED/DRAFT), except EXPIRED: an ACTIVE or SCHEDULED coupon is lazily flipped to EXPIRED once end_date has passed (see expireOverdueCoupons in src/lib/coupons.js).';
 COMMENT ON COLUMN coupons.end_date IS 'NULL = runs indefinitely (''Set an end date'' left unchecked).';
 COMMENT ON COLUMN coupons.category_id IS 'Set only when applies_to = ''CATEGORY''.';
 
