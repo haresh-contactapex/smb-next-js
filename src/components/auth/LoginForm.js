@@ -25,7 +25,7 @@ export default function LoginForm() {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 5000);
   }
 
   function dismissToast() {

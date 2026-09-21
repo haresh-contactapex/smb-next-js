@@ -27,7 +27,7 @@ export default function AdminLoginForm() {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 5000);
   }
 
   function dismissToast() {
@@ -79,13 +79,19 @@ export default function AdminLoginForm() {
         throw new Error(result.error || "Unable to sign in.");
       }
       showToast("Signed in successfully");
-      router.push("/");
-      router.refresh();
+      // The toast unmounts the instant this page navigates away, so give it
+      // a beat to actually be seen instead of redirecting immediately. Leave
+      // the button disabled (submitting stays true) through the redirect
+      // rather than resetting it in a `finally`, so it can't be re-submitted
+      // during that window.
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 900);
     } catch (error) {
       showToast(error.message, "error");
       setRecaptchaToken("");
       setRecaptchaKey((k) => k + 1);
-    } finally {
       setSubmitting(false);
     }
   }

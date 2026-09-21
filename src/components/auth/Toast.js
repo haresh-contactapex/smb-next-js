@@ -3,9 +3,14 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 
-const AUTO_DISMISS_MS = 2200;
+const AUTO_DISMISS_MS = 10000;
 
-export default function Toast({ message, visible, variant = "success", onDismiss }) {
+export default function Toast({
+  message,
+  visible,
+  variant = "success",
+  onDismiss,
+}) {
   const [progressDone, setProgressDone] = useState(false);
 
   useEffect(() => {
@@ -65,8 +70,12 @@ export default function Toast({ message, visible, variant = "success", onDismiss
             <Icon name="check" className="w-3.5 h-3.5" />
           </span>
           <div>
-            <p className="text-sm font-bold leading-tight text-green-800 dark:text-green-300">Success</p>
-            <p className="text-sm leading-snug text-green-700 dark:text-green-400">{message}</p>
+            <p className="text-sm font-bold leading-tight text-green-800 dark:text-green-300">
+              Success
+            </p>
+            <p className="text-sm leading-snug text-green-700 dark:text-green-400">
+              {message}
+            </p>
           </div>
           <button
             type="button"

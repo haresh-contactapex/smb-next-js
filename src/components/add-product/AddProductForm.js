@@ -21,6 +21,8 @@ import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvid
 import { getCurrencySymbol } from "@/lib/currency";
 
 const ENTER_SUBMIT_INPUT_TYPES = ["text", "search", "email", "tel", "url", "number", "password"];
+// Keep in sync with AUTO_DISMISS_MS in ./Toast.js (drives the success toast's progress-bar animation).
+const TOAST_AUTO_DISMISS_MS = 10000;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
 const ALLOWED_MODEL_EXTENSIONS = [".glb", ".usdz"];
@@ -102,7 +104,7 @@ export default function AddProductForm({ productId }) {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
   }
 
   function dismissToast() {

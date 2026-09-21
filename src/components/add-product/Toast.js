@@ -3,13 +3,18 @@
 import { useEffect, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 
-const AUTO_DISMISS_MS = 2200;
+const AUTO_DISMISS_MS = 10000;
 
-export default function Toast({ message, visible, variant = "success", onDismiss }) {
+export default function Toast({
+  message,
+  visible,
+  variant = "success",
+  onDismiss,
+}) {
   const [progressDone, setProgressDone] = useState(false);
 
   useEffect(() => {
-    if (variant !== "success" || !visible) {
+    if (!visible) {
       setProgressDone(false);
       return;
     }
@@ -31,7 +36,7 @@ export default function Toast({ message, visible, variant = "success", onDismiss
           visible ? "" : " -translate-y-4 opacity-0 pointer-events-none"
         }`}
       >
-        <div className="relative flex items-start gap-3 bg-red-600 text-white rounded-xl shadow-popover pl-4 pr-9 py-3.5">
+        <div className="relative overflow-hidden flex items-start gap-3 bg-red-600 text-white rounded-xl shadow-popover pl-4 pr-9 py-3.5">
           <span className="flex-shrink-0 w-6 h-6 mt-0.5 rounded-full bg-white text-red-600 flex items-center justify-center text-sm font-bold">
             !
           </span>
@@ -47,6 +52,16 @@ export default function Toast({ message, visible, variant = "success", onDismiss
           >
             &times;
           </button>
+          <div className="absolute left-0 right-0 bottom-0 h-1 bg-black/15">
+            <div
+              className="h-full bg-red-300 ease-linear"
+              style={{
+                width: progressDone ? "0%" : "100%",
+                transitionProperty: "width",
+                transitionDuration: `${AUTO_DISMISS_MS}ms`,
+              }}
+            />
+          </div>
         </div>
       </div>
     );
@@ -65,8 +80,12 @@ export default function Toast({ message, visible, variant = "success", onDismiss
             <Icon name="check" className="w-3.5 h-3.5" />
           </span>
           <div>
-            <p className="text-sm font-bold leading-tight text-green-800 dark:text-green-300">Success</p>
-            <p className="text-sm leading-snug text-green-700 dark:text-green-400">{message}</p>
+            <p className="text-sm font-bold leading-tight text-green-800 dark:text-green-300">
+              Success
+            </p>
+            <p className="text-sm leading-snug text-green-700 dark:text-green-400">
+              {message}
+            </p>
           </div>
           <button
             type="button"
