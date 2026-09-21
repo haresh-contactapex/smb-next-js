@@ -3,6 +3,7 @@ import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
 import { listMedia, createMedia } from "@/lib/media";
+import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
@@ -25,6 +26,11 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const staffUser = await getCurrentStaffUser();
+  if (!staffUser) {
+    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get("file");

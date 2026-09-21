@@ -2,8 +2,14 @@ import { unlink } from "fs/promises";
 import path from "path";
 import { NextResponse } from "next/server";
 import { deleteMedia } from "@/lib/media";
+import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 
 export async function DELETE(request, { params }) {
+  const staffUser = await getCurrentStaffUser();
+  if (!staffUser) {
+    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+  }
+
   try {
     const url = await deleteMedia(params.id);
     if (!url) {
