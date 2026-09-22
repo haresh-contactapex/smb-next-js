@@ -1,8 +1,8 @@
 # Categories / Products Workflow
 
 Process flows for the **Categories / Products** section of the admin panel
-(sidebar submenu: Categories, All Products, Add Product; Add Category is
-reached from the Categories page). Pairs with
+(sidebar submenu: Categories, All Products, Add Product, Import Products;
+Add Category is reached from the Categories page). Pairs with
 [`category-product-catalog-database-schema.md`](category-product-catalog-database-schema.md),
 which defines the tables these flows would read from and write to once a
 real backend exists — today every page here runs on static/in-memory data
@@ -115,6 +115,75 @@ flowchart TD
   from the All Products dataset (`computeCategoryCounts`), and a parent
   category's count is the sum of its descendants' — so the two pages
   always agree on totals without any manual syncing.
+
+## 5. Import Products (CSV)
+
+Unlike the rest of this document, this flow is wired to the real database
+today — `/all-products/import` (`src/components/import-products/`) posts a
+`.csv` file to `POST /api/products/import`, which is backed by
+`src/lib/productImport.js` and `createProduct()` in `src/lib/products.js`.
+
+```mermaid
+flowchart TD
+    Start(["Open /all-products/import"]) --> Pick["Pick or drop a .csv file\n(client checks extension + 5MB cap)"]
+    Pick --> Click(["Click Import products"])
+    Click --> Upload["POST multipart file to\n/api/products/import"]
+    Upload --> Auth{"Staff session\nvalid?"}
+    Auth -- "No" --> Reject401["401 — route checks the\nstaff session itself;\nmiddleware doesn't cover /api"]
+    Auth -- "Yes" --> FileCheck{"Extension/MIME\n+ size OK?"}
+    FileCheck -- "No" --> Reject400["400 with a specific\nerror message"]
+    FileCheck -- "Yes" --> Parse["Parse with PapaParse,\nheader row -> lowercase/underscore\ncolumn names"]
+    Parse --> ColCheck{"title, sku, price\ncolumns present?"}
+    ColCheck -- "No" --> Reject500["Whole import fails —\nmissing required column(s)"]
+    ColCheck -- "Yes" --> Loop["For each data row:\nvalidate + map to the same\npayload shape as assembleProduct(),\nthen call createProduct()"]
+    Loop --> RowOK{"Row valid &\nhandle unique?"}
+    RowOK -- "Yes" --> Created["Row counted in created"]
+    RowOK -- "No" --> Failed["Row added to failed[]\nwith its error — rest of\nthe file keeps processing"]
+    Created --> More{"More rows?"}
+    Failed --> More
+    More -- "Yes" --> Loop
+    More -- "No" --> Summary["Return { created, failed }\nin the JSON envelope"]
+    Summary --> Show["Show summary card:\ncreated count, failed table,\ndownloadable error report"]
+```
+
+Key behavior worth calling out:
+
+- **Each product reuses `createProduct()` as-is** — the same
+  handle-uniqueness check, category-path upsert, and tag/collection upsert
+  that Add Product uses.
+- **One bad product never aborts the file.** Validation errors (missing
+  required field, non-numeric price, invalid status/weight unit) and DB
+  errors (duplicate handle) are both caught per product and reported in
+  `failed[]`, so a 500-row file with 3 bad products still creates the rest.
+- **Required columns**: `title`, `sku`, `price`. Optional columns cover the
+  same fields as the Add Product form — see `src/components/import-products/helpers.js`
+  for the exact list and `src/lib/productImport.js` for validation rules.
+  Multi-value cells (`tags`, `collections`, `image_url`) are
+  semicolon-separated; `category` uses the same `"Parent > Child"` path
+  syntax as the rest of this section.
+- **Variable products (with options/variants) are one row per variant.**
+  `groupRowsByProduct()` groups every row that shares a non-empty `handle`
+  into a single product; `buildOptionsAndVariants()` then reads each row's
+  `option1_name`/`option1_value` (through `option3_name`/`option3_value`)
+  plus `variant_sku`, `variant_price`, `variant_compare_at_price`,
+  `variant_inventory_quantity`, `variant_weight`/`variant_weight_unit`, and
+  `variant_image_url` into that product's `options[]`/`variants[]` — the
+  same shape `regenerateVariants()` produces for the Add Product form. Only
+  the group's first row needs the product-level columns (title, sku, price,
+  description, ...); a row with no `handle` at all is still treated as its
+  own simple, single-SKU product, so existing simple-product CSVs keep
+  working unchanged. The Import Products page offers a matching "Variable
+  product sample" download alongside the simple one.
+
+## 6. Export Products (CSV)
+
+The **Export** button on `/all-products` (`ExportProductsButton.js`) calls
+`GET /api/products/export`, backed by `src/lib/productExport.js`. It reads
+every product with `listProducts()` + `getProductById()` and writes the same
+column set `productImport.js` reads (simple products as one row, variable
+products as one row per variant, grouped by `handle`) — so an exported file
+can be re-imported unchanged, and it doubles as a full backup of the
+catalog.
 
 ## Data lifecycle today vs. with a backend
 

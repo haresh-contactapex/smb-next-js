@@ -60,6 +60,7 @@ export const adminPanelConfig = {
         { id: "categories", label: "Categories", href: "/categories" },
         { id: "all-products", label: "All Products", href: "/all-products" },
         { id: "add-product", label: "Add Product", href: "/add-product" },
+        { id: "import-products", label: "Import Products", href: "/all-products/import" },
       ],
     },
     {
