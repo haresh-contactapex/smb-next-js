@@ -1,5 +1,4 @@
-import { unlink } from "fs/promises";
-import path from "path";
+import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { deleteMedia } from "@/lib/media";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
@@ -16,10 +15,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    if (url.startsWith("/uploads/")) {
-      const filePath = path.join(process.cwd(), "public", url);
-      await unlink(filePath).catch(() => {});
-    }
+    await del(url).catch(() => {});
 
     return NextResponse.json({ success: true, data: { id: params.id } });
   } catch (error) {

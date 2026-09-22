@@ -26,3 +26,4 @@ yarn-error.log*
 # uploaded media (persisted to disk at runtime, not committed)
 /public/uploads/*
 !/public/uploads/.gitkeep
+.env*
