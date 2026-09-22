@@ -266,13 +266,15 @@ CREATE TABLE notifications_settings (
     new_order_email_alert        BOOLEAN     NOT NULL DEFAULT true,
     low_stock_alert              BOOLEAN     NOT NULL DEFAULT true,
     new_customer_signup_alert    BOOLEAN     NOT NULL DEFAULT false,
-    notification_recipient_email VARCHAR(255),
+    notification_recipient_email VARCHAR(255) NOT NULL DEFAULT 'admin@shopmyband.com',
     enable_sms_notifications     BOOLEAN     NOT NULL DEFAULT false,
     enable_push_notifications    BOOLEAN     NOT NULL DEFAULT false,
+    toast_timeout_seconds        SMALLINT    NOT NULL DEFAULT 3 CHECK (toast_timeout_seconds BETWEEN 1 AND 30),
     updated_at                   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE notifications_settings IS 'Backs the Settings -> Notifications page. Singleton row (id = 1).';
 COMMENT ON COLUMN notifications_settings.notification_recipient_email IS 'Where the alerts above are sent.';
+COMMENT ON COLUMN notifications_settings.toast_timeout_seconds IS 'How long admin toast notifications stay visible before auto-dismissing. 1-30 seconds.';
 
 -- ----------------------------------------------------------------------------
 -- SEO

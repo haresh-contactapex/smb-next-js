@@ -248,9 +248,10 @@ Backs the Settings → Notifications page.
 | `new_order_email_alert`          | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
 | `low_stock_alert`                | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
 | `new_customer_signup_alert`      | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
-| `notification_recipient_email`   | `VARCHAR(255)` | NULL                             | Where the alerts above are sent |
+| `notification_recipient_email`   | `VARCHAR(255)` | NOT NULL, DEFAULT `'admin@shopmyband.com'` | Where the alerts above are sent |
 | `enable_sms_notifications`       | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
 | `enable_push_notifications`      | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
+| `toast_timeout_seconds`          | `SMALLINT`     | NOT NULL, DEFAULT `3`, CHECK BETWEEN 1 AND 30 | How long admin toasts stay visible before auto-dismissing |
 | `updated_at`                     | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`        |       |
 
 ### `seo_settings`

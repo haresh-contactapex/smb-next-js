@@ -17,6 +17,7 @@
     "db:migrate:products": "node scripts/migrate.mjs docs/settings/products-table-only.sql",
     "db:migrate:security": "node scripts/migrate.mjs docs/settings/security-table-only.sql",
     "db:migrate:integrations": "node scripts/migrate.mjs docs/settings/integrations-table-only.sql",
+    "db:migrate:notifications": "node scripts/migrate.mjs docs/settings/notifications-table-only.sql",
     "db:migrate:users-security": "node scripts/migrate.mjs docs/my-account/users-security-columns-only.sql",
     "db:seed:admin": "node scripts/create-admin-user.mjs"
   },
