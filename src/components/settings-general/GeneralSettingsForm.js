@@ -12,7 +12,11 @@ import PageToolbar from "./PageToolbar";
 import StoreIdentitySection from "./StoreIdentitySection";
 import StoreContactSection from "./StoreContactSection";
 import LocalizationSidebar from "./LocalizationSidebar";
-import Toast from "./Toast";
+import Toast from "@/components/add-product/Toast";
+
+// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
+// also drives the progress-bar animation for both success and error messages.
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function GeneralSettingsForm() {
   const [settings, setSettings] = useState(DEFAULT_GENERAL_SETTINGS);
@@ -54,7 +58,10 @@ export default function GeneralSettingsForm() {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      TOAST_AUTO_DISMISS_MS,
+    );
   }
 
   function dismissToast() {

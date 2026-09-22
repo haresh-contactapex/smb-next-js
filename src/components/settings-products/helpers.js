@@ -1,11 +1,17 @@
+// Matches the product catalog's own status values (see
+// src/components/add-product/StatusSidebar.js) so the default chosen here
+// is exactly what a new product's Status field shows — Archived is omitted
+// since it isn't a sensible starting status for a new product.
 export const PRODUCT_STATUSES = [
+  { value: "active", label: "Active" },
   { value: "draft", label: "Draft" },
-  { value: "published", label: "Published" },
 ];
 
 export const WEIGHT_UNITS = [
   { value: "lb", label: "lb" },
   { value: "kg", label: "kg" },
+  { value: "g", label: "g" },
+  { value: "oz", label: "oz" },
 ];
 
 export const DEFAULT_PRODUCTS_SETTINGS = {

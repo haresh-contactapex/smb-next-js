@@ -3,10 +3,18 @@ import { findCustomerByEmail, createCustomer } from "@/lib/customers";
 import { hashPassword } from "@/lib/auth/password";
 import { createCustomerSession } from "@/lib/auth/customerSession";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
+import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidEmail, isValidPassword } from "@/components/auth/helpers";
+import { isEmailConfigured, sendCustomerWelcomeEmail, sendNewCustomerAdminNotification } from "@/lib/email";
+import { getGeneralSettings } from "@/lib/generalSettings";
 
 export async function POST(request) {
   try {
+    const maintenance = await checkMaintenanceMode();
+    if (maintenance.active) {
+      return NextResponse.json({ success: false, error: maintenance.message }, { status: 503 });
+    }
+
     const payload = await request.json();
     const firstName = String(payload.firstName || "").trim();
     const lastName = String(payload.lastName || "").trim();
@@ -53,6 +61,18 @@ export async function POST(request) {
     });
 
     await createCustomerSession(customer.id, { rememberMe: false });
+
+    // Best-effort notifications, awaited (not fire-and-forget — a serverless
+    // function can be frozen the instant the response is sent, killing any
+    // still-pending work) but never allowed to fail the registration itself:
+    // sendEmail already logs and returns false rather than throwing.
+    if (isEmailConfigured()) {
+      const { storeName, storeEmail } = await getGeneralSettings();
+      await sendCustomerWelcomeEmail({ to: customer.email, firstName: customer.firstName, storeName });
+      if (storeEmail) {
+        await sendNewCustomerAdminNotification({ to: storeEmail, customer, storeName });
+      }
+    }
 
     return NextResponse.json({ success: true, data: customer }, { status: 201 });
   } catch (error) {

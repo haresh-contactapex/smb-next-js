@@ -3,6 +3,7 @@ import { findCustomerByEmail } from "@/lib/customers";
 import { insertCustomerResetToken } from "@/lib/passwordResetTokens";
 import { createResetToken } from "@/lib/auth/resetToken";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
+import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidEmail } from "@/components/auth/helpers";
 import { isEmailConfigured, sendPasswordResetEmail } from "@/lib/email";
 
@@ -10,6 +11,11 @@ import { isEmailConfigured, sendPasswordResetEmail } from "@/lib/email";
 // so this endpoint can't be used to enumerate registered customers.
 export async function POST(request) {
   try {
+    const maintenance = await checkMaintenanceMode();
+    if (maintenance.active) {
+      return NextResponse.json({ success: false, error: maintenance.message }, { status: 503 });
+    }
+
     const payload = await request.json();
     const email = String(payload.email || "").trim();
 

@@ -7,7 +7,11 @@ import BillingAddressSection from "./BillingAddressSection";
 import ShippingAddressSection from "./ShippingAddressSection";
 import AddressPreviewSidebar from "./AddressPreviewSidebar";
 import DeliveryInstructionsSidebar from "./DeliveryInstructionsSidebar";
-import Toast from "./Toast";
+import Toast from "@/components/add-product/Toast";
+
+// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
+// also drives the progress-bar animation for both success and error messages.
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 function toFormAddress(saved, profile) {
   if (!saved) return emptyAddressFromProfile(profile);
@@ -45,7 +49,10 @@ export default function AddressForm() {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      TOAST_AUTO_DISMISS_MS,
+    );
   }
 
   function dismissToast() {

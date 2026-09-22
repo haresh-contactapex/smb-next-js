@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
 import { STAFF_SESSION_COOKIE, STAFF_SESSION_SCOPE } from "@/lib/auth/constants";
 import { getStaffSecurityPolicy, isSessionTimedOut, isPasswordExpired } from "@/lib/auth/sessionPolicy";
+import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 
 // Customer-facing auth pages and the admin panel's own standalone auth pages
 // (kept in sync with ConditionalShell's STANDALONE_ROUTES) — everything else
@@ -17,6 +18,12 @@ const PUBLIC_PATHS = new Set([
   "/admin/reset-password",
 ]);
 
+// The storefront visitor surface Settings -> System & Maintenance's
+// "maintenance mode" toggle blocks — every customer-facing entry point this
+// admin panel exposes. Staff/admin paths are never gated here, so admins
+// keep access while maintenance mode is on.
+const STOREFRONT_PATHS = new Set(["/login", "/register", "/forgot-password", "/reset-password"]);
+
 // A password-expired staff member can still reach their own Profile page
 // (to change the password) and sign out; everything else bounces to Profile.
 const PASSWORD_EXPIRED_ALLOWED_PATHS = new Set(["/profile"]);
@@ -30,6 +37,19 @@ function safeNextPath(request) {
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+
+  // The maintenance page itself must stay reachable no matter what, so
+  // storefront visitors rewritten to it below don't hit a redirect loop.
+  if (pathname === "/maintenance") {
+    return NextResponse.next();
+  }
+
+  if (STOREFRONT_PATHS.has(pathname)) {
+    const maintenance = await checkMaintenanceMode();
+    if (maintenance.active) {
+      return NextResponse.rewrite(new URL("/maintenance", request.url));
+    }
+  }
 
   const token = request.cookies.get(STAFF_SESSION_COOKIE)?.value;
   const payload = await verifyJwt(token);

@@ -11,6 +11,8 @@ export const GENERAL_SETTINGS_DEFAULTS = {
   faviconUrl: null,
   currency: "USD",
   skuPrefix: "",
+  defaultProductStatus: "draft",
+  defaultWeightUnit: "lb",
   enableRecaptcha: false,
 };
 
@@ -29,9 +31,9 @@ export function GeneralSettingsProvider({ value, children }) {
 }
 
 // Store name/logo/favicon (Settings -> General), currency (Settings ->
-// Currency & Tax), SKU prefix (Settings -> Products) and the reCAPTCHA
-// toggle (Settings -> Security), available to any client component without
-// prop-drilling.
+// Currency & Tax), SKU prefix/default product status/default weight unit
+// (Settings -> Products) and the reCAPTCHA toggle (Settings -> Security),
+// available to any client component without prop-drilling.
 export function useGeneralSettings() {
   return useContext(GeneralSettingsContext);
 }

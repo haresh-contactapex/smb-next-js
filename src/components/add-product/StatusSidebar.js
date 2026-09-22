@@ -1,12 +1,18 @@
 "use client";
 
 import Icon from "@/components/admin-panel/Icon";
+import { PRODUCT_STATUSES } from "@/components/settings-products/helpers";
+import { productStatusFromSettings } from "./helpers";
 
-const STATUS_OPTIONS = [
-  { value: "ACTIVE", label: "Active" },
-  { value: "DRAFT", label: "Draft" },
-  { value: "ARCHIVED", label: "Archived" },
-];
+// Settings -> Products -> "Default Product Status" is the single source of
+// truth for which statuses a product can be given. `productStatusFromSettings`
+// (same helper the live default-status wiring in AddProductForm uses) maps
+// each settings value to this form's uppercase status enum, so there's one
+// translation point instead of a second, separately-maintained list.
+const STATUS_OPTIONS = PRODUCT_STATUSES.map((opt) => ({
+  value: productStatusFromSettings(opt.value),
+  label: opt.label,
+}));
 
 export default function StatusSidebar({ status, handle, onFieldChange, onHandleChange }) {
   return (

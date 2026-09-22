@@ -31,6 +31,15 @@ export function stripHtml(html) {
   return html ? html.replace(/<[^>]*>/g, "") : "";
 }
 
+// Maps Settings -> Products' Default Product Status ("active" / "draft")
+// to this form's status enum ("ACTIVE" / "DRAFT" / "ARCHIVED" — see
+// StatusSidebar). Falls back to "ACTIVE" for an unrecognized/missing value.
+const SETTINGS_STATUS_TO_PRODUCT_STATUS = { active: "ACTIVE", draft: "DRAFT" };
+
+export function productStatusFromSettings(defaultProductStatus) {
+  return SETTINGS_STATUS_TO_PRODUCT_STATUS[defaultProductStatus] || "ACTIVE";
+}
+
 export function cartesian(arrays) {
   return arrays.reduce((acc, curr) => acc.flatMap((a) => curr.map((c) => [...a, c])), [[]]);
 }

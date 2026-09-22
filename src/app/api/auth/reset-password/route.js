@@ -4,10 +4,16 @@ import { updateCustomerPassword } from "@/lib/customers";
 import { hashPassword } from "@/lib/auth/password";
 import { hashResetToken } from "@/lib/auth/resetToken";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
+import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidPassword, getPasswordErrorMessage } from "@/components/auth/helpers";
 
 export async function POST(request) {
   try {
+    const maintenance = await checkMaintenanceMode();
+    if (maintenance.active) {
+      return NextResponse.json({ success: false, error: maintenance.message }, { status: 503 });
+    }
+
     const payload = await request.json();
     const token = String(payload.token || "");
     const password = String(payload.password || "");

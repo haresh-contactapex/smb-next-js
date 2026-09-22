@@ -12,6 +12,7 @@ const STANDALONE_ROUTES = [
   "/admin/logout",
   "/admin/forgot-password",
   "/admin/reset-password",
+  "/maintenance",
 ];
 
 /**

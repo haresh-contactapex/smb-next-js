@@ -8,7 +8,7 @@ import SelectField from "@/components/settings-shared/SelectField";
 import TextField from "@/components/settings-shared/TextField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
-import Toast from "./Toast";
+import Toast from "@/components/add-product/Toast";
 import {
   CURRENCY_POSITIONS,
   NUMBER_FORMATS,
@@ -17,6 +17,10 @@ import {
   toSavePayload,
   validateCurrencyTaxSettingsForm,
 } from "./helpers";
+
+// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
+// also drives the progress-bar animation for both success and error messages.
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function CurrencyTaxSettingsForm() {
   const [settings, setSettings] = useState(DEFAULT_CURRENCY_TAX_SETTINGS);
@@ -41,7 +45,10 @@ export default function CurrencyTaxSettingsForm() {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      TOAST_AUTO_DISMISS_MS,
+    );
   }
 
   function dismissToast() {

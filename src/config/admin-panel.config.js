@@ -100,6 +100,7 @@ export const adminPanelConfig = {
         { id: "orders", label: "Orders", href: "/settings/orders" },
         { id: "customers", label: "Customers", href: "/settings/customers" },
         { id: "products", label: "Products", href: "/settings/products" },
+        { id: "pricing", label: "Pricing", href: "/settings/pricing" },
         { id: "inventory", label: "Inventory", href: "/settings/inventory" },
         { id: "checkout", label: "Checkout", href: "/settings/checkout" },
         { id: "returns-refunds", label: "Returns & Refunds", href: "/settings/returns-refunds" },

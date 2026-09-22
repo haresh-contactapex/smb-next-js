@@ -2,14 +2,24 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { slugify, DEFAULT_CATEGORY, buildCategoryFromData, assembleCategory, excludeDescendants } from "./helpers";
+import {
+  slugify,
+  DEFAULT_CATEGORY,
+  buildCategoryFromData,
+  assembleCategory,
+  excludeDescendants,
+} from "./helpers";
 import PageToolbar from "./PageToolbar";
 import CategoryDetailsSection from "./CategoryDetailsSection";
 import CollectionItemsSection from "./CollectionItemsSection";
 import SeoSection from "./SeoSection";
 import HierarchySidebar from "./HierarchySidebar";
 import ProductRulesSidebar from "./ProductRulesSidebar";
-import Toast from "./Toast";
+import Toast from "@/components/add-product/Toast";
+
+// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
+// also drives the progress-bar animation for both success and error messages.
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function AddCategoryForm({ categoryId, categories = [] }) {
   const isEdit = Boolean(categoryId);
@@ -19,7 +29,11 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   const [saving, setSaving] = useState(false);
   const [titleError, setTitleError] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const [toast, setToast] = useState({
+    message: "",
+    visible: false,
+    variant: "success",
+  });
 
   const titleInputRef = useRef(null);
   const toastTimerRef = useRef(null);
@@ -31,7 +45,8 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
       .then((res) => res.json())
       .then((json) => {
         if (cancelled) return;
-        if (!json.success) throw new Error(json.error || "Failed to load category");
+        if (!json.success)
+          throw new Error(json.error || "Failed to load category");
         setCategory(buildCategoryFromData(json.data));
         setLoading(false);
       })
@@ -50,7 +65,10 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      TOAST_AUTO_DISMISS_MS,
+    );
   }
 
   function dismissToast() {
@@ -72,7 +90,11 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   }
 
   function handleHandleChange(value) {
-    setCategory((prev) => ({ ...prev, handle: slugify(value), handleTouched: true }));
+    setCategory((prev) => ({
+      ...prev,
+      handle: slugify(value),
+      handleTouched: true,
+    }));
   }
 
   function handleImagePicked(file) {
@@ -105,8 +127,8 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
         missingTitle && missingImage
           ? "Image and Title required"
           : missingTitle
-          ? "Title is required"
-          : "Image is required";
+            ? "Title is required"
+            : "Image is required";
       showToast(message, "error");
       return;
     }
@@ -117,13 +139,17 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   async function persistCategory() {
     setSaving(true);
     try {
-      const res = await fetch(isEdit ? `/api/categories/${categoryId}` : "/api/categories", {
-        method: isEdit ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(assembleCategory(category)),
-      });
+      const res = await fetch(
+        isEdit ? `/api/categories/${categoryId}` : "/api/categories",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(assembleCategory(category)),
+        },
+      );
       const json = await res.json();
-      if (!json.success) throw new Error(json.error || "Failed to save category");
+      if (!json.success)
+        throw new Error(json.error || "Failed to save category");
 
       showToast(isEdit ? "Category updated" : "Category saved");
       router.push("/categories");
@@ -146,13 +172,18 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
     setImageError(false);
   }
 
-  const previewTitle = category.seoTitle || `Shop My Band — ${category.title || "Category Title"}`;
+  const previewTitle =
+    category.seoTitle || `Shop My Band — ${category.title || "Category Title"}`;
   const previewDesc =
     category.seoDescription ||
     "Add a meta description to see how your category listing will look in search engine results.";
 
   if (loading) {
-    return <div className="py-16 text-center text-sm text-slate-400">Loading category…</div>;
+    return (
+      <div className="py-16 text-center text-sm text-slate-400">
+        Loading category…
+      </div>
+    );
   }
 
   return (
@@ -184,7 +215,9 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
             previewTitle={previewTitle}
             previewDesc={previewDesc}
             onSeoTitleChange={(value) => setField("seoTitle", value)}
-            onSeoDescriptionChange={(value) => setField("seoDescription", value)}
+            onSeoDescriptionChange={(value) =>
+              setField("seoDescription", value)
+            }
             onHandleChange={handleHandleChange}
           />
         </div>
@@ -204,7 +237,12 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
+      <Toast
+        message={toast.message}
+        visible={toast.visible}
+        variant={toast.variant}
+        onDismiss={dismissToast}
+      />
     </form>
   );
 }

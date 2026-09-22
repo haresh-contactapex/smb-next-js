@@ -107,6 +107,8 @@ export default async function RootLayout({ children }) {
             faviconUrl: settings?.faviconUrl,
             currency: currencyTaxSettings?.currency,
             skuPrefix: productsSettings?.skuPrefix,
+            defaultProductStatus: productsSettings?.defaultStatus,
+            defaultWeightUnit: productsSettings?.defaultWeightUnit,
             enableRecaptcha: securitySettings?.enableRecaptcha,
           }}
         >

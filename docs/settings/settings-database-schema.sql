@@ -174,7 +174,7 @@ CREATE TABLE products_settings (
     id                   SMALLINT PRIMARY KEY CHECK (id = 1),
     sku_prefix           VARCHAR(20),
     default_status       VARCHAR(10) NOT NULL DEFAULT 'draft'
-        CHECK (default_status IN ('draft', 'published')),
+        CHECK (default_status IN ('active', 'draft')),
     default_weight_unit  VARCHAR(2)  NOT NULL DEFAULT 'lb'
         CHECK (default_weight_unit IN ('lb', 'kg')),
     allow_backorders     BOOLEAN     NOT NULL DEFAULT false,
@@ -184,8 +184,26 @@ CREATE TABLE products_settings (
     updated_at           TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE products_settings IS 'Backs the Settings -> Products page. Singleton row (id = 1).';
-COMMENT ON COLUMN products_settings.default_status IS 'Status a new product is created with.';
+COMMENT ON COLUMN products_settings.default_status IS 'Status a new product is created with; matches the products.status catalog values (Active/Draft — Archived is not a valid starting status).';
 COMMENT ON COLUMN products_settings.low_stock_threshold IS 'Duplicated on inventory_settings; two independent forms in the current UI.';
+
+-- ----------------------------------------------------------------------------
+-- Pricing
+-- ----------------------------------------------------------------------------
+CREATE TABLE pricing_settings (
+    id                    SMALLINT PRIMARY KEY CHECK (id = 1),
+    adjustment_value      NUMERIC(10, 2) NOT NULL DEFAULT 0
+        CHECK (adjustment_value >= 0),
+    adjustment_type       VARCHAR(10) NOT NULL DEFAULT 'percentage'
+        CHECK (adjustment_type IN ('percentage', 'fixed')),
+    adjustment_direction  VARCHAR(10) NOT NULL DEFAULT 'increase'
+        CHECK (adjustment_direction IN ('increase', 'decrease')),
+    updated_at            TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+COMMENT ON TABLE pricing_settings IS 'Backs the Settings -> Pricing page. Singleton row (id = 1).';
+COMMENT ON COLUMN pricing_settings.adjustment_value IS 'Magnitude of the price adjustment; interpreted as a percentage or a fixed currency amount depending on adjustment_type.';
+COMMENT ON COLUMN pricing_settings.adjustment_type IS 'Whether adjustment_value is a percentage of the product price or a fixed amount.';
+COMMENT ON COLUMN pricing_settings.adjustment_direction IS 'Whether the adjustment raises or lowers the product price.';
 
 -- ----------------------------------------------------------------------------
 -- Inventory
@@ -432,6 +450,7 @@ INSERT INTO shipping_settings (id) VALUES (1);
 INSERT INTO orders_settings (id) VALUES (1);
 INSERT INTO customers_settings (id) VALUES (1);
 INSERT INTO products_settings (id) VALUES (1);
+INSERT INTO pricing_settings (id) VALUES (1);
 INSERT INTO inventory_settings (id) VALUES (1);
 INSERT INTO checkout_settings (id) VALUES (1);
 INSERT INTO returns_refunds_settings (id) VALUES (1);

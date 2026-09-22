@@ -73,3 +73,31 @@ export async function sendPasswordResetEmail({ to, resetLink }) {
 
   return sendEmail({ to, subject, html, text });
 }
+
+export async function sendCustomerWelcomeEmail({ to, firstName, storeName }) {
+  const subject = `Welcome to ${storeName}`;
+  const text = `Hi ${firstName},\n\nYour ${storeName} account has been created. You can now sign in to check out faster and track your orders.\n\nIf you didn't create this account, please contact us.`;
+  const html = `
+    <p>Hi ${firstName},</p>
+    <p>Your ${storeName} account has been created. You can now sign in to check out faster and track your orders.</p>
+    <p>If you didn't create this account, please contact us.</p>
+  `;
+
+  return sendEmail({ to, subject, html, text });
+}
+
+// Notifies the store's contact address (Settings -> General -> Store Email)
+// of a new signup — a lightweight "someone joined" notice, not a
+// transactional email the customer is waiting on, so a delivery failure here
+// is logged (by sendEmail) but never surfaces to the registering customer.
+export async function sendNewCustomerAdminNotification({ to, customer, storeName }) {
+  const subject = `New customer registered on ${storeName}`;
+  const fullName = `${customer.firstName} ${customer.lastName}`.trim();
+  const text = `A new customer just registered on ${storeName}.\n\nName: ${fullName}\nEmail: ${customer.email}`;
+  const html = `
+    <p>A new customer just registered on ${storeName}.</p>
+    <p><strong>Name:</strong> ${fullName}<br/><strong>Email:</strong> ${customer.email}</p>
+  `;
+
+  return sendEmail({ to, subject, html, text });
+}

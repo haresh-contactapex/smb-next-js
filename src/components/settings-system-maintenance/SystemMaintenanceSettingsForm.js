@@ -1,41 +1,104 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextAreaField from "@/components/settings-shared/TextAreaField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
-import Toast from "@/components/settings-shared/Toast";
-
-const DEFAULT_SETTINGS = {
-  maintenanceModeEnabled: false,
-  maintenanceMessage: "",
-  debugModeEnabled: false,
-};
+import Toast from "./Toast";
+import {
+  DEFAULT_SYSTEM_MAINTENANCE_SETTINGS,
+  toFormSettings,
+  toSavePayload,
+  validateSystemMaintenanceSettingsForm,
+} from "./helpers";
 
 export default function SystemMaintenanceSettingsForm() {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [toast, setToast] = useState({ message: "", visible: false });
-  const toastTimerRef = useRef(null);
+  const [settings, setSettings] = useState(DEFAULT_SYSTEM_MAINTENANCE_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
-  function showToast(message) {
-    setToast({ message, visible: true });
+  const toastTimerRef = useRef(null);
+  const maintenanceMessageInputRef = useRef(null);
+
+  const fieldRefs = {
+    maintenanceMessage: maintenanceMessageInputRef,
+  };
+
+  function focusField(field) {
+    fieldRefs[field]?.current?.focus();
+  }
+
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
     toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
   }
 
-  function setField(field, value) {
-    setSettings((prev) => ({ ...prev, [field]: value }));
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
   }
 
-  function handleSave() {
-    showToast("System & Maintenance settings saved");
+  async function loadSettings() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/settings/system-maintenance");
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to load System & Maintenance settings");
+      setSettings(toFormSettings(json.data));
+      setErrors({});
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function setField(field, value) {
+    setSettings((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  }
+
+  async function handleSave() {
+    const result = validateSystemMaintenanceSettingsForm(settings);
+    setErrors(result.errors);
+
+    if (!result.valid) {
+      showToast(result.message, "error");
+      focusField(result.firstErrorField);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings/system-maintenance", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toSavePayload(settings)),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to save System & Maintenance settings");
+      setSettings(toFormSettings(json.data));
+      showToast("System & Maintenance settings saved");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleDiscard() {
-    if (!window.confirm("Discard all changes and start over?")) return;
-    setSettings(DEFAULT_SETTINGS);
+    if (!window.confirm("Discard all changes and reload your saved settings?")) return;
+    loadSettings();
   }
 
   function handleBackUpNow() {
@@ -48,7 +111,14 @@ export default function SystemMaintenanceSettingsForm() {
 
   return (
     <>
-      <PageToolbar icon="server" title="System & Maintenance" onDiscard={handleDiscard} onSave={handleSave} />
+      <PageToolbar
+        icon="server"
+        title="System & Maintenance"
+        onDiscard={handleDiscard}
+        onSave={handleSave}
+        saving={saving}
+        disabled={loading}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
@@ -58,6 +128,7 @@ export default function SystemMaintenanceSettingsForm() {
               description="Shows a maintenance page to storefront visitors while admins keep access."
               checked={settings.maintenanceModeEnabled}
               onChange={(value) => setField("maintenanceModeEnabled", value)}
+              disabled={loading}
             />
             <TextAreaField
               id="f-maintenance-message"
@@ -66,12 +137,16 @@ export default function SystemMaintenanceSettingsForm() {
               value={settings.maintenanceMessage}
               onChange={(value) => setField("maintenanceMessage", value)}
               placeholder="We'll be back soon — thanks for your patience!"
+              error={errors.maintenanceMessage}
+              inputRef={maintenanceMessageInputRef}
+              disabled={loading}
             />
             <ToggleField
               label="Enable debug mode"
               description="Shows verbose error output — disable in production."
               checked={settings.debugModeEnabled}
               onChange={(value) => setField("debugModeEnabled", value)}
+              disabled={loading}
             />
           </SectionCard>
 
@@ -123,7 +198,7 @@ export default function SystemMaintenanceSettingsForm() {
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );
 }

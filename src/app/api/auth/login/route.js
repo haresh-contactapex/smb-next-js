@@ -3,12 +3,18 @@ import { findCustomerByEmail, toPublicCustomer } from "@/lib/customers";
 import { verifyPassword } from "@/lib/auth/password";
 import { createCustomerSession } from "@/lib/auth/customerSession";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
+import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidEmail } from "@/components/auth/helpers";
 
 const INVALID_CREDENTIALS_ERROR = "Incorrect email or password.";
 
 export async function POST(request) {
   try {
+    const maintenance = await checkMaintenanceMode();
+    if (maintenance.active) {
+      return NextResponse.json({ success: false, error: maintenance.message }, { status: 503 });
+    }
+
     const payload = await request.json();
     const email = String(payload.email || "").trim();
     const password = String(payload.password || "");

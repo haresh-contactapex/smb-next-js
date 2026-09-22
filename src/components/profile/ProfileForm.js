@@ -8,7 +8,11 @@ import ProfileDetailsSection from "./ProfileDetailsSection";
 import PasswordSection from "./PasswordSection";
 import AccountStatusSidebar from "./AccountStatusSidebar";
 import PreferencesSidebar from "./PreferencesSidebar";
-import Toast from "./Toast";
+import Toast from "@/components/add-product/Toast";
+
+// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
+// also drives the progress-bar animation for both success and error messages.
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function ProfileForm() {
   const [profile, setProfile] = useState(EMPTY_PROFILE);
@@ -41,7 +45,10 @@ export default function ProfileForm() {
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
     clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+    toastTimerRef.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      TOAST_AUTO_DISMISS_MS,
+    );
   }
 
   function dismissToast() {

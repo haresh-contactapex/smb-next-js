@@ -3,7 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SAMPLE, DEFAULT_PRODUCT_SEED } from "@/data/addProductData";
-import { buildProductFromData, assembleProduct, regenerateVariants, slugify, stripHtml, toNumber } from "./helpers";
+import {
+  buildProductFromData,
+  assembleProduct,
+  regenerateVariants,
+  slugify,
+  stripHtml,
+  toNumber,
+  productStatusFromSettings,
+} from "./helpers";
 import PageToolbar from "./PageToolbar";
 import ProductDetailsSection from "./ProductDetailsSection";
 import MediaSection from "./MediaSection";
@@ -39,12 +47,18 @@ function classifyMediaFile(file) {
 export default function AddProductForm({ productId }) {
   const isEdit = Boolean(productId);
   const router = useRouter();
-  const { currency, skuPrefix } = useGeneralSettings();
+  const { currency, skuPrefix, defaultProductStatus, defaultWeightUnit } = useGeneralSettings();
   const currencySymbol = getCurrencySymbol(currency);
-  // New products start pre-filled with the store's configured SKU prefix
-  // (Settings -> Products); editing an existing product loads its real SKU
-  // instead, once the fetch below resolves.
-  const blankProductSeed = skuPrefix ? { ...DEFAULT_PRODUCT_SEED, sku: skuPrefix } : DEFAULT_PRODUCT_SEED;
+  // New products start pre-filled with the store's configured SKU prefix,
+  // default status and default weight unit (Settings -> Products); editing
+  // an existing product loads its real values instead, once the fetch below
+  // resolves.
+  const blankProductSeed = {
+    ...DEFAULT_PRODUCT_SEED,
+    ...(skuPrefix ? { sku: skuPrefix } : {}),
+    ...(defaultProductStatus ? { status: productStatusFromSettings(defaultProductStatus) } : {}),
+    ...(defaultWeightUnit ? { weight_unit: defaultWeightUnit } : {}),
+  };
   const [product, setProduct] = useState(() => buildProductFromData(isEdit ? DEFAULT_PRODUCT_SEED : blankProductSeed));
   const [loading, setLoading] = useState(isEdit);
   const [saving, setSaving] = useState(false);
