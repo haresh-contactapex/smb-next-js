@@ -15,16 +15,18 @@ export default function AdminAuthLayout({ title, subtitle, children, footer }) {
         <Link href="/admin/login" className="flex items-center justify-center gap-2.5 mb-8">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image
-            <img src={logoUrl} alt={storeName} className="w-9 h-9 rounded-xl object-contain shrink-0 bg-white shadow-sm" />
+            <img src={logoUrl} alt={storeName} className="block max-w-full h-auto rounded-2xl bg-white p-3 shadow-sm object-contain" />
           ) : (
             <span className="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 text-white grid place-items-center shrink-0">
               <Icon name="gift" className="w-4 h-4" />
             </span>
           )}
-          <span className="leading-tight text-center">
-            <span className="block font-bold text-slate-800 dark:text-white">{storeName}</span>
-            <span className="block text-xs text-slate-400">Admin Panel</span>
-          </span>
+          {!logoUrl && (
+            <span className="leading-tight text-center">
+              <span className="block font-bold text-slate-800 dark:text-white">{storeName}</span>
+              <span className="block text-xs text-slate-400">Admin Panel</span>
+            </span>
+          )}
         </Link>
 
         <div className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-2xl shadow-sm p-6 sm:p-8">

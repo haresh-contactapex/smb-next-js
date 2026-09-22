@@ -22,16 +22,18 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
         <Link href="/" className="flex items-center gap-2.5 relative">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image
-            <img src={logoUrl} alt={storeName} className="w-10 h-10 rounded-xl object-contain shrink-0 bg-white/10" />
+            <img src={logoUrl} alt={storeName} className="block max-w-full h-auto rounded-2xl bg-white p-3 shadow-sm object-contain" />
           ) : (
             <span className="w-10 h-10 rounded-xl bg-white/10 grid place-items-center shrink-0">
               <Icon name="gift" className="w-5 h-5" />
             </span>
           )}
-          <span className="leading-tight">
-            <span className="block font-bold text-lg">{storeName}</span>
-            <span className="block text-xs text-white/70">Rings &amp; Bands Boutique</span>
-          </span>
+          {!logoUrl && (
+            <span className="leading-tight">
+              <span className="block font-bold text-lg">{storeName}</span>
+              <span className="block text-xs text-white/70">Rings &amp; Bands Boutique</span>
+            </span>
+          )}
         </Link>
 
         <div className="relative space-y-8 max-w-md">
@@ -58,13 +60,13 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
           <Link href="/" className="flex lg:hidden items-center gap-2.5 mb-8">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image
-              <img src={logoUrl} alt={storeName} className="w-9 h-9 rounded-xl object-contain shrink-0 bg-white" />
+              <img src={logoUrl} alt={storeName} className="block max-w-full h-auto rounded-2xl bg-white p-3 shadow-sm object-contain" />
             ) : (
               <span className="w-9 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 text-white grid place-items-center shrink-0">
                 <Icon name="gift" className="w-4 h-4" />
               </span>
             )}
-            <span className="font-bold text-slate-800 dark:text-white">{storeName}</span>
+            {!logoUrl && <span className="font-bold text-slate-800 dark:text-white">{storeName}</span>}
           </Link>
 
           <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{title}</h1>
