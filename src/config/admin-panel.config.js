@@ -43,6 +43,16 @@ export const adminPanelConfig = {
     },
     {
       type: "submenu",
+      id: "customers",
+      label: "Customers",
+      icon: "users",
+      items: [
+        { id: "all-customers", label: "All Customers", href: "/all-customers" },
+        { id: "add-customer", label: "Add Customer", href: "/add-customer" },
+      ],
+    },
+    {
+      type: "submenu",
       id: "catalog",
       label: "Categories / Products",
       icon: "layers",
