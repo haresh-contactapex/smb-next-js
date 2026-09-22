@@ -66,6 +66,23 @@ CREATE INDEX products_status_idx ON products (status);
 CREATE INDEX products_sku_idx ON products (sku);
 
 -- =========================================================================
+-- product_attributes
+-- =========================================================================
+-- Freeform admin-defined Label/Value pairs shown in the Attributes section
+-- (directly after Variants on the Add Product form). Unlike product_options,
+-- these never generate variants/SKUs -- they're descriptive only, and the
+-- admin can add/edit/delete any number of them with no predefined fields.
+CREATE TABLE product_attributes (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    product_id  UUID NOT NULL REFERENCES products (id) ON DELETE CASCADE,
+    label       VARCHAR(100) NOT NULL,
+    value       TEXT NOT NULL,
+    position    SMALLINT NOT NULL DEFAULT 0
+);
+
+CREATE INDEX product_attributes_product_id_idx ON product_attributes (product_id);
+
+-- =========================================================================
 -- product_options
 -- =========================================================================
 CREATE TABLE product_options (

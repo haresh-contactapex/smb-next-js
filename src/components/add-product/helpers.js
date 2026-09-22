@@ -31,6 +31,10 @@ export function stripHtml(html) {
   return html ? html.replace(/<[^>]*>/g, "") : "";
 }
 
+export function newAttributeId() {
+  return "attr_" + Math.random().toString(36).slice(2, 10);
+}
+
 // Maps Settings -> Products' Default Product Status ("active" / "draft")
 // to this form's status enum ("ACTIVE" / "DRAFT" / "ARCHIVED" — see
 // StatusSidebar). Falls back to "ACTIVE" for an unrecognized/missing value.
@@ -191,6 +195,15 @@ export function buildProductFromData(data = {}) {
     variants,
     seo: { title: data.seo?.title || "", description: data.seo?.description || "" },
     media: (data.media || []).map((m) => ({ ...m })),
+    // Freeform admin-defined Label/Value pairs — no predefined fields, so
+    // this is just whatever rows came back from the server (or [] for a new
+    // product). Each row needs a stable client-side id for React/list state
+    // even before it's ever been saved.
+    attributes: (data.attributes || []).map((a) => ({
+      id: a.id || newAttributeId(),
+      label: a.label || "",
+      value: a.value || "",
+    })),
   };
 }
 
@@ -246,5 +259,8 @@ export function assembleProduct(product) {
       description: product.seo.description || stripHtml(product.body_html).slice(0, 160),
     },
     media: product.media.map((m) => ({ type: m.type, url: m.url, name: m.name })),
+    attributes: product.attributes
+      .filter((a) => a.label.trim())
+      .map((a) => ({ label: a.label, value: a.value })),
   };
 }

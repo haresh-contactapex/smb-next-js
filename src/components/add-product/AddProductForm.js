@@ -11,6 +11,7 @@ import {
   stripHtml,
   toNumber,
   productStatusFromSettings,
+  newAttributeId,
 } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import ProductDetailsSection from "./ProductDetailsSection";
@@ -19,6 +20,7 @@ import PricingSection from "./PricingSection";
 import InventorySection from "./InventorySection";
 import ShippingSection from "./ShippingSection";
 import VariantsSection from "./VariantsSection";
+import AttributesSection from "./AttributesSection";
 import SeoSection from "./SeoSection";
 import StatusSidebar from "./StatusSidebar";
 import OrganizationSidebar from "./OrganizationSidebar";
@@ -223,6 +225,25 @@ export default function AddProductForm({ productId }) {
 
   function handleRemoveMedia(index) {
     setProduct((prev) => ({ ...prev, media: prev.media.filter((_, i) => i !== index) }));
+  }
+
+  function handleAddAttribute() {
+    setProduct((prev) => ({
+      ...prev,
+      attributes: [...prev.attributes, { id: newAttributeId(), label: "", value: "" }],
+    }));
+  }
+
+  function handleAttributeChange(index, field, value) {
+    setProduct((prev) => {
+      const next = prev.attributes.slice();
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, attributes: next };
+    });
+  }
+
+  function handleRemoveAttribute(index) {
+    setProduct((prev) => ({ ...prev, attributes: prev.attributes.filter((_, i) => i !== index) }));
   }
 
   function handleVariantImageChange(index, file) {
@@ -491,6 +512,13 @@ export default function AddProductForm({ productId }) {
             onVariantsChange={handleVariantsChange}
             onVariantImageChange={handleVariantImageChange}
             onVariantImageRemove={handleVariantImageRemove}
+          />
+
+          <AttributesSection
+            attributes={product.attributes}
+            onAdd={handleAddAttribute}
+            onChange={handleAttributeChange}
+            onRemove={handleRemoveAttribute}
           />
 
           <SeoSection

@@ -50,7 +50,7 @@ async function dedupeSkusGlobally(variants) {
   });
 }
 
-function slugify(str) {
+export function slugify(str) {
   return String(str)
     .toLowerCase()
     .trim()
@@ -69,21 +69,40 @@ export async function upsertCategoryPath(path) {
 
   let parentId = null;
   for (const name of levels) {
-    const slug = slugify(name);
+    const baseSlug = slugify(name);
     const [existing] = parentId
-      ? await sql`SELECT id FROM categories WHERE slug = ${slug} AND parent_id = ${parentId}`
-      : await sql`SELECT id FROM categories WHERE slug = ${slug} AND parent_id IS NULL`;
+      ? await sql`SELECT id FROM categories WHERE slug = ${baseSlug} AND parent_id = ${parentId}`
+      : await sql`SELECT id FROM categories WHERE slug = ${baseSlug} AND parent_id IS NULL`;
 
     if (existing) {
       parentId = existing.id;
       continue;
     }
 
-    const [created] = await sql`
-      INSERT INTO categories (name, slug, parent_id)
-      VALUES (${name}, ${slug}, ${parentId})
-      RETURNING id
-    `;
+    // categories.slug is unique *globally*, not just within a parent, so a
+    // same-named category that already exists under a different parent (e.g.
+    // "Wedding Bands" at the top level and again under Jewelry > Rings) needs
+    // a disambiguated slug rather than failing the whole save.
+    let slug = baseSlug;
+    let created = null;
+    let attempt = 0;
+    while (!created) {
+      try {
+        const rows = await sql`
+          INSERT INTO categories (name, slug, parent_id)
+          VALUES (${name}, ${slug}, ${parentId})
+          RETURNING id
+        `;
+        created = rows[0];
+      } catch (error) {
+        if (error.code === "23505" && error.constraint === "categories_slug_key" && attempt < 5) {
+          attempt += 1;
+          slug = `${baseSlug}-${attempt + 1}`;
+          continue;
+        }
+        throw error;
+      }
+    }
     parentId = created.id;
   }
 
@@ -212,6 +231,10 @@ export async function getProductById(id) {
     SELECT type, url, name FROM product_media WHERE product_id = ${id} ORDER BY position
   `;
 
+  const attributes = await sql`
+    SELECT id, label, value FROM product_attributes WHERE product_id = ${id} ORDER BY position
+  `;
+
   const tags = await sql`
     SELECT t.name FROM tags t
     JOIN product_tags pt ON pt.tag_id = t.id
@@ -252,6 +275,7 @@ export async function getProductById(id) {
     })),
     variantDefaults: null,
     seo: { title: product.seo_title || "", description: product.seo_description || "" },
+    attributes: attributes.map((a) => ({ id: a.id, label: a.label, value: a.value })),
     media: media.map((m) => ({ type: m.type, url: m.url, name: m.name })),
     variants: variants.map((v) => ({
       id: v.id,
@@ -273,6 +297,7 @@ export async function getProductById(id) {
 async function replaceChildRows(productId, payload) {
   await sql`DELETE FROM product_options WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_media WHERE product_id = ${productId}`;
+  await sql`DELETE FROM product_attributes WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_tags WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_collections WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_variants WHERE product_id = ${productId}`;
@@ -320,6 +345,18 @@ async function replaceChildRows(productId, payload) {
       "product_media",
       ["product_id", "type", "url", "name"],
       media.map((m) => [productId, m.type, m.url, m.name || null])
+    );
+  }
+
+  // Freeform admin-defined fields — no predefined labels, just whatever the
+  // admin typed. Rows with an empty label are dropped rather than blocking
+  // the save (label is NOT NULL on product_attributes).
+  const attributes = (payload.attributes || []).filter((a) => a.label && a.label.trim());
+  if (attributes.length) {
+    await batchInsert(
+      "product_attributes",
+      ["product_id", "label", "value", "position"],
+      attributes.map((a, i) => [productId, a.label.trim(), a.value ?? "", i])
     );
   }
 

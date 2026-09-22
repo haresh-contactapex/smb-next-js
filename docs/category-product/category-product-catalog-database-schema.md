@@ -88,6 +88,24 @@ top-level pricing/inventory/shipping plus an optional `variants[]` array).
 Indexes: `UNIQUE (handle)`, `INDEX (category_id)`, `INDEX (status)`,
 `INDEX (sku)`.
 
+### `product_attributes`
+
+Freeform, admin-defined Label/Value pairs backing the **Attributes**
+section on the Add Product form (rendered directly after Variants). No
+fields are predefined — the admin adds, edits, and deletes rows freely.
+Unlike `product_options`/`product_variants`, these are purely descriptive
+and never generate a SKU.
+
+| Column       | Type           | Constraints                                     | Notes |
+| ------------ | -------------- | ------------------------------------------------ | ----- |
+| `id`         | `UUID`         | PK, default `gen_random_uuid()`                    |       |
+| `product_id` | `UUID`         | NOT NULL, FK → `products.id` ON DELETE CASCADE     |       |
+| `label`      | `VARCHAR(100)` | NOT NULL                                           |       |
+| `value`      | `TEXT`         | NOT NULL                                           |       |
+| `position`   | `SMALLINT`     | NOT NULL, DEFAULT `0`                              | Display/save order |
+
+Indexes: `INDEX (product_id)`.
+
 ### `product_options`
 
 One row per variant-generating option (e.g. "Color", "Size").
