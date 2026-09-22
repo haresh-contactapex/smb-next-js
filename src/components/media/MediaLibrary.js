@@ -12,6 +12,7 @@ export default function MediaLibrary({ initialItems }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [selected, setSelected] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   async function handleUpload(fileList) {
     setUploadError("");
@@ -35,6 +36,7 @@ export default function MediaLibrary({ initialItems }) {
 
   async function handleDelete(item) {
     if (!window.confirm(`Delete "${item.fileName}"? This can't be undone.`)) return;
+    setDeletingId(item.id);
     try {
       const res = await fetch(`/api/media/${item.id}`, { method: "DELETE" });
       const json = await res.json();
@@ -44,14 +46,21 @@ export default function MediaLibrary({ initialItems }) {
       router.refresh();
     } catch (error) {
       window.alert(error.message);
+    } finally {
+      setDeletingId(null);
     }
   }
 
   return (
     <div className="space-y-5">
       <MediaUploaderDropzone onFilesPicked={handleUpload} uploading={uploading} error={uploadError} />
-      <MediaGrid items={items} onSelect={setSelected} />
-      <MediaDetailsModal item={selected} onClose={() => setSelected(null)} onDelete={handleDelete} />
+      <MediaGrid items={items} onSelect={setSelected} deletingId={deletingId} />
+      <MediaDetailsModal
+        item={selected}
+        deleting={selected != null && deletingId === selected.id}
+        onClose={() => setSelected(null)}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }

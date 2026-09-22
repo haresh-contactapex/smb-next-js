@@ -10,7 +10,7 @@ function formatSize(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function MediaDetailsModal({ item, onClose, onDelete }) {
+export default function MediaDetailsModal({ item, deleting, onClose, onDelete }) {
   const [copied, setCopied] = useState(false);
 
   if (!item) return null;
@@ -29,16 +29,27 @@ export default function MediaDetailsModal({ item, onClose, onDelete }) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 dark:bg-black/60 p-4"
       onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+        if (e.target === e.currentTarget && !deleting) onClose();
       }}
     >
-      <div className="bg-white dark:bg-darksurface rounded-2xl border border-slate-200 dark:border-white/10 shadow-popover w-full max-w-2xl max-h-[85vh] flex flex-col">
+      <div className="relative bg-white dark:bg-darksurface rounded-2xl border border-slate-200 dark:border-white/10 shadow-popover w-full max-w-2xl max-h-[85vh] flex flex-col">
+        {deleting && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white/90 dark:bg-darksurface/90 rounded-2xl"
+          >
+            <Icon name="refresh-cw" className="w-7 h-7 text-primary-500 dark:text-accent-500 animate-spin" />
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Deleting…</p>
+          </div>
+        )}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-white/5">
           <h3 className="text-sm font-bold text-slate-800 dark:text-white truncate pr-4">{item.fileName}</h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none shrink-0"
+            disabled={deleting}
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-lg leading-none shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           >
             &times;
           </button>
@@ -90,9 +101,11 @@ export default function MediaDetailsModal({ item, onClose, onDelete }) {
           <button
             type="button"
             onClick={() => onDelete(item)}
-            className="px-4 h-9 rounded-xl border border-red-200 dark:border-red-500/30 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors"
+            disabled={deleting}
+            className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl border border-red-200 dark:border-red-500/30 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Delete
+            {deleting && <Icon name="refresh-cw" className="w-3.5 h-3.5 animate-spin" />}
+            {deleting ? "Deleting…" : "Delete"}
           </button>
         </div>
       </div>
