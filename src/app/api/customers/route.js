@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listCustomers, createCustomerRecord } from "@/lib/customers";
 
 export async function GET() {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission("customers.view");
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const data = await listCustomers();
@@ -17,10 +15,8 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission("customers.create");
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const payload = await request.json();

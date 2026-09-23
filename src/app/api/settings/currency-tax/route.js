@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
+import { settingsPermission } from "@/lib/permissions";
 import { getCurrencyTaxSettings, updateCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 import { CURRENCIES } from "@/data/accountData";
 import {
@@ -10,10 +11,8 @@ import {
 } from "@/components/settings-currency-tax/helpers";
 
 export async function GET() {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission(settingsPermission("currency-tax", "view"));
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const data = await getCurrencyTaxSettings();
@@ -24,10 +23,8 @@ export async function GET() {
 }
 
 export async function PUT(request) {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission(settingsPermission("currency-tax", "edit"));
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const payload = await request.json();

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 function formatSize(bytes) {
   if (!bytes) return "";
@@ -97,17 +98,19 @@ export default function MediaDetailsModal({ item, deleting, onClose, onDelete })
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-100 dark:border-white/5">
-          <button
-            type="button"
-            onClick={() => onDelete(item)}
-            disabled={deleting}
-            className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl border border-red-200 dark:border-red-500/30 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {deleting && <Icon name="refresh-cw" className="w-3.5 h-3.5 animate-spin" />}
-            {deleting ? "Deleting…" : "Delete"}
-          </button>
-        </div>
+        <Can permission="media.delete">
+          <div className="flex items-center justify-end gap-2 px-5 py-3.5 border-t border-slate-100 dark:border-white/5">
+            <button
+              type="button"
+              onClick={() => onDelete(item)}
+              disabled={deleting}
+              className="inline-flex items-center gap-1.5 px-4 h-9 rounded-xl border border-red-200 dark:border-red-500/30 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {deleting && <Icon name="refresh-cw" className="w-3.5 h-3.5 animate-spin" />}
+              {deleting ? "Deleting…" : "Delete"}
+            </button>
+          </div>
+        </Can>
       </div>
     </div>
   );

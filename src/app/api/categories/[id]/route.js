@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getCategoryById, updateCategory, deleteCategory } from "@/lib/categories";
 
 export async function GET(request, { params }) {
+  const auth = await requireStaffPermission(["categories.view", "categories.edit"]);
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
   try {
     const category = await getCategoryById(params.id);
     if (!category) {
@@ -14,6 +18,9 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const auth = await requireStaffPermission("categories.edit");
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
   try {
     const payload = await request.json();
     const id = await updateCategory(params.id, payload);
@@ -24,6 +31,9 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const auth = await requireStaffPermission("categories.delete");
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
   try {
     await deleteCategory(params.id);
     return NextResponse.json({ success: true, data: { id: params.id } });

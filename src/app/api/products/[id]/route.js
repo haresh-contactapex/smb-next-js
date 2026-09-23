@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getProductById, updateProduct, deleteProduct } from "@/lib/products";
 
 export async function GET(request, { params }) {
+  const auth = await requireStaffPermission(["products.view", "products.edit"]);
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
   try {
     const product = await getProductById(params.id);
     if (!product) {
@@ -14,6 +18,9 @@ export async function GET(request, { params }) {
 }
 
 export async function PUT(request, { params }) {
+  const auth = await requireStaffPermission("products.edit");
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
   try {
     const payload = await request.json();
     const id = await updateProduct(params.id, payload);
@@ -24,6 +31,9 @@ export async function PUT(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const auth = await requireStaffPermission("products.delete");
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
   try {
     await deleteProduct(params.id);
     return NextResponse.json({ success: true, data: { id: params.id } });

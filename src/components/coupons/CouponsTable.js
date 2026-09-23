@@ -9,6 +9,7 @@ import {
 } from "./couponHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { formatCurrency } from "@/lib/currency";
+import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 export default function CouponsTable({ coupons, onDelete }) {
   const { currency } = useGeneralSettings();
@@ -74,21 +75,25 @@ export default function CouponsTable({ coupons, onDelete }) {
                   >
                     <Icon name="eye" className="w-4 h-4" />
                   </button>
-                  <Link
-                    href={`/edit-coupon/${coupon.id}`}
-                    title="Edit coupon"
-                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-                  >
-                    <Icon name="edit-2" className="w-4 h-4" />
-                  </Link>
-                  <button
-                    type="button"
-                    title="Delete coupon"
-                    onClick={() => onDelete?.(coupon)}
-                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
-                  >
-                    <Icon name="trash-2" className="w-4 h-4" />
-                  </button>
+                  <Can permission="coupons.edit">
+                    <Link
+                      href={`/edit-coupon/${coupon.id}`}
+                      title="Edit coupon"
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                    >
+                      <Icon name="edit-2" className="w-4 h-4" />
+                    </Link>
+                  </Can>
+                  <Can permission="coupons.delete">
+                    <button
+                      type="button"
+                      title="Delete coupon"
+                      onClick={() => onDelete?.(coupon)}
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                    >
+                      <Icon name="trash-2" className="w-4 h-4" />
+                    </button>
+                  </Can>
                 </div>
               </td>
             </tr>

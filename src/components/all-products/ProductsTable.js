@@ -4,6 +4,7 @@ import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { getStockInfo, STOCK_TEXT_CLASSES, STATUS_BADGE_CLASSES } from "./productHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { formatCurrency } from "@/lib/currency";
+import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 export default function ProductsTable({ products, onDelete }) {
   const { currency } = useGeneralSettings();
@@ -77,21 +78,25 @@ export default function ProductsTable({ products, onDelete }) {
                     >
                       <Icon name="eye" className="w-4 h-4" />
                     </button>
-                    <Link
-                      href={`/edit-product/${product.id}`}
-                      title="Edit product"
-                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-                    >
-                      <Icon name="edit-2" className="w-4 h-4" />
-                    </Link>
-                    <button
-                      type="button"
-                      title="Delete product"
-                      onClick={() => onDelete?.(product)}
-                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
-                    >
-                      <Icon name="trash-2" className="w-4 h-4" />
-                    </button>
+                    <Can permission="products.edit">
+                      <Link
+                        href={`/edit-product/${product.id}`}
+                        title="Edit product"
+                        className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                      >
+                        <Icon name="edit-2" className="w-4 h-4" />
+                      </Link>
+                    </Can>
+                    <Can permission="products.delete">
+                      <button
+                        type="button"
+                        title="Delete product"
+                        onClick={() => onDelete?.(product)}
+                        className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                      >
+                        <Icon name="trash-2" className="w-4 h-4" />
+                      </button>
+                    </Can>
                   </div>
                 </td>
               </tr>

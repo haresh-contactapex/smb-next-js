@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
+import { settingsPermission } from "@/lib/permissions";
 import { getStoreSettings, updateStoreSettings } from "@/lib/storeSettings";
 import { isValidEmail } from "@/components/auth/helpers";
 import { isValidUsPhone } from "@/lib/phone";
 import { isValidStoreUrl, BUSINESS_TYPES } from "@/components/settings-store/helpers";
 
 export async function GET() {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission(settingsPermission("store", "view"));
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const data = await getStoreSettings();
@@ -20,10 +19,8 @@ export async function GET() {
 }
 
 export async function PUT(request) {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission(settingsPermission("store", "edit"));
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const payload = await request.json();

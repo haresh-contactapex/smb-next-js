@@ -3,6 +3,7 @@ import "./globals.css";
 import ConditionalShell from "@/components/admin-panel/ConditionalShell";
 import ThemeInitScript from "@/components/admin-panel/ThemeInitScript";
 import { GeneralSettingsProvider } from "@/components/providers/GeneralSettingsProvider";
+import { StaffPermissionsProvider } from "@/components/providers/StaffPermissionsProvider";
 import { adminPanelConfig } from "@/config/admin-panel.config";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { roleLabel, initialsFor } from "@/lib/staff";
@@ -10,6 +11,9 @@ import { getGeneralSettings } from "@/lib/generalSettings";
 import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 import { getProductsSettings } from "@/lib/productsSettings";
 import { getSecuritySettings } from "@/lib/securitySettings";
+import { getAdminRoleBySlug } from "@/lib/adminRoles";
+import { filterNavItemsForRole } from "@/lib/routePermissions";
+import { effectivePermissions } from "@/lib/permissions";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -62,6 +66,18 @@ async function loadSecuritySettings() {
   }
 }
 
+// The signed-in staff member's role, used to hide sidebar entries they can't
+// open. null (no role row / table not migrated / DB hiccup) hides every
+// permission-gated entry, matching what middleware would allow.
+async function loadStaffRole(staffUser) {
+  if (!staffUser) return null;
+  try {
+    return await getAdminRoleBySlug(staffUser.role);
+  } catch {
+    return null;
+  }
+}
+
 export async function generateMetadata() {
   const settings = await loadGeneralSettings();
   return {
@@ -80,13 +96,23 @@ export default async function RootLayout({ children }) {
     loadSecuritySettings(),
   ]);
 
+  const staffRole = await loadStaffRole(staffUser);
+  // What the role may do, for hiding controls client-side (null = no staff
+  // session, e.g. the login page). An inactive or missing role grants nothing.
+  const staffPermissions = staffUser
+    ? staffRole?.status === "active"
+      ? effectivePermissions(staffRole)
+      : []
+    : null;
+
   const config = staffUser
     ? {
         ...adminPanelConfig,
+        navItems: filterNavItemsForRole(adminPanelConfig.navItems, staffRole),
         user: {
           ...adminPanelConfig.user,
           name: staffUser.firstName,
-          role: roleLabel(staffUser.role),
+          role: staffRole?.name || roleLabel(staffUser.role),
           initials: initialsFor(staffUser.firstName, staffUser.lastName),
           logoutHref: "/admin/logout",
         },
@@ -112,7 +138,9 @@ export default async function RootLayout({ children }) {
             enableRecaptcha: securitySettings?.enableRecaptcha,
           }}
         >
-          <ConditionalShell config={config}>{children}</ConditionalShell>
+          <StaffPermissionsProvider permissions={staffPermissions}>
+            <ConditionalShell config={config}>{children}</ConditionalShell>
+          </StaffPermissionsProvider>
         </GeneralSettingsProvider>
       </body>
     </html>

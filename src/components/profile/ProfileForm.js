@@ -83,6 +83,8 @@ export default function ProfileForm() {
   async function handleAvatarPicked(file) {
     const formData = new FormData();
     formData.append("file", file);
+    // Lets any staff member upload their own avatar without media rights.
+    formData.append("purpose", "avatar");
     try {
       const res = await fetch("/api/media", { method: "POST", body: formData });
       const json = await res.json();

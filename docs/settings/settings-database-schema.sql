@@ -331,7 +331,7 @@ COMMENT ON COLUMN security_settings.max_login_attempts IS 'Required in the UI. F
 COMMENT ON COLUMN security_settings.ip_allowlist IS 'Optional. Newline-separated IPs/CIDRs, mirroring the textarea in the UI ("one per line").';
 
 -- ----------------------------------------------------------------------------
--- Admin & Roles: invitations (non-singleton) + role permission matrix (singleton)
+-- Admin & Roles: invitations + roles & permissions (both non-singleton)
 -- ----------------------------------------------------------------------------
 CREATE TABLE admin_invitations (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -353,16 +353,27 @@ COMMENT ON COLUMN admin_invitations.accepted_at IS 'Set when the invitee creates
 CREATE INDEX idx_admin_invitations_email ON admin_invitations (email);
 CREATE INDEX idx_admin_invitations_status ON admin_invitations (status);
 
-CREATE TABLE role_permissions_settings (
-    id                           SMALLINT PRIMARY KEY CHECK (id = 1),
-    staff_manage_products        BOOLEAN NOT NULL DEFAULT true,
-    staff_manage_orders          BOOLEAN NOT NULL DEFAULT true,
-    staff_manage_discounts       BOOLEAN NOT NULL DEFAULT false,
-    staff_view_financial_reports BOOLEAN NOT NULL DEFAULT false,
-    manager_manage_admins        BOOLEAN NOT NULL DEFAULT false,
-    updated_at                   TIMESTAMPTZ NOT NULL DEFAULT now()
+-- Roles & Permissions. Runnable subset with seed roles:
+-- docs/settings/admin-roles-table-only.sql (npm run db:migrate:admin-roles).
+CREATE TABLE admin_roles (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    slug        VARCHAR(60)  NOT NULL UNIQUE,
+    name        VARCHAR(100) NOT NULL,
+    description TEXT,
+    status      VARCHAR(10)  NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'inactive')),
+    is_system   BOOLEAN      NOT NULL DEFAULT false,
+    full_access BOOLEAN      NOT NULL DEFAULT false,
+    permissions JSONB        NOT NULL DEFAULT '[]'::jsonb
+        CHECK (jsonb_typeof(permissions) = 'array'),
+    created_at  TIMESTAMPTZ  NOT NULL DEFAULT now(),
+    updated_at  TIMESTAMPTZ  NOT NULL DEFAULT now()
 );
-COMMENT ON TABLE role_permissions_settings IS 'Backs the Role Permissions toggle group on Settings -> Admin & Roles. Singleton row (id = 1): one shared matrix, not per-admin overrides.';
+CREATE UNIQUE INDEX admin_roles_name_lower_key ON admin_roles (lower(name));
+COMMENT ON TABLE admin_roles IS 'Backs Settings -> Admin & Roles (Roles & Permissions). users.role references admin_roles.slug.';
+COMMENT ON COLUMN admin_roles.is_system IS 'System-critical role (Super Admin): cannot be deleted, deactivated, renamed or have its permissions changed.';
+COMMENT ON COLUMN admin_roles.full_access IS 'Grants every permission, including modules added to the sidebar later; permissions is ignored.';
+COMMENT ON COLUMN admin_roles.permissions IS 'JSON array of "module.action" keys. Modules are derived from the sidebar config by src/lib/permissions.js.';
 
 -- ----------------------------------------------------------------------------
 -- Integrations
@@ -459,12 +470,12 @@ INSERT INTO email_settings (id) VALUES (1);
 INSERT INTO notifications_settings (id) VALUES (1);
 INSERT INTO seo_settings (id) VALUES (1);
 INSERT INTO security_settings (id) VALUES (1);
-INSERT INTO role_permissions_settings (id) VALUES (1);
 INSERT INTO integrations_settings (id) VALUES (1);
 INSERT INTO social_media_settings (id) VALUES (1);
 INSERT INTO legal_settings (id) VALUES (1);
 INSERT INTO system_maintenance_settings (id) VALUES (1);
 -- admin_invitations is intentionally NOT seeded: it starts empty and rows
--- are created only when an invite is sent.
+-- are created only when an invite is sent. admin_roles is seeded by
+-- admin-roles-table-only.sql.
 
 COMMIT;

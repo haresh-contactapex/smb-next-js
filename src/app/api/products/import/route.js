@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { importProductsFromCsv } from "@/lib/productImport";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 
 // Windows/Excel-exported CSVs are inconsistently reported — the file
 // extension is the reliable signal, MIME is only a secondary check.
@@ -8,12 +8,8 @@ const ALLOWED_MIME_TYPES = new Set(["text/csv", "application/vnd.ms-excel", "app
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 
 export async function POST(request) {
-  // Middleware only gates page navigation, not /api — this route must check
-  // the staff session itself before touching product data.
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission("products.import");
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const formData = await request.formData();

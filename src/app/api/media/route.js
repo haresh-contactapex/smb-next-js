@@ -4,9 +4,23 @@ import { put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { listMedia, createMedia } from "@/lib/media";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
+import { settingsPermission } from "@/lib/permissions";
 
 const ALLOWED_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+
+// The library is also read by the product/category image pickers and the
+// General settings logo/favicon fields, not just the Media page.
+const READ_PERMISSIONS = [
+  "media.view",
+  "products.create",
+  "products.edit",
+  "categories.create",
+  "categories.edit",
+  settingsPermission("general", "edit"),
+];
+const UPLOAD_PERMISSIONS = ["media.create", settingsPermission("general", "edit")];
 
 function extensionFor(file) {
   const fromName = extname(file.name || "").toLowerCase();
@@ -16,6 +30,9 @@ function extensionFor(file) {
 }
 
 export async function GET() {
+  const auth = await requireStaffPermission(READ_PERMISSIONS);
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
   try {
     const data = await listMedia();
     return NextResponse.json({ success: true, data });
@@ -25,13 +42,20 @@ export async function GET() {
 }
 
 export async function POST(request) {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
-
   try {
     const formData = await request.formData();
+
+    // Every staff member may upload their own profile avatar (purpose=avatar);
+    // any other upload needs media or settings rights.
+    if (formData.get("purpose") === "avatar") {
+      if (!(await getCurrentStaffUser())) {
+        return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+      }
+    } else {
+      const auth = await requireStaffPermission(UPLOAD_PERMISSIONS);
+      if (!auth.ok) return permissionDeniedResponse(auth);
+    }
+
     const file = formData.get("file");
 
     if (!file || typeof file === "string") {

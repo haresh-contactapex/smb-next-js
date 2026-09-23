@@ -2,6 +2,7 @@ import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { VISIBILITY_BADGE_CLASSES } from "./categoryHelpers";
+import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 export default function CategoriesTable({ categories, onDelete }) {
   if (categories.length === 0) {
@@ -56,21 +57,25 @@ export default function CategoriesTable({ categories, onDelete }) {
                   >
                     <Icon name="eye" className="w-4 h-4" />
                   </button>
-                  <Link
-                    href={`/edit-category/${category.id}`}
-                    title="Edit category"
-                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-                  >
-                    <Icon name="edit-2" className="w-4 h-4" />
-                  </Link>
-                  <button
-                    type="button"
-                    title="Delete category"
-                    onClick={() => onDelete?.(category)}
-                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
-                  >
-                    <Icon name="trash-2" className="w-4 h-4" />
-                  </button>
+                  <Can permission="categories.edit">
+                    <Link
+                      href={`/edit-category/${category.id}`}
+                      title="Edit category"
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                    >
+                      <Icon name="edit-2" className="w-4 h-4" />
+                    </Link>
+                  </Can>
+                  <Can permission="categories.delete">
+                    <button
+                      type="button"
+                      title="Delete category"
+                      onClick={() => onDelete?.(category)}
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                    >
+                      <Icon name="trash-2" className="w-4 h-4" />
+                    </button>
+                  </Can>
                 </div>
               </td>
             </tr>

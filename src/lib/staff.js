@@ -1,7 +1,14 @@
 import { sql } from "./db";
 
+// Header fallback labels for the seeded admin_roles slugs (see
+// docs/settings/admin-roles-table-only.sql); unknown slugs show as-is.
 const ROLE_LABELS = {
-  store_admin: "Store Admin",
+  store_admin: "Super Admin",
+  store_manager: "Store Manager",
+  product_manager: "Product Manager",
+  order_manager: "Order Manager",
+  content_manager: "Content Manager",
+  support_agent: "Support Agent",
   manager: "Manager",
   staff: "Staff",
 };

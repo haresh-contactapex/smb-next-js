@@ -3,6 +3,9 @@ import { verifyJwt } from "@/lib/auth/jwt";
 import { STAFF_SESSION_COOKIE, STAFF_SESSION_SCOPE } from "@/lib/auth/constants";
 import { getStaffSecurityPolicy, isSessionTimedOut, isPasswordExpired } from "@/lib/auth/sessionPolicy";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
+import { getAdminRoleForUser } from "@/lib/adminRoles";
+import { roleHasPermission } from "@/lib/permissions";
+import { requiredPermissionForPath } from "@/lib/routePermissions";
 
 // Customer-facing auth pages and the admin panel's own standalone auth pages
 // (kept in sync with ConditionalShell's STANDALONE_ROUTES) — everything else
@@ -100,6 +103,28 @@ export async function middleware(request) {
     const profileUrl = new URL("/profile", request.url);
     profileUrl.searchParams.set("reason", "password-expired");
     return NextResponse.redirect(profileUrl);
+  }
+
+  // Roles & Permissions: the page's required permission (src/lib/
+  // routePermissions.js) must be granted by the staff member's role. Unlike
+  // the policy check above this fails closed — server pages read the
+  // database directly, so letting a request through on a DB error could
+  // expose data. The URL is kept and the Access Denied page is shown instead,
+  // with a 403 status.
+  const requiredPermission = requiredPermissionForPath(pathname);
+  if (requiredPermission) {
+    let reason = "denied";
+    try {
+      const role = await getAdminRoleForUser(payload.sub);
+      if (roleHasPermission(role, requiredPermission)) return NextResponse.next();
+      if (!role) reason = "no-role";
+      else if (role.status !== "active") reason = "inactive";
+    } catch (error) {
+      reason = error?.status === 503 ? "setup" : "error";
+    }
+    const deniedUrl = new URL("/access-denied", request.url);
+    deniedUrl.searchParams.set("reason", reason);
+    return NextResponse.rewrite(deniedUrl, { status: 403 });
   }
 
   return NextResponse.next();

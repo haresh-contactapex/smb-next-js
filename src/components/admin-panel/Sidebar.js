@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "./Icon";
@@ -21,7 +21,17 @@ export default function Sidebar({ brand, navItems }) {
   const [collapseIcon, setCollapseIcon] = useState("chevron-left");
   const pathname = usePathname();
   const { storeName, logoUrl } = useGeneralSettings();
-  const isActiveHref = (href) => Boolean(href) && href !== "#" && href === pathname;
+  // An exact match wins; otherwise the longest nav href that prefixes the
+  // current path stays highlighted, so nested pages (e.g. /settings/x/new)
+  // keep their menu entry active. "/" only ever matches exactly.
+  const activeHref = useMemo(() => {
+    const hrefs = navItems
+      .flatMap((item) => (item.type === "submenu" ? item.items.map((sub) => sub.href) : [item.href]))
+      .filter((href) => href && href !== "#" && href !== "/");
+    if (hrefs.includes(pathname)) return pathname;
+    return hrefs.filter((href) => pathname.startsWith(`${href}/`)).sort((a, b) => b.length - a.length)[0] || pathname;
+  }, [navItems, pathname]);
+  const isActiveHref = (href) => Boolean(href) && href !== "#" && href === activeHref;
 
   // Sync the collapse icon with the persisted state once mounted (the layout is
   // collapsed pre-paint by ThemeInitScript; this just gets the icon to match).

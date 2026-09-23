@@ -1,13 +1,11 @@
 import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { deleteMedia } from "@/lib/media";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 
 export async function DELETE(request, { params }) {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
-  }
+  const auth = await requireStaffPermission("media.delete");
+  if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
     const url = await deleteMedia(params.id);

@@ -7,6 +7,8 @@ import SelectField from "@/components/settings-shared/SelectField";
 import TextField from "@/components/settings-shared/TextField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
 import Toast from "./Toast";
+import { useCan } from "@/components/providers/StaffPermissionsProvider";
+import { settingsPermission } from "@/lib/permissions";
 import {
   ADJUSTMENT_TYPES,
   ADJUSTMENT_DIRECTIONS,
@@ -17,6 +19,10 @@ import {
 } from "./helpers";
 
 export default function PricingSettingsForm() {
+  // Bulk repricing rewrites every product, so it needs both permissions
+  // (mirrors /api/settings/pricing/apply).
+  const can = useCan();
+  const canApply = can(settingsPermission("pricing", "edit")) && can("products.edit");
   const [settings, setSettings] = useState(DEFAULT_PRICING_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -187,16 +193,18 @@ export default function PricingSettingsForm() {
               />
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                type="button"
-                onClick={handleApply}
-                disabled={loading || applying}
-                className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
-              >
-                {applying ? "Applying…" : "Apply to All Products"}
-              </button>
-            </div>
+            {canApply && (
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={handleApply}
+                  disabled={loading || applying}
+                  className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                >
+                  {applying ? "Applying…" : "Apply to All Products"}
+                </button>
+              </div>
+            )}
           </SectionCard>
         </div>
 

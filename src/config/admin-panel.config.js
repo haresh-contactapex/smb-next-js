@@ -5,6 +5,11 @@
  * src/components/admin-panel folder: brand, nav menu, header search fields,
  * notifications and the logged-in user. Nothing in the admin-panel components
  * is hard-coded to this store.
+ *
+ * Roles & Permissions reads `navItems` too: every top-level menu becomes a
+ * module in Settings -> Admin & Roles' permission matrix automatically. Use a
+ * nav item's optional `permissions` field to map it onto known modules, give
+ * it custom actions, or opt out — see src/lib/permissions.js.
  */
 export const adminPanelConfig = {
   brand: {
@@ -21,6 +26,8 @@ export const adminPanelConfig = {
       id: "account",
       label: "My Account",
       icon: "user",
+      // Personal profile pages — every staff member manages their own.
+      permissions: false,
       items: [
         { id: "profile", label: "Profile", href: "/profile" },
         { id: "address", label: "Address", href: "/address" },
@@ -56,11 +63,13 @@ export const adminPanelConfig = {
       id: "catalog",
       label: "Categories / Products",
       icon: "layers",
+      // Two modules under one menu: each page names the module it belongs to.
+      permissions: { children: true },
       items: [
-        { id: "categories", label: "Categories", href: "/categories" },
-        { id: "all-products", label: "All Products", href: "/all-products" },
-        { id: "add-product", label: "Add Product", href: "/add-product" },
-        { id: "import-products", label: "Import Products", href: "/all-products/import" },
+        { id: "categories", label: "Categories", href: "/categories", permissions: "categories" },
+        { id: "all-products", label: "All Products", href: "/all-products", permissions: "products" },
+        { id: "add-product", label: "Add Product", href: "/add-product", permissions: "products" },
+        { id: "import-products", label: "Import Products", href: "/all-products/import", permissions: "products" },
       ],
     },
     {
@@ -78,6 +87,7 @@ export const adminPanelConfig = {
       id: "giftcards",
       label: "Gift Cards",
       icon: "gift",
+      permissions: { key: "giftcards", label: "Gift Cards", singular: "Gift Card" },
       items: [
         { id: "all-giftcards", label: "All Gift Cards", href: "#" },
         { id: "create-giftcard", label: "Create Gift Card", href: "#" },
@@ -85,13 +95,23 @@ export const adminPanelConfig = {
       ],
     },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/media" },
-    { type: "link", id: "shipping", label: "Shipping & Return Policy", icon: "truck", href: "#" },
+    {
+      type: "link",
+      id: "shipping",
+      label: "Shipping & Return Policy",
+      icon: "truck",
+      href: "#",
+      permissions: { key: "shipping", label: "Shipping & Return Policy", actions: ["view", "edit"] },
+    },
     { type: "section", label: "System" },
     {
       type: "submenu",
       id: "settings",
       label: "Settings",
       icon: "settings",
+      // Group menu: every settings page is its own permission row
+      // ("settings-<page id>", View / Edit), including pages added here later.
+      permissions: { children: true, actions: ["view", "edit"] },
       items: [
         { id: "general", label: "General", href: "/settings/general" },
         { id: "store", label: "Store", href: "/settings/store" },
@@ -110,7 +130,7 @@ export const adminPanelConfig = {
         { id: "notifications", label: "Notifications", href: "/settings/notifications" },
         { id: "seo", label: "SEO", href: "/settings/seo" },
         { id: "security", label: "Security", href: "/settings/security" },
-        { id: "admin-roles", label: "Admin & Roles", href: "/settings/admin-roles" },
+        { id: "admin-roles", label: "Admin & Roles", href: "/settings/admin-roles", permissions: "users" },
         { id: "integrations", label: "Integrations", href: "/settings/integrations" },
         { id: "social-media", label: "Social Media", href: "/settings/social-media" },
         { id: "legal", label: "Legal", href: "/settings/legal" },

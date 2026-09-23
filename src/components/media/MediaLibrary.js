@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import MediaUploaderDropzone from "./MediaUploaderDropzone";
 import MediaGrid from "./MediaGrid";
 import MediaDetailsModal from "./MediaDetailsModal";
+import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 export default function MediaLibrary({ initialItems }) {
   const router = useRouter();
@@ -53,7 +54,9 @@ export default function MediaLibrary({ initialItems }) {
 
   return (
     <div className="space-y-5">
-      <MediaUploaderDropzone onFilesPicked={handleUpload} uploading={uploading} error={uploadError} />
+      <Can permission="media.create">
+        <MediaUploaderDropzone onFilesPicked={handleUpload} uploading={uploading} error={uploadError} />
+      </Can>
       <MediaGrid items={items} onSelect={setSelected} deletingId={deletingId} />
       <MediaDetailsModal
         item={selected}

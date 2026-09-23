@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
+import { roleHasPermission, settingsPermission } from "@/lib/permissions";
 import { applyPriceAdjustmentToAllProducts } from "@/lib/pricing";
 import { ADJUSTMENT_TYPES, ADJUSTMENT_DIRECTIONS, isValidAdjustmentValue } from "@/components/settings-pricing/helpers";
 
 export async function POST(request) {
-  const staffUser = await getCurrentStaffUser();
-  if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+  // Rewrites every product's price, so it needs product editing rights as
+  // well as settings access.
+  const auth = await requireStaffPermission(settingsPermission("pricing", "edit"));
+  if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!roleHasPermission(auth.role, "products.edit")) {
+    return permissionDeniedResponse({ status: 403, error: "You don't have permission to change product prices." });
   }
 
   try {

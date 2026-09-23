@@ -22,6 +22,7 @@ and is not repeated here.
 ```mermaid
 erDiagram
     USERS ||--o{ ADMIN_INVITATIONS : "invited_by"
+    ADMIN_ROLES ||--o{ USERS : "users.role = slug"
 ```
 
 `USERS` is defined in
@@ -303,21 +304,50 @@ row, not a value edited in place.
 
 Indexes: `INDEX (email)`, `INDEX (status)`.
 
-### `role_permissions_settings`
+### `admin_roles`
 
-Backs the "Role Permissions" toggle group on the Settings → Admin & Roles
-page — a singleton, since the UI edits one fixed matrix for the whole store
-rather than a per-admin permission set.
+Backs **Settings → Admin & Roles** (the *Roles & Permissions* list, add/edit
+and view screens). Implemented: runnable subset with seed roles in
+[`admin-roles-table-only.sql`](./admin-roles-table-only.sql)
+(`npm run db:migrate:admin-roles`), read/written by `src/lib/adminRoles.js`
+through `/api/admin-roles`.
 
-| Column                             | Type          | Constraints                | Notes |
-| ------------------------------------- | ------------- | ------------------------------- | ----- |
-| `id`                                   | `SMALLINT`    | PK, CHECK (`id = 1`)             |       |
-| `staff_manage_products`               | `BOOLEAN`     | NOT NULL, DEFAULT `true`         |       |
-| `staff_manage_orders`                 | `BOOLEAN`     | NOT NULL, DEFAULT `true`         |       |
-| `staff_manage_discounts`              | `BOOLEAN`     | NOT NULL, DEFAULT `false`        |       |
-| `staff_view_financial_reports`        | `BOOLEAN`     | NOT NULL, DEFAULT `false`        |       |
-| `manager_manage_admins`               | `BOOLEAN`     | NOT NULL, DEFAULT `false`        |       |
-| `updated_at`                           | `TIMESTAMPTZ` | NOT NULL, DEFAULT `now()`        |       |
+| Column        | Type           | Constraints                                         | Notes |
+| ------------- | -------------- | --------------------------------------------------- | ----- |
+| `id`          | `UUID`         | PK, default `gen_random_uuid()`                     |       |
+| `slug`        | `VARCHAR(60)`  | NOT NULL, UNIQUE                                    | Stored in `users.role`; generated from the name on create and never changed |
+| `name`        | `VARCHAR(100)` | NOT NULL, UNIQUE on `lower(name)`                   | "Role Name *" |
+| `description` | `TEXT`         | NULL                                                | "Description" |
+| `status`      | `VARCHAR(10)`  | NOT NULL, DEFAULT `'active'`, CHECK IN (`active`, `inactive`) | An inactive role grants no permissions |
+| `is_system`   | `BOOLEAN`      | NOT NULL, DEFAULT `false`                           | Super Admin: can't be deleted, deactivated, renamed or re-permissioned |
+| `full_access` | `BOOLEAN`      | NOT NULL, DEFAULT `false`                           | Grants every permission, including modules added later |
+| `permissions` | `JSONB`        | NOT NULL, DEFAULT `'[]'`, must be an array          | `"module.action"` keys, e.g. `"products.edit"` |
+| `created_at`  | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`                           |       |
+| `updated_at`  | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`                           |       |
+
+"Users Assigned" is computed as `COUNT(users WHERE users.role = admin_roles.slug)`.
+A role with assigned users can't be deleted.
+
+**Permission modules are not stored in the database.** `src/lib/permissions.js`
+derives them from `navItems` in `src/config/admin-panel.config.js`, so adding
+a top-level sidebar menu adds a row to the permission matrix automatically
+(default actions View/Create/Edit/Delete, keyed by the nav item's `id`). A nav
+item may set `permissions` to map onto known modules, supply custom actions,
+or opt out (`false`). Keys for a module that no longer exists are dropped the
+next time the role is saved.
+
+A submenu marked `permissions: { children: true }` is a **group menu**: each
+of its pages is its own module, shown as its own row under the menu's header
+in the matrix. Settings is one, so every settings page has its own View/Edit
+pair keyed `settings-<page id>` (e.g. `settings-store.edit`, checked by
+`/settings/store` and `PUT /api/settings/store`); a page added under Settings
+gets its row automatically. In an ordinary submenu the pages belong to the
+menu's module and are listed under its row (e.g. Orders → Pending,
+Processing).
+
+Seed roles: Super Admin (`store_admin`, system, full access — existing staff
+accounts created by `db:seed:admin` use this slug), Store Manager, Product
+Manager, Order Manager, Content Manager and Support Agent.
 
 ### `integrations_settings`
 
@@ -434,9 +464,9 @@ editable settings — see Design notes.
 - Admin & Roles is the one non-singleton page: `admin_invitations` holds the
   pending-invite list (an admin accepting an invite becomes a row in `users`
   from the My Account schema, at which point the invitation's `status`
-  becomes `ACCEPTED`), while the boolean permission matrix below it is still
-  a singleton (`role_permissions_settings`) since the page only ever edits
-  one shared set of role capabilities, not per-admin overrides.
+  becomes `ACCEPTED`). Roles are rows in `admin_roles`, each with its own
+  permission set; see that table for how permission modules follow the
+  sidebar configuration.
 - `mailchimp_api_key` / `google_recaptcha_site_key` / `google_recaptcha_secret_key`
   / gateway `public_key` / `secret_key` are exactly the fields the
   Integrations and Payment forms collect today; a production system would

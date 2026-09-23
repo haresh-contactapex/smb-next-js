@@ -2,6 +2,7 @@ import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { pickAvatarColor, getInitials, formatDate, GROUP_BADGE_CLASSES } from "./customerHelpers";
+import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 export default function CustomersTable({ customers, onDelete }) {
   if (customers.length === 0) {
@@ -60,21 +61,25 @@ export default function CustomersTable({ customers, onDelete }) {
               <td className="py-3 px-1 text-slate-500 dark:text-slate-400">{formatDate(customer.createdAt)}</td>
               <td className="py-3 px-1 text-right">
                 <div className="inline-flex items-center gap-1">
-                  <Link
-                    href={`/edit-customer/${customer.id}`}
-                    title="Edit customer"
-                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-                  >
-                    <Icon name="edit-2" className="w-4 h-4" />
-                  </Link>
-                  <button
-                    type="button"
-                    title="Delete customer"
-                    onClick={() => onDelete?.(customer)}
-                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
-                  >
-                    <Icon name="trash-2" className="w-4 h-4" />
-                  </button>
+                  <Can permission="customers.edit">
+                    <Link
+                      href={`/edit-customer/${customer.id}`}
+                      title="Edit customer"
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                    >
+                      <Icon name="edit-2" className="w-4 h-4" />
+                    </Link>
+                  </Can>
+                  <Can permission="customers.delete">
+                    <button
+                      type="button"
+                      title="Delete customer"
+                      onClick={() => onDelete?.(customer)}
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                    >
+                      <Icon name="trash-2" className="w-4 h-4" />
+                    </button>
+                  </Can>
                 </div>
               </td>
             </tr>
