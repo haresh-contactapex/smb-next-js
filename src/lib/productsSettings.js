@@ -31,5 +31,16 @@ export async function updateProductsSettings(settings) {
     WHERE id = 1
     RETURNING *
   `;
+
+  // Settings -> Shipping's "Weight Unit" defaults to this value; keep it in
+  // sync whenever the Products default changes. Swallowed if shipping_settings
+  // hasn't been migrated yet in this environment, so Products settings can
+  // still be saved on its own.
+  try {
+    await sql`UPDATE shipping_settings SET weight_unit = ${settings.defaultWeightUnit}, updated_at = now() WHERE id = 1`;
+  } catch {
+    // shipping_settings not present yet — nothing to sync.
+  }
+
   return toPublicSettings(row);
 }

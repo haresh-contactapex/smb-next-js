@@ -121,7 +121,7 @@ CREATE TABLE shipping_settings (
     free_shipping_threshold  DECIMAL(12,2) NOT NULL DEFAULT 75,
     processing_time_days     SMALLINT      NOT NULL DEFAULT 2,
     weight_unit              VARCHAR(2)    NOT NULL DEFAULT 'lb'
-        CHECK (weight_unit IN ('lb', 'kg')),
+        CHECK (weight_unit IN ('lb', 'kg', 'g', 'oz')),
     dimension_unit           VARCHAR(2)    NOT NULL DEFAULT 'in'
         CHECK (dimension_unit IN ('in', 'cm')),
     local_pickup_enabled     BOOLEAN       NOT NULL DEFAULT false,
@@ -129,6 +129,7 @@ CREATE TABLE shipping_settings (
 );
 COMMENT ON TABLE shipping_settings IS 'Backs the Settings -> Shipping page. Singleton row (id = 1).';
 COMMENT ON COLUMN shipping_settings.free_shipping_threshold IS 'Order subtotal at/above which shipping is free.';
+COMMENT ON COLUMN shipping_settings.weight_unit IS 'Defaults to, and is kept in sync with, products_settings.default_weight_unit whenever Settings -> Products is saved.';
 
 -- ----------------------------------------------------------------------------
 -- Orders
@@ -176,7 +177,7 @@ CREATE TABLE products_settings (
     default_status       VARCHAR(10) NOT NULL DEFAULT 'draft'
         CHECK (default_status IN ('active', 'draft')),
     default_weight_unit  VARCHAR(2)  NOT NULL DEFAULT 'lb'
-        CHECK (default_weight_unit IN ('lb', 'kg')),
+        CHECK (default_weight_unit IN ('lb', 'kg', 'g', 'oz')),
     allow_backorders     BOOLEAN     NOT NULL DEFAULT false,
     allow_reviews        BOOLEAN     NOT NULL DEFAULT true,
     show_low_stock_badge BOOLEAN     NOT NULL DEFAULT true,

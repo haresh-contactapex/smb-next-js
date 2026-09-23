@@ -1,55 +1,131 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import SelectField from "@/components/settings-shared/SelectField";
 import TextField from "@/components/settings-shared/TextField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
-import Toast from "@/components/settings-shared/Toast";
+import Toast from "@/components/add-product/Toast";
+import {
+  CARRIERS,
+  WEIGHT_UNITS,
+  DIMENSION_UNITS,
+  DEFAULT_SHIPPING_SETTINGS,
+  toFormSettings,
+  toSavePayload,
+  validateShippingSettingsForm,
+} from "./helpers";
 
-const CARRIERS = ["USPS", "UPS", "FedEx", "DHL", "Local Courier"];
-const WEIGHT_UNITS = ["lb", "kg"];
-const DIMENSION_UNITS = ["in", "cm"];
-
-const DEFAULT_SETTINGS = {
-  defaultCarrier: "USPS",
-  flatRateFee: "5.99",
-  freeShippingThreshold: "75",
-  processingTimeDays: "2",
-  weightUnit: "lb",
-  dimensionUnit: "in",
-  localPickupEnabled: false,
-};
+// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
+// also drives the progress-bar animation for both success and error messages.
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function ShippingSettingsForm() {
-  const [settings, setSettings] = useState(DEFAULT_SETTINGS);
-  const [toast, setToast] = useState({ message: "", visible: false });
-  const toastTimerRef = useRef(null);
+  const [settings, setSettings] = useState(DEFAULT_SHIPPING_SETTINGS);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
-  function showToast(message) {
-    setToast({ message, visible: true });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), 2200);
+  const toastTimerRef = useRef(null);
+  const flatRateFeeInputRef = useRef(null);
+  const freeShippingThresholdInputRef = useRef(null);
+  const processingTimeDaysInputRef = useRef(null);
+
+  const fieldRefs = {
+    flatRateFee: flatRateFeeInputRef,
+    freeShippingThreshold: freeShippingThresholdInputRef,
+    processingTimeDays: processingTimeDaysInputRef,
+  };
+
+  function focusField(field) {
+    fieldRefs[field]?.current?.focus();
   }
+
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(
+      () => setToast((t) => ({ ...t, visible: false })),
+      TOAST_AUTO_DISMISS_MS,
+    );
+  }
+
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
+  }
+
+  async function loadSettings() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/settings/shipping");
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to load shipping settings");
+      setSettings(toFormSettings(json.data));
+      setErrors({});
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function setField(field, value) {
     setSettings((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   }
 
-  function handleSave() {
-    showToast("Shipping settings saved");
+  async function handleSave() {
+    const result = validateShippingSettingsForm(settings);
+    setErrors(result.errors);
+
+    if (!result.valid) {
+      showToast(result.message, "error");
+      focusField(result.firstErrorField);
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings/shipping", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(toSavePayload(settings)),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to save shipping settings");
+      setSettings(toFormSettings(json.data));
+      showToast("Shipping settings saved");
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   }
 
   function handleDiscard() {
-    if (!window.confirm("Discard all changes and start over?")) return;
-    setSettings(DEFAULT_SETTINGS);
+    if (!window.confirm("Discard all changes and reload your saved settings?")) return;
+    loadSettings();
   }
 
   return (
     <>
-      <PageToolbar icon="truck" title="Shipping" onDiscard={handleDiscard} onSave={handleSave} />
+      <PageToolbar
+        icon="truck"
+        title="Shipping"
+        onDiscard={handleDiscard}
+        onSave={handleSave}
+        saving={saving}
+        disabled={loading}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
@@ -69,6 +145,10 @@ export default function ShippingSettingsForm() {
                 value={settings.flatRateFee}
                 onChange={(value) => setField("flatRateFee", value)}
                 placeholder="5.99"
+                error={errors.flatRateFee}
+                inputRef={flatRateFeeInputRef}
+                onEnter={handleSave}
+                disabled={loading}
               />
               <TextField
                 id="f-free-shipping-threshold"
@@ -77,6 +157,10 @@ export default function ShippingSettingsForm() {
                 value={settings.freeShippingThreshold}
                 onChange={(value) => setField("freeShippingThreshold", value)}
                 placeholder="75"
+                error={errors.freeShippingThreshold}
+                inputRef={freeShippingThresholdInputRef}
+                onEnter={handleSave}
+                disabled={loading}
               />
             </div>
           </SectionCard>
@@ -89,6 +173,10 @@ export default function ShippingSettingsForm() {
               value={settings.processingTimeDays}
               onChange={(value) => setField("processingTimeDays", value)}
               placeholder="2"
+              error={errors.processingTimeDays}
+              inputRef={processingTimeDaysInputRef}
+              onEnter={handleSave}
+              disabled={loading}
             />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <SelectField
@@ -110,6 +198,7 @@ export default function ShippingSettingsForm() {
               label="Enable local pickup"
               checked={settings.localPickupEnabled}
               onChange={(value) => setField("localPickupEnabled", value)}
+              disabled={loading}
             />
           </SectionCard>
         </div>
@@ -127,7 +216,7 @@ export default function ShippingSettingsForm() {
         </div>
       </div>
 
-      <Toast message={toast.message} visible={toast.visible} />
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );
 }

@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS products_settings (
     default_status       VARCHAR(10) NOT NULL DEFAULT 'draft'
         CHECK (default_status IN ('active', 'draft')),
     default_weight_unit  VARCHAR(2)  NOT NULL DEFAULT 'lb'
-        CHECK (default_weight_unit IN ('lb', 'kg')),
+        CHECK (default_weight_unit IN ('lb', 'kg', 'g', 'oz')),
     allow_backorders     BOOLEAN     NOT NULL DEFAULT false,
     allow_reviews        BOOLEAN     NOT NULL DEFAULT true,
     show_low_stock_badge BOOLEAN     NOT NULL DEFAULT true,
@@ -27,5 +27,12 @@ UPDATE products_settings SET default_status = 'active' WHERE default_status = 'p
 ALTER TABLE products_settings DROP CONSTRAINT IF EXISTS products_settings_default_status_check;
 ALTER TABLE products_settings ADD CONSTRAINT products_settings_default_status_check
     CHECK (default_status IN ('active', 'draft'));
+
+-- Re-running this file against an environment migrated before 'g' and 'oz'
+-- were added to the default weight unit choices widens the constraint
+-- without losing the existing row.
+ALTER TABLE products_settings DROP CONSTRAINT IF EXISTS products_settings_default_weight_unit_check;
+ALTER TABLE products_settings ADD CONSTRAINT products_settings_default_weight_unit_check
+    CHECK (default_weight_unit IN ('lb', 'kg', 'g', 'oz'));
 
 INSERT INTO products_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;

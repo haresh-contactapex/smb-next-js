@@ -123,7 +123,7 @@ Backs the Settings → Shipping page.
 | `flat_rate_fee`             | `DECIMAL(12,2)` | NOT NULL, DEFAULT `5.99`                                                        |       |
 | `free_shipping_threshold`   | `DECIMAL(12,2)` | NOT NULL, DEFAULT `75`                                                          | Order subtotal at/above which shipping is free |
 | `processing_time_days`      | `SMALLINT`      | NOT NULL, DEFAULT `2`                                                           |       |
-| `weight_unit`               | `VARCHAR(2)`    | NOT NULL, DEFAULT `'lb'`, CHECK IN (`lb`, `kg`)                                 |       |
+| `weight_unit`               | `VARCHAR(2)`    | NOT NULL, DEFAULT `'lb'`, CHECK IN (`lb`, `kg`, `g`, `oz`)                      | Defaults to, and is kept in sync with, `products_settings.default_weight_unit` whenever Settings → Products is saved |
 | `dimension_unit`            | `VARCHAR(2)`    | NOT NULL, DEFAULT `'in'`, CHECK IN (`in`, `cm`)                                 |       |
 | `local_pickup_enabled`      | `BOOLEAN`       | NOT NULL, DEFAULT `false`                                                       |       |
 | `updated_at`                | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                                       |       |
@@ -167,7 +167,7 @@ Backs the Settings → Products page.
 | `id`                       | `SMALLINT`    | PK, CHECK (`id = 1`)                                              |       |
 | `sku_prefix`               | `VARCHAR(20)` | NULL                                                              |       |
 | `default_status`           | `VARCHAR(10)` | NOT NULL, DEFAULT `'draft'`, CHECK IN (`draft`, `published`)      | Status a new product is created with |
-| `default_weight_unit`      | `VARCHAR(2)`  | NOT NULL, DEFAULT `'lb'`, CHECK IN (`lb`, `kg`)                   |       |
+| `default_weight_unit`      | `VARCHAR(2)`  | NOT NULL, DEFAULT `'lb'`, CHECK IN (`lb`, `kg`, `g`, `oz`)        | Pushed to `shipping_settings.weight_unit` whenever this is saved |
 | `allow_backorders`         | `BOOLEAN`     | NOT NULL, DEFAULT `false`                                         |       |
 | `allow_reviews`            | `BOOLEAN`     | NOT NULL, DEFAULT `true`                                          |       |
 | `show_low_stock_badge`     | `BOOLEAN`     | NOT NULL, DEFAULT `true`                                          |       |
@@ -392,7 +392,7 @@ editable settings — see Design notes.
 | Currency position          | `before`, `after`                                              | `currency_tax_settings.currency_position` |
 | Number format               | `1,234.56`, `1.234,56`, `1 234.56`                              | `currency_tax_settings.number_format` |
 | Shipping carrier            | `USPS`, `UPS`, `FedEx`, `DHL`, `Local Courier`                  | `shipping_settings.default_carrier` |
-| Weight unit                 | `lb`, `kg`                                                      | `shipping_settings.weight_unit`, `products_settings.default_weight_unit` |
+| Weight unit                 | `lb`, `kg`, `g`, `oz`                                            | `shipping_settings.weight_unit`, `products_settings.default_weight_unit` |
 | Dimension unit              | `in`, `cm`                                                      | `shipping_settings.dimension_unit` |
 | Order status (default)      | `Pending`, `Processing`, `Completed`                            | `orders_settings.default_order_status` |
 | Customer group               | `Retail`, `Wholesale`, `VIP`                                    | `customers_settings.default_customer_group` |

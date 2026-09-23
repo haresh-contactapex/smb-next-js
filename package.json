@@ -14,6 +14,7 @@
     "db:migrate:auth": "node scripts/migrate.mjs docs/auth/auth-database-schema.sql",
     "db:migrate:staff-users": "node scripts/migrate.mjs docs/my-account/users-table-only.sql",
     "db:migrate:currency-tax": "node scripts/migrate.mjs docs/settings/currency-tax-table-only.sql",
+    "db:migrate:shipping": "node scripts/migrate.mjs docs/settings/shipping-table-only.sql",
     "db:migrate:products": "node scripts/migrate.mjs docs/settings/products-table-only.sql",
     "db:migrate:pricing": "node scripts/migrate.mjs docs/settings/pricing-table-only.sql",
     "db:migrate:security": "node scripts/migrate.mjs docs/settings/security-table-only.sql",
