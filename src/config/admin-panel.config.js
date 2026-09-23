@@ -37,6 +37,18 @@ export const adminPanelConfig = {
     },
     {
       type: "submenu",
+      id: "users",
+      label: "Users",
+      icon: "users",
+      // Staff accounts (the `users` table), gated by the users.* permissions.
+      permissions: "users",
+      items: [
+        { id: "all-users", label: "All Users", href: "/users" },
+        { id: "add-user", label: "Add User", href: "/users/new" },
+      ],
+    },
+    {
+      type: "submenu",
       id: "orders",
       label: "Orders",
       icon: "shopping-bag",

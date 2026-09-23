@@ -18,6 +18,8 @@ export default function PasswordField({
   error,
   autoComplete,
   showStrength = false,
+  inputRef,
+  onKeyDown,
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -35,9 +37,11 @@ export default function PasswordField({
         </span>
         <input
           id={id}
+          ref={inputRef}
           type={visible ? "text" : "password"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={onKeyDown}
           placeholder={placeholder}
           aria-label={label}
           autoComplete={autoComplete}

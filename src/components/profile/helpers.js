@@ -1,4 +1,5 @@
 import { isValidUsPhone } from "@/lib/phone";
+import { getPasswordErrorMessage, isValidPassword } from "@/components/auth/helpers";
 
 export const EMPTY_PROFILE = {
   avatarUrl: null,
@@ -54,8 +55,8 @@ export function validateProfileForm(profile) {
   const changingPassword = Boolean(profile.currentPassword || profile.newPassword || profile.confirmPassword);
   if (changingPassword) {
     if (!profile.currentPassword) errors.currentPassword = "Enter your current password.";
-    if (!profile.newPassword || profile.newPassword.length < 8) {
-      errors.newPassword = "New password must be at least 8 characters.";
+    if (!isValidPassword(profile.newPassword)) {
+      errors.newPassword = getPasswordErrorMessage(profile.newPassword) || "Enter a new password.";
     }
     if (profile.newPassword !== profile.confirmPassword) {
       errors.newPassword = errors.newPassword || "New password and confirmation must match.";

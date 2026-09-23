@@ -1,6 +1,6 @@
 import Icon from "@/components/admin-panel/Icon";
 
-export default function SelectField({ id, label, value, options, onChange, hint, error, inputRef, onEnter }) {
+export default function SelectField({ id, label, value, options, onChange, hint, error, inputRef, onEnter, disabled = false }) {
   function handleKeyDown(e) {
     if (e.key !== "Enter") return;
     e.preventDefault();
@@ -20,17 +20,18 @@ export default function SelectField({ id, label, value, options, onChange, hint,
           onChange={(e) => onChange(e.target.value)}
           onKeyDown={onEnter ? handleKeyDown : undefined}
           aria-label={label}
+          disabled={disabled}
           className={`field-input appearance-none pr-8 cursor-pointer${
             error
               ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
               : ""
-          }`}
+          }${disabled ? " opacity-50 cursor-not-allowed" : ""}`}
         >
           {options.map((opt) => {
             const optValue = typeof opt === "string" ? opt : opt.value;
             const optLabel = typeof opt === "string" ? opt : opt.label;
             return (
-              <option key={optValue} value={optValue}>
+              <option key={optValue} value={optValue} disabled={typeof opt === "string" ? false : Boolean(opt.disabled)}>
                 {optLabel}
               </option>
             );

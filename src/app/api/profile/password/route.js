@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { getStaffPasswordHash, updateStaffPassword } from "@/lib/staff";
 import { verifyPassword, hashPassword } from "@/lib/auth/password";
-import { isValidPassword } from "@/components/auth/helpers";
+import { getPasswordErrorMessage, isValidPassword } from "@/components/auth/helpers";
 
 export async function PUT(request) {
   const staffUser = await getCurrentStaffUser();
@@ -24,7 +24,7 @@ export async function PUT(request) {
     }
     if (!isValidPassword(newPassword)) {
       return NextResponse.json(
-        { success: false, error: "New password must be at least 8 characters." },
+        { success: false, error: getPasswordErrorMessage(newPassword) || "Enter a new password." },
         { status: 400 }
       );
     }
