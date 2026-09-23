@@ -211,6 +211,7 @@ export default function IntegrationsSettingsForm() {
               "Connect third-party analytics and marketing tools to track storefront activity.",
               "API keys and site keys are only used by the integrations you enable above.",
               "Disabling an integration stops new data from being sent, but does not delete existing data.",
+              "Google reCAPTCHA's Site Key and Secret Key take effect across the whole site (login, register, forgot/reset password) as soon as they're saved here, replacing the keys in .env.local while this integration is enabled.",
             ]}
           />
         </div>

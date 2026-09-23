@@ -1,11 +1,16 @@
 import { getSecuritySettings } from "@/lib/securitySettings";
+import { getIntegrationsSettings } from "@/lib/integrationsSettings";
 
 const VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify";
 
-export async function verifyRecaptcha(token) {
-  const secret = process.env.RECAPTCHA_SECRET_KEY;
-  if (!secret) {
-    console.error("verifyRecaptcha: RECAPTCHA_SECRET_KEY is not set — treating the token as unverified.");
+// `secret` lets a caller pass the Settings -> Integrations "Google reCAPTCHA"
+// secret key; falls back to the env var when that integration isn't
+// configured, so a deployment with no database row still works from
+// .env.local alone.
+export async function verifyRecaptcha(token, secret) {
+  const resolvedSecret = secret || process.env.RECAPTCHA_SECRET_KEY;
+  if (!resolvedSecret) {
+    console.error("verifyRecaptcha: no reCAPTCHA secret key configured (Settings -> Integrations or RECAPTCHA_SECRET_KEY) — treating the token as unverified.");
     return false;
   }
   if (!token) return false;
@@ -14,7 +19,7 @@ export async function verifyRecaptcha(token) {
     const response = await fetch(VERIFY_URL, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ secret, response: token }),
+      body: new URLSearchParams({ secret: resolvedSecret, response: token }),
     });
     const data = await response.json();
     return Boolean(data.success);
@@ -38,5 +43,18 @@ export async function checkRecaptchaIfEnabled(token) {
   }
   if (!settings?.enableRecaptcha) return { required: false, valid: true };
 
-  return { required: true, valid: await verifyRecaptcha(token) };
+  // Settings -> Integrations' "Google reCAPTCHA" toggle supplies the actual
+  // site-wide secret key when the admin has entered one there; otherwise
+  // verifyRecaptcha() falls back to RECAPTCHA_SECRET_KEY from .env.local.
+  let secret;
+  try {
+    const integrations = await getIntegrationsSettings();
+    if (integrations?.googleRecaptchaEnabled && integrations?.googleRecaptchaSecretKey) {
+      secret = integrations.googleRecaptchaSecretKey;
+    }
+  } catch {
+    // Fall back to the env var below.
+  }
+
+  return { required: true, valid: await verifyRecaptcha(token, secret) };
 }

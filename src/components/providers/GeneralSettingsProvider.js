@@ -14,6 +14,8 @@ export const GENERAL_SETTINGS_DEFAULTS = {
   defaultProductStatus: "draft",
   defaultWeightUnit: "lb",
   enableRecaptcha: false,
+  googleRecaptchaEnabled: false,
+  googleRecaptchaSiteKey: "",
 };
 
 const GeneralSettingsContext = createContext(GENERAL_SETTINGS_DEFAULTS);
@@ -32,8 +34,9 @@ export function GeneralSettingsProvider({ value, children }) {
 
 // Store name/logo/favicon (Settings -> General), currency (Settings ->
 // Currency & Tax), SKU prefix/default product status/default weight unit
-// (Settings -> Products) and the reCAPTCHA toggle (Settings -> Security),
-// available to any client component without prop-drilling.
+// (Settings -> Products), the reCAPTCHA toggle (Settings -> Security), and
+// the reCAPTCHA site key (Settings -> Integrations), available to any
+// client component without prop-drilling.
 export function useGeneralSettings() {
   return useContext(GeneralSettingsContext);
 }

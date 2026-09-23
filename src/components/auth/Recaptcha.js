@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
-const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+const ENV_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
 
 let scriptLoadPromise = null;
 
@@ -30,6 +31,11 @@ function loadRecaptchaScript() {
  * submit payload as `recaptchaToken`.
  */
 export default function Recaptcha({ onChange }) {
+  const { googleRecaptchaEnabled, googleRecaptchaSiteKey } = useGeneralSettings();
+  // Settings -> Integrations' "Google reCAPTCHA" site key wins when the
+  // admin has entered one there; otherwise fall back to .env.local so a
+  // deployment with no database row still renders the widget.
+  const siteKey = (googleRecaptchaEnabled && googleRecaptchaSiteKey) || ENV_SITE_KEY;
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
   const [failed, setFailed] = useState(false);
@@ -37,8 +43,8 @@ export default function Recaptcha({ onChange }) {
   useEffect(() => {
     let cancelled = false;
 
-    if (!SITE_KEY) {
-      console.error("Recaptcha: NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set.");
+    if (!siteKey) {
+      console.error("Recaptcha: no reCAPTCHA site key configured (Settings -> Integrations or NEXT_PUBLIC_RECAPTCHA_SITE_KEY).");
       setFailed(true);
       return undefined;
     }
@@ -49,7 +55,7 @@ export default function Recaptcha({ onChange }) {
       .then((grecaptcha) => {
         if (cancelled || !grecaptcha || !containerRef.current || widgetIdRef.current !== null) return;
         widgetIdRef.current = grecaptcha.render(containerRef.current, {
-          sitekey: SITE_KEY,
+          sitekey: siteKey,
           theme: isDark ? "dark" : "light",
           callback: (token) => onChange(token),
           "expired-callback": () => onChange(""),
@@ -64,7 +70,7 @@ export default function Recaptcha({ onChange }) {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [siteKey]);
 
   if (failed) {
     return <p className="text-xs text-error">reCAPTCHA failed to load. Please refresh the page and try again.</p>;

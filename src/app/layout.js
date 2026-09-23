@@ -11,6 +11,7 @@ import { getGeneralSettings } from "@/lib/generalSettings";
 import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 import { getProductsSettings } from "@/lib/productsSettings";
 import { getSecuritySettings } from "@/lib/securitySettings";
+import { getIntegrationsSettings } from "@/lib/integrationsSettings";
 import { getAdminRoleBySlug } from "@/lib/adminRoles";
 import { filterNavItemsForRole } from "@/lib/routePermissions";
 import { effectivePermissions } from "@/lib/permissions";
@@ -66,6 +67,16 @@ async function loadSecuritySettings() {
   }
 }
 
+// The reCAPTCHA site key lives on Settings -> Integrations — same
+// fallback-to-null treatment as loadGeneralSettings() above.
+async function loadIntegrationsSettings() {
+  try {
+    return await getIntegrationsSettings();
+  } catch {
+    return null;
+  }
+}
+
 // The signed-in staff member's role, used to hide sidebar entries they can't
 // open. null (no role row / table not migrated / DB hiccup) hides every
 // permission-gated entry, matching what middleware would allow.
@@ -88,13 +99,15 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const [staffUser, settings, currencyTaxSettings, productsSettings, securitySettings] = await Promise.all([
-    getCurrentStaffUser(),
-    loadGeneralSettings(),
-    loadCurrencyTaxSettings(),
-    loadProductsSettings(),
-    loadSecuritySettings(),
-  ]);
+  const [staffUser, settings, currencyTaxSettings, productsSettings, securitySettings, integrationsSettings] =
+    await Promise.all([
+      getCurrentStaffUser(),
+      loadGeneralSettings(),
+      loadCurrencyTaxSettings(),
+      loadProductsSettings(),
+      loadSecuritySettings(),
+      loadIntegrationsSettings(),
+    ]);
 
   const staffRole = await loadStaffRole(staffUser);
   // What the role may do, for hiding controls client-side (null = no staff
@@ -136,6 +149,8 @@ export default async function RootLayout({ children }) {
             defaultProductStatus: productsSettings?.defaultStatus,
             defaultWeightUnit: productsSettings?.defaultWeightUnit,
             enableRecaptcha: securitySettings?.enableRecaptcha,
+            googleRecaptchaEnabled: integrationsSettings?.googleRecaptchaEnabled,
+            googleRecaptchaSiteKey: integrationsSettings?.googleRecaptchaSiteKey,
           }}
         >
           <StaffPermissionsProvider permissions={staffPermissions}>
