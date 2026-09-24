@@ -90,8 +90,9 @@ export function toSavePayload(form) {
   return payload;
 }
 
-// Returns { valid, errors, firstErrorField, message }. `isEdit` makes the
-// password optional (blank keeps the current one).
+// Returns { valid, errors, firstErrorField, message }. New users get a
+// generated password by email, so only an edit can set one (blank keeps the
+// current password).
 export function validateUserForm(form, { isEdit }) {
   const errors = {};
   const firstName = form.firstName.trim();
@@ -108,7 +109,7 @@ export function validateUserForm(form, { isEdit }) {
   if (!form.role) errors.role = "Choose a role.";
   if (form.bio.trim().length > BIO_MAX) errors.bio = `Bio must be ${BIO_MAX} characters or fewer.`;
 
-  if (!isEdit || form.password || form.confirmPassword) {
+  if (isEdit && (form.password || form.confirmPassword)) {
     // Same rule as My Account -> Profile: 8+ characters with a letter, a
     // number and a special character.
     if (!form.password) errors.password = "Password is required.";

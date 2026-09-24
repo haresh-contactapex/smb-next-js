@@ -14,7 +14,15 @@ import { confirmDelete, deleteUser } from "./userActions";
 // Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast.
 const TOAST_AUTO_DISMISS_MS = 10000;
 
-const SAVED_MESSAGES = { created: "User created", updated: "User saved" };
+const SAVED_MESSAGES = {
+  created: { message: "User created — a welcome email with their password was sent", variant: "success" },
+  "created-no-email": {
+    message:
+      "User created, but the welcome email couldn't be sent. Check Settings → Email, then edit the user to set a password and share it with them.",
+    variant: "error",
+  },
+  updated: { message: "User saved", variant: "success" },
+};
 
 export default function UsersListing({ users: initialUsers, roles, permissions, currentUserId, actorFullAccess, saved }) {
   const router = useRouter();
@@ -43,7 +51,7 @@ export default function UsersListing({ users: initialUsers, roles, permissions, 
   // reload doesn't repeat the message.
   useEffect(() => {
     if (!SAVED_MESSAGES[saved]) return;
-    showToast(SAVED_MESSAGES[saved]);
+    showToast(SAVED_MESSAGES[saved].message, SAVED_MESSAGES[saved].variant);
     router.replace("/users", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

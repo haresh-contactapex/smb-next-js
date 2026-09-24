@@ -101,3 +101,33 @@ export async function sendNewCustomerAdminNotification({ to, customer, storeName
 
   return sendEmail({ to, subject, html, text });
 }
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// Sent when an admin creates a staff account on Users -> Add User. The
+// account starts with a random password; the link lets the new user replace
+// it (it reuses the staff reset-password flow).
+export async function sendStaffWelcomeEmail({ to, firstName, storeName, temporaryPassword, setPasswordLink, loginLink, linkExpiresInHours }) {
+  const subject = `Your ${storeName} admin account has been created`;
+  const text = `Hi ${firstName},\n\nAn admin account has been created for you on ${storeName}.\n\nSign in: ${loginLink}\nEmail: ${to}\nTemporary password: ${temporaryPassword}\n\nFor your security, set your own password using this link (it expires in ${linkExpiresInHours} hours and can only be used once):\n${setPasswordLink}\n\nIf you weren't expecting this, please contact your store administrator.`;
+  const html = `
+    <p>Hi ${escapeHtml(firstName)},</p>
+    <p>An admin account has been created for you on <strong>${escapeHtml(storeName)}</strong>.</p>
+    <p>
+      <strong>Email:</strong> ${escapeHtml(to)}<br/>
+      <strong>Temporary password:</strong> <code style="font-size:15px">${escapeHtml(temporaryPassword)}</code>
+    </p>
+    <p><a href="${setPasswordLink}">Set your own password</a> &nbsp;·&nbsp; <a href="${loginLink}">Sign in</a></p>
+    <p>For your security, set your own password now. The link expires in ${linkExpiresInHours} hours and can only be used once.</p>
+    <p>If you weren't expecting this, please contact your store administrator.</p>
+  `;
+
+  return sendEmail({ to, subject, html, text });
+}

@@ -33,8 +33,8 @@ export async function POST(request) {
   try {
     const payload = await request.json().catch(() => null);
     if (!payload) return NextResponse.json({ success: false, error: "Invalid request body." }, { status: 400 });
-    const data = await createStaffUser(payload, auth.role);
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    const { user, welcomeEmailSent } = await createStaffUser(payload, auth.role, { origin: new URL(request.url).origin });
+    return NextResponse.json({ success: true, data: { ...user, welcomeEmailSent } }, { status: 201 });
   } catch (error) {
     return errorResponse(error);
   }

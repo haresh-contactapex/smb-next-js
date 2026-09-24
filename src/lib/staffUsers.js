@@ -1,5 +1,9 @@
 import { sql } from "./db";
-import { hashPassword } from "./auth/password";
+import { hashPassword, generateTemporaryPassword } from "./auth/password";
+import { createResetToken, WELCOME_TOKEN_TTL_MS } from "./auth/resetToken";
+import { insertStaffResetToken } from "./passwordResetTokens";
+import { sendStaffWelcomeEmail } from "./email";
+import { getGeneralSettings } from "./generalSettings";
 import { isValidUsPhone } from "./phone";
 import { isValidPassword, getPasswordErrorMessage } from "@/components/auth/helpers";
 import { LANGUAGES, TIMEZONES } from "@/data/accountData";
@@ -95,8 +99,8 @@ function fail(field, message) {
   throw new StaffUserError(message, 400, field);
 }
 
-// Shared by create and update. `requirePassword` is true on create; on update
-// a blank password keeps the current one.
+// Shared by create and update. Create never takes a password (one is
+// generated and emailed); on update a blank password keeps the current one.
 export function validateStaffUserInput(payload = {}, { requirePassword }) {
   const firstName = String(payload.firstName ?? "").trim().replace(/\s+/g, " ");
   const lastName = String(payload.lastName ?? "").trim().replace(/\s+/g, " ");
@@ -187,12 +191,45 @@ function assertCanManageTarget(target, actorRole) {
   }
 }
 
-export async function createStaffUser(payload, actorRole) {
-  const input = validateStaffUserInput(payload, { requirePassword: true });
-  await assertAssignableRole(input.role, actorRole);
-  const passwordHash = await hashPassword(input.password);
+async function storeName() {
+  try {
+    return (await getGeneralSettings())?.storeName || "Shop My Band";
+  } catch {
+    return "Shop My Band";
+  }
+}
 
-  return run(async () => {
+// Emails the new user their temporary password plus a one-time "set your
+// password" link (a staff reset token, redeemed on /admin/reset-password).
+// Best-effort: the account already exists, so a delivery failure is reported
+// back instead of thrown.
+async function sendWelcome(user, temporaryPassword, origin) {
+  try {
+    const { rawToken, tokenHash, expiresAt } = createResetToken(WELCOME_TOKEN_TTL_MS);
+    await insertStaffResetToken({ userId: user.id, tokenHash, requestedEmail: user.email, expiresAt });
+    return await sendStaffWelcomeEmail({
+      to: user.email,
+      firstName: user.firstName,
+      storeName: await storeName(),
+      temporaryPassword,
+      setPasswordLink: `${origin}/admin/reset-password?token=${rawToken}`,
+      loginLink: `${origin}/admin/login`,
+      linkExpiresInHours: WELCOME_TOKEN_TTL_MS / (60 * 60 * 1000),
+    });
+  } catch (error) {
+    console.error("createStaffUser: failed to send the welcome email", error);
+    return false;
+  }
+}
+
+// Returns { user, welcomeEmailSent }. `origin` builds the emailed links.
+export async function createStaffUser(payload, actorRole, { origin }) {
+  const input = validateStaffUserInput({ ...payload, password: "" }, { requirePassword: false });
+  await assertAssignableRole(input.role, actorRole);
+  const temporaryPassword = generateTemporaryPassword();
+  const passwordHash = await hashPassword(temporaryPassword);
+
+  const user = await run(async () => {
     const [row] = await sql`
       INSERT INTO users (first_name, last_name, email, phone, bio, role, language, timezone, two_factor_enabled, password_hash)
       VALUES (
@@ -203,6 +240,9 @@ export async function createStaffUser(payload, actorRole) {
     `;
     return getStaffUserById(row.id);
   });
+
+  const welcomeEmailSent = await sendWelcome(user, temporaryPassword, origin);
+  return { user, welcomeEmailSent };
 }
 
 export async function updateStaffUser(id, payload, actor, actorRole) {

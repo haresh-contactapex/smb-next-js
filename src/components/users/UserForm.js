@@ -109,7 +109,8 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
         error.field = json.field;
         throw error;
       }
-      router.push(`/users?saved=${isEdit ? "updated" : "created"}`);
+      const saved = isEdit ? "updated" : json.data.welcomeEmailSent ? "created" : "created-no-email";
+      router.push(`/users?saved=${saved}`);
       router.refresh();
     } catch (error) {
       if (error.field && fieldRefs[error.field]) {
@@ -268,17 +269,16 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
             )}
           </SectionCard>
 
+          {isEdit && (
           <SectionCard title="Password">
             <p className="text-xs text-slate-400 -mt-2">
-              {isEdit
-                ? "Leave blank to keep the current password."
-                : "Set an initial password and share it securely."}{" "}
-              Use at least 8 characters with letters, numbers and a special character.
+              Leave blank to keep the current password. Use at least 8 characters with letters, numbers and a special
+              character.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <PasswordField
                 id="f-user-password"
-                label={isEdit ? "New Password" : "Password *"}
+                label="New Password"
                 value={form.password}
                 onChange={(value) => setField("password", value)}
                 placeholder="••••••••"
@@ -289,7 +289,7 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
               />
               <PasswordField
                 id="f-user-confirm-password"
-                label={isEdit ? "Confirm New Password" : "Confirm Password *"}
+                label="Confirm New Password"
                 value={form.confirmPassword}
                 onChange={(value) => setField("confirmPassword", value)}
                 placeholder="••••••••"
@@ -302,6 +302,18 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
               />
             </div>
           </SectionCard>
+          )}
+
+          {!isEdit && (
+            <section className="flex items-start gap-3 rounded-2xl border border-primary-100 bg-primary-50/60 p-4 dark:border-accent-500/20 dark:bg-accent-500/5">
+              <Icon name="mail" className="w-5 h-5 shrink-0 text-primary-600 dark:text-accent-400" />
+              <p className="text-xs text-slate-600 dark:text-slate-300">
+                <span className="block text-sm font-semibold text-slate-800 dark:text-white">Password is sent by email</span>
+                On Create User, a welcome email goes to the address above with a randomly generated password and a
+                link to set their own password (valid for 72 hours).
+              </p>
+            </section>
+          )}
         </div>
 
         <div className="space-y-6">
