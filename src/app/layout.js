@@ -148,7 +148,10 @@ export default async function RootLayout({ children }) {
             skuPrefix: productsSettings?.skuPrefix,
             defaultProductStatus: productsSettings?.defaultStatus,
             defaultWeightUnit: productsSettings?.defaultWeightUnit,
-            enableRecaptcha: securitySettings?.enableRecaptcha,
+            // Shown/required only when BOTH Security's "Enable reCAPTCHA"
+            // toggle AND Integrations' "Google reCAPTCHA" toggle are on —
+            // see checkRecaptchaIfEnabled() for the matching server-side rule.
+            enableRecaptcha: Boolean(securitySettings?.enableRecaptcha) && Boolean(integrationsSettings?.googleRecaptchaEnabled),
             googleRecaptchaEnabled: integrationsSettings?.googleRecaptchaEnabled,
             googleRecaptchaSiteKey: integrationsSettings?.googleRecaptchaSiteKey,
           }}

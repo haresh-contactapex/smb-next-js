@@ -29,11 +29,13 @@ export async function verifyRecaptcha(token, secret) {
   }
 }
 
-// Settings -> Security's "Enable reCAPTCHA on login and checkout" toggle
-// gates whether a route needs to check a token at all. Routes call this
-// once instead of each re-implementing the "read the setting, then verify"
-// sequence. Fails closed (not required) if the setting can't be read, same
-// fallback used elsewhere for settings reads.
+// A token is required only when BOTH Settings -> Security's "Enable
+// reCAPTCHA on login and checkout" toggle AND Settings -> Integrations'
+// "Google reCAPTCHA" toggle are on — the former is the site-wide security
+// policy, the latter is whether the Google reCAPTCHA integration itself is
+// turned on. Routes call this once instead of each re-implementing the
+// "read the settings, then verify" sequence. Fails closed (not required) if
+// a setting can't be read, same fallback used elsewhere for settings reads.
 export async function checkRecaptchaIfEnabled(token) {
   let settings;
   try {
@@ -43,18 +45,17 @@ export async function checkRecaptchaIfEnabled(token) {
   }
   if (!settings?.enableRecaptcha) return { required: false, valid: true };
 
-  // Settings -> Integrations' "Google reCAPTCHA" toggle supplies the actual
-  // site-wide secret key when the admin has entered one there; otherwise
-  // verifyRecaptcha() falls back to RECAPTCHA_SECRET_KEY from .env.local.
-  let secret;
+  let integrations;
   try {
-    const integrations = await getIntegrationsSettings();
-    if (integrations?.googleRecaptchaEnabled && integrations?.googleRecaptchaSecretKey) {
-      secret = integrations.googleRecaptchaSecretKey;
-    }
+    integrations = await getIntegrationsSettings();
   } catch {
-    // Fall back to the env var below.
+    integrations = null;
   }
+  if (!integrations?.googleRecaptchaEnabled) return { required: false, valid: true };
+
+  // The Integrations secret key wins when one is set; otherwise
+  // verifyRecaptcha() falls back to RECAPTCHA_SECRET_KEY from .env.local.
+  const secret = integrations.googleRecaptchaSecretKey || undefined;
 
   return { required: true, valid: await verifyRecaptcha(token, secret) };
 }
