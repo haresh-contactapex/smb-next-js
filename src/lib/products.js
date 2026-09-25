@@ -22,6 +22,34 @@ async function batchInsert(table, columns, rows, returning) {
 
 const MAX_SKU_LENGTH = 12;
 
+// Carries the HTTP status a route handler should answer with, so expected
+// validation failures aren't reported as 500s.
+export class ProductError extends Error {
+  constructor(message, status = 400) {
+    super(message);
+    this.name = "ProductError";
+    this.status = status;
+  }
+}
+
+// blob:/data: URLs are browser-local previews; persisting one leaves an image
+// that's gone as soon as the tab reloads. Media must be uploaded first.
+function isLocalOnlyUrl(url) {
+  return /^(blob|data):/i.test(String(url || ""));
+}
+
+function assertPersistentMediaUrls(payload) {
+  const badMedia = (payload.media || []).filter((m) => !m?.url || isLocalOnlyUrl(m.url));
+  const badVariants = (payload.variants || []).filter((v) => v.image && isLocalOnlyUrl(v.image.url));
+  if (!badMedia.length && !badVariants.length) return;
+  const names = [...badMedia.map((m) => m?.name), ...badVariants.map((v) => v.image.name || v.sku)]
+    .filter(Boolean)
+    .slice(0, 5);
+  throw new ProductError(
+    `Some media was never uploaded${names.length ? ` (${names.join(", ")})` : ""}. Remove it and upload it again.`
+  );
+}
+
 // product_variants.sku is unique *across every product*, not just within one —
 // so two products with similar auto-generated codes (e.g. same color/size
 // options) can collide even though each product's own variants are internally
@@ -464,8 +492,9 @@ async function writeProductRow(id, payload, categoryId) {
       return id;
     } catch (error) {
       if (error.code === "23505" && error.constraint === "products_handle_key") {
-        throw new Error(
-          `A product with the handle "${values.handle}" already exists. Change the title or handle and try again.`
+        throw new ProductError(
+          `A product with the handle "${values.handle}" already exists. Change the title or handle and try again.`,
+          409
         );
       }
       throw error;
@@ -490,8 +519,9 @@ async function writeProductRow(id, payload, categoryId) {
     return created.id;
   } catch (error) {
     if (error.code === "23505" && error.constraint === "products_handle_key") {
-      throw new Error(
-        `A product with the handle "${values.handle}" already exists. Change the title or handle and try again.`
+      throw new ProductError(
+        `A product with the handle "${values.handle}" already exists. Change the title or handle and try again.`,
+        409
       );
     }
     throw error;
@@ -499,6 +529,7 @@ async function writeProductRow(id, payload, categoryId) {
 }
 
 export async function createProduct(payload) {
+  assertPersistentMediaUrls(payload);
   const categoryId = await upsertCategoryPath(payload.category);
   const id = await writeProductRow(null, payload, categoryId);
   try {
@@ -516,6 +547,7 @@ export async function createProduct(payload) {
 }
 
 export async function updateProduct(id, payload) {
+  assertPersistentMediaUrls(payload);
   const categoryId = await upsertCategoryPath(payload.category);
   await writeProductRow(id, payload, categoryId);
   await replaceChildRows(id, payload);

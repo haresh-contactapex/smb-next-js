@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import { isMissingUpload } from "./helpers";
 
 export default function MediaSection({ media, mediaError, sectionRef, onAddFiles, onRemoveMedia }) {
   const fileInputRef = useRef(null);
@@ -81,8 +82,16 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
             key={`${m.name}-${i}`}
             className="relative group border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden aspect-square bg-slate-100 dark:bg-darksurface2/60 flex items-center justify-center"
           >
-            {m.type === "image" ? (
-              // eslint-disable-next-line @next/next/no-img-element -- blob: object URLs from local uploads, not optimizable by next/image
+            {isMissingUpload(m) ? (
+              <div className="flex flex-col items-center justify-center gap-1 p-2 text-center">
+                <Icon name="upload-cloud" className="w-6 h-6 text-error" />
+                <span className="text-[11px] font-semibold text-error">Missing</span>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 break-all line-clamp-2">
+                  {m.name || "file"} — remove and upload again
+                </span>
+              </div>
+            ) : m.type === "image" ? (
+              // eslint-disable-next-line @next/next/no-img-element -- blob: previews and Vercel Blob URLs, not optimizable by next/image
               <img
                 src={m.url}
                 alt={m.name || ""}
@@ -108,9 +117,11 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
             )}
             <button
               type="button"
-              aria-label="Remove media"
+              aria-label={`Remove ${m.name || "media"}`}
               onClick={() => onRemoveMedia(i)}
-              className="absolute top-1 right-1 w-6 h-6 rounded-full bg-slate-900/70 text-white text-xs opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+              className={`absolute top-1 right-1 w-6 h-6 rounded-full bg-slate-900/70 text-white text-xs group-hover:opacity-100 focus:opacity-100 transition flex items-center justify-center${
+                isMissingUpload(m) ? " opacity-100" : " opacity-0"
+              }`}
             >
               &times;
             </button>

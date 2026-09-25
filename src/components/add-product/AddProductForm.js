@@ -12,6 +12,8 @@ import {
   toNumber,
   productStatusFromSettings,
   newAttributeId,
+  isPendingUpload,
+  isMissingUpload,
 } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import ProductDetailsSection from "./ProductDetailsSection";
@@ -37,6 +39,39 @@ const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
 const ALLOWED_MODEL_EXTENSIONS = [".glb", ".usdz"];
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+
+async function uploadProductFile(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("purpose", "product");
+  const res = await fetch("/api/media", { method: "POST", body: formData });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.success) throw new Error(json.error || `Failed to upload ${file.name}`);
+  return json.data.url;
+}
+
+// Uploads every item still holding a local File and swaps its blob: preview
+// URL for the stored public URL. Returns the next product state.
+async function uploadPendingFiles(product) {
+  const upload = async (item) => {
+    if (!isPendingUpload(item)) return item;
+    const url = await uploadProductFile(item.file);
+    return { type: item.type, url, name: item.name };
+  };
+  const media = await Promise.all(product.media.map(upload));
+  const variants = await Promise.all(
+    product.variants.map(async (v) => {
+      if (!isPendingUpload(v.image)) return v;
+      const uploaded = await upload(v.image);
+      return { ...v, image: { url: uploaded.url, name: uploaded.name } };
+    })
+  );
+  // Only once every upload succeeded — a partial failure keeps the local previews.
+  [...product.media, ...product.variants.map((v) => v.image)]
+    .filter(isPendingUpload)
+    .forEach((item) => URL.revokeObjectURL(item.url));
+  return { ...product, media, variants };
+}
 
 function classifyMediaFile(file) {
   if (ALLOWED_IMAGE_TYPES.includes(file.type)) return "image";
@@ -210,6 +245,7 @@ export default function AddProductForm({ productId }) {
         type: kind,
         url: URL.createObjectURL(file),
         name: file.name,
+        file,
       }));
       setProduct((prev) => ({ ...prev, media: [...prev.media, ...additions] }));
       setMediaError(false);
@@ -259,7 +295,7 @@ export default function AddProductForm({ productId }) {
       const nextVariants = prev.variants.slice();
       nextVariants[index] = {
         ...nextVariants[index],
-        image: { url: URL.createObjectURL(file), name: file.name },
+        image: { url: URL.createObjectURL(file), name: file.name, file },
       };
       return { ...prev, variants: nextVariants };
     });
@@ -342,6 +378,14 @@ export default function AddProductForm({ productId }) {
         },
       },
       {
+        invalid: product.media.some(isMissingUpload),
+        setError: setMediaError,
+        onFail: () => {
+          mediaSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          showToast("Some media files were never uploaded — remove the items marked “Missing” and upload them again", "error");
+        },
+      },
+      {
         invalid: !product.price || toNumber(product.price) <= 0,
         setError: setPriceError,
         onFail: () => {
@@ -367,6 +411,14 @@ export default function AddProductForm({ productId }) {
           showToast("Add a price and quantity for every variant before saving", "error");
         },
       },
+      {
+        invalid: product.variants.some((v) => isMissingUpload(v.image)),
+        setError: () => {},
+        onFail: () => {
+          variantsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+          showToast("Some variant images were never uploaded — remove or replace the images marked missing", "error");
+        },
+      },
     ];
 
     const firstInvalidIndex = steps.findIndex((step) => step.invalid);
@@ -384,10 +436,15 @@ export default function AddProductForm({ productId }) {
     savingRef.current = true;
     setSaving(true);
     try {
+      // Kept in state right away so a failed save retried later doesn't
+      // upload the same files a second time.
+      const uploaded = await uploadPendingFiles(product);
+      setProduct(uploaded);
+
       const res = await fetch(isEdit ? `/api/products/${productId}` : "/api/products", {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(assembleProduct(product)),
+        body: JSON.stringify(assembleProduct(uploaded)),
       });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to save product");

@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 import { WEIGHT_UNITS } from "@/data/addProductData";
-import { slugify, sanitizeDecimal, sanitizeInteger } from "./helpers";
+import { slugify, sanitizeDecimal, sanitizeInteger, isMissingUpload } from "./helpers";
 
 function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue, onReorderValues }) {
   const [valueInput, setValueInput] = useState("");
@@ -96,6 +96,7 @@ function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue, 
 
 function VariantImageCell({ image, label, onChange, onRemove }) {
   const inputRef = useRef(null);
+  const missing = isMissingUpload(image);
 
   function handleFileSelected(e) {
     const file = e.target.files?.[0];
@@ -108,12 +109,14 @@ function VariantImageCell({ image, label, onChange, onRemove }) {
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        title={image ? "Change variant image" : "Add variant image"}
-        aria-label={`${label} image`}
-        className="w-9 h-9 rounded-lg border border-dashed border-slate-300 dark:border-white/15 overflow-hidden grid place-items-center bg-slate-50 dark:bg-darksurface2/60 hover:border-primary-400 dark:hover:border-accent-500/60 transition-colors"
+        title={missing ? "Image missing — upload it again" : image ? "Change variant image" : "Add variant image"}
+        aria-label={missing ? `${label} image missing, upload again` : `${label} image`}
+        className={`w-9 h-9 rounded-lg border border-dashed ${missing ? "border-red-400 bg-red-50 dark:bg-red-500/10" : "border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-darksurface2/60"} overflow-hidden grid place-items-center hover:border-primary-400 dark:hover:border-accent-500/60 transition-colors`}
       >
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element -- blob: object URL from a local upload
+        {missing ? (
+          <Icon name="upload-cloud" className="w-4 h-4 text-error" />
+        ) : image ? (
+          // eslint-disable-next-line @next/next/no-img-element -- blob: preview or Vercel Blob URL
           <img
             src={image.url}
             alt={image.name || label}
@@ -131,7 +134,7 @@ function VariantImageCell({ image, label, onChange, onRemove }) {
           type="button"
           aria-label={`Remove ${label} image`}
           onClick={onRemove}
-          className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-slate-900/80 text-white text-[10px] leading-none opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
+          className={`absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-slate-900/80 text-white text-[10px] leading-none group-hover:opacity-100 focus:opacity-100 transition flex items-center justify-center${missing ? " opacity-100" : " opacity-0"}`}
         >
           &times;
         </button>

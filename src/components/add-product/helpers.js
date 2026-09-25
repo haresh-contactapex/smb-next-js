@@ -31,6 +31,18 @@ export function stripHtml(html) {
   return html ? html.replace(/<[^>]*>/g, "") : "";
 }
 
+// A media item / variant image picked in this session carries its File until
+// it's uploaded on save. A blob: URL *without* a File is a dead preview link
+// from a product saved before uploads existed — it can't be recovered and
+// must be removed and re-uploaded.
+export function isPendingUpload(item) {
+  return Boolean(item?.file);
+}
+
+export function isMissingUpload(item) {
+  return Boolean(item) && !item.file && /^(blob|data):/i.test(String(item.url || ""));
+}
+
 export function newAttributeId() {
   return "attr_" + Math.random().toString(36).slice(2, 10);
 }
