@@ -7,7 +7,10 @@ import Icon from "@/components/admin-panel/Icon";
 import UsersPageHeader, { PRIMARY_BUTTON_CLASSES } from "./UsersPageHeader";
 import UsersFilters from "./UsersFilters";
 import UsersTable from "./UsersTable";
+import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import Toast from "./Toast";
+import DeleteToast from "./DeleteToast";
+import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import { fullName, isLocked } from "./helpers";
 import { confirmDelete, deleteUser } from "./userActions";
 
@@ -30,8 +33,12 @@ export default function UsersListing({ users: initialUsers, roles, permissions, 
   const [search, setSearch] = useState("");
   const [role, setRole] = useState("");
   const [status, setStatus] = useState("");
-  const [busyId, setBusyId] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+  const [sort, setSort] = useState({ key: "name", direction: "asc" });
+  const [deletingUser, setDeletingUser] = useState(null);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
   const busyRef = useRef(false);
   const toastTimerRef = useRef(null);
   const context = useMemo(() => ({ currentUserId, actorFullAccess }), [currentUserId, actorFullAccess]);
@@ -62,17 +69,17 @@ export default function UsersListing({ users: initialUsers, roles, permissions, 
   async function handleDelete(user) {
     if (busyRef.current || !confirmDelete(user)) return;
     busyRef.current = true;
-    setBusyId(user.id);
+    setDeletingUser(user);
     try {
       await deleteUser(user);
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
-      showToast(`${fullName(user)} deleted`);
+      setDeleteToast({ visible: true, message: `"${fullName(user)}" was removed.` });
       router.refresh();
     } catch (error) {
       showToast(error.message, "error");
     } finally {
       busyRef.current = false;
-      setBusyId(null);
+      setDeletingUser(null);
     }
   }
 
@@ -89,6 +96,42 @@ export default function UsersListing({ users: initialUsers, roles, permissions, 
       return true;
     });
   }, [users, search, role, status]);
+
+  const sorted = useMemo(() => {
+    const { key, direction } = sort;
+    const dir = direction === "asc" ? 1 : -1;
+    return [...filtered].sort((a, b) => {
+      if (key === "role") return String(a.roleName || "").localeCompare(String(b.roleName || ""), undefined, { sensitivity: "base" }) * dir;
+      if (key === "status") return (Number(isLocked(a)) - Number(isLocked(b))) * dir;
+      if (key === "lastLogin") return String(a.lastLoginAt || "").localeCompare(String(b.lastLoginAt || "")) * dir;
+      if (key === "created") return String(a.createdAt || "").localeCompare(String(b.createdAt || "")) * dir;
+      return fullName(a).localeCompare(fullName(b), undefined, { sensitivity: "base" }) * dir;
+    });
+  }, [filtered, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageItems = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  function updateFilter(setter) {
+    return (value) => {
+      setter(value);
+      setPage(1);
+    };
+  }
+
+  function handleSortChange(key) {
+    setSort((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+    setPage(1);
+  }
+
+  function handlePageSizeChange(size) {
+    setPageSize(size);
+    setPage(1);
+  }
 
   const lockedCount = users.filter(isLocked).length;
 
@@ -110,26 +153,53 @@ export default function UsersListing({ users: initialUsers, roles, permissions, 
 
       <UsersFilters
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={updateFilter(setSearch)}
         role={role}
-        onRoleChange={setRole}
+        onRoleChange={updateFilter(setRole)}
         roles={roles}
         status={status}
-        onStatusChange={setStatus}
-        resultCount={filtered.length}
+        onStatusChange={updateFilter(setStatus)}
+        resultCount={sorted.length}
         hasActiveFilters={Boolean(search || role || status)}
         onClear={() => {
           setSearch("");
           setRole("");
           setStatus("");
+          setPage(1);
         }}
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
-        <UsersTable users={filtered} busyId={busyId} permissions={permissions} context={context} onDelete={handleDelete} />
+        <UsersTable
+          users={pageItems}
+          busyId={deletingUser?.id}
+          permissions={permissions}
+          context={context}
+          onDelete={handleDelete}
+          sort={sort}
+          onSortChange={handleSortChange}
+        />
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          totalCount={sorted.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </section>
 
       <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
+      <DeleteOverlay
+        active={deletingUser != null}
+        title="Deleting user…"
+        itemLabel={deletingUser ? fullName(deletingUser) : ""}
+      />
+      <DeleteToast
+        visible={deleteToast.visible}
+        message={deleteToast.message}
+        onDismiss={() => setDeleteToast((t) => ({ ...t, visible: false }))}
+      />
     </>
   );
 }

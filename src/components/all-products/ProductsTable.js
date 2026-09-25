@@ -6,7 +6,25 @@ import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvid
 import { formatCurrency } from "@/lib/currency";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 
-export default function ProductsTable({ products, onDelete }) {
+function SortableHeader({ label, sortKey, sort, onSortChange }) {
+  const active = sort?.key === sortKey;
+  const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
+  return (
+    <th className="py-3 px-1 font-semibold">
+      <button
+        type="button"
+        onClick={() => onSortChange(sortKey)}
+        aria-label={`Sort by ${label}${active ? (sort.direction === "asc" ? ", ascending" : ", descending") : ""}`}
+        className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+      >
+        {label}
+        <Icon name={icon} className={`w-3 h-3 ${active ? "text-primary-500 dark:text-accent-400" : "text-slate-300 dark:text-slate-600"}`} />
+      </button>
+    </th>
+  );
+}
+
+export default function ProductsTable({ products, onDelete, deletingId, sort, onSortChange }) {
   const { currency } = useGeneralSettings();
 
   if (products.length === 0) {
@@ -22,17 +40,18 @@ export default function ProductsTable({ products, onDelete }) {
       <table className="w-full text-sm min-w-[820px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
-            <th className="py-3 px-1 font-semibold">Product</th>
-            <th className="py-3 px-1 font-semibold">Category</th>
-            <th className="py-3 px-1 font-semibold">Price</th>
+            <SortableHeader label="Product" sortKey="title" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Category" sortKey="category" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Price" sortKey="price" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Inventory</th>
-            <th className="py-3 px-1 font-semibold">Status</th>
+            <SortableHeader label="Status" sortKey="status" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold text-right">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
           {products.map((product) => {
             const stock = getStockInfo(product.inventory);
+            const isDeleting = product.id === deletingId;
             return (
               <tr key={product.id} className="table-row transition-colors">
                 <td className="py-3 px-1">
@@ -92,7 +111,8 @@ export default function ProductsTable({ products, onDelete }) {
                         type="button"
                         title="Delete product"
                         onClick={() => onDelete?.(product)}
-                        className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                        disabled={isDeleting}
+                        className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <Icon name="trash-2" className="w-4 h-4" />
                       </button>

@@ -340,3 +340,190 @@ body.sidebar-open #sidebarBackdrop {
 .pulse-dot {
   animation: pulseDot 1.8s ease-in-out infinite;
 }
+
+/* Animated "orbit rings" trash-can icon used by full-screen "deleting"
+   loaders: an amber ring and a cyan ring counter-orbit with twinkling
+   sparkles around a gold bin, while the bin's lid tips open and a paper
+   scrap drops in. Ported 1:1 (colors, timings, easing) from the approved
+   reference demo. See DeleteOverlay for the SVG markup this styles. */
+.trash-icon .lid {
+  transform-box: view-box;
+  transform-origin: 36px 54px;
+}
+.trash-icon .can {
+  transform-box: view-box;
+  transform-origin: 80px 138px;
+}
+.trash-icon .paper {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.trash-icon .orbit-a,
+.trash-icon .orbit-b {
+  transform-box: view-box;
+  transform-origin: 80px 88px;
+}
+.trash-icon .sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.trash-icon.is-loading .lid {
+  animation: trashLid 1.8s ease-in-out infinite;
+}
+.trash-icon.is-loading .paper {
+  animation: trashPaper 1.8s ease-in infinite;
+}
+.trash-icon.is-loading .can {
+  animation: trashCan 1.8s ease-out infinite;
+}
+.trash-icon.is-loading .orbit-a {
+  animation: trashSpin 3s linear infinite;
+}
+.trash-icon.is-loading .orbit-b {
+  animation: trashSpin 3s linear infinite reverse;
+}
+.trash-icon.is-loading .sparkle {
+  animation: trashSparkle 1.4s ease-in-out infinite alternate;
+}
+.trash-icon.is-glow {
+  filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.35));
+}
+@keyframes trashLid {
+  0%,
+  10% {
+    transform: translateY(0) rotate(0);
+  }
+  25%,
+  55% {
+    transform: translateY(-12px) rotate(-32deg);
+  }
+  68% {
+    transform: translateY(0) rotate(0);
+  }
+  74% {
+    transform: translateY(-3px);
+  }
+  80%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+}
+@keyframes trashPaper {
+  0%,
+  22% {
+    opacity: 0;
+    transform: translate(4px, -44px) rotate(-40deg);
+  }
+  28% {
+    opacity: 1;
+    transform: translate(2px, -36px) rotate(-20deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(0, 6px) rotate(18deg);
+  }
+  58%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 26px) rotate(30deg);
+  }
+}
+@keyframes trashCan {
+  0%,
+  64% {
+    transform: scale(1, 1);
+  }
+  70% {
+    transform: scale(1.07, 0.92);
+  }
+  78% {
+    transform: scale(0.97, 1.03);
+  }
+  86%,
+  100% {
+    transform: scale(1, 1);
+  }
+}
+@keyframes trashSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes trashSparkle {
+  0% {
+    transform: scale(0.85);
+    filter: drop-shadow(0 0 4px #fef08a);
+  }
+  100% {
+    transform: scale(1.35) rotate(45deg);
+    filter: drop-shadow(0 0 16px #facc15);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .trash-icon * {
+    animation-duration: 3s !important;
+  }
+}
+
+/* Full-screen "deleting" overlay chrome: an expanding ripple behind the
+   icon, ambient glow blobs in the card corners, a status pill with a
+   pulsing dot, and a gradient progress bar that fills while the request is
+   in flight. See DeleteOverlay. */
+.trash-icon-wrap.is-loading::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1px solid rgba(251, 191, 36, 0.35);
+  animation: trashRipple 2.2s cubic-bezier(0.1, 0.8, 0.2, 1) infinite;
+}
+@keyframes trashRipple {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+.delete-overlay-amb {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 9999px;
+  filter: blur(60px);
+  pointer-events: none;
+}
+.delete-overlay-amb.a {
+  top: -70px;
+  left: -70px;
+  background: rgba(6, 182, 212, 0.14);
+}
+.delete-overlay-amb.b {
+  bottom: -70px;
+  right: -70px;
+  background: rgba(168, 85, 247, 0.14);
+}
+.delete-overlay-pill .dot {
+  animation: deleteOverlayPing 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes deleteOverlayPing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.7);
+  }
+  75%,
+  100% {
+    box-shadow: 0 0 0 6px rgba(248, 113, 113, 0);
+  }
+}
+.delete-overlay-bar {
+  background: linear-gradient(90deg, #fbbf24, #38bdf8);
+}
+@media (prefers-reduced-motion: reduce) {
+  .trash-icon-wrap.is-loading::before,
+  .delete-overlay-pill .dot {
+    animation-duration: 3s !important;
+  }
+}

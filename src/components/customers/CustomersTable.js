@@ -4,7 +4,25 @@ import { AVATAR_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { pickAvatarColor, getInitials, formatDate, GROUP_BADGE_CLASSES } from "./customerHelpers";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 
-export default function CustomersTable({ customers, onDelete }) {
+function SortableHeader({ label, sortKey, sort, onSortChange }) {
+  const active = sort?.key === sortKey;
+  const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
+  return (
+    <th className="py-3 px-1 font-semibold">
+      <button
+        type="button"
+        onClick={() => onSortChange(sortKey)}
+        aria-label={`Sort by ${label}${active ? (sort.direction === "asc" ? ", ascending" : ", descending") : ""}`}
+        className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+      >
+        {label}
+        <Icon name={icon} className={`w-3 h-3 ${active ? "text-primary-500 dark:text-accent-400" : "text-slate-300 dark:text-slate-600"}`} />
+      </button>
+    </th>
+  );
+}
+
+export default function CustomersTable({ customers, onDelete, deletingId, sort, onSortChange }) {
   if (customers.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No customers match your filters.</div>;
   }
@@ -14,17 +32,19 @@ export default function CustomersTable({ customers, onDelete }) {
       <table className="w-full text-sm min-w-[900px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
-            <th className="py-3 px-1 font-semibold">Customer</th>
+            <SortableHeader label="Customer" sortKey="name" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Phone</th>
-            <th className="py-3 px-1 font-semibold">Group</th>
-            <th className="py-3 px-1 font-semibold">Loyalty Points</th>
+            <SortableHeader label="Group" sortKey="customerGroup" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Loyalty Points" sortKey="loyaltyPoints" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Marketing</th>
-            <th className="py-3 px-1 font-semibold">Joined</th>
+            <SortableHeader label="Joined" sortKey="createdAt" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold text-right">Action</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-          {customers.map((customer) => (
+          {customers.map((customer) => {
+            const isDeleting = customer.id === deletingId;
+            return (
             <tr key={customer.id} className="table-row transition-colors">
               <td className="py-3 px-1">
                 <div className="flex items-center gap-3">
@@ -75,7 +95,8 @@ export default function CustomersTable({ customers, onDelete }) {
                       type="button"
                       title="Delete customer"
                       onClick={() => onDelete?.(customer)}
-                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                      disabled={isDeleting}
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <Icon name="trash-2" className="w-4 h-4" />
                     </button>
@@ -83,7 +104,8 @@ export default function CustomersTable({ customers, onDelete }) {
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

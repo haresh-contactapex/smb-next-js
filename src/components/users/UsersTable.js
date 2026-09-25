@@ -6,6 +6,24 @@ import { deleteBlockedReason, editBlockedReason } from "./userActions";
 const ICON_BUTTON =
   "w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none";
 
+function SortableHeader({ label, sortKey, sort, onSortChange }) {
+  const active = sort?.key === sortKey;
+  const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
+  return (
+    <th scope="col" className="py-3 px-2 font-semibold">
+      <button
+        type="button"
+        onClick={() => onSortChange(sortKey)}
+        aria-label={`Sort by ${label}${active ? (sort.direction === "asc" ? ", ascending" : ", descending") : ""}`}
+        className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+      >
+        {label}
+        <Icon name={icon} className={`w-3 h-3 ${active ? "text-primary-500 dark:text-accent-400" : "text-slate-300 dark:text-slate-600"}`} />
+      </button>
+    </th>
+  );
+}
+
 function RoleBadge({ user }) {
   const inactive = user.roleStatus === "inactive";
   const missing = !user.roleStatus;
@@ -24,7 +42,7 @@ function RoleBadge({ user }) {
   );
 }
 
-export default function UsersTable({ users, busyId, permissions, context, onDelete }) {
+export default function UsersTable({ users, busyId, permissions, context, onDelete, sort, onSortChange }) {
   if (users.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No users match your filters.</div>;
   }
@@ -34,13 +52,13 @@ export default function UsersTable({ users, busyId, permissions, context, onDele
       <table className="w-full text-sm min-w-[960px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
-            <th scope="col" className="py-3 px-2 font-semibold">User</th>
+            <SortableHeader label="User" sortKey="name" sort={sort} onSortChange={onSortChange} />
             <th scope="col" className="py-3 px-2 font-semibold">Phone</th>
-            <th scope="col" className="py-3 px-2 font-semibold">Role</th>
+            <SortableHeader label="Role" sortKey="role" sort={sort} onSortChange={onSortChange} />
             <th scope="col" className="py-3 px-2 font-semibold">2FA</th>
-            <th scope="col" className="py-3 px-2 font-semibold">Status</th>
-            <th scope="col" className="py-3 px-2 font-semibold">Last Login</th>
-            <th scope="col" className="py-3 px-2 font-semibold">Created</th>
+            <SortableHeader label="Status" sortKey="status" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Last Login" sortKey="lastLogin" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Created" sortKey="created" sort={sort} onSortChange={onSortChange} />
             <th scope="col" className="py-3 px-2 font-semibold text-right">Actions</th>
           </tr>
         </thead>
@@ -123,7 +141,7 @@ export default function UsersTable({ users, busyId, permissions, context, onDele
                         disabled={busy || Boolean(deleteBlocked)}
                         className={`${ICON_BUTTON} hover:!bg-red-50 hover:text-error dark:hover:!bg-red-500/10`}
                       >
-                        <Icon name={busy ? "refresh-cw" : "trash-2"} className={`w-4 h-4${busy ? " animate-spin" : ""}`} />
+                        <Icon name="trash-2" className="w-4 h-4" />
                       </button>
                     )}
                   </div>

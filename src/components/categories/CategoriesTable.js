@@ -4,7 +4,25 @@ import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { VISIBILITY_BADGE_CLASSES } from "./categoryHelpers";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 
-export default function CategoriesTable({ categories, onDelete }) {
+function SortableHeader({ label, sortKey, sort, onSortChange }) {
+  const active = sort?.key === sortKey;
+  const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
+  return (
+    <th className="py-3 px-1 font-semibold">
+      <button
+        type="button"
+        onClick={() => onSortChange(sortKey)}
+        aria-label={`Sort by ${label}${active ? (sort.direction === "asc" ? ", ascending" : ", descending") : ""}`}
+        className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+      >
+        {label}
+        <Icon name={icon} className={`w-3 h-3 ${active ? "text-primary-500 dark:text-accent-400" : "text-slate-300 dark:text-slate-600"}`} />
+      </button>
+    </th>
+  );
+}
+
+export default function CategoriesTable({ categories, onDelete, sort, onSortChange }) {
   if (categories.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No categories match your filters.</div>;
   }
@@ -14,10 +32,10 @@ export default function CategoriesTable({ categories, onDelete }) {
       <table className="w-full text-sm min-w-[720px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
-            <th className="py-3 px-1 font-semibold">Category</th>
+            <SortableHeader label="Category" sortKey="name" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Parent</th>
-            <th className="py-3 px-1 font-semibold">Products</th>
-            <th className="py-3 px-1 font-semibold">Visibility</th>
+            <SortableHeader label="Products" sortKey="productCount" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Visibility" sortKey="visible" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold text-right">Action</th>
           </tr>
         </thead>
