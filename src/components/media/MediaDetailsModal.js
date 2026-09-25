@@ -34,16 +34,6 @@ export default function MediaDetailsModal({ item, deleting, onClose, onDelete })
       }}
     >
       <div className="relative bg-white dark:bg-darksurface rounded-2xl border border-slate-200 dark:border-white/10 shadow-popover w-full max-w-2xl max-h-[85vh] flex flex-col">
-        {deleting && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white/90 dark:bg-darksurface/90 rounded-2xl"
-          >
-            <Icon name="refresh-cw" className="w-7 h-7 text-primary-500 dark:text-accent-500 animate-spin" />
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">Deleting…</p>
-          </div>
-        )}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 dark:border-white/5">
           <h3 className="text-sm font-bold text-slate-800 dark:text-white truncate pr-4">{item.fileName}</h3>
           <button

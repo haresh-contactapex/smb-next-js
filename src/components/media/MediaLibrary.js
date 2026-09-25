@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import MediaUploaderDropzone from "./MediaUploaderDropzone";
 import MediaGrid from "./MediaGrid";
 import MediaDetailsModal from "./MediaDetailsModal";
+import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 export default function MediaLibrary({ initialItems }) {
@@ -13,7 +14,7 @@ export default function MediaLibrary({ initialItems }) {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
   const [selected, setSelected] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
+  const [deletingItem, setDeletingItem] = useState(null);
 
   async function handleUpload(fileList) {
     setUploadError("");
@@ -37,7 +38,7 @@ export default function MediaLibrary({ initialItems }) {
 
   async function handleDelete(item) {
     if (!window.confirm(`Delete "${item.fileName}"? This can't be undone.`)) return;
-    setDeletingId(item.id);
+    setDeletingItem(item);
     try {
       const res = await fetch(`/api/media/${item.id}`, { method: "DELETE" });
       const json = await res.json();
@@ -48,7 +49,7 @@ export default function MediaLibrary({ initialItems }) {
     } catch (error) {
       window.alert(error.message);
     } finally {
-      setDeletingId(null);
+      setDeletingItem(null);
     }
   }
 
@@ -57,12 +58,17 @@ export default function MediaLibrary({ initialItems }) {
       <Can permission="media.create">
         <MediaUploaderDropzone onFilesPicked={handleUpload} uploading={uploading} error={uploadError} />
       </Can>
-      <MediaGrid items={items} onSelect={setSelected} deletingId={deletingId} />
+      <MediaGrid items={items} onSelect={setSelected} deletingId={deletingItem?.id} />
       <MediaDetailsModal
         item={selected}
-        deleting={selected != null && deletingId === selected.id}
+        deleting={selected != null && deletingItem?.id === selected.id}
         onClose={() => setSelected(null)}
         onDelete={handleDelete}
+      />
+      <DeleteOverlay
+        active={deletingItem != null}
+        title="Deleting file…"
+        itemLabel={deletingItem?.fileName || ""}
       />
     </div>
   );
