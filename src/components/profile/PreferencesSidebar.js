@@ -3,7 +3,10 @@ import { LANGUAGES, TIMEZONES } from "@/data/accountData";
 
 export default function PreferencesSidebar({ language, timezone, onFieldChange }) {
   return (
-    <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
+    <section
+      id="preferences"
+      className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 scroll-mt-24"
+    >
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Preferences</h2>
 
       <div className="space-y-4">

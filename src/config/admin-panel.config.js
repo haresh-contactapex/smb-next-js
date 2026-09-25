@@ -193,9 +193,9 @@ export const adminPanelConfig = {
     initials: "HA",
     logoutHref: "/admin/logout",
     menu: [
-      { icon: "user", label: "My Profile", href: "#" },
-      { icon: "settings", label: "Account Settings", href: "#" },
-      { icon: "shield", label: "Security", href: "#" },
+      { icon: "user", label: "My Profile", href: "/profile" },
+      { icon: "settings", label: "Account Settings", href: "/profile#preferences" },
+      { icon: "shield", label: "Security", href: "/profile#password" },
     ],
   },
 
