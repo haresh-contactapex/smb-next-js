@@ -1,14 +1,16 @@
 import nodemailer from "nodemailer";
+import { getEmailTransportSettings } from "./emailSettings";
 
-// SMTP is configured via env vars (see .env.example), the same pattern used
-// for JWT_SECRET/RECAPTCHA_SECRET_KEY. The DB-backed email_settings table in
-// docs/settings/settings-database-schema.md is not migrated yet, and its
-// smtp_password column needs encryption-at-rest before it can hold real
-// credentials — so this reads process.env directly rather than that table.
+// SMTP details come from Settings -> Email (the email_settings table) once
+// they have been saved there; until then the SMTP_* env vars in .env.local
+// (see .env.example) are used as a fallback, so a fresh environment — or one
+// where the email_settings table hasn't been migrated yet — can still send.
+// Settings are re-read on every send, so changes saved on the Settings ->
+// Email page apply to the whole system immediately, without a restart.
 let cachedTransporter = null;
 let cachedTransporterKey = null;
 
-function readSmtpConfig() {
+function readEnvSmtpConfig() {
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
   const user = process.env.SMTP_USER;
@@ -16,22 +18,66 @@ function readSmtpConfig() {
   const secure = process.env.SMTP_SECURE === "true" || port === 465;
   const from = process.env.SMTP_FROM || user;
 
-  return { host, port, user, pass, secure, from };
+  return { source: "env", host, port, user, pass, secure, from, footerText: "" };
 }
 
-export function isEmailConfigured() {
-  const { host, user, pass } = readSmtpConfig();
-  return Boolean(host && user && pass);
+function isCompleteConfig(config) {
+  return Boolean(config?.host && config.user && config.pass);
 }
 
-function getTransporter() {
-  const config = readSmtpConfig();
-  const key = `${config.host}:${config.port}:${config.user}`;
+// Returns null when email_settings is missing (not migrated) or unreadable,
+// so callers fall back to the env config instead of failing.
+async function readSettingsSmtpConfig() {
+  try {
+    const settings = await getEmailTransportSettings();
+    if (!settings) return null;
+    const port = Number(settings.smtpPort || 587);
+    return {
+      source: "settings",
+      host: settings.smtpHost,
+      port,
+      user: settings.smtpUsername,
+      pass: settings.smtpPassword,
+      secure: port === 465,
+      from: settings.senderEmail
+        ? { name: settings.senderName || "", address: settings.senderEmail }
+        : settings.smtpUsername,
+      footerText: settings.emailFooterText || "",
+    };
+  } catch (error) {
+    console.error("email: could not read Settings -> Email, falling back to SMTP_* env vars.", error.message);
+    return null;
+  }
+}
+
+async function readSmtpConfig() {
+  const settingsConfig = await readSettingsSmtpConfig();
+  if (isCompleteConfig(settingsConfig)) return settingsConfig;
+
+  const envConfig = readEnvSmtpConfig();
+  // The footer is a store setting in its own right, so it still applies
+  // while the SMTP connection itself comes from the env fallback.
+  return { ...envConfig, footerText: settingsConfig?.footerText || "" };
+}
+
+// "settings" (Settings -> Email), "env" (.env.local fallback) or "none".
+export async function getActiveSmtpSource() {
+  const config = await readSmtpConfig();
+  return isCompleteConfig(config) ? config.source : "none";
+}
+
+export async function isEmailConfigured() {
+  return isCompleteConfig(await readSmtpConfig());
+}
+
+function getTransporter(config) {
+  const key = JSON.stringify([config.host, config.port, config.secure, config.user, config.pass]);
 
   if (cachedTransporter && cachedTransporterKey === key) {
     return cachedTransporter;
   }
 
+  cachedTransporter?.close?.();
   cachedTransporter = nodemailer.createTransport({
     host: config.host,
     port: config.port,
@@ -42,18 +88,37 @@ function getTransporter() {
   return cachedTransporter;
 }
 
+function escapeHtml(value) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function withFooter({ html, text }, footerText) {
+  if (!footerText) return { html, text };
+  const footerHtml = escapeHtml(footerText).replace(/\r?\n/g, "<br/>");
+  return {
+    html: html ? `${html}\n<hr/>\n<p style="color:#64748b;font-size:12px">${footerHtml}</p>` : html,
+    text: text ? `${text}\n\n--\n${footerText}` : text,
+  };
+}
+
 // Sends best-effort: returns false and logs instead of throwing, so callers
 // (e.g. forgot-password) don't have to branch their response on email
 // delivery and risk leaking account-existence info through status codes.
 export async function sendEmail({ to, subject, html, text }) {
-  if (!isEmailConfigured()) {
-    console.error("sendEmail: SMTP_HOST/SMTP_USER/SMTP_PASS are not set — email not sent.");
+  const config = await readSmtpConfig();
+  if (!isCompleteConfig(config)) {
+    console.error("sendEmail: SMTP is not configured in Settings -> Email or SMTP_* env vars — email not sent.");
     return false;
   }
 
   try {
-    const { from } = readSmtpConfig();
-    await getTransporter().sendMail({ from, to, subject, html, text });
+    const body = withFooter({ html, text }, config.footerText);
+    await getTransporter(config).sendMail({ from: config.from, to, subject, ...body });
     return true;
   } catch (error) {
     console.error("sendEmail: failed to send", error);
@@ -100,15 +165,6 @@ export async function sendNewCustomerAdminNotification({ to, customer, storeName
   `;
 
   return sendEmail({ to, subject, html, text });
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 // Sent when an admin creates a staff account on Users -> Add User. The

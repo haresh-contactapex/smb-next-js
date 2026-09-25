@@ -66,7 +66,7 @@ export async function POST(request) {
     // function can be frozen the instant the response is sent, killing any
     // still-pending work) but never allowed to fail the registration itself:
     // sendEmail already logs and returns false rather than throwing.
-    if (isEmailConfigured()) {
+    if (await isEmailConfigured()) {
       const { storeName, storeEmail } = await getGeneralSettings();
       await sendCustomerWelcomeEmail({ to: customer.email, firstName: customer.firstName, storeName });
       if (storeEmail) {

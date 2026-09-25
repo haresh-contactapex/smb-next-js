@@ -43,7 +43,7 @@ export async function POST(request) {
 
       const resetLink = `${new URL(request.url).origin}/reset-password?token=${rawToken}`;
 
-      if (isEmailConfigured()) {
+      if (await isEmailConfigured()) {
         const sent = await sendPasswordResetEmail({ to: email, resetLink });
         if (!sent) {
           console.error(`[forgot-password] failed to send reset email to ${email}`);

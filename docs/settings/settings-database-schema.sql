@@ -263,7 +263,7 @@ COMMENT ON TABLE returns_refunds_settings IS 'Backs the Settings -> Returns & Re
 CREATE TABLE email_settings (
     id                                 SMALLINT PRIMARY KEY CHECK (id = 1),
     smtp_host                          VARCHAR(255),
-    smtp_port                          INTEGER,
+    smtp_port                          INTEGER CHECK (smtp_port BETWEEN 1 AND 65535),
     smtp_username                      VARCHAR(255),
     smtp_password                      VARCHAR(255),
     sender_name                        VARCHAR(150),
@@ -275,7 +275,7 @@ CREATE TABLE email_settings (
     updated_at                         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE email_settings IS 'Backs the Settings -> Email page. Singleton row (id = 1).';
-COMMENT ON COLUMN email_settings.smtp_password IS 'Should be stored encrypted, not plaintext.';
+COMMENT ON COLUMN email_settings.smtp_password IS 'Write-only from the admin UI: the API never returns it, and a blank value on save keeps the stored password. Should be stored encrypted, not plaintext.';
 
 -- ----------------------------------------------------------------------------
 -- Notifications

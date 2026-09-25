@@ -222,15 +222,26 @@ Backs the Settings → Returns & Refunds page.
 
 ### `email_settings`
 
-Backs the Settings → Email page.
+Backs the Settings → Email page. Implemented: runnable subset in
+[`email-table-only.sql`](./email-table-only.sql)
+(`npm run db:migrate:email`), read/written by `src/lib/emailSettings.js`
+through `GET`/`PUT /api/settings/email` (`settings-email.view` / `.edit`).
+Validation rules live in `src/components/settings-email/helpers.js` and are
+shared by the form and the route.
+
+`src/lib/email.js` reads this row on every send, so saved SMTP details apply to
+every outgoing email immediately. Until host, username and password are all
+saved here, the mailer falls back to the `SMTP_*` env vars. The sender name/email
+form the "From" address, and `email_footer_text` is appended to every email
+(including while the env fallback is in use).
 
 | Column                             | Type           | Constraints                | Notes |
 | ------------------------------------- | -------------- | ------------------------------- | ----- |
 | `id`                                   | `SMALLINT`     | PK, CHECK (`id = 1`)             |       |
 | `smtp_host`                            | `VARCHAR(255)` | NULL                             |       |
-| `smtp_port`                            | `INTEGER`      | NULL                             |       |
+| `smtp_port`                            | `INTEGER`      | NULL, CHECK (1–65535)            | Port 465 uses SSL; others upgrade via STARTTLS |
 | `smtp_username`                        | `VARCHAR(255)` | NULL                             |       |
-| `smtp_password`                        | `VARCHAR(255)` | NULL                             | Should be stored encrypted, not plaintext; see Design notes |
+| `smtp_password`                        | `VARCHAR(255)` | NULL                             | Write-only: the API returns only `hasSmtpPassword`, and a blank value on save keeps the stored one. Should be stored encrypted, not plaintext; see Design notes |
 | `sender_name`                          | `VARCHAR(150)` | NULL                             |       |
 | `sender_email`                         | `VARCHAR(255)` | NULL                             |       |
 | `send_order_confirmation_emails`       | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
