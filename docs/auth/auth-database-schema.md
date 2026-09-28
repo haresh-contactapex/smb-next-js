@@ -53,11 +53,8 @@ Indexes: `UNIQUE (token_hash)`, `INDEX (customer_id)`, `INDEX (expires_at)`
   reference `customers` without redeclaring it.
 - **Register's "I agree to the Terms of Service and Privacy Policy" checkbox
   (`agreeTerms`)** needs a `terms_accepted_at TIMESTAMPTZ NULL` column on
-  `customers`. It isn't added here to keep this change scoped to Auth — the
-  same reasoning `orders-database-schema.md` used when it flagged
-  `gift_cards.customer_id` for reconciliation instead of editing
-  `gift-cards-database-schema.md` directly. Treat this note as that same
-  kind of flagged follow-up for whoever next touches the `customers` table.
+  `customers`. It isn't added here to keep this change scoped to Auth —
+  flagged as a follow-up for whoever next touches the `customers` table.
 - **`customers_settings.require_email_verification`** (Settings schema)
   implies an eventual `email_verified_at TIMESTAMPTZ NULL` column on
   `customers` too, but Register has no "verify your email" step in the UI

@@ -32,7 +32,6 @@ export const adminPanelConfig = {
         { id: "profile", label: "Profile", href: "/profile" },
         { id: "address", label: "Address", href: "/address" },
         { id: "payment", label: "Payment", href: "/payment" },
-        { id: "gift-cards", label: "Gift Cards", href: "/gift-cards" },
       ],
     },
     {
@@ -94,18 +93,6 @@ export const adminPanelConfig = {
         { id: "create-coupon", label: "Create Coupon", href: "/create-coupon" },
       ],
     },
-    {
-      type: "submenu",
-      id: "giftcards",
-      label: "Gift Cards",
-      icon: "gift",
-      permissions: { key: "giftcards", label: "Gift Cards", singular: "Gift Card" },
-      items: [
-        { id: "all-giftcards", label: "All Gift Cards", href: "#" },
-        { id: "create-giftcard", label: "Create Gift Card", href: "#" },
-        { id: "giftcard-transactions", label: "Gift Card Transactions", href: "#" },
-      ],
-    },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/media" },
     {
       type: "link",
@@ -157,7 +144,7 @@ export const adminPanelConfig = {
   ],
 
   notifications: {
-    newCount: 4,
+    newCount: 3,
     viewAllHref: "#",
     items: [
       {
@@ -171,12 +158,6 @@ export const adminPanelConfig = {
         color: "error",
         title: '"Rose Gold Eternity Band" is out of stock',
         time: "28 minutes ago",
-      },
-      {
-        icon: "gift",
-        color: "accent",
-        title: "Gift card GC-2291 redeemed",
-        time: "1 hour ago",
       },
       {
         icon: "dollar-sign",

@@ -1,7 +1,7 @@
 import Icon from "@/components/admin-panel/Icon";
 import { SOFT_COLOR_CLASSES } from "./colorClasses";
 
-/** Reusable 2x2 stat grid — used for Products and Coupons/Gift Cards sections. */
+/** Reusable 2x2 stat grid — used for Products and Coupons sections. */
 export default function MiniStatGrid({ title, stats }) {
   return (
     <section>

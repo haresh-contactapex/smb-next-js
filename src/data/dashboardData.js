@@ -36,11 +36,9 @@ export const productStats = [
   { icon: "alert-triangle", iconColor: "warning", value: "25", label: "Low Stock" },
 ];
 
-export const couponGiftCardStats = [
+export const couponStats = [
   { icon: "tag", iconColor: "accent", value: "42", label: "Total Coupons" },
   { icon: "check-circle", iconColor: "success", value: "27", label: "Active Coupons" },
-  { icon: "gift", iconColor: "info", value: "118", label: "Total Gift Cards" },
-  { icon: "dollar-sign", iconColor: "primary", value: "₹4,86,200", label: "Gift Card Value" },
 ];
 
 export const salesChartData = {
@@ -179,7 +177,6 @@ export const productPerformance = [
 export const quickActions = [
   { icon: "plus-circle", iconColor: "primary", label: "Add Product", href: "#" },
   { icon: "tag", iconColor: "accent", label: "Create Coupon", href: "#" },
-  { icon: "gift", iconColor: "info", label: "Create Gift Card", href: "#" },
   { icon: "shopping-bag", iconColor: "success", label: "View Orders", href: "/orders" },
   { icon: "settings", iconColor: "warning", label: "Update Store Settings", href: "#", wide: true },
 ];
@@ -188,7 +185,6 @@ export const recentActivity = [
   { icon: "shopping-bag", iconColor: "success", text: "New order received from Priya Nair", time: "2 minutes ago" },
   { icon: "alert-triangle", iconColor: "error", text: '"Rose Gold Eternity Band" went out of stock', time: "28 minutes ago" },
   { icon: "tag", iconColor: "accent", text: 'Coupon "WED26" created', time: "1 hour ago" },
-  { icon: "gift", iconColor: "info", text: "Gift card GC-2291 redeemed", time: "2 hours ago" },
   { icon: "dollar-sign", iconColor: "primary", text: "Payment received for order #SMB-10479", time: "3 hours ago" },
   { icon: "user", iconColor: "neutral", text: "Vendor profile updated", time: "Yesterday, 6:42 PM" },
 ];

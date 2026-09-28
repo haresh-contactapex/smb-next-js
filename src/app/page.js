@@ -12,7 +12,7 @@ import {
   orderStats,
   totalSales,
   productStats,
-  couponGiftCardStats,
+  couponStats,
   recentOrders,
   productPerformance,
   quickActions,
@@ -31,7 +31,7 @@ export default function DashboardPage() {
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <MiniStatGrid title="Products" stats={productStats} />
-        <MiniStatGrid title="Coupons & Gift Cards" stats={couponGiftCardStats} />
+        <MiniStatGrid title="Coupons" stats={couponStats} />
       </div>
 
       <SalesChart />

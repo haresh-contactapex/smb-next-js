@@ -17,9 +17,9 @@ import { buildNavModuleIndex, navChildModuleKey, navItemModuleKey, roleHasPermis
  *   5. Anything else only needs a signed-in session.
  */
 
-// My Account pages (the staff member's own profile, addresses, payment
-// methods and gift cards) plus the pages middleware itself relies on.
-const OPEN_PATHS = ["/profile", "/address", "/payment", "/gift-cards", "/access-denied", "/maintenance"];
+// My Account pages (the staff member's own profile, addresses and payment
+// methods) plus the pages middleware itself relies on.
+const OPEN_PATHS = ["/profile", "/address", "/payment", "/access-denied", "/maintenance"];
 
 // `path` matches exactly; `prefix` matches the path and anything below it.
 const ROUTE_RULES = [

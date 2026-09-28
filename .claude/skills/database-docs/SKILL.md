@@ -14,7 +14,7 @@ description: Change Shop My Band Neon PostgreSQL access, schema SQL, data mappin
 
 ## Source of truth and migrations
 
-- Schema SQL and companion explanations live under `docs/`, grouped by feature (`category-product`, `auth`, `settings`, `vouchers-coupons`, `gift-cards`, `media`, `orders`, and `my-account`). Update both the `.sql` and matching `.md` documentation.
+- Schema SQL and companion explanations live under `docs/`, grouped by feature (`category-product`, `auth`, `settings`, `vouchers-coupons`, `media`, `orders`, and `my-account`). Update both the `.sql` and matching `.md` documentation.
 - `scripts/migrate.mjs` defaults to the category/product schema and accepts a schema file path. Package scripts provide the commonly used feature migrations.
 - The migration script splits statements while accounting for single-quoted strings, but it is not a full SQL parser. Keep schema scripts compatible with that behavior; do not introduce procedural blocks with semicolons unless the runner is upgraded first.
 - Apply the narrow relevant schema migration, never an unrelated schema, when validating a persistence change.

@@ -13,10 +13,9 @@
 --     Create that table first, or drop the FK constraint if this script runs
 --     standalone.
 --   * This file defines `orders.id`, which `coupon_redemptions.order_id`
---     (docs/vouchers-coupons/vouchers-coupons-database-schema.sql) and
---     `gift_card_transactions.order_id`
---     (docs/gift-cards/gift-cards-database-schema.sql) already expect. Run
---     this script before those, or add those FK constraints afterward.
+--     (docs/vouchers-coupons/vouchers-coupons-database-schema.sql) already
+--     expects. Run this script before that one, or add the FK constraint
+--     afterward.
 --   * `orders_settings` / `customers_settings` are defined in
 --     docs/settings/settings-database-schema.sql and are not repeated here.
 
