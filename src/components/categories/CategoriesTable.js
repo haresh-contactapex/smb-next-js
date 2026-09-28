@@ -22,7 +22,7 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
   );
 }
 
-export default function CategoriesTable({ categories, onDelete, sort, onSortChange }) {
+export default function CategoriesTable({ categories, onDelete, deletingId, sort, onSortChange }) {
   if (categories.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No categories match your filters.</div>;
   }
@@ -40,7 +40,9 @@ export default function CategoriesTable({ categories, onDelete, sort, onSortChan
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-          {categories.map((category) => (
+          {categories.map((category) => {
+            const isDeleting = category.id === deletingId;
+            return (
             <tr key={category.id} className="table-row transition-colors">
               <td className="py-3 px-1">
                 <div className="flex items-center gap-3">
@@ -89,7 +91,8 @@ export default function CategoriesTable({ categories, onDelete, sort, onSortChan
                       type="button"
                       title="Delete category"
                       onClick={() => onDelete?.(category)}
-                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10"
+                      disabled={isDeleting}
+                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
                     >
                       <Icon name="trash-2" className="w-4 h-4" />
                     </button>
@@ -97,7 +100,8 @@ export default function CategoriesTable({ categories, onDelete, sort, onSortChan
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

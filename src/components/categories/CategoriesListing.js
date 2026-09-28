@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import CategoriesFilters from "./CategoriesFilters";
 import CategoriesTable from "./CategoriesTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
+import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import Toast from "./Toast";
 
 export default function CategoriesListing({ categories: initialCategories }) {
   const router = useRouter();
@@ -14,17 +16,23 @@ export default function CategoriesListing({ categories: initialCategories }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [sort, setSort] = useState({ key: "name", direction: "asc" });
+  const [deletingCategory, setDeletingCategory] = useState(null);
+  const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
 
   async function handleDelete(category) {
     if (!window.confirm(`Delete "${category.name}"? This can't be undone.`)) return;
+    setDeletingCategory(category);
     try {
       const res = await fetch(`/api/categories/${category.id}`, { method: "DELETE" });
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to delete category");
       setCategories((prev) => prev.filter((c) => c.id !== category.id));
+      setDeleteToast({ visible: true, message: `"${category.name}" was removed.` });
       router.refresh();
     } catch (error) {
       window.alert(error.message);
+    } finally {
+      setDeletingCategory(null);
     }
   }
 
@@ -85,7 +93,13 @@ export default function CategoriesListing({ categories: initialCategories }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
-        <CategoriesTable categories={pageItems} onDelete={handleDelete} sort={sort} onSortChange={handleSortChange} />
+        <CategoriesTable
+          categories={pageItems}
+          onDelete={handleDelete}
+          deletingId={deletingCategory?.id}
+          sort={sort}
+          onSortChange={handleSortChange}
+        />
         <Pagination
           page={currentPage}
           pageCount={pageCount}
@@ -95,6 +109,16 @@ export default function CategoriesListing({ categories: initialCategories }) {
           onPageSizeChange={handlePageSizeChange}
         />
       </section>
+      <DeleteOverlay
+        active={deletingCategory != null}
+        title="Deleting category…"
+        itemLabel={deletingCategory?.name || ""}
+      />
+      <Toast
+        visible={deleteToast.visible}
+        message={deleteToast.message}
+        onDismiss={() => setDeleteToast((t) => ({ ...t, visible: false }))}
+      />
     </>
   );
 }
