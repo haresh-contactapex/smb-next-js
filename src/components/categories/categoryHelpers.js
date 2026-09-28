@@ -7,12 +7,15 @@ export function pickIconColor(id) {
 }
 
 export function computeCategoryStats(categoriesWithCounts) {
-  const leaves = categoriesWithCounts.filter((cat) => cat.parentPath !== null);
   return {
     total: categoriesWithCounts.length,
     visible: categoriesWithCounts.filter((cat) => cat.visible).length,
     hidden: categoriesWithCounts.filter((cat) => !cat.visible).length,
-    empty: leaves.filter((cat) => cat.productCount === 0).length,
+    // productCount already rolls up descendant products (see listCategories), so a
+    // category with 0 here has no products anywhere in its own subtree — top-level
+    // or not, that's genuinely empty and should match what the table's Products
+    // column shows for that row.
+    empty: categoriesWithCounts.filter((cat) => cat.productCount === 0).length,
   };
 }
 
