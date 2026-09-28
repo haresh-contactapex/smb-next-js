@@ -11,6 +11,7 @@
     "db:migrate:media": "node scripts/migrate.mjs docs/media/media-library-schema.sql",
     "db:migrate:coupons": "node scripts/migrate.mjs docs/vouchers-coupons/coupons-table-only.sql",
     "db:migrate:customers": "node scripts/migrate.mjs docs/auth/customers-table-only.sql",
+    "db:migrate:orders": "node scripts/migrate.mjs docs/orders/orders-table-only.sql",
     "db:migrate:auth": "node scripts/migrate.mjs docs/auth/auth-database-schema.sql",
     "db:migrate:staff-users": "node scripts/migrate.mjs docs/my-account/users-table-only.sql",
     "db:migrate:currency-tax": "node scripts/migrate.mjs docs/settings/currency-tax-table-only.sql",

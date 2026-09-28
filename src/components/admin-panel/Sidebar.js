@@ -14,8 +14,11 @@ import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvid
  *
  * navItems entries:
  *   { type: 'link',    id, label, icon, href }
- *   { type: 'submenu', id, label, icon, items: [{ id, label, href }] }
+ *   { type: 'submenu', id, label, icon, items: [{ id, label, href, count? }] }
  *   { type: 'section',  label }
+ *
+ * A sub-item's optional `count` renders as a badge (e.g. Orders' live
+ * per-status counts — see src/lib/orders.js's withOrderNavCounts).
  */
 export default function Sidebar({ brand, navItems }) {
   const [collapseIcon, setCollapseIcon] = useState("chevron-left");
@@ -135,11 +138,16 @@ export default function Sidebar({ brand, navItems }) {
                         <Link
                           href={sub.href || "#"}
                           onClick={handleNavClick}
-                          className={`nav-link block px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5${
+                          className={`nav-link flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5${
                             isActiveHref(sub.href) ? " active" : ""
                           }`}
                         >
-                          {sub.label}
+                          <span className="truncate">{sub.label}</span>
+                          {typeof sub.count === "number" && sub.count > 0 && (
+                            <span className="shrink-0 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-slate-100 dark:bg-white/10 text-[11px] font-semibold text-slate-500 dark:text-slate-300">
+                              {sub.count}
+                            </span>
+                          )}
                         </Link>
                       </li>
                     ))}

@@ -1,14 +1,17 @@
 import OrdersPageToolbar from "@/components/orders/OrdersPageToolbar";
 import OrdersStats from "@/components/orders/OrdersStats";
 import OrdersListing from "@/components/orders/OrdersListing";
-import { orders } from "@/data/ordersData";
+import { listOrders } from "@/lib/orders";
 import { computeOrderStats } from "@/components/orders/orderHelpers";
 
 export const metadata = {
   title: "Processing Orders · Shop My Band Admin",
 };
 
-export default function ProcessingOrdersPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProcessingOrdersPage() {
+  const orders = await listOrders();
   const stats = computeOrderStats(orders);
 
   return (

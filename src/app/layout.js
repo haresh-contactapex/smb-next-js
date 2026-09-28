@@ -15,6 +15,7 @@ import { getIntegrationsSettings } from "@/lib/integrationsSettings";
 import { getAdminRoleBySlug } from "@/lib/adminRoles";
 import { filterNavItemsForRole } from "@/lib/routePermissions";
 import { effectivePermissions } from "@/lib/permissions";
+import { getOrderStatusCounts, withOrderNavCounts } from "@/lib/orders";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -77,6 +78,16 @@ async function loadIntegrationsSettings() {
   }
 }
 
+// Live per-status order counts shown as sidebar badges — same fallback-to-null
+// treatment as loadGeneralSettings() above (e.g. before db:migrate:orders runs).
+async function loadOrderStatusCounts() {
+  try {
+    return await getOrderStatusCounts();
+  } catch {
+    return null;
+  }
+}
+
 // The signed-in staff member's role, used to hide sidebar entries they can't
 // open. null (no role row / table not migrated / DB hiccup) hides every
 // permission-gated entry, matching what middleware would allow.
@@ -99,7 +110,7 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const [staffUser, settings, currencyTaxSettings, productsSettings, securitySettings, integrationsSettings] =
+  const [staffUser, settings, currencyTaxSettings, productsSettings, securitySettings, integrationsSettings, orderCounts] =
     await Promise.all([
       getCurrentStaffUser(),
       loadGeneralSettings(),
@@ -107,6 +118,7 @@ export default async function RootLayout({ children }) {
       loadProductsSettings(),
       loadSecuritySettings(),
       loadIntegrationsSettings(),
+      loadOrderStatusCounts(),
     ]);
 
   const staffRole = await loadStaffRole(staffUser);
@@ -121,7 +133,7 @@ export default async function RootLayout({ children }) {
   const config = staffUser
     ? {
         ...adminPanelConfig,
-        navItems: filterNavItemsForRole(adminPanelConfig.navItems, staffRole),
+        navItems: withOrderNavCounts(filterNavItemsForRole(adminPanelConfig.navItems, staffRole), orderCounts),
         user: {
           ...adminPanelConfig.user,
           name: staffUser.firstName,
@@ -130,7 +142,7 @@ export default async function RootLayout({ children }) {
           logoutHref: "/admin/logout",
         },
       }
-    : adminPanelConfig;
+    : { ...adminPanelConfig, navItems: withOrderNavCounts(adminPanelConfig.navItems, orderCounts) };
 
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>

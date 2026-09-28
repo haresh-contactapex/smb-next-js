@@ -14,6 +14,13 @@ listing — each is justified in Design notes below, the same way
 `coupon_redemptions` was added alongside `coupons` in the vouchers/coupons
 schema.
 
+`orders-table-only.sql` is a pragmatic subset of this doc: just the `orders`
+table, with `item_count`/`payment_status` denormalized instead of derived
+from `order_line_items`/`payments`, so the listing pages and sidebar counts
+can go live without also standing up addresses/line-items/payments first —
+same "table-only" pattern as `docs/auth/customers-table-only.sql`. `src/lib/orders.js`
+and the Orders pages read from that subset today.
+
 ## Entity-relationship diagram
 
 ```mermaid
@@ -27,20 +34,16 @@ erDiagram
     ORDERS ||--o{ PAYMENTS : "order_id"
     PAYMENT_METHODS ||--o{ PAYMENTS : "payment_method_id"
     ORDERS ||--o{ COUPON_REDEMPTIONS : "order_id"
-    ORDERS ||--o{ GIFT_CARD_TRANSACTIONS : "order_id"
 ```
 
 `PRODUCTS` / `PRODUCT_VARIANTS` are defined in
 [`category-product-catalog-database-schema.md`](../category-product/category-product-catalog-database-schema.md).
 `PAYMENT_METHODS` is defined in
 [`my-account-database-schema.md`](../my-account/my-account-database-schema.md)
-— a saved card a customer chose at checkout. `COUPON_REDEMPTIONS` and
-`GIFT_CARD_TRANSACTIONS` are defined in
-[`vouchers-coupons-database-schema.md`](../vouchers-coupons/vouchers-coupons-database-schema.md)
-and
-[`gift-cards-database-schema.md`](../gift-cards/gift-cards-database-schema.md)
-respectively; both already declared an `order_id` FK expecting this table to
-exist — see Design notes. Store-wide order/customer configuration
+— a saved card a customer chose at checkout. `COUPON_REDEMPTIONS` is defined in
+[`vouchers-coupons-database-schema.md`](../vouchers-coupons/vouchers-coupons-database-schema.md),
+which already declared an `order_id` FK expecting this table to exist — see
+Design notes. Store-wide order/customer configuration
 (`orders_settings`, `customers_settings`) already lives in
 [`settings-database-schema.md`](../settings/settings-database-schema.md) and
 is not repeated here.
@@ -168,14 +171,9 @@ Indexes: `INDEX (order_id)`.
 - `customers` is introduced here as an entity distinct from `users` in the My
   Account schema. `users` models the store's own logged-in admin (`role`
   defaults to `'store_admin'`); it has no concept of the person buying a
-  product. `gift_cards.customer_id` in the gift-cards schema currently points
-  at `users.id`, written on the assumption that a storefront account reuses
-  the admin's own table — this doc diverges from that and treats them as
-  separate tables instead, matching how `coupon_redemptions.customer_id` in
-  the vouchers/coupons schema already anticipated a standalone `customers`
-  table. Reconciling `gift_cards.customer_id` to point at `customers.id`
-  instead is a reasonable follow-up, flagged here rather than changed in that
-  file to keep this change scoped to Orders.
+  product. This doc treats them as separate tables, matching how
+  `coupon_redemptions.customer_id` in the vouchers/coupons schema already
+  anticipated a standalone `customers` table.
 - `orders.customer_id` is nullable with `ON DELETE SET NULL`, and
   `customer_name` is stored alongside it as a snapshot, so an order stays
   fully readable in the listing even after the customer's account is deleted
