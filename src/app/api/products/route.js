@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
-import { listProducts, createProduct } from "@/lib/products";
+import { listProducts, createProduct, searchProducts } from "@/lib/products";
 
-export async function GET() {
+export async function GET(request) {
   const auth = await requireStaffPermission("products.view");
   if (!auth.ok) return permissionDeniedResponse(auth);
 
+  const q = new URL(request.url).searchParams.get("q")?.trim();
+
   try {
-    const data = await listProducts();
+    const data = q ? await searchProducts(q) : await listProducts();
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

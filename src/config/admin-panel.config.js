@@ -139,8 +139,14 @@ export const adminPanelConfig = {
   ],
 
   searchFields: [
-    { id: "orders", placeholder: "Search orders…" },
-    { id: "products", placeholder: "Search products…" },
+    { id: "orders", type: "orders", placeholder: "Search orders…", endpoint: "/api/orders", viewAllHref: "/orders" },
+    {
+      id: "products",
+      type: "products",
+      placeholder: "Search products…",
+      endpoint: "/api/products",
+      viewAllHref: "/all-products",
+    },
   ],
 
   notifications: {

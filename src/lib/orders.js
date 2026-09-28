@@ -41,6 +41,20 @@ export async function listOrders() {
   return rows.map(mapOrder);
 }
 
+// Lightweight lookup for the header's order search dropdown — order number
+// or customer name match, same row shape as listOrders() so the dropdown can
+// reuse its status/payment color mapping.
+export async function searchOrders(query, limit = 8) {
+  const like = `%${query}%`;
+  const rows = await sql`
+    SELECT * FROM orders
+    WHERE order_number ILIKE ${like} OR customer_name ILIKE ${like}
+    ORDER BY placed_at DESC
+    LIMIT ${limit}
+  `;
+  return rows.map(mapOrder);
+}
+
 export async function getOrderStatusCounts() {
   const rows = await sql`SELECT status, COUNT(*)::int AS count FROM orders GROUP BY status`;
   const counts = { Pending: 0, Processing: 0, Completed: 0, Cancelled: 0 };

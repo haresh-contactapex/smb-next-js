@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import ProductsFilters from "./ProductsFilters";
 import ProductsTable from "./ProductsTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
@@ -10,8 +10,9 @@ import Toast from "./Toast";
 
 export default function ProductsListing({ products: initialProducts }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [products, setProducts] = useState(initialProducts);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("q") || "");
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
   const [page, setPage] = useState(1);

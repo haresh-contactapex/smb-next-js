@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import OrdersFilters from "./OrdersFilters";
 import OrdersTable from "./OrdersTable";
 import Pagination from "./Pagination";
@@ -8,7 +9,8 @@ import Pagination from "./Pagination";
 const PAGE_SIZE = 8;
 
 export default function OrdersListing({ orders, fixedStatus }) {
-  const [search, setSearch] = useState("");
+  const searchParams = useSearchParams();
+  const [search, setSearch] = useState(() => searchParams.get("q") || "");
   const [status, setStatus] = useState(fixedStatus ?? "");
   const [payment, setPayment] = useState("");
   const [page, setPage] = useState(1);

@@ -214,6 +214,39 @@ export async function listProducts() {
   }));
 }
 
+// Lightweight lookup for the header's product search dropdown — title/SKU
+// match plus a single thumbnail, not the full listProducts() listing shape.
+export async function searchProducts(query, limit = 8) {
+  const like = `%${query}%`;
+  const rows = await sql`
+    SELECT
+      p.id,
+      p.title,
+      p.sku,
+      p.status,
+      p.price,
+      p.compare_at_price,
+      m.url AS thumbnail
+    FROM products p
+    LEFT JOIN LATERAL (
+      SELECT url FROM product_media WHERE product_id = p.id ORDER BY position LIMIT 1
+    ) m ON true
+    WHERE p.title ILIKE ${like} OR p.sku ILIKE ${like}
+    ORDER BY p.created_at DESC
+    LIMIT ${limit}
+  `;
+
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    sku: row.sku || "",
+    price: Number(row.price) || 0,
+    compareAtPrice: row.compare_at_price ? Number(row.compare_at_price) : null,
+    status: row.status.charAt(0) + row.status.slice(1).toLowerCase(),
+    thumbnail: row.thumbnail || null,
+  }));
+}
+
 export async function getProductById(id) {
   const [product] = await sql`SELECT * FROM products WHERE id = ${id}`;
   if (!product) return null;

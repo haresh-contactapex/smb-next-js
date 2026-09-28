@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Icon from "./Icon";
+import HeaderSearchField from "./HeaderSearchField";
 import { openSidebar, toggleDropdown, toggleTheme } from "./adminPanelActions";
 
 const NOTIF_COLOR_CLASSES = {
@@ -33,16 +34,7 @@ export default function Header({ searchFields = [], notifications, user }) {
         {searchFields.length > 0 && (
           <div className="hidden md:flex items-center gap-2 flex-1 max-w-xl">
             {searchFields.map((field) => (
-              <div key={field.id} className="relative flex-1">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">
-                  <Icon name="search" className="w-4 h-4" />
-                </span>
-                <input
-                  type="text"
-                  placeholder={field.placeholder}
-                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:bg-white dark:focus:bg-darksurface2 focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm placeholder:text-slate-400 transition-all"
-                />
-              </div>
+              <HeaderSearchField key={field.id} field={field} />
             ))}
           </div>
         )}
