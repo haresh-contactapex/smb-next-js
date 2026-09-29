@@ -94,6 +94,7 @@ export const adminPanelConfig = {
       ],
     },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/media" },
+    { type: "link", id: "reports", label: "Reports", icon: "bar-chart-2", href: "/reports" },
     {
       type: "link",
       id: "shipping",

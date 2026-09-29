@@ -80,7 +80,7 @@ CREATE TABLE orders (
     status                 VARCHAR(10) NOT NULL DEFAULT 'Pending'
                            CHECK (status IN ('Pending', 'Processing', 'Completed', 'Cancelled')),
     payment_status         VARCHAR(10) NOT NULL DEFAULT 'Unpaid'
-                           CHECK (payment_status IN ('Paid', 'Unpaid', 'Refunded')),
+                           CHECK (payment_status IN ('Paid', 'Unpaid', 'Refunded', 'Failed')),
     total_amount           DECIMAL(12, 2) NOT NULL,
     currency               VARCHAR(3) NOT NULL DEFAULT 'INR',
     placed_at              TIMESTAMPTZ NOT NULL DEFAULT now(),

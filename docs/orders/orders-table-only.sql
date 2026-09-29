@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS orders (
     status            VARCHAR(10) NOT NULL DEFAULT 'Pending'
                       CHECK (status IN ('Pending', 'Processing', 'Completed', 'Cancelled')),
     payment_status    VARCHAR(10) NOT NULL DEFAULT 'Unpaid'
-                      CHECK (payment_status IN ('Paid', 'Unpaid', 'Refunded')),
+                      CHECK (payment_status IN ('Paid', 'Unpaid', 'Refunded', 'Failed')),
     placed_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
     cancelled_at      TIMESTAMPTZ NULL,
     created_at        TIMESTAMPTZ NOT NULL DEFAULT now(),

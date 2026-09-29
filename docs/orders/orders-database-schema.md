@@ -107,7 +107,7 @@ Backs the All Orders / Pending / Processing / Completed / Cancelled listings.
 | `billing_address_id`    | `UUID`          | NULL, FK → `order_addresses.id` ON DELETE SET NULL                      |                                                                               |
 | `shipping_address_id`   | `UUID`          | NULL, FK → `order_addresses.id` ON DELETE SET NULL                      |                                                                               |
 | `status`                | `VARCHAR(10)`   | NOT NULL, DEFAULT `'Pending'`, CHECK IN (`Pending`, `Processing`, `Completed`, `Cancelled`) | Default mirrors `orders_settings.default_order_status`                      |
-| `payment_status`        | `VARCHAR(10)`   | NOT NULL, DEFAULT `'Unpaid'`, CHECK IN (`Paid`, `Unpaid`, `Refunded`)   | Denormalized summary of `payments`; see Design notes                        |
+| `payment_status`        | `VARCHAR(10)`   | NOT NULL, DEFAULT `'Unpaid'`, CHECK IN (`Paid`, `Unpaid`, `Refunded`, `Failed`) | Denormalized summary of `payments`; see Design notes                 |
 | `total_amount`          | `DECIMAL(12,2)` | NOT NULL                                                                | Matches the listing's "Amount" column; see Design notes on the breakdown    |
 | `currency`              | `VARCHAR(3)`    | NOT NULL, DEFAULT `'INR'`                                               | See Design notes on the default                                            |
 | `placed_at`             | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                               | Matches the listing's "Date" column                                         |
@@ -160,7 +160,7 @@ Indexes: `INDEX (order_id)`.
 | Enum                  | Values                                          | Used by                                    |
 | ------------------------ | -------------------------------------------------- | ----------------------------------------------- |
 | Order status              | `Pending`, `Processing`, `Completed`, `Cancelled`   | `orders.status`                                  |
-| Order payment status       | `Paid`, `Unpaid`, `Refunded`                       | `orders.payment_status`                          |
+| Order payment status       | `Paid`, `Unpaid`, `Refunded`, `Failed`             | `orders.payment_status`                          |
 | Order address type         | `BILLING`, `SHIPPING`                              | `order_addresses.type`                           |
 | Customer group              | `Retail`, `Wholesale`, `VIP`                       | `customers.customer_group` (see also `customers_settings.default_customer_group`) |
 | Payment provider            | `stripe`, `paypal`, `razorpay`, `cod`              | `payments.provider`                              |
@@ -209,3 +209,9 @@ Indexes: `INDEX (order_id)`.
   schema — an existing inconsistency in that doc, not one introduced here.
 - Money columns use `DECIMAL(12,2)` rather than float types to avoid rounding
   errors, consistent with the other schemas in this repo.
+- `'Failed'` was added to `orders.payment_status` for the Reports feature's
+  "Failed Payments" stat (`docs/reports/reports-overview.md`), mirroring the
+  `'failed'` value the full `payments.status` enum already had. Nothing
+  currently sets it (no order-creation/payment flow exists yet), so the stat
+  reads 0 until a real payment-failure path is built — the column is ready
+  for that rather than the report faking the number.
