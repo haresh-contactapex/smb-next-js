@@ -45,6 +45,10 @@ export default function PasswordField({
           placeholder={placeholder}
           aria-label={label}
           autoComplete={autoComplete}
+          // A password-manager browser extension can tag this field (e.g.
+          // with a wfd-id attribute) between the server HTML and React
+          // hydrating, which React otherwise flags as a mismatch.
+          suppressHydrationWarning
           className={`field-input pl-10 pr-10${
             displayError
               ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
