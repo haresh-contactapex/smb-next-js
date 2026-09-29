@@ -241,7 +241,7 @@ export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
       safe(getProductStats, null),
       safe(getCouponStats, null),
       safe(getSalesChartData, null),
-      safe(() => listRecentOrders(5), []),
+      safe(() => listRecentOrders(5).then((orders) => orders.map((o) => ({ ...o, amount: formatCurrency(o.totalAmount, currency) }))), []),
       safe(() => getProductStock(currency, 5), []),
       safe(getTopCustomers, []),
       safe(getEarningStats, null),
