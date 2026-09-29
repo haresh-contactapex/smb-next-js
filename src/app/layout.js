@@ -1,21 +1,12 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import ConditionalShell from "@/components/admin-panel/ConditionalShell";
 import ThemeInitScript from "@/components/admin-panel/ThemeInitScript";
 import { GeneralSettingsProvider } from "@/components/providers/GeneralSettingsProvider";
-import { StaffPermissionsProvider } from "@/components/providers/StaffPermissionsProvider";
-import { adminPanelConfig } from "@/config/admin-panel.config";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
-import { roleLabel, initialsFor } from "@/lib/staff";
 import { getGeneralSettings } from "@/lib/generalSettings";
 import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 import { getProductsSettings } from "@/lib/productsSettings";
 import { getSecuritySettings } from "@/lib/securitySettings";
 import { getIntegrationsSettings } from "@/lib/integrationsSettings";
-import { getAdminRoleBySlug } from "@/lib/adminRoles";
-import { filterNavItemsForRole } from "@/lib/routePermissions";
-import { effectivePermissions } from "@/lib/permissions";
-import { getOrderStatusCounts, withOrderNavCounts } from "@/lib/orders";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -78,71 +69,25 @@ async function loadIntegrationsSettings() {
   }
 }
 
-// Live per-status order counts shown as sidebar badges — same fallback-to-null
-// treatment as loadGeneralSettings() above (e.g. before db:migrate:orders runs).
-async function loadOrderStatusCounts() {
-  try {
-    return await getOrderStatusCounts();
-  } catch {
-    return null;
-  }
-}
-
-// The signed-in staff member's role, used to hide sidebar entries they can't
-// open. null (no role row / table not migrated / DB hiccup) hides every
-// permission-gated entry, matching what middleware would allow.
-async function loadStaffRole(staffUser) {
-  if (!staffUser) return null;
-  try {
-    return await getAdminRoleBySlug(staffUser.role);
-  } catch {
-    return null;
-  }
-}
-
+// Storefront default; /admin overrides this in src/app/admin/layout.js.
 export async function generateMetadata() {
   const settings = await loadGeneralSettings();
+  const name = settings?.storeName || "Shop My Band";
   return {
-    title: settings?.storeName ? `${settings.storeName} — Admin Dashboard` : "Shop My Band — Admin Dashboard",
-    description: settings?.storeName ? `Admin dashboard for ${settings.storeName}` : "Admin dashboard for Shop My Band",
+    title: `${name} | Wedding Bands`,
+    description: `Shop wedding, anniversary, classic and eternity bands at ${name}.`,
     ...(settings?.faviconUrl ? { icons: { icon: settings.faviconUrl } } : {}),
   };
 }
 
 export default async function RootLayout({ children }) {
-  const [staffUser, settings, currencyTaxSettings, productsSettings, securitySettings, integrationsSettings, orderCounts] =
-    await Promise.all([
-      getCurrentStaffUser(),
-      loadGeneralSettings(),
-      loadCurrencyTaxSettings(),
-      loadProductsSettings(),
-      loadSecuritySettings(),
-      loadIntegrationsSettings(),
-      loadOrderStatusCounts(),
-    ]);
-
-  const staffRole = await loadStaffRole(staffUser);
-  // What the role may do, for hiding controls client-side (null = no staff
-  // session, e.g. the login page). An inactive or missing role grants nothing.
-  const staffPermissions = staffUser
-    ? staffRole?.status === "active"
-      ? effectivePermissions(staffRole)
-      : []
-    : null;
-
-  const config = staffUser
-    ? {
-        ...adminPanelConfig,
-        navItems: withOrderNavCounts(filterNavItemsForRole(adminPanelConfig.navItems, staffRole), orderCounts),
-        user: {
-          ...adminPanelConfig.user,
-          name: staffUser.firstName,
-          role: staffRole?.name || roleLabel(staffUser.role),
-          initials: initialsFor(staffUser.firstName, staffUser.lastName),
-          logoutHref: "/admin/logout",
-        },
-      }
-    : { ...adminPanelConfig, navItems: withOrderNavCounts(adminPanelConfig.navItems, orderCounts) };
+  const [settings, currencyTaxSettings, productsSettings, securitySettings, integrationsSettings] = await Promise.all([
+    loadGeneralSettings(),
+    loadCurrencyTaxSettings(),
+    loadProductsSettings(),
+    loadSecuritySettings(),
+    loadIntegrationsSettings(),
+  ]);
 
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
@@ -168,9 +113,7 @@ export default async function RootLayout({ children }) {
             googleRecaptchaSiteKey: integrationsSettings?.googleRecaptchaSiteKey,
           }}
         >
-          <StaffPermissionsProvider permissions={staffPermissions}>
-            <ConditionalShell config={config}>{children}</ConditionalShell>
-          </StaffPermissionsProvider>
+          {children}
         </GeneralSettingsProvider>
       </body>
     </html>

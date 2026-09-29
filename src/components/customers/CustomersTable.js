@@ -83,7 +83,7 @@ export default function CustomersTable({ customers, onDelete, deletingId, sort, 
                 <div className="inline-flex items-center gap-1">
                   <Can permission="customers.edit">
                     <Link
-                      href={`/edit-customer/${customer.id}`}
+                      href={`/admin/edit-customer/${customer.id}`}
                       title="Edit customer"
                       className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                     >

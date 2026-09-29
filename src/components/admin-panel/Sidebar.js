@@ -26,11 +26,11 @@ export default function Sidebar({ brand, navItems }) {
   const { storeName, logoUrl } = useGeneralSettings();
   // An exact match wins; otherwise the longest nav href that prefixes the
   // current path stays highlighted, so nested pages (e.g. /settings/x/new)
-  // keep their menu entry active. "/" only ever matches exactly.
+  // keep their menu entry active. "/admin" only ever matches exactly.
   const activeHref = useMemo(() => {
     const hrefs = navItems
       .flatMap((item) => (item.type === "submenu" ? item.items.map((sub) => sub.href) : [item.href]))
-      .filter((href) => href && href !== "#" && href !== "/");
+      .filter((href) => href && href !== "#" && href !== "/admin");
     if (hrefs.includes(pathname)) return pathname;
     return hrefs.filter((href) => pathname.startsWith(`${href}/`)).sort((a, b) => b.length - a.length)[0] || pathname;
   }, [navItems, pathname]);
@@ -61,7 +61,7 @@ export default function Sidebar({ brand, navItems }) {
       >
         {/* Brand */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-200 dark:border-white/5 shrink-0">
-          <Link href={brand.href || "/"} className="sidebar-brand flex items-center min-w-0">
+          <Link href={brand.href || "/admin"} className="sidebar-brand flex items-center min-w-0">
             {logoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image
               <img

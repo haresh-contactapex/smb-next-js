@@ -66,7 +66,7 @@ export default function EditOrderForm({ orderId }) {
       if (!json.success) throw new Error(json.error || "Failed to save order");
 
       showToast("Order updated");
-      router.push("/orders");
+      router.push("/admin/orders");
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -87,7 +87,7 @@ export default function EditOrderForm({ orderId }) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <Link
-            href="/orders"
+            href="/admin/orders"
             className="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 mb-1"
           >
             <Icon name="chevron-left" className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function EditOrderForm({ orderId }) {
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <Link
-            href="/orders"
+            href="/admin/orders"
             className="inline-flex items-center px-4 h-10 rounded-xl border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/5 text-slate-600 dark:text-slate-300 text-sm font-semibold transition-colors"
           >
             Cancel

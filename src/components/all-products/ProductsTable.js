@@ -95,7 +95,7 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
                     </button>
                     <Can permission="products.edit">
                       <Link
-                        href={`/edit-product/${product.id}`}
+                        href={`/admin/edit-product/${product.id}`}
                         title="Edit product"
                         className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                       >

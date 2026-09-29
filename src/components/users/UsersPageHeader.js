@@ -11,7 +11,7 @@ export default function UsersPageHeader({ title, crumb, children }) {
           <Icon name="users" className="w-4 h-4" />
           {crumb ? (
             <>
-              <Link href="/users" className="hover:text-primary-600 dark:hover:text-accent-400">
+              <Link href="/admin/users" className="hover:text-primary-600 dark:hover:text-accent-400">
                 Users
               </Link>
               <span>/</span>

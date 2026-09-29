@@ -66,7 +66,7 @@ export default function RolesTable({ roles, modules, busyId, onDuplicate, onDele
                     </span>
                     <span className="min-w-0">
                       <Link
-                        href={`/settings/admin-roles/${role.id}`}
+                        href={`/admin/settings/admin-roles/${role.id}`}
                         className="block font-medium text-slate-700 dark:text-slate-200 hover:text-primary-600 dark:hover:text-accent-400 truncate"
                       >
                         {role.name}
@@ -98,11 +98,11 @@ export default function RolesTable({ roles, modules, busyId, onDuplicate, onDele
                 <td className="py-3 px-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">{formatDate(role.updatedAt)}</td>
                 <td className="py-3 px-2 text-right">
                   <div className="inline-flex items-center gap-1">
-                    <Link href={`/settings/admin-roles/${role.id}`} title="View role" aria-label={`View ${role.name}`} className={ICON_BUTTON}>
+                    <Link href={`/admin/settings/admin-roles/${role.id}`} title="View role" aria-label={`View ${role.name}`} className={ICON_BUTTON}>
                       <Icon name="eye" className="w-4 h-4" />
                     </Link>
                     <Link
-                      href={`/settings/admin-roles/${role.id}/edit`}
+                      href={`/admin/settings/admin-roles/${role.id}/edit`}
                       title="Edit role"
                       aria-label={`Edit ${role.name}`}
                       className={ICON_BUTTON}

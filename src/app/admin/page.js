@@ -15,10 +15,10 @@ import { getDashboardData } from "@/lib/dashboard";
 export const dynamic = "force-dynamic";
 
 const quickActions = [
-  { icon: "plus-circle", iconColor: "primary", label: "Add Product", href: "/add-product" },
-  { icon: "tag", iconColor: "accent", label: "Create Coupon", href: "/create-coupon" },
-  { icon: "shopping-bag", iconColor: "success", label: "View Orders", href: "/orders" },
-  { icon: "settings", iconColor: "warning", label: "Update Store Settings", href: "/settings/general", wide: true },
+  { icon: "plus-circle", iconColor: "primary", label: "Add Product", href: "/admin/add-product" },
+  { icon: "tag", iconColor: "accent", label: "Create Coupon", href: "/admin/create-coupon" },
+  { icon: "shopping-bag", iconColor: "success", label: "View Orders", href: "/admin/orders" },
+  { icon: "settings", iconColor: "warning", label: "Update Store Settings", href: "/admin/settings/general", wide: true },
 ];
 
 async function loadCurrency() {
@@ -50,13 +50,13 @@ export default async function DashboardPage({ searchParams }) {
         {data.earningStats && <EarningStatistic data={data.earningStats} currency={currency} />}
       </div>
 
-      <RecentOrdersTable orders={data.recentOrders} viewAllHref="/orders" />
+      <RecentOrdersTable orders={data.recentOrders} viewAllHref="/admin/orders" />
 
-      <ProductPerformanceTable products={data.productStock} viewAllHref="/all-products" />
+      <ProductPerformanceTable products={data.productStock} viewAllHref="/admin/all-products" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <QuickActions actions={quickActions} />
-        <TopCustomers customers={data.topCustomers} viewAllHref="/all-customers" />
+        <TopCustomers customers={data.topCustomers} viewAllHref="/admin/all-customers" />
       </div>
     </>
   );

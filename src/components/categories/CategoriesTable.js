@@ -79,7 +79,7 @@ export default function CategoriesTable({ categories, onDelete, deletingId, sort
                   </button>
                   <Can permission="categories.edit">
                     <Link
-                      href={`/edit-category/${category.id}`}
+                      href={`/admin/edit-category/${category.id}`}
                       title="Edit category"
                       className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                     >

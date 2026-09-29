@@ -140,7 +140,7 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
       if (!json.success) throw new Error(json.error || "Failed to save coupon");
 
       showToast(isEdit ? "Coupon updated" : "Coupon saved");
-      router.push("/all-coupons");
+      router.push("/admin/all-coupons");
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -151,7 +151,7 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
   function handleDiscard() {
     if (isEdit) {
       if (!window.confirm("Discard changes and go back to All Coupons?")) return;
-      router.push("/all-coupons");
+      router.push("/admin/all-coupons");
       return;
     }
     if (!window.confirm("Discard all changes and start over?")) return;

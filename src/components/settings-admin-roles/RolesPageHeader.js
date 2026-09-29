@@ -14,7 +14,7 @@ export default function RolesPageHeader({ title, crumb, children }) {
           <span>/</span>
           {crumb ? (
             <>
-              <Link href="/settings/admin-roles" className="hover:text-primary-600 dark:hover:text-accent-400">
+              <Link href="/admin/settings/admin-roles" className="hover:text-primary-600 dark:hover:text-accent-400">
                 Admin &amp; Roles
               </Link>
               <span>/</span>

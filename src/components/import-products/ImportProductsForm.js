@@ -222,7 +222,7 @@ export default function ImportProductsForm() {
               <h2 className="text-sm font-bold text-slate-800 dark:text-white">Import summary</h2>
               <button
                 type="button"
-                onClick={() => router.push("/all-products")}
+                onClick={() => router.push("/admin/all-products")}
                 className="text-xs font-semibold text-primary-600 dark:text-accent-400 hover:underline"
               >
                 View all products

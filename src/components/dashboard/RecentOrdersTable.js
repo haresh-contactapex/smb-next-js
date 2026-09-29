@@ -63,7 +63,7 @@ export default function RecentOrdersTable({ orders, viewAllHref = "#" }) {
                       <Icon name="eye" className="w-4 h-4" />
                     </button>
                     <Link
-                      href={`/edit-order/${order.orderId}`}
+                      href={`/admin/edit-order/${order.orderId}`}
                       title="Edit order"
                       className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                     >

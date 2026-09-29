@@ -601,3 +601,34 @@ export async function updateProduct(id, payload) {
 export async function deleteProduct(id) {
   await sql`DELETE FROM products WHERE id = ${id}`;
 }
+
+// Storefront listing: only ACTIVE products, with the first two images (main +
+// hover) from the product's media order. blob: URLs are skipped as above.
+export async function listStorefrontProducts() {
+  const rows = await sql`
+    SELECT
+      p.id,
+      p.title,
+      p.handle,
+      p.price,
+      (
+        SELECT ARRAY_AGG(url ORDER BY position) FROM (
+          SELECT url, position FROM product_media
+          WHERE product_id = p.id AND type = 'image' AND url NOT LIKE 'blob:%'
+          ORDER BY position
+          LIMIT 2
+        ) images
+      ) AS images
+    FROM products p
+    WHERE p.status = 'ACTIVE'
+    ORDER BY p.created_at DESC
+  `;
+
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    price: Number(row.price) || 0,
+    image: row.images?.[0] || null,
+    hoverImage: row.images?.[1] || row.images?.[0] || null,
+  }));
+}

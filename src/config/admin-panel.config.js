@@ -16,11 +16,11 @@ export const adminPanelConfig = {
     name: "Shop My Band",
     subtitle: "Admin Panel",
     icon: "gift",
-    href: "/",
+    href: "/admin",
   },
 
   navItems: [
-    { type: "link", id: "dashboard", label: "Dashboard", icon: "grid", href: "/" },
+    { type: "link", id: "dashboard", label: "Dashboard", icon: "grid", href: "/admin" },
     {
       type: "submenu",
       id: "account",
@@ -29,9 +29,9 @@ export const adminPanelConfig = {
       // Personal profile pages — every staff member manages their own.
       permissions: false,
       items: [
-        { id: "profile", label: "Profile", href: "/profile" },
-        { id: "address", label: "Address", href: "/address" },
-        { id: "payment", label: "Payment", href: "/payment" },
+        { id: "profile", label: "Profile", href: "/admin/profile" },
+        { id: "address", label: "Address", href: "/admin/address" },
+        { id: "payment", label: "Payment", href: "/admin/payment" },
       ],
     },
     {
@@ -42,8 +42,8 @@ export const adminPanelConfig = {
       // Staff accounts (the `users` table), gated by the users.* permissions.
       permissions: "users",
       items: [
-        { id: "all-users", label: "All Users", href: "/users" },
-        { id: "add-user", label: "Add User", href: "/users/new" },
+        { id: "all-users", label: "All Users", href: "/admin/users" },
+        { id: "add-user", label: "Add User", href: "/admin/users/new" },
       ],
     },
     {
@@ -52,11 +52,11 @@ export const adminPanelConfig = {
       label: "Orders",
       icon: "shopping-bag",
       items: [
-        { id: "all-orders", label: "All Orders", href: "/orders" },
-        { id: "pending", label: "Pending", href: "/orders/pending" },
-        { id: "processing", label: "Processing", href: "/orders/processing" },
-        { id: "completed", label: "Completed", href: "/orders/completed" },
-        { id: "cancelled", label: "Cancelled", href: "/orders/cancelled" },
+        { id: "all-orders", label: "All Orders", href: "/admin/orders" },
+        { id: "pending", label: "Pending", href: "/admin/orders/pending" },
+        { id: "processing", label: "Processing", href: "/admin/orders/processing" },
+        { id: "completed", label: "Completed", href: "/admin/orders/completed" },
+        { id: "cancelled", label: "Cancelled", href: "/admin/orders/cancelled" },
       ],
     },
     {
@@ -65,8 +65,8 @@ export const adminPanelConfig = {
       label: "Customers",
       icon: "users",
       items: [
-        { id: "all-customers", label: "All Customers", href: "/all-customers" },
-        { id: "add-customer", label: "Add Customer", href: "/add-customer" },
+        { id: "all-customers", label: "All Customers", href: "/admin/all-customers" },
+        { id: "add-customer", label: "Add Customer", href: "/admin/add-customer" },
       ],
     },
     {
@@ -77,10 +77,10 @@ export const adminPanelConfig = {
       // Two modules under one menu: each page names the module it belongs to.
       permissions: { children: true },
       items: [
-        { id: "categories", label: "Categories", href: "/categories", permissions: "categories" },
-        { id: "all-products", label: "All Products", href: "/all-products", permissions: "products" },
-        { id: "add-product", label: "Add Product", href: "/add-product", permissions: "products" },
-        { id: "import-products", label: "Import Products", href: "/all-products/import", permissions: "products" },
+        { id: "categories", label: "Categories", href: "/admin/categories", permissions: "categories" },
+        { id: "all-products", label: "All Products", href: "/admin/all-products", permissions: "products" },
+        { id: "add-product", label: "Add Product", href: "/admin/add-product", permissions: "products" },
+        { id: "import-products", label: "Import Products", href: "/admin/all-products/import", permissions: "products" },
       ],
     },
     {
@@ -89,12 +89,12 @@ export const adminPanelConfig = {
       label: "Vouchers / Coupons",
       icon: "tag",
       items: [
-        { id: "all-coupons", label: "All Coupons", href: "/all-coupons" },
-        { id: "create-coupon", label: "Create Coupon", href: "/create-coupon" },
+        { id: "all-coupons", label: "All Coupons", href: "/admin/all-coupons" },
+        { id: "create-coupon", label: "Create Coupon", href: "/admin/create-coupon" },
       ],
     },
-    { type: "link", id: "media", label: "Media", icon: "image", href: "/media" },
-    { type: "link", id: "reports", label: "Reports", icon: "bar-chart-2", href: "/reports" },
+    { type: "link", id: "media", label: "Media", icon: "image", href: "/admin/media" },
+    { type: "link", id: "reports", label: "Reports", icon: "bar-chart-2", href: "/admin/reports" },
     {
       type: "link",
       id: "shipping",
@@ -113,40 +113,40 @@ export const adminPanelConfig = {
       // ("settings-<page id>", View / Edit), including pages added here later.
       permissions: { children: true, actions: ["view", "edit"] },
       items: [
-        { id: "general", label: "General", href: "/settings/general" },
-        { id: "store", label: "Store", href: "/settings/store" },
-        { id: "currency-tax", label: "Currency & Tax", href: "/settings/currency-tax" },
-        { id: "payment", label: "Payment", href: "/settings/payment" },
-        { id: "shipping", label: "Shipping", href: "/settings/shipping" },
-        { id: "orders", label: "Orders", href: "/settings/orders" },
-        { id: "customers", label: "Customers", href: "/settings/customers" },
-        { id: "products", label: "Products", href: "/settings/products" },
-        { id: "pricing", label: "Pricing", href: "/settings/pricing" },
-        { id: "inventory", label: "Inventory", href: "/settings/inventory" },
-        { id: "checkout", label: "Checkout", href: "/settings/checkout" },
-        { id: "returns-refunds", label: "Returns & Refunds", href: "/settings/returns-refunds" },
-        { id: "discounts-coupons", label: "Discounts & Coupons", href: "/settings/discounts-coupons" },
-        { id: "email", label: "Email", href: "/settings/email" },
-        { id: "notifications", label: "Notifications", href: "/settings/notifications" },
-        { id: "seo", label: "SEO", href: "/settings/seo" },
-        { id: "security", label: "Security", href: "/settings/security" },
-        { id: "admin-roles", label: "Admin & Roles", href: "/settings/admin-roles", permissions: "users" },
-        { id: "integrations", label: "Integrations", href: "/settings/integrations" },
-        { id: "social-media", label: "Social Media", href: "/settings/social-media" },
-        { id: "legal", label: "Legal", href: "/settings/legal" },
-        { id: "system-maintenance", label: "System & Maintenance", href: "/settings/system-maintenance" },
+        { id: "general", label: "General", href: "/admin/settings/general" },
+        { id: "store", label: "Store", href: "/admin/settings/store" },
+        { id: "currency-tax", label: "Currency & Tax", href: "/admin/settings/currency-tax" },
+        { id: "payment", label: "Payment", href: "/admin/settings/payment" },
+        { id: "shipping", label: "Shipping", href: "/admin/settings/shipping" },
+        { id: "orders", label: "Orders", href: "/admin/settings/orders" },
+        { id: "customers", label: "Customers", href: "/admin/settings/customers" },
+        { id: "products", label: "Products", href: "/admin/settings/products" },
+        { id: "pricing", label: "Pricing", href: "/admin/settings/pricing" },
+        { id: "inventory", label: "Inventory", href: "/admin/settings/inventory" },
+        { id: "checkout", label: "Checkout", href: "/admin/settings/checkout" },
+        { id: "returns-refunds", label: "Returns & Refunds", href: "/admin/settings/returns-refunds" },
+        { id: "discounts-coupons", label: "Discounts & Coupons", href: "/admin/settings/discounts-coupons" },
+        { id: "email", label: "Email", href: "/admin/settings/email" },
+        { id: "notifications", label: "Notifications", href: "/admin/settings/notifications" },
+        { id: "seo", label: "SEO", href: "/admin/settings/seo" },
+        { id: "security", label: "Security", href: "/admin/settings/security" },
+        { id: "admin-roles", label: "Admin & Roles", href: "/admin/settings/admin-roles", permissions: "users" },
+        { id: "integrations", label: "Integrations", href: "/admin/settings/integrations" },
+        { id: "social-media", label: "Social Media", href: "/admin/settings/social-media" },
+        { id: "legal", label: "Legal", href: "/admin/settings/legal" },
+        { id: "system-maintenance", label: "System & Maintenance", href: "/admin/settings/system-maintenance" },
       ],
     },
   ],
 
   searchFields: [
-    { id: "orders", type: "orders", placeholder: "Search orders…", endpoint: "/api/orders", viewAllHref: "/orders" },
+    { id: "orders", type: "orders", placeholder: "Search orders…", endpoint: "/api/orders", viewAllHref: "/admin/orders" },
     {
       id: "products",
       type: "products",
       placeholder: "Search products…",
       endpoint: "/api/products",
-      viewAllHref: "/all-products",
+      viewAllHref: "/admin/all-products",
     },
   ],
 
@@ -161,9 +161,9 @@ export const adminPanelConfig = {
     initials: "HA",
     logoutHref: "/admin/logout",
     menu: [
-      { icon: "user", label: "My Profile", href: "/profile" },
-      { icon: "settings", label: "Account Settings", href: "/profile#preferences" },
-      { icon: "shield", label: "Security", href: "/profile#password" },
+      { icon: "user", label: "My Profile", href: "/admin/profile" },
+      { icon: "settings", label: "Account Settings", href: "/admin/profile#preferences" },
+      { icon: "shield", label: "Security", href: "/admin/profile#password" },
     ],
   },
 

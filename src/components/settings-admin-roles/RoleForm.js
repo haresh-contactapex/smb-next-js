@@ -58,7 +58,7 @@ export default function RoleForm({ role: initialRole = null, saved }) {
   useEffect(() => {
     if (saved !== "created" || !initialRole) return;
     showToast("Role created. You can keep adjusting its permissions here.");
-    router.replace(`/settings/admin-roles/${initialRole.id}/edit`, { scroll: false });
+    router.replace(`/admin/settings/admin-roles/${initialRole.id}/edit`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -92,7 +92,7 @@ export default function RoleForm({ role: initialRole = null, saved }) {
 
       if (!isEdit) {
         // Continue on the new role's edit screen, checkboxes and all.
-        router.replace(`/settings/admin-roles/${json.data.id}/edit?saved=created`);
+        router.replace(`/admin/settings/admin-roles/${json.data.id}/edit?saved=created`);
         return;
       }
       const nextForm = toFormRole(json.data);
@@ -119,7 +119,7 @@ export default function RoleForm({ role: initialRole = null, saved }) {
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-6">
       <RolesPageHeader title={title} crumb={isEdit ? "Edit Role" : "Add New Role"}>
-        <Link href={isEdit ? `/settings/admin-roles/${role.id}` : "/settings/admin-roles"} onClick={handleCancel} className={SECONDARY_BUTTON_CLASSES}>
+        <Link href={isEdit ? `/admin/settings/admin-roles/${role.id}` : "/admin/settings/admin-roles"} onClick={handleCancel} className={SECONDARY_BUTTON_CLASSES}>
           {dirty ? "Cancel" : "Back"}
         </Link>
         <button type="submit" disabled={saving} className={PRIMARY_BUTTON_CLASSES}>

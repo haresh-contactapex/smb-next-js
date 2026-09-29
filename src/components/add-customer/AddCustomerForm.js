@@ -127,7 +127,7 @@ export default function AddCustomerForm({ customerId }) {
       if (!json.success) throw new Error(json.error || "Failed to save customer");
 
       showToast(isEdit ? "Customer updated" : "Customer saved");
-      router.push("/all-customers");
+      router.push("/admin/all-customers");
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -138,7 +138,7 @@ export default function AddCustomerForm({ customerId }) {
   function handleDiscard() {
     if (isEdit) {
       if (!window.confirm("Discard changes and go back to All Customers?")) return;
-      router.push("/all-customers");
+      router.push("/admin/all-customers");
       return;
     }
     if (!window.confirm("Discard all changes and start over?")) return;

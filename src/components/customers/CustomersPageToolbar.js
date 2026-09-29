@@ -14,7 +14,7 @@ export default function CustomersPageToolbar() {
       </div>
       <Can permission="customers.create">
         <a
-          href="/add-customer"
+          href="/admin/add-customer"
           className="inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-sm font-semibold shadow-sm transition-colors shrink-0 w-fit"
         >
           <Icon name="plus-circle" className="w-4 h-4" />

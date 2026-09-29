@@ -3,22 +3,19 @@
 import { usePathname } from "next/navigation";
 import AdminLayout from "./AdminLayout";
 
+// The admin panel's own standalone auth pages (kept in sync with middleware's
+// PUBLIC_PATHS). Customer auth pages and the storefront sit outside /admin.
 const STANDALONE_ROUTES = [
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/reset-password",
   "/admin/login",
   "/admin/logout",
   "/admin/forgot-password",
   "/admin/reset-password",
-  "/maintenance",
 ];
 
 /**
  * Standalone routes (auth pages) render without the sidebar/header/footer shell;
- * everything else gets the full AdminLayout. Gated on pathname so the root layout
- * can stay a server component while still sharing one <body>/theme-init script.
+ * everything else under /admin gets the full AdminLayout. Gated on pathname so the
+ * admin layout can stay a server component.
  */
 export default function ConditionalShell({ config, children }) {
   const pathname = usePathname();

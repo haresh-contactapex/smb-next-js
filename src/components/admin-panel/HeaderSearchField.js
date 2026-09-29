@@ -115,7 +115,7 @@ export default function HeaderSearchField({ field }) {
               ? results.map((product) => (
                   <Link
                     key={product.id}
-                    href={`/edit-product/${product.id}`}
+                    href={`/admin/edit-product/${product.id}`}
                     onClick={closeDropdown}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5"
                   >

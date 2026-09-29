@@ -26,7 +26,7 @@ export default function BillingAddressSidebar({ sameAsShipping, onSameAsShipping
 
       <p className="text-[11px] text-slate-400">
         Manage saved addresses on the{" "}
-        <Link href="/address" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
+        <Link href="/admin/address" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
           Address
         </Link>{" "}
         page.

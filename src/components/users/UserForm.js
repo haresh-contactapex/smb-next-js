@@ -111,7 +111,7 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
         throw error;
       }
       const saved = isEdit ? "updated" : json.data.welcomeEmailSent ? "created" : "created-no-email";
-      router.push(`/users?saved=${saved}`);
+      router.push(`/admin/users?saved=${saved}`);
       router.refresh();
     } catch (error) {
       if (error.field && fieldRefs[error.field]) {
@@ -130,7 +130,7 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
     setDeleting(true);
     try {
       await deleteUser(user);
-      router.push(`/users?deleted=${encodeURIComponent(fullName(user))}`);
+      router.push(`/admin/users?deleted=${encodeURIComponent(fullName(user))}`);
       router.refresh();
     } catch (error) {
       showToast(error.message, "error");
@@ -160,7 +160,7 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
             Delete
           </button>
         )}
-        <Link href="/users" onClick={handleCancel} className={SECONDARY_BUTTON_CLASSES}>
+        <Link href="/admin/users" onClick={handleCancel} className={SECONDARY_BUTTON_CLASSES}>
           Cancel
         </Link>
         <button type="submit" disabled={busy} className={PRIMARY_BUTTON_CLASSES}>

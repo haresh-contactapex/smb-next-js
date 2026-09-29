@@ -13,17 +13,17 @@ export const dynamic = "force-dynamic";
 
 export default async function EditUserPage({ params }) {
   const auth = await requireStaffPermission("users.edit");
-  if (!auth.ok) return <UsersNotice status={auth.status} message={auth.error} backHref="/users" />;
+  if (!auth.ok) return <UsersNotice status={auth.status} message={auth.error} backHref="/admin/users" />;
 
   const { id } = await params;
 
   try {
     const [user, roles] = await Promise.all([getStaffUserById(id), listAdminRoles()]);
-    if (!user) return <UsersNotice status={404} backHref="/users" />;
+    if (!user) return <UsersNotice status={404} backHref="/admin/users" />;
 
     const actorFullAccess = Boolean(auth.role.fullAccess);
     if (user.roleFullAccess && !actorFullAccess && user.id !== auth.user.id) {
-      return <UsersNotice status={403} backHref="/users" />;
+      return <UsersNotice status={403} backHref="/admin/users" />;
     }
 
     return (
@@ -37,6 +37,6 @@ export default async function EditUserPage({ params }) {
     );
   } catch (error) {
     const status = error instanceof StaffUserError || error instanceof AdminRoleError ? error.status : 500;
-    return <UsersNotice status={status} message={error.message} backHref="/users" />;
+    return <UsersNotice status={status} message={error.message} backHref="/admin/users" />;
   }
 }

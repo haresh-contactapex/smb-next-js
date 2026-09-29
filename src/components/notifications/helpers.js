@@ -60,21 +60,21 @@ export function notificationHref(n) {
   const id = encodeURIComponent(n.entityId);
   switch (n.entityType) {
     case "order":
-      return `/edit-order/${id}`;
+      return `/admin/edit-order/${id}`;
     case "product":
-      return `/edit-product/${id}`;
+      return `/admin/edit-product/${id}`;
     case "customer":
-      return `/edit-customer/${id}`;
+      return `/admin/edit-customer/${id}`;
     case "category":
-      return `/edit-category/${id}`;
+      return `/admin/edit-category/${id}`;
     case "coupon":
-      return `/edit-coupon/${id}`;
+      return `/admin/edit-coupon/${id}`;
     case "user":
-      return `/users/${id}/edit`;
+      return `/admin/users/${id}/edit`;
     case "role":
-      return "/settings/admin-roles";
+      return "/admin/settings/admin-roles";
     case "settings":
-      return `/settings/${id}`;
+      return `/admin/settings/${id}`;
     default:
       return null;
   }

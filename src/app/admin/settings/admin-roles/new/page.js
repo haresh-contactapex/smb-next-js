@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function NewAdminRolePage() {
   const auth = await requireStaffPermission(MANAGE_ROLES_PERMISSION);
-  if (!auth.ok) return <RolesNotice status={auth.status} message={auth.error} backHref="/settings/admin-roles" />;
+  if (!auth.ok) return <RolesNotice status={auth.status} message={auth.error} backHref="/admin/settings/admin-roles" />;
 
   return <RoleForm />;
 }

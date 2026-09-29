@@ -11,7 +11,8 @@
 
 | Path | Purpose |
 | --- | --- |
-| `src/app/` | App Router pages, layouts, route handlers, and global styles. |
+| `src/app/` | App Router pages, layouts, route handlers, and global styles. Admin pages live under `src/app/admin/` (URL prefix `/admin`); the public storefront is the `src/app/(site)/` route group (`/`); customer auth pages (`/login`, `/register`, …) stay at the root. |
+| `src/components/storefront/` | Public storefront header, footer, mobile menu, and product listing. Static images in `public/storefront/`. |
 | `src/components/` | Feature-oriented React UI. Each feature generally owns its form, helpers, toast, sections, table, and filters. |
 | `src/lib/` | Server-side database access, domain logic, validation, and auth/session helpers. |
 | `src/data/` | Static/sample data used by dashboard and in-progress areas. |
@@ -67,7 +68,10 @@ For a new persisted feature, follow the existing vertical slice:
 
 ## Route and shell rules
 
-- Auth pages listed in both `src/middleware.js` and `src/components/admin-panel/ConditionalShell.js` render without the admin shell. Keep those lists synchronized when adding standalone routes.
+- The admin panel is served under `/admin`: every admin `href`, `router.push`, and permission rule in `src/lib/routePermissions.js` must include the `/admin` prefix. `/api/*` routes are not prefixed.
+- Admin auth pages listed in both `src/middleware.js` and `src/components/admin-panel/ConditionalShell.js` render without the admin shell. Keep those lists synchronized when adding standalone routes.
+- `src/app/admin/layout.js` owns the staff session, role-filtered nav, and admin shell. The root layout only provides fonts, theme, and `GeneralSettingsProvider`. The storefront shell is `src/app/(site)/layout.js` (light-only, Montserrat/Playfair).
+- Middleware only gates `/admin/**`; everything else is public storefront and is subject to maintenance mode.
 - The root layout obtains store settings and staff identity server-side and supplies global settings through `GeneralSettingsProvider`. Extend that provider deliberately when a client-wide store setting is needed.
 - Database-backed server pages that must always show fresh values should follow the existing `export const dynamic = "force-dynamic"` pattern.
 

@@ -58,7 +58,7 @@ export default function RoleView({ role: initialRole, saved }) {
   useEffect(() => {
     if (!SAVED_MESSAGES[saved]) return;
     showToast(SAVED_MESSAGES[saved]);
-    router.replace(`/settings/admin-roles/${initialRole.id}`, { scroll: false });
+    router.replace(`/admin/settings/admin-roles/${initialRole.id}`, { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -79,7 +79,7 @@ export default function RoleView({ role: initialRole, saved }) {
   function handleDuplicate() {
     runAction("duplicate", async () => {
       const copy = await duplicateRole(role);
-      router.push(`/settings/admin-roles/${copy.id}/edit`);
+      router.push(`/admin/settings/admin-roles/${copy.id}/edit`);
     });
   }
 
@@ -96,7 +96,7 @@ export default function RoleView({ role: initialRole, saved }) {
     if (!confirmDelete(role)) return;
     runAction("delete", async () => {
       await deleteRole(role);
-      router.push("/settings/admin-roles");
+      router.push("/admin/settings/admin-roles");
       router.refresh();
     });
   }
@@ -107,7 +107,7 @@ export default function RoleView({ role: initialRole, saved }) {
   return (
     <div className="space-y-6">
       <RolesPageHeader title={role.name} crumb={role.name}>
-        <Link href="/settings/admin-roles" className={SECONDARY_BUTTON_CLASSES}>
+        <Link href="/admin/settings/admin-roles" className={SECONDARY_BUTTON_CLASSES}>
           <Icon name="chevron-left" className="w-4 h-4" />
           All Roles
         </Link>
@@ -131,7 +131,7 @@ export default function RoleView({ role: initialRole, saved }) {
           <Icon name="trash-2" className="w-4 h-4" />
           {busy === "delete" ? "Deleting…" : "Delete"}
         </button>
-        <Link href={`/settings/admin-roles/${role.id}/edit`} className={PRIMARY_BUTTON_CLASSES}>
+        <Link href={`/admin/settings/admin-roles/${role.id}/edit`} className={PRIMARY_BUTTON_CLASSES}>
           <Icon name="edit-2" className="w-4 h-4" />
           Edit Role
         </Link>
@@ -178,7 +178,7 @@ export default function RoleView({ role: initialRole, saved }) {
             <span className="text-[11px] font-medium text-slate-400">· read-only</span>
             {!role.fullAccess && (
               <Link
-                href={`/settings/admin-roles/${role.id}/edit`}
+                href={`/admin/settings/admin-roles/${role.id}/edit`}
                 className="ml-auto inline-flex items-center gap-1.5 px-3 h-8 rounded-lg bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors"
               >
                 <Icon name="edit-2" className="w-3.5 h-3.5" />

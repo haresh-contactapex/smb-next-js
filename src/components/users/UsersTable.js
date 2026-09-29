@@ -127,7 +127,7 @@ export default function UsersTable({ users, busyId, permissions, context, onDele
                           <Icon name="edit-2" className="w-4 h-4" />
                         </span>
                       ) : (
-                        <Link href={`/users/${user.id}/edit`} title="Edit user" aria-label={`Edit ${name}`} className={ICON_BUTTON}>
+                        <Link href={`/admin/users/${user.id}/edit`} title="Edit user" aria-label={`Edit ${name}`} className={ICON_BUTTON}>
                           <Icon name="edit-2" className="w-4 h-4" />
                         </Link>
                       )

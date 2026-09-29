@@ -67,7 +67,7 @@ export default function UsersListing({
   useEffect(() => {
     if (!SAVED_MESSAGES[saved]) return;
     showToast(SAVED_MESSAGES[saved].message, SAVED_MESSAGES[saved].variant);
-    router.replace("/users", { scroll: false });
+    router.replace("/admin/users", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -76,7 +76,7 @@ export default function UsersListing({
   useEffect(() => {
     if (!deletedName) return;
     setDeleteToast({ visible: true, message: `"${deletedName}" was removed.` });
-    router.replace("/users", { scroll: false });
+    router.replace("/admin/users", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -156,7 +156,7 @@ export default function UsersListing({
     <>
       <UsersPageHeader title="All Users">
         {permissions.canCreate && (
-          <Link href="/users/new" className={PRIMARY_BUTTON_CLASSES}>
+          <Link href="/admin/users/new" className={PRIMARY_BUTTON_CLASSES}>
             <Icon name="plus-circle" className="w-4 h-4" />
             Add User
           </Link>

@@ -150,7 +150,7 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
         throw new Error(json.error || "Failed to save category");
 
       showToast(isEdit ? "Category updated" : "Category saved");
-      router.push("/categories");
+      router.push("/admin/categories");
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -161,7 +161,7 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   function handleDiscard() {
     if (isEdit) {
       if (!window.confirm("Discard changes and go back to Categories?")) return;
-      router.push("/categories");
+      router.push("/admin/categories");
       return;
     }
     if (!window.confirm("Discard all changes and start over?")) return;

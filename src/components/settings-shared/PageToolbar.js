@@ -18,7 +18,7 @@ export default function PageToolbar({
   // Each settings page has its own Edit permission, named after its URL
   // (/settings/store -> settings-store.edit) unless one is passed in.
   const pathname = usePathname();
-  const page = pathname?.split("/")[2];
+  const page = pathname?.split("/")[3];
   const requiredPermission = editPermission || settingsPermission(page, "edit");
 
   return (

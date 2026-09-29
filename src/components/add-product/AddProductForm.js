@@ -450,7 +450,7 @@ export default function AddProductForm({ productId }) {
       if (!json.success) throw new Error(json.error || "Failed to save product");
 
       showToast(isEdit ? "Product updated" : "Product created");
-      router.push("/all-products");
+      router.push("/admin/all-products");
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -475,7 +475,7 @@ export default function AddProductForm({ productId }) {
   function handleDiscard() {
     if (isEdit) {
       if (!window.confirm("Discard changes and go back to All Products?")) return;
-      router.push("/all-products");
+      router.push("/admin/all-products");
       return;
     }
     if (!window.confirm("Discard all changes and start over?")) return;

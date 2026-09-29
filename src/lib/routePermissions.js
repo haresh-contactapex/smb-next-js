@@ -19,41 +19,41 @@ import { buildNavModuleIndex, navChildModuleKey, navItemModuleKey, roleHasPermis
 
 // My Account pages (the staff member's own profile, addresses and payment
 // methods) plus the pages middleware itself relies on.
-const OPEN_PATHS = ["/profile", "/address", "/payment", "/access-denied", "/maintenance"];
+const OPEN_PATHS = ["/admin/profile", "/admin/address", "/admin/payment", "/admin/access-denied", "/maintenance"];
 
 // `path` matches exactly; `prefix` matches the path and anything below it.
 const ROUTE_RULES = [
-  { path: "/", permission: "dashboard.view" },
+  { path: "/admin", permission: "dashboard.view" },
 
-  { prefix: "/edit-order", permission: "orders.edit" },
-  { prefix: "/orders", permission: "orders.view" },
+  { prefix: "/admin/edit-order", permission: "orders.edit" },
+  { prefix: "/admin/orders", permission: "orders.view" },
 
-  { path: "/all-customers", permission: "customers.view" },
-  { path: "/add-customer", permission: "customers.create" },
-  { prefix: "/edit-customer", permission: "customers.edit" },
+  { path: "/admin/all-customers", permission: "customers.view" },
+  { path: "/admin/add-customer", permission: "customers.create" },
+  { prefix: "/admin/edit-customer", permission: "customers.edit" },
 
-  { path: "/categories", permission: "categories.view" },
-  { path: "/add-category", permission: "categories.create" },
-  { prefix: "/edit-category", permission: "categories.edit" },
+  { path: "/admin/categories", permission: "categories.view" },
+  { path: "/admin/add-category", permission: "categories.create" },
+  { prefix: "/admin/edit-category", permission: "categories.edit" },
 
-  { path: "/all-products/import", permission: "products.import" },
-  { path: "/all-products", permission: "products.view" },
-  { path: "/add-product", permission: "products.create" },
-  { prefix: "/edit-product", permission: "products.edit" },
+  { path: "/admin/all-products/import", permission: "products.import" },
+  { path: "/admin/all-products", permission: "products.view" },
+  { path: "/admin/add-product", permission: "products.create" },
+  { prefix: "/admin/edit-product", permission: "products.edit" },
 
-  { path: "/all-coupons", permission: "coupons.view" },
-  { path: "/create-coupon", permission: "coupons.create" },
-  { prefix: "/edit-coupon", permission: "coupons.edit" },
+  { path: "/admin/all-coupons", permission: "coupons.view" },
+  { path: "/admin/create-coupon", permission: "coupons.create" },
+  { prefix: "/admin/edit-coupon", permission: "coupons.edit" },
 
-  { prefix: "/media", permission: "media.view" },
+  { prefix: "/admin/media", permission: "media.view" },
 
-  { path: "/users/new", permission: "users.create" },
-  { pattern: /^\/users\/[^/]+\/edit$/, permission: "users.edit" },
-  { prefix: "/users", permission: "users.view" },
+  { path: "/admin/users/new", permission: "users.create" },
+  { pattern: /^\/admin\/users\/[^/]+\/edit$/, permission: "users.edit" },
+  { prefix: "/admin/users", permission: "users.view" },
 
   // Other settings pages are gated per page through the sidebar (Settings
   // is a group menu: /settings/store needs settings-store.view).
-  { prefix: "/settings/admin-roles", permission: "users.manage_roles" },
+  { prefix: "/admin/settings/admin-roles", permission: "users.manage_roles" },
 ];
 
 function matchesPrefix(pathname, prefix) {
@@ -80,11 +80,11 @@ export function requiredPermissionForPath(pathname, navItems) {
     ? buildNavModuleIndex(navItems)
     : (cachedNavIndex ??= buildNavModuleIndex(adminPanelConfig.navItems));
   const match = navIndex
-    .filter((entry) => entry.href !== "/" && matchesPrefix(path, entry.href))
+    .filter((entry) => entry.href !== "/admin" && matchesPrefix(path, entry.href))
     .sort((a, b) => b.href.length - a.href.length)[0];
   if (match) return `${match.moduleKey}.view`;
 
-  const settingsPage = path.match(/^\/settings\/([^/]+)/);
+  const settingsPage = path.match(/^\/admin\/settings\/([^/]+)/);
   return settingsPage ? settingsPermission(settingsPage[1], "view") : null;
 }
 

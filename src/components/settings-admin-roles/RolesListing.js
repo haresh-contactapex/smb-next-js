@@ -54,7 +54,7 @@ export default function RolesListing({ roles: initialRoles }) {
   function handleDuplicate(role) {
     runAction(role, async () => {
       const copy = await duplicateRole(role);
-      router.push(`/settings/admin-roles/${copy.id}/edit`);
+      router.push(`/admin/settings/admin-roles/${copy.id}/edit`);
     });
   }
 
@@ -91,7 +91,7 @@ export default function RolesListing({ roles: initialRoles }) {
   return (
     <>
       <RolesPageHeader title="Roles & Permissions">
-        <Link href="/settings/admin-roles/new" className={PRIMARY_BUTTON_CLASSES}>
+        <Link href="/admin/settings/admin-roles/new" className={PRIMARY_BUTTON_CLASSES}>
           <Icon name="plus-circle" className="w-4 h-4" />
           Add New Role
         </Link>

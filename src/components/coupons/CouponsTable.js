@@ -97,7 +97,7 @@ export default function CouponsTable({ coupons, onDelete, deletingId, sort, onSo
                   </button>
                   <Can permission="coupons.edit">
                     <Link
-                      href={`/edit-coupon/${coupon.id}`}
+                      href={`/admin/edit-coupon/${coupon.id}`}
                       title="Edit coupon"
                       className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                     >

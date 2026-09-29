@@ -11,13 +11,13 @@ export const dynamic = "force-dynamic";
 
 export default async function NewUserPage() {
   const auth = await requireStaffPermission("users.create");
-  if (!auth.ok) return <UsersNotice status={auth.status} message={auth.error} backHref="/users" />;
+  if (!auth.ok) return <UsersNotice status={auth.status} message={auth.error} backHref="/admin/users" />;
 
   try {
     const roles = await listAdminRoles();
     return <UserForm roles={roles} currentUserId={auth.user.id} actorFullAccess={Boolean(auth.role.fullAccess)} />;
   } catch (error) {
     const status = error instanceof AdminRoleError ? error.status : 500;
-    return <UsersNotice status={status} message={error.message} backHref="/users" />;
+    return <UsersNotice status={status} message={error.message} backHref="/admin/users" />;
   }
 }

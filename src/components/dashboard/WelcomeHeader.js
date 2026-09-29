@@ -13,7 +13,7 @@ export default function WelcomeHeader({ name, range }) {
   const label = (DASHBOARD_RANGES.find((r) => r.key === range) || DASHBOARD_RANGES[1]).label;
 
   function pick(key) {
-    if (key !== range) startTransition(() => router.push(key === "7d" ? "/" : `/?range=${key}`));
+    if (key !== range) startTransition(() => router.push(key === "7d" ? "/admin" : `/admin?range=${key}`));
     toggleDropdown("panelDateRange");
   }
 

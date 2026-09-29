@@ -27,7 +27,7 @@ export default async function AccessDeniedPage({ searchParams }) {
       <h1 className="mt-4 text-lg font-bold text-slate-800 dark:text-white">Access denied</h1>
       <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">{message}</p>
       <Link
-        href="/profile"
+        href="/admin/profile"
         className="mt-6 inline-flex items-center gap-2 px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors"
       >
         <Icon name="user" className="w-4 h-4" />
