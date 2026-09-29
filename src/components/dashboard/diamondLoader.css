@@ -1,0 +1,101 @@
+/* Diamond loader — full-screen overlay (ported from diamond-loader-blue-text.html). */
+.dl-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(8, 15, 29, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+/* Same card treatment as the delete-confirmation overlay. */
+.dl-card {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  max-width: 360px;
+  padding: 28px 32px;
+  border-radius: 24px;
+  text-align: center;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.dl-amb { position: absolute; width: 190px; height: 190px; border-radius: 9999px; filter: blur(60px); pointer-events: none; }
+.dl-amb.a { top: -70px; left: -70px; background: rgba(6, 182, 212, 0.14); }
+.dl-amb.b { bottom: -70px; right: -70px; background: rgba(168, 85, 247, 0.14); }
+.dl-overlay.dl-hidden { opacity: 0; visibility: hidden; }
+.dl-stage { position: relative; width: min(240px, 100%); aspect-ratio: 1; display: grid; place-items: center; }
+.dl-halo {
+  position: absolute; inset: 4%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(217,169,63,.35) 0%, rgba(217,169,63,.12) 40%, rgba(0,0,0,0) 68%);
+  animation: dl-breathe 3s ease-in-out infinite;
+}
+.dl-diamond { position: relative; width: 44%; filter: drop-shadow(0 0 14px rgba(240,190,80,.75)); animation: dl-float 3s ease-in-out infinite; }
+.dl-diamond .dl-sweep { animation: dl-sweep 3s ease-in-out infinite; }
+.dl-ring { position: absolute; inset: 8%; animation: dl-spin 16s linear infinite; }
+.dl-ring svg { width: 100%; height: 100%; overflow: visible; }
+.dl-orbit { position: absolute; inset: 8%; }
+.dl-orbit.a { animation: dl-spin 18s linear infinite; }
+.dl-orbit.b { animation: dl-spin 26s linear infinite reverse; inset: 12%; }
+.dl-bead {
+  position: absolute; border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, #fff3c4 0%, #e6b84e 45%, #9a6a14 100%);
+  box-shadow: 0 1px 3px rgba(120,80,10,.35);
+}
+.dl-orbit.a .dl-bead:nth-child(1) { width: 14px; height: 14px; top: 2%; right: 22%; }
+.dl-orbit.a .dl-bead:nth-child(2) { width: 16px; height: 16px; top: 42%; left: -2%; }
+.dl-orbit.a .dl-bead:nth-child(3) { width: 18px; height: 18px; bottom: 6%; left: 20%; }
+.dl-orbit.a .dl-bead:nth-child(4) { width: 12px; height: 12px; top: 46%; right: -3%; }
+.dl-orbit.b .dl-bead:nth-child(1) { width: 7px; height: 7px; top: 0; left: 45%; }
+.dl-orbit.b .dl-bead:nth-child(2) { width: 6px; height: 6px; bottom: 8%; right: 18%; }
+.dl-orbit.b .dl-bead:nth-child(3) { width: 8px; height: 8px; top: 64%; left: 4%; }
+.dl-orbit.b .dl-bead:nth-child(4) { width: 5px; height: 5px; top: 20%; left: 8%; }
+.dl-sparkle { position: absolute; opacity: 0; animation: dl-twinkle 3s ease-in-out infinite; filter: drop-shadow(0 0 5px rgba(255,214,100,.95)); }
+.dl-sparkle svg { width: 100%; height: 100%; }
+.dl-sparkle.s1 { top: 20%; left: 17%; width: 22px; height: 22px; animation-delay: 0s; }
+.dl-sparkle.s2 { top: 22%; right: 25%; width: 34px; height: 34px; animation-delay: 1s; }
+.dl-sparkle.s3 { bottom: 24%; right: 15%; width: 26px; height: 26px; animation-delay: 2s; }
+.dl-title {
+  margin-top: 6px;
+  font-family: "Times New Roman", Times, Georgia, serif;
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  background: linear-gradient(180deg, #b9ccf5 0%, #8fadeb 55%, #6f92d6 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.dl-subtitle { margin-top: 10px; font-size: 15px; color: #94a3b8; text-align: center; padding: 0 20px; }
+.dl-bar {
+  position: relative; margin-top: 24px; width: 100%; height: 12px; border-radius: 999px;
+  background: rgba(51, 65, 85, 0.7); box-shadow: inset 0 1px 2px rgba(0,0,0,.3); overflow: hidden;
+}
+.dl-bar-fill {
+  position: relative; height: 100%; width: 0%; border-radius: 999px;
+  background: linear-gradient(90deg, #a5741a 0%, #d9a93f 45%, #f4dc95 85%, #fff6d6 100%);
+  box-shadow: 0 0 10px rgba(217,169,63,.55); transition: width .3s ease-out;
+}
+.dl-bar-fill::after {
+  content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 22px; border-radius: 999px;
+  background: radial-gradient(circle at center, #fff 0%, rgba(255,255,255,0) 70%);
+}
+@keyframes dl-spin { to { transform: rotate(360deg); } }
+@keyframes dl-float { 0%,100% { transform: translateY(5px); } 50% { transform: translateY(-6px); } }
+@keyframes dl-breathe { 0%,100% { opacity: .75; transform: scale(.96); } 50% { opacity: 1; transform: scale(1.04); } }
+@keyframes dl-sweep { 0% { transform: translateX(-70px) skewX(-20deg); opacity: 0; } 40%,60% { opacity: .85; } 100% { transform: translateX(240px) skewX(-20deg); opacity: 0; } }
+@keyframes dl-twinkle { 0%,100% { opacity: 0; transform: scale(.3) rotate(0); } 50% { opacity: 1; transform: scale(1) rotate(20deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .dl-halo, .dl-diamond, .dl-diamond .dl-sweep, .dl-ring, .dl-orbit, .dl-sparkle { animation: none; }
+  .dl-sparkle { opacity: 1; }
+}
