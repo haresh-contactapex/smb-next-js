@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
-import { getCurrencySymbol } from "@/lib/currency";
+import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
 
 function chartColors() {
   const dark = document.documentElement.classList.contains("dark");
@@ -20,6 +20,7 @@ export default function SalesChart({ data: salesChartData, currency }) {
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   const [period, setPeriod] = useState("daily");
+  const periodTotal = salesChartData[period].sales.reduce((sum, v) => sum + v, 0);
 
   function build(activePeriod) {
     const canvas = canvasRef.current;
@@ -28,7 +29,7 @@ export default function SalesChart({ data: salesChartData, currency }) {
     const d = salesChartData[activePeriod];
     const c = chartColors();
     const gradient = ctx.createLinearGradient(0, 0, 0, 280);
-    gradient.addColorStop(0, "rgba(28,59,106,0.25)");
+    gradient.addColorStop(0, "rgba(28,59,106,0.28)");
     gradient.addColorStop(1, "rgba(28,59,106,0)");
 
     if (chartRef.current) chartRef.current.destroy();
@@ -42,26 +43,14 @@ export default function SalesChart({ data: salesChartData, currency }) {
             data: d.sales,
             borderColor: "#1c3b6a",
             backgroundColor: gradient,
-            borderWidth: 2.5,
-            pointRadius: 3,
-            pointBackgroundColor: "#1c3b6a",
-            pointBorderColor: "#fff",
-            pointBorderWidth: 1.5,
-            tension: 0.35,
+            borderWidth: 3,
+            pointRadius: 0,
+            pointHoverRadius: 5,
+            pointHoverBackgroundColor: "#1c3b6a",
+            pointHoverBorderColor: "#fff",
+            pointHoverBorderWidth: 2,
+            tension: 0.4,
             fill: true,
-            yAxisID: "y",
-            order: 1,
-          },
-          {
-            type: "bar",
-            label: "Orders",
-            data: d.orders,
-            backgroundColor: "rgba(209,157,34,0.55)",
-            hoverBackgroundColor: "#d19d22",
-            borderRadius: 6,
-            barThickness: activePeriod === "monthly" ? 22 : 16,
-            yAxisID: "y1",
-            order: 2,
           },
         ],
       },
@@ -80,30 +69,18 @@ export default function SalesChart({ data: salesChartData, currency }) {
             padding: 10,
             cornerRadius: 10,
             callbacks: {
-              label: function (item) {
-                if (item.dataset.label.indexOf("Sales") > -1) {
-                  return ` Sales: ${symbol}` + item.raw.toLocaleString();
-                }
-                return " Orders: " + item.raw;
-              },
+              label: (item) => ` Sales: ${symbol}` + item.raw.toLocaleString(),
+              afterLabel: (item) => ` Orders: ${d.orders[item.dataIndex]}`,
             },
           },
         },
         scales: {
-          x: { grid: { display: false }, ticks: { color: c.text, font: { size: 11 } } },
+          x: { grid: { display: false }, border: { display: false }, ticks: { color: c.text, font: { size: 11 } } },
           y: {
-            position: "left",
+            beginAtZero: true,
             grid: { color: c.grid },
-            ticks: {
-              color: c.text,
-              font: { size: 11 },
-              callback: (v) => symbol + (v >= 1000 ? v / 1000 + "k" : v),
-            },
-          },
-          y1: {
-            position: "right",
-            grid: { display: false },
-            ticks: { color: c.text, font: { size: 11 } },
+            border: { display: false },
+            ticks: { display: false },
           },
         },
       },
@@ -130,19 +107,10 @@ export default function SalesChart({ data: salesChartData, currency }) {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
         <div>
           <h3 className="text-base font-bold text-slate-800 dark:text-white">Sales Overview</h3>
-          <p className="text-[12px] text-slate-400 mt-0.5">Track sales and order volume over time</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-white mt-2">{formatCurrency(periodTotal, currency)}</p>
+          <p className="text-[12px] text-slate-400 mt-0.5">Paid sales over the selected period</p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-4 text-[12px] font-medium text-slate-500 dark:text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-primary-500" />
-              Sales
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-accent-500" />
-              Orders
-            </span>
-          </div>
           <div className="flex items-center bg-slate-100 dark:bg-darksurface2 rounded-lg p-1">
             {["daily", "weekly", "monthly"].map((p) => (
               <button
