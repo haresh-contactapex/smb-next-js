@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
-import { salesChartData } from "@/data/dashboardData";
+import { getCurrencySymbol } from "@/lib/currency";
 
 function chartColors() {
   const dark = document.documentElement.classList.contains("dark");
@@ -15,7 +15,8 @@ function chartColors() {
   };
 }
 
-export default function SalesChart() {
+export default function SalesChart({ data: salesChartData, currency }) {
+  const symbol = getCurrencySymbol(currency);
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   const [period, setPeriod] = useState("daily");
@@ -37,7 +38,7 @@ export default function SalesChart() {
         datasets: [
           {
             type: "line",
-            label: "Sales (₹)",
+            label: `Sales (${symbol})`,
             data: d.sales,
             borderColor: "#1c3b6a",
             backgroundColor: gradient,
@@ -81,7 +82,7 @@ export default function SalesChart() {
             callbacks: {
               label: function (item) {
                 if (item.dataset.label.indexOf("Sales") > -1) {
-                  return " Sales: ₹" + item.raw.toLocaleString("en-IN");
+                  return ` Sales: ${symbol}` + item.raw.toLocaleString();
                 }
                 return " Orders: " + item.raw;
               },
@@ -96,7 +97,7 @@ export default function SalesChart() {
             ticks: {
               color: c.text,
               font: { size: 11 },
-              callback: (v) => "₹" + (v >= 1000 ? v / 1000 + "k" : v),
+              callback: (v) => symbol + (v >= 1000 ? v / 1000 + "k" : v),
             },
           },
           y1: {

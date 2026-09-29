@@ -26,6 +26,11 @@ export default function RecentOrdersTable({ orders, viewAllHref = "#" }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+            {orders.length === 0 && (
+              <tr>
+                <td colSpan={8} className="py-8 text-center text-slate-400">No orders yet.</td>
+              </tr>
+            )}
             {orders.map((order) => (
               <tr key={order.id} className="table-row transition-colors">
                 <td className="py-3 px-1 font-semibold text-primary-700 dark:text-accent-400">{order.id}</td>

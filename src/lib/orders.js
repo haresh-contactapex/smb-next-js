@@ -45,6 +45,11 @@ export async function listOrders() {
   return rows.map(mapOrder);
 }
 
+export async function listRecentOrders(limit = 5) {
+  const rows = await sql`SELECT * FROM orders ORDER BY placed_at DESC LIMIT ${limit}`;
+  return rows.map(mapOrder);
+}
+
 export async function getOrderById(id) {
   const [row] = await sql`SELECT * FROM orders WHERE id = ${id}`;
   return row ? mapOrder(row) : null;

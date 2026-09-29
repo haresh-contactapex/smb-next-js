@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
 import { toggleDropdown } from "@/components/admin-panel/adminPanelActions";
-import { dateRangeOptions } from "@/data/dashboardData";
+import { DASHBOARD_RANGES } from "@/lib/dashboardRanges";
 
-export default function WelcomeHeader({ name }) {
-  const [label, setLabel] = useState("Last 7 Days");
+export default function WelcomeHeader({ name, range }) {
+  const router = useRouter();
+  const label = (DASHBOARD_RANGES.find((r) => r.key === range) || DASHBOARD_RANGES[1]).label;
 
-  function pick(option) {
-    setLabel(option);
+  function pick(key) {
+    router.push(key === "7d" ? "/" : `/?range=${key}`);
     toggleDropdown("panelDateRange");
   }
 
@@ -35,13 +36,13 @@ export default function WelcomeHeader({ name }) {
           id="panelDateRange"
           className="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-2xl shadow-popover overflow-hidden z-30 py-1.5"
         >
-          {dateRangeOptions.map((option) => (
+          {DASHBOARD_RANGES.map((option) => (
             <button
-              key={option}
-              onClick={() => pick(option)}
+              key={option.key}
+              onClick={() => pick(option.key)}
               className="w-full text-left px-4 py-2.5 text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5"
             >
-              {option}
+              {option.label}
             </button>
           ))}
         </div>

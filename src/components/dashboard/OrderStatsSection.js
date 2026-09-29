@@ -28,7 +28,7 @@ export default function OrderStatsSection({ stats, totalSales }) {
             </div>
             <p className="text-2xl font-bold text-slate-800 dark:text-white">{stat.value}</p>
             <p className="text-[12px] text-slate-400 mt-0.5">{stat.label}</p>
-            <p className="text-[11px] text-slate-400 mt-2">vs last month</p>
+            <p className="text-[11px] text-slate-400 mt-2">vs previous period</p>
           </div>
         ))}
 
@@ -44,7 +44,7 @@ export default function OrderStatsSection({ stats, totalSales }) {
           </div>
           <p className="text-2xl font-bold">{totalSales.value}</p>
           <p className="text-[12px] text-white/70 mt-0.5">{totalSales.label}</p>
-          <p className="text-[11px] text-white/50 mt-2">vs last month</p>
+          <p className="text-[11px] text-white/50 mt-2">vs previous period</p>
         </div>
       </div>
     </section>

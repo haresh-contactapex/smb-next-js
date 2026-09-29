@@ -7,42 +7,55 @@ import RecentOrdersTable from "@/components/dashboard/RecentOrdersTable";
 import ProductPerformanceTable from "@/components/dashboard/ProductPerformanceTable";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentActivity from "@/components/dashboard/RecentActivity";
-import {
-  storeSetupSteps,
-  orderStats,
-  totalSales,
-  productStats,
-  couponStats,
-  recentOrders,
-  productPerformance,
-  quickActions,
-  recentActivity,
-} from "@/data/dashboardData";
 import { adminPanelConfig } from "@/config/admin-panel.config";
+import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
+import { getDashboardData } from "@/lib/dashboard";
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+const quickActions = [
+  { icon: "plus-circle", iconColor: "primary", label: "Add Product", href: "/add-product" },
+  { icon: "tag", iconColor: "accent", label: "Create Coupon", href: "/create-coupon" },
+  { icon: "shopping-bag", iconColor: "success", label: "View Orders", href: "/orders" },
+  { icon: "settings", iconColor: "warning", label: "Update Store Settings", href: "/settings/general", wide: true },
+];
+
+async function loadCurrency() {
+  try {
+    return (await getCurrencyTaxSettings()).currency;
+  } catch {
+    return undefined;
+  }
+}
+
+export default async function DashboardPage({ searchParams }) {
+  const { range } = await searchParams;
+  const [staffUser, currency] = await Promise.all([getCurrentStaffUser(), loadCurrency()]);
+  const data = await getDashboardData({ rangeKey: range, currency });
+
   return (
     <>
-      <WelcomeHeader name={adminPanelConfig.user.name} />
+      <WelcomeHeader name={staffUser?.firstName || adminPanelConfig.user.name} range={data.range} />
 
-      <StoreSetupProgress data={storeSetupSteps} />
+      {data.storeSetup && <StoreSetupProgress data={data.storeSetup} />}
 
-      <OrderStatsSection stats={orderStats} totalSales={totalSales} />
+      {data.orderStats && data.totalSales && <OrderStatsSection stats={data.orderStats} totalSales={data.totalSales} />}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <MiniStatGrid title="Products" stats={productStats} />
-        <MiniStatGrid title="Coupons" stats={couponStats} />
+        {data.productStats && <MiniStatGrid title="Products" stats={data.productStats} />}
+        {data.couponStats && <MiniStatGrid title="Coupons" stats={data.couponStats} />}
       </div>
 
-      <SalesChart />
+      {data.salesChartData && <SalesChart data={data.salesChartData} currency={currency} />}
 
-      <RecentOrdersTable orders={recentOrders} viewAllHref="/orders" />
+      <RecentOrdersTable orders={data.recentOrders} viewAllHref="/orders" />
 
-      <ProductPerformanceTable products={productPerformance} />
+      <ProductPerformanceTable products={data.productStock} viewAllHref="/all-products" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <QuickActions actions={quickActions} />
-        <RecentActivity activity={recentActivity} />
+        <RecentActivity activity={data.recentActivity} />
       </div>
     </>
   );
