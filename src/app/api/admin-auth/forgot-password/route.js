@@ -4,6 +4,7 @@ import { insertStaffResetToken } from "@/lib/passwordResetTokens";
 import { createResetToken } from "@/lib/auth/resetToken";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { isValidEmail } from "@/components/auth/helpers";
+import { isEmailConfigured, sendPasswordResetEmail } from "@/lib/email";
 
 // Always responds with success (whether or not the email matches a staff
 // account) so this endpoint can't be used to enumerate admin users.
@@ -35,7 +36,16 @@ export async function POST(request) {
       });
 
       const resetLink = `${new URL(request.url).origin}/admin/reset-password?token=${rawToken}`;
-      console.log(`[admin-forgot-password] reset link for ${email}: ${resetLink}`);
+
+      if (await isEmailConfigured()) {
+        const sent = await sendPasswordResetEmail({ to: email, resetLink });
+        if (!sent) {
+          console.error(`[admin-forgot-password] failed to send reset email to ${email}`);
+        }
+      } else {
+        // No SMTP configured — log the link so the flow stays testable locally.
+        console.log(`[admin-forgot-password] reset link for ${email}: ${resetLink}`);
+      }
     }
 
     return NextResponse.json({ success: true });
