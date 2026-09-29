@@ -162,72 +162,48 @@ async function getProductStock(currency, limit = 5) {
   });
 }
 
-// Each check degrades to "not done" on its own — e.g. payment_settings has no
-// migration yet, and that must not hide the rest of the checklist.
-async function getStoreSetup() {
-  const [[store], [pay], [ship], [products], [maint]] = await Promise.all([
-    safe(() => sql`SELECT store_name, store_email, logo_url FROM general_settings WHERE id = 1`, []),
-    safe(
-      () => sql`SELECT (stripe_enabled OR paypal_enabled OR razorpay_enabled OR cod_enabled) AS connected FROM payment_settings WHERE id = 1`,
-      []
-    ),
-    safe(() => sql`SELECT id FROM shipping_settings WHERE id = 1`, []),
-    safe(() => sql`SELECT COUNT(*)::int AS count FROM products`, []),
-    safe(() => sql`SELECT maintenance_mode_enabled AS enabled FROM system_maintenance_settings WHERE id = 1`, []),
-  ]);
-  const steps = [
-    { label: "Store Profile", done: Boolean(store?.store_name && store?.store_email && store?.logo_url) },
-    { label: "Payment Connected", done: Boolean(pay?.connected) },
-    { label: "First Product Added", done: (products?.count || 0) > 0 },
-    { label: "Shipping Policy", done: Boolean(ship) },
-    { label: "Publish Store", done: maint ? !maint.enabled : true },
-  ].map((s) => ({ label: s.label, status: s.done ? "done" : "warning" }));
-  const completedCount = steps.filter((s) => s.status === "done").length;
-  return {
-    completedCount,
-    totalCount: steps.length,
-    percent: Math.round((completedCount / steps.length) * 100),
-    steps,
-  };
+const AVATAR_COLORS = ["primary", "accent", "info", "success", "error"];
+
+function initialsFor(name) {
+  const parts = String(name || "").trim().split(/s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-function timeAgo(date) {
-  const diff = Math.max(0, Date.now() - new Date(date).getTime());
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins} minute${mins === 1 ? "" : "s"} ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  const days = Math.floor(hours / 24);
-  if (days === 1) return "Yesterday";
-  if (days < 30) return `${days} days ago`;
-  return new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+// Keep the first 3 and last 2 digits, e.g. 017******58.
+function maskPhone(phone) {
+  const digits = String(phone || "").replace(/D/g, "");
+  if (digits.length < 6) return "";
+  return digits.slice(0, 3) + "*".repeat(digits.length - 5) + digits.slice(-2);
 }
 
-// Built from real records since no activity-log table exists.
-async function getRecentActivity(limit = 8) {
+// Ranked by number of non-cancelled orders. Orders keep a customer_name
+// snapshot, so guest/deleted-customer orders still group by name.
+async function getTopCustomers(limit = 6) {
   const rows = await sql`
-    (SELECT 'order' AS kind, 'New order #' || order_number || ' from ' || customer_name AS text, placed_at AS at FROM orders)
-    UNION ALL
-    (SELECT 'coupon', 'Coupon "' || code || '" created', created_at FROM coupons)
-    UNION ALL
-    (SELECT 'product', 'Product "' || title || '" added', created_at FROM products)
-    UNION ALL
-    (SELECT 'customer', 'New customer ' || first_name || ' ' || last_name, created_at FROM customers)
-    ORDER BY at DESC
+    SELECT COALESCE(o.customer_id::text, lower(o.customer_name)) AS key,
+      MAX(o.customer_name) AS name, MAX(c.phone) AS phone, MAX(c.email) AS email,
+      COUNT(*)::int AS orders
+    FROM orders o
+    LEFT JOIN customers c ON c.id = o.customer_id
+    WHERE o.status <> 'Cancelled'
+    GROUP BY 1
+    ORDER BY orders DESC, name ASC
     LIMIT ${limit}`;
-  const icons = {
-    order: ["shopping-bag", "success"],
-    coupon: ["tag", "accent"],
-    product: ["package", "primary"],
-    customer: ["user", "neutral"],
-  };
-  return rows.map((r) => ({ icon: icons[r.kind][0], iconColor: icons[r.kind][1], text: r.text, time: timeAgo(r.at) }));
+  return rows.map((r, i) => ({
+    key: r.key,
+    name: r.name,
+    initials: initialsFor(r.name),
+    avatarColor: AVATAR_COLORS[i % AVATAR_COLORS.length],
+    contact: maskPhone(r.phone) || r.email || "",
+    orders: r.orders,
+  }));
 }
 
 export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
   const range = resolveRange(rangeKey);
-  const [orderBlock, productStats, couponStats, salesChartData, recentOrders, productStock, storeSetup, recentActivity] =
+  const [orderBlock, productStats, couponStats, salesChartData, recentOrders, productStock, topCustomers] =
     await Promise.all([
       safe(() => getOrderStats(range.days, currency), null),
       safe(getProductStats, null),
@@ -235,12 +211,10 @@ export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
       safe(getSalesChartData, null),
       safe(() => listRecentOrders(5), []),
       safe(() => getProductStock(currency, 5), []),
-      safe(getStoreSetup, null),
-      safe(getRecentActivity, []),
+      safe(getTopCustomers, []),
     ]);
   return {
     range: range.key,
-    storeSetup,
     orderStats: orderBlock?.orderStats ?? null,
     totalSales: orderBlock?.totalSales ?? null,
     productStats,
@@ -248,6 +222,6 @@ export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
     salesChartData,
     recentOrders,
     productStock,
-    recentActivity,
+    topCustomers,
   };
 }

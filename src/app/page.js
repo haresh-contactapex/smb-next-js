@@ -1,12 +1,11 @@
 import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
-import StoreSetupProgress from "@/components/dashboard/StoreSetupProgress";
 import OrderStatsSection from "@/components/dashboard/OrderStatsSection";
 import MiniStatGrid from "@/components/dashboard/MiniStatGrid";
 import SalesChart from "@/components/dashboard/SalesChart";
 import RecentOrdersTable from "@/components/dashboard/RecentOrdersTable";
 import ProductPerformanceTable from "@/components/dashboard/ProductPerformanceTable";
 import QuickActions from "@/components/dashboard/QuickActions";
-import RecentActivity from "@/components/dashboard/RecentActivity";
+import TopCustomers from "@/components/dashboard/TopCustomers";
 import { adminPanelConfig } from "@/config/admin-panel.config";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
@@ -38,8 +37,6 @@ export default async function DashboardPage({ searchParams }) {
     <>
       <WelcomeHeader name={staffUser?.firstName || adminPanelConfig.user.name} range={data.range} />
 
-      {data.storeSetup && <StoreSetupProgress data={data.storeSetup} />}
-
       {data.orderStats && data.totalSales && <OrderStatsSection stats={data.orderStats} totalSales={data.totalSales} />}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -55,7 +52,7 @@ export default async function DashboardPage({ searchParams }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <QuickActions actions={quickActions} />
-        <RecentActivity activity={data.recentActivity} />
+        <TopCustomers customers={data.topCustomers} viewAllHref="/all-customers" />
       </div>
     </>
   );
