@@ -8,6 +8,7 @@ import {
   AdminRoleError,
 } from "@/lib/adminRoles";
 import { MANAGE_ROLES_PERMISSION } from "@/lib/permissions";
+import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof AdminRoleError) {
@@ -44,6 +45,15 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     const payload = await request.json();
     const data = await updateAdminRole(id, payload, auth.role);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "role.permissions_changed",
+      entityType: "role",
+      entityId: id,
+      title: `Role "${data?.name}" permissions updated`,
+      severity: "warning",
+      metadata: { permissionCount: data?.permissions?.length ?? 0, fullAccess: Boolean(data?.fullAccess) },
+    });
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return errorResponse(error);
@@ -59,6 +69,15 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const payload = await request.json();
     const data = await setAdminRoleStatus(id, String(payload.status || ""), auth.role);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "role.status_changed",
+      entityType: "role",
+      entityId: id,
+      title: `Role "${data?.name}" ${data?.status === "active" ? "activated" : "deactivated"}`,
+      severity: "warning",
+      metadata: { status: data?.status },
+    });
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return errorResponse(error);
@@ -66,12 +85,20 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
-  const { denied } = await authorize();
+  const { auth, denied } = await authorize();
   if (denied) return denied;
 
   try {
     const { id } = await params;
     const data = await deleteAdminRole(id);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "role.deleted",
+      entityType: "role",
+      entityId: id,
+      title: "Role deleted",
+      severity: "warning",
+    });
     return NextResponse.json({ success: true, data });
   } catch (error) {
     return errorResponse(error);

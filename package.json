@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:all": "node scripts/dev-all.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -25,7 +26,9 @@
     "db:migrate:system-maintenance": "node scripts/migrate.mjs docs/settings/system-maintenance-table-only.sql",
     "db:migrate:admin-roles": "node scripts/migrate.mjs docs/settings/admin-roles-table-only.sql",
     "db:migrate:users-security": "node scripts/migrate.mjs docs/my-account/users-security-columns-only.sql",
-    "db:seed:admin": "node scripts/create-admin-user.mjs"
+    "db:seed:admin": "node scripts/create-admin-user.mjs",
+    "db:migrate:admin-notifications": "node scripts/migrate.mjs docs/notifications/admin-notifications-table-only.sql",
+    "ws:notifications": "node scripts/notifications-ws-server.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
@@ -37,7 +40,8 @@
     "nodemailer": "^10.0.10",
     "papaparse": "^5.7.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "ws": "^8.22.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.19",

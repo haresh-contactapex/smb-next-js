@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getShippingSettings, updateShippingSettings } from "@/lib/shippingSettings";
@@ -77,6 +78,26 @@ export async function PUT(request) {
     }
 
     const updated = await updateShippingSettings(settings);
+
+    await logAdminActivity({
+
+      actor: auth.user,
+
+      action: "settings.updated",
+
+      entityType: "settings",
+
+      entityId: "shipping",
+
+      title: "Settings updated: shipping",
+
+      description: `  changed the shipping settings.`,
+
+      severity: "warning",
+
+      metadata: { fields: Object.keys(settings) },
+
+    });
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

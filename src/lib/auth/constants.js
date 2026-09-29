@@ -6,3 +6,7 @@ export const STAFF_SESSION_COOKIE = "smb_staff_session";
 
 export const CUSTOMER_SESSION_SCOPE = "customer";
 export const STAFF_SESSION_SCOPE = "staff";
+
+// Short-lived ticket for the notifications WebSocket handshake; distinct from
+// the session scopes so it can never act as a staff or customer session.
+export const NOTIFICATIONS_WS_SCOPE = "notifications-ws";

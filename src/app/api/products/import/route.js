@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { importProductsFromCsv } from "@/lib/productImport";
+import { logAdminActivity } from "@/lib/notifications";
 
 // Windows/Excel-exported CSVs are inconsistently reported — the file
 // extension is the reliable signal, MIME is only a secondary check.
@@ -29,6 +30,14 @@ export async function POST(request) {
 
     const csvText = await file.text();
     const data = await importProductsFromCsv(csvText);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "product.imported",
+      entityType: "product",
+      title: "Products imported from CSV",
+      description: `File: ${String(file.name || "upload.csv").slice(0, 80)}.`,
+      metadata: { summary: data },
+    });
 
     return NextResponse.json({ success: true, data });
   } catch (error) {

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { listAdminRoles, createAdminRole, AdminRoleError } from "@/lib/adminRoles";
 import { MANAGE_ROLES_PERMISSION } from "@/lib/permissions";
+import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof AdminRoleError) {
@@ -29,6 +30,15 @@ export async function POST(request) {
   try {
     const payload = await request.json();
     const data = await createAdminRole(payload, auth.role);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "role.created",
+      entityType: "role",
+      entityId: data?.id,
+      title: `Role "${data?.name}" created`,
+      severity: "warning",
+      metadata: { permissionCount: data?.permissions?.length ?? 0, fullAccess: Boolean(data?.fullAccess) },
+    });
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     return errorResponse(error);

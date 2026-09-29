@@ -149,29 +149,9 @@ export const adminPanelConfig = {
     },
   ],
 
+  // Truthy => the topbar shows the live notification bell (data comes from /api/notifications).
   notifications: {
-    newCount: 3,
-    viewAllHref: "#",
-    items: [
-      {
-        icon: "shopping-bag",
-        color: "success",
-        title: "New order #SMB-10482 received",
-        time: "2 minutes ago",
-      },
-      {
-        icon: "alert-triangle",
-        color: "error",
-        title: '"Rose Gold Eternity Band" is out of stock',
-        time: "28 minutes ago",
-      },
-      {
-        icon: "dollar-sign",
-        color: "info",
-        title: "Payment received for order #SMB-10479",
-        time: "3 hours ago",
-      },
-    ],
+    viewAllHref: "/admin/notifications",
   },
 
   user: {

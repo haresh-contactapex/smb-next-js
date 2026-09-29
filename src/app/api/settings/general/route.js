@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getGeneralSettings, updateGeneralSettings } from "@/lib/generalSettings";
@@ -77,6 +78,26 @@ export async function PUT(request) {
     }
 
     const updated = await updateGeneralSettings(settings);
+
+    await logAdminActivity({
+
+      actor: auth.user,
+
+      action: "settings.updated",
+
+      entityType: "settings",
+
+      entityId: "general",
+
+      title: "Settings updated: general",
+
+      description: `  changed the general settings.`,
+
+      severity: "warning",
+
+      metadata: { fields: Object.keys(settings) },
+
+    });
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getEmailSettings, hasStoredSmtpPassword, updateEmailSettings } from "@/lib/emailSettings";
@@ -46,6 +47,26 @@ export async function PUT(request) {
     }
 
     const updated = await updateEmailSettings(settings);
+
+    await logAdminActivity({
+
+      actor: auth.user,
+
+      action: "settings.updated",
+
+      entityType: "settings",
+
+      entityId: "email",
+
+      title: "Settings updated: email",
+
+      description: `  changed the email settings.`,
+
+      severity: "warning",
+
+      metadata: { fields: Object.keys(settings) },
+
+    });
     return NextResponse.json({
       success: true,
       data: { ...updated, activeSmtpSource: await getActiveSmtpSource() },

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getPricingSettings, updatePricingSettings } from "@/lib/pricingSettings";
@@ -46,6 +47,26 @@ export async function PUT(request) {
     }
 
     const updated = await updatePricingSettings(settings);
+
+    await logAdminActivity({
+
+      actor: auth.user,
+
+      action: "settings.updated",
+
+      entityType: "settings",
+
+      entityId: "pricing",
+
+      title: "Settings updated: pricing",
+
+      description: `  changed the pricing settings.`,
+
+      severity: "warning",
+
+      metadata: { fields: Object.keys(settings) },
+
+    });
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

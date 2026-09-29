@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { listStaffUsers, createStaffUser, StaffUserError } from "@/lib/staffUsers";
+import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof StaffUserError) {
@@ -34,6 +35,16 @@ export async function POST(request) {
     const payload = await request.json().catch(() => null);
     if (!payload) return NextResponse.json({ success: false, error: "Invalid request body." }, { status: 400 });
     const { user, welcomeEmailSent } = await createStaffUser(payload, auth.role, { origin: new URL(request.url).origin });
+    await logAdminActivity({
+      actor: auth.user,
+      action: "user.created",
+      entityType: "user",
+      entityId: user.id,
+      title: `Admin user ${user.firstName} ${user.lastName} created`,
+      description: `Assigned role: ${user.role}.`,
+      severity: "success",
+      metadata: { role: user.role },
+    });
     return NextResponse.json({ success: true, data: { ...user, welcomeEmailSent } }, { status: 201 });
   } catch (error) {
     return errorResponse(error);
