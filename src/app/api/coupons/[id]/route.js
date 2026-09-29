@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getCouponById, updateCoupon, deleteCoupon } from "@/lib/coupons";
+import { logAdminActivity } from "@/lib/notifications";
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["coupons.view", "coupons.edit"]);
@@ -24,6 +25,13 @@ export async function PUT(request, { params }) {
   try {
     const payload = await request.json();
     const id = await updateCoupon(params.id, payload);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "coupon.updated",
+      entityType: "coupon",
+      entityId: id,
+      title: `Coupon "${String(payload?.code || payload?.name || "").slice(0, 80) || "untitled"}" updated`,
+    });
     return NextResponse.json({ success: true, data: { id } });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -36,6 +44,14 @@ export async function DELETE(request, { params }) {
 
   try {
     await deleteCoupon(params.id);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "coupon.deleted",
+      entityType: "coupon",
+      entityId: params.id,
+      title: "Coupon deleted",
+      severity: "warning",
+    });
     return NextResponse.json({ success: true, data: { id: params.id } });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });

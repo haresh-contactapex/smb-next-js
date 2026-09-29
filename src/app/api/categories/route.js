@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listCategories, createCategory } from "@/lib/categories";
+import { logAdminActivity } from "@/lib/notifications";
 
 export async function GET() {
   const auth = await requireStaffPermission(["categories.view", "products.view", "products.create", "products.edit", "coupons.create", "coupons.edit"]);
@@ -21,6 +22,14 @@ export async function POST(request) {
   try {
     const payload = await request.json();
     const id = await createCategory(payload);
+    await logAdminActivity({
+      actor: auth.user,
+      action: "category.created",
+      entityType: "category",
+      entityId: id,
+      title: `Category "${String(payload?.name || payload?.title || "").slice(0, 80) || "untitled"}" created`,
+      severity: "success",
+    });
     return NextResponse.json({ success: true, data: { id } }, { status: 201 });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
