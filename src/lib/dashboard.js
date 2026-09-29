@@ -129,6 +129,38 @@ async function getSalesChartData() {
   return { daily: shape(daily), weekly: shape(weekly), monthly: shape(monthly) };
 }
 
+// Month-by-month totals for this year and last, for the Earning Statistic
+// card. There's no cost data on orders (no line items), so profit can't be
+// computed; the third tile is unpaid order value instead.
+//   sales   = every non-cancelled order
+//   income  = the Paid ones (what has actually come in)
+//   pending = non-cancelled orders not yet paid
+async function getEarningStats() {
+  const rows = await sql`
+    SELECT EXTRACT(YEAR FROM placed_at)::int AS year, EXTRACT(MONTH FROM placed_at)::int AS month,
+      COALESCE(SUM(total_amount), 0) AS sales,
+      COALESCE(SUM(total_amount) FILTER (WHERE payment_status = 'Paid'), 0) AS income,
+      COALESCE(SUM(total_amount) FILTER (WHERE payment_status = 'Unpaid'), 0) AS pending
+    FROM orders
+    WHERE status <> 'Cancelled'
+      AND placed_at >= date_trunc('year', now()) - interval '1 year'
+    GROUP BY 1, 2`;
+  const thisYear = new Date().getFullYear();
+  const build = (year) => {
+    const income = Array(12).fill(0);
+    const totals = { sales: 0, income: 0, pending: 0 };
+    for (const r of rows) {
+      if (r.year !== year) continue;
+      income[r.month - 1] = Number(r.income);
+      totals.sales += Number(r.sales);
+      totals.income += Number(r.income);
+      totals.pending += Number(r.pending);
+    }
+    return { label: String(year), income, totals };
+  };
+  return { years: [build(thisYear), build(thisYear - 1)] };
+}
+
 // There's no order line-items table yet (orders is the "table-only" variant),
 // so units sold / revenue per product can't be computed honestly. Show stock
 // health instead, lowest stock first.
@@ -203,7 +235,7 @@ async function getTopCustomers(limit = 6) {
 
 export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
   const range = resolveRange(rangeKey);
-  const [orderBlock, productStats, couponStats, salesChartData, recentOrders, productStock, topCustomers] =
+  const [orderBlock, productStats, couponStats, salesChartData, recentOrders, productStock, topCustomers, earningStats] =
     await Promise.all([
       safe(() => getOrderStats(range.days, currency), null),
       safe(getProductStats, null),
@@ -212,6 +244,7 @@ export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
       safe(() => listRecentOrders(5), []),
       safe(() => getProductStock(currency, 5), []),
       safe(getTopCustomers, []),
+      safe(getEarningStats, null),
     ]);
   return {
     range: range.key,
@@ -223,5 +256,6 @@ export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
     recentOrders,
     productStock,
     topCustomers,
+    earningStats,
   };
 }

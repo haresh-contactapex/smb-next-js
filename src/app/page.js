@@ -2,6 +2,7 @@ import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
 import OrderStatsSection from "@/components/dashboard/OrderStatsSection";
 import MiniStatGrid from "@/components/dashboard/MiniStatGrid";
 import SalesChart from "@/components/dashboard/SalesChart";
+import EarningStatistic from "@/components/dashboard/EarningStatistic";
 import RecentOrdersTable from "@/components/dashboard/RecentOrdersTable";
 import ProductPerformanceTable from "@/components/dashboard/ProductPerformanceTable";
 import QuickActions from "@/components/dashboard/QuickActions";
@@ -44,7 +45,10 @@ export default async function DashboardPage({ searchParams }) {
         {data.couponStats && <MiniStatGrid title="Coupons" stats={data.couponStats} />}
       </div>
 
-      {data.salesChartData && <SalesChart data={data.salesChartData} currency={currency} />}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        {data.salesChartData && <SalesChart data={data.salesChartData} currency={currency} />}
+        {data.earningStats && <EarningStatistic data={data.earningStats} currency={currency} />}
+      </div>
 
       <RecentOrdersTable orders={data.recentOrders} viewAllHref="/orders" />
 
