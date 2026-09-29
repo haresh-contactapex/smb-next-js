@@ -268,7 +268,6 @@ body.sidebar-open #sidebarBackdrop {
   body.sidebar-collapsed .nav-badge,
   body.sidebar-collapsed .nav-chevron,
   body.sidebar-collapsed .nav-section-label,
-  body.sidebar-collapsed .logo-text,
   body.sidebar-collapsed .sidebar-submenu {
     display: none !important;
   }
