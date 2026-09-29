@@ -27,7 +27,15 @@ const SAVED_MESSAGES = {
   updated: { message: "User saved", variant: "success" },
 };
 
-export default function UsersListing({ users: initialUsers, roles, permissions, currentUserId, actorFullAccess, saved }) {
+export default function UsersListing({
+  users: initialUsers,
+  roles,
+  permissions,
+  currentUserId,
+  actorFullAccess,
+  saved,
+  deletedName,
+}) {
   const router = useRouter();
   const [users, setUsers] = useState(initialUsers);
   const [search, setSearch] = useState("");
@@ -59,6 +67,15 @@ export default function UsersListing({ users: initialUsers, roles, permissions, 
   useEffect(() => {
     if (!SAVED_MESSAGES[saved]) return;
     showToast(SAVED_MESSAGES[saved].message, SAVED_MESSAGES[saved].variant);
+    router.replace("/users", { scroll: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Confirms a delete made from the edit-user screen, then drops ?deleted= so
+  // a reload doesn't repeat the message.
+  useEffect(() => {
+    if (!deletedName) return;
+    setDeleteToast({ visible: true, message: `"${deletedName}" was removed.` });
     router.replace("/users", { scroll: false });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

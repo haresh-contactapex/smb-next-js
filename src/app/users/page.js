@@ -15,7 +15,7 @@ export default async function AllUsersPage({ searchParams }) {
   const auth = await requireStaffPermission("users.view");
   if (!auth.ok) return <UsersNotice status={auth.status} message={auth.error} />;
 
-  const { saved } = (await searchParams) || {};
+  const { saved, deleted } = (await searchParams) || {};
 
   try {
     const [users, roles] = await Promise.all([listStaffUsers(), listAdminRoles()]);
@@ -31,6 +31,7 @@ export default async function AllUsersPage({ searchParams }) {
         currentUserId={auth.user.id}
         actorFullAccess={Boolean(auth.role.fullAccess)}
         saved={typeof saved === "string" ? saved : undefined}
+        deletedName={typeof deleted === "string" ? deleted : undefined}
       />
     );
   } catch (error) {

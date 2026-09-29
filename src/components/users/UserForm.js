@@ -12,6 +12,7 @@ import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
 import PasswordField from "@/components/auth/PasswordField";
 import Toast from "./Toast";
+import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import UsersPageHeader, { DANGER_BUTTON_CLASSES, PRIMARY_BUTTON_CLASSES, SECONDARY_BUTTON_CLASSES } from "./UsersPageHeader";
 import { BIO_MAX, formatDate, fullName, isLocked, toFormUser, toSavePayload, validateUserForm } from "./helpers";
 import { confirmDelete, deleteBlockedReason, deleteUser } from "./userActions";
@@ -129,7 +130,7 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
     setDeleting(true);
     try {
       await deleteUser(user);
-      router.push("/users");
+      router.push(`/users?deleted=${encodeURIComponent(fullName(user))}`);
       router.refresh();
     } catch (error) {
       showToast(error.message, "error");
@@ -155,8 +156,8 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
             title={deleteBlocked || undefined}
             className={DANGER_BUTTON_CLASSES}
           >
-            <Icon name={deleting ? "refresh-cw" : "trash-2"} className={`w-4 h-4${deleting ? " animate-spin" : ""}`} />
-            {deleting ? "Deleting…" : "Delete"}
+            <Icon name="trash-2" className="w-4 h-4" />
+            Delete
           </button>
         )}
         <Link href="/users" onClick={handleCancel} className={SECONDARY_BUTTON_CLASSES}>
@@ -372,6 +373,7 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
       </div>
 
       <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
+      <DeleteOverlay active={deleting} title="Deleting user…" itemLabel={isEdit ? fullName(user) : ""} />
     </form>
   );
 }
