@@ -1,7 +1,26 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES, BADGE_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 
-export default function OrdersTable({ orders }) {
+function SortableHeader({ label, sortKey, sort, onSortChange }) {
+  const active = sort?.key === sortKey;
+  const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
+  return (
+    <th className="py-3 px-1 font-semibold">
+      <button
+        type="button"
+        onClick={() => onSortChange(sortKey)}
+        aria-label={`Sort by ${label}${active ? (sort.direction === "asc" ? ", ascending" : ", descending") : ""}`}
+        className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+      >
+        {label}
+        <Icon name={icon} className={`w-3 h-3 ${active ? "text-primary-500 dark:text-accent-400" : "text-slate-300 dark:text-slate-600"}`} />
+      </button>
+    </th>
+  );
+}
+
+export default function OrdersTable({ orders, sort, onSortChange }) {
   if (orders.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No orders match your filters.</div>;
   }
@@ -11,13 +30,13 @@ export default function OrdersTable({ orders }) {
       <table className="w-full text-sm min-w-[860px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
-            <th className="py-3 px-1 font-semibold">Order ID</th>
-            <th className="py-3 px-1 font-semibold">Customer</th>
-            <th className="py-3 px-1 font-semibold">Date</th>
+            <SortableHeader label="Order ID" sortKey="id" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Customer" sortKey="customer" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Date" sortKey="date" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Products</th>
-            <th className="py-3 px-1 font-semibold">Amount</th>
-            <th className="py-3 px-1 font-semibold">Payment</th>
-            <th className="py-3 px-1 font-semibold">Status</th>
+            <SortableHeader label="Amount" sortKey="amount" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Payment" sortKey="payment" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Status" sortKey="status" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold text-right">Action</th>
           </tr>
         </thead>
@@ -57,13 +76,13 @@ export default function OrdersTable({ orders }) {
                   >
                     <Icon name="eye" className="w-4 h-4" />
                   </button>
-                  <button
-                    type="button"
+                  <Link
+                    href={`/edit-order/${order.orderId}`}
                     title="Edit order"
                     className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                   >
                     <Icon name="edit-2" className="w-4 h-4" />
-                  </button>
+                  </Link>
                 </div>
               </td>
             </tr>

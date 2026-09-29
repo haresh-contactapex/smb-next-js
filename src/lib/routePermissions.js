@@ -25,6 +25,7 @@ const OPEN_PATHS = ["/profile", "/address", "/payment", "/access-denied", "/main
 const ROUTE_RULES = [
   { path: "/", permission: "dashboard.view" },
 
+  { prefix: "/edit-order", permission: "orders.edit" },
   { prefix: "/orders", permission: "orders.view" },
 
   { path: "/all-customers", permission: "customers.view" },

@@ -2,7 +2,7 @@ import { sql } from "./db";
 import { formatCurrency } from "./currency";
 
 const STATUS_COLORS = { Pending: "warning", Processing: "info", Completed: "success", Cancelled: "error" };
-const PAYMENT_COLORS = { Paid: "success", Unpaid: "warning", Refunded: "info" };
+const PAYMENT_COLORS = { Paid: "success", Unpaid: "warning", Refunded: "info", Failed: "error" };
 // Cycled by row position for visual variety — not tied to status/payment,
 // matching how src/data/ordersData.js varied avatarColor per row.
 const AVATAR_COLORS = ["primary", "accent", "info", "success", "error"];
@@ -23,12 +23,16 @@ function formatOrderDate(value) {
 function mapOrder(row, index) {
   return {
     id: `#${row.order_number}`,
+    orderId: row.id,
+    orderNumber: row.order_number,
     customer: row.customer_name,
     initials: initialsFor(row.customer_name),
     avatarColor: AVATAR_COLORS[index % AVATAR_COLORS.length],
     date: formatOrderDate(row.placed_at),
+    placedAt: new Date(row.placed_at).toISOString(),
     products: `${row.item_count} item${row.item_count === 1 ? "" : "s"}`,
     amount: formatCurrency(row.total_amount, row.currency),
+    totalAmount: Number(row.total_amount),
     payment: row.payment_status,
     paymentColor: PAYMENT_COLORS[row.payment_status] || "info",
     status: row.status,
@@ -39,6 +43,33 @@ function mapOrder(row, index) {
 export async function listOrders() {
   const rows = await sql`SELECT * FROM orders ORDER BY placed_at DESC`;
   return rows.map(mapOrder);
+}
+
+export async function getOrderById(id) {
+  const [row] = await sql`SELECT * FROM orders WHERE id = ${id}`;
+  return row ? mapOrder(row) : null;
+}
+
+// Edit Order only changes status/payment_status today — the other columns
+// are snapshots taken at checkout, not something staff retroactively edit.
+export async function updateOrderStatus(id, { status, paymentStatus }) {
+  if (!Object.keys(STATUS_COLORS).includes(status)) {
+    throw new Error(`"${status}" isn't a valid order status.`);
+  }
+  if (!Object.keys(PAYMENT_COLORS).includes(paymentStatus)) {
+    throw new Error(`"${paymentStatus}" isn't a valid payment status.`);
+  }
+
+  const [row] = await sql`
+    UPDATE orders SET
+      status = ${status},
+      payment_status = ${paymentStatus},
+      cancelled_at = CASE WHEN ${status} = 'Cancelled' THEN COALESCE(cancelled_at, now()) ELSE NULL END,
+      updated_at = now()
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return row ? mapOrder(row) : null;
 }
 
 // Lightweight lookup for the header's order search dropdown — order number
