@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
-import { SOFT_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
+import ProductThumbnail from "./ProductThumbnail";
 import { getStockInfo, STOCK_TEXT_CLASSES, STATUS_BADGE_CLASSES } from "./productHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { formatCurrency } from "@/lib/currency";
@@ -56,11 +56,7 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
               <tr key={product.id} className="table-row transition-colors">
                 <td className="py-3 px-1">
                   <div className="flex items-center gap-3">
-                    <span
-                      className={`w-10 h-10 rounded-xl grid place-items-center shrink-0 ${SOFT_COLOR_CLASSES[product.iconColor]}`}
-                    >
-                      <Icon name="gift" className="w-5 h-5" />
-                    </span>
+                    <ProductThumbnail src={product.thumbnail} alt={product.title} iconColor={product.iconColor} />
                     <span className="min-w-0">
                       <span className="block font-medium text-slate-700 dark:text-slate-200 truncate">
                         {product.title}

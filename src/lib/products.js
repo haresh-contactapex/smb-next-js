@@ -191,9 +191,19 @@ export async function listProducts() {
       p.compare_at_price,
       p.inventory_quantity,
       c.name AS category_name,
-      COALESCE(v.variant_qty, p.inventory_quantity, 0) AS inventory
+      COALESCE(v.variant_qty, p.inventory_quantity, 0) AS inventory,
+      m.url AS thumbnail
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
+    -- The main image: the first image in the product's media order. blob:
+    -- URLs are dead local previews saved before uploads existed, so they're
+    -- skipped rather than shown as a broken thumbnail.
+    LEFT JOIN LATERAL (
+      SELECT url FROM product_media
+      WHERE product_id = p.id AND type = 'image' AND url NOT LIKE 'blob:%'
+      ORDER BY position
+      LIMIT 1
+    ) m ON true
     LEFT JOIN (
       SELECT product_id, SUM(inventory_quantity) AS variant_qty
       FROM product_variants
@@ -211,6 +221,7 @@ export async function listProducts() {
     compareAtPrice: row.compare_at_price ? Number(row.compare_at_price) : null,
     inventory: Number(row.inventory) || 0,
     status: row.status.charAt(0) + row.status.slice(1).toLowerCase(),
+    thumbnail: row.thumbnail || null,
   }));
 }
 
@@ -404,8 +415,8 @@ async function replaceChildRows(productId, payload) {
   if (media.length) {
     await batchInsert(
       "product_media",
-      ["product_id", "type", "url", "name"],
-      media.map((m) => [productId, m.type, m.url, m.name || null])
+      ["product_id", "type", "url", "name", "position"],
+      media.map((m, i) => [productId, m.type, m.url, m.name || null, i])
     );
   }
 
