@@ -11,10 +11,8 @@ import {
 } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import CategoryDetailsSection from "./CategoryDetailsSection";
-import CollectionItemsSection from "./CollectionItemsSection";
 import SeoSection from "./SeoSection";
 import HierarchySidebar from "./HierarchySidebar";
-import ProductRulesSidebar from "./ProductRulesSidebar";
 import Toast from "@/components/add-product/Toast";
 
 // Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
@@ -206,8 +204,6 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
             onImageRejected={handleImageRejected}
           />
 
-          <CollectionItemsSection />
-
           <SeoSection
             seoTitle={category.seoTitle}
             seoDescription={category.seoDescription}
@@ -232,8 +228,6 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
             onThemeChange={(value) => setField("themeTemplate", value)}
             onVisibleChange={(value) => setField("visible", value)}
           />
-
-          <ProductRulesSidebar />
         </div>
       </div>
 
