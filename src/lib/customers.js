@@ -1,4 +1,5 @@
 import { sql } from "./db";
+import { isValidUsPhone } from "./phone";
 
 // Never include password_hash in anything handed back to a route handler's
 // JSON response or a JWT payload.
@@ -100,6 +101,7 @@ function customerRecordValues(payload) {
 
   if (!firstName || !lastName) throw new Error("First name and last name are required.");
   if (!email) throw new Error("Email is required.");
+  if (!isValidUsPhone(phone)) throw new Error("Enter a valid 10-digit US phone number.");
 
   return { firstName, lastName, email, phone, customerGroup, loyaltyPoints, acceptsMarketing };
 }

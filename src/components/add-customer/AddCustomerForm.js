@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isValidEmail } from "@/components/auth/helpers";
+import { formatUsPhone, isValidUsPhone } from "@/lib/phone";
 import { DEFAULT_CUSTOMER, buildCustomerFromData, assembleCustomer } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import CustomerDetailsSection from "./CustomerDetailsSection";
@@ -22,6 +23,7 @@ export default function AddCustomerForm({ customerId }) {
   const [firstNameError, setFirstNameError] = useState(false);
   const [lastNameError, setLastNameError] = useState(false);
   const [emailError, setEmailError] = useState(false);
+  const [phoneError, setPhoneError] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const firstNameInputRef = useRef(null);
@@ -81,20 +83,32 @@ export default function AddCustomerForm({ customerId }) {
     setEmailError(false);
   }
 
+  function handlePhoneChange(value) {
+    setField("phone", formatUsPhone(value));
+    setPhoneError(false);
+  }
+
   function handleSave(e) {
     e?.preventDefault();
 
     const missingFirstName = !customer.firstName.trim();
     const missingLastName = !customer.lastName.trim();
     const invalidEmail = !customer.email.trim() || !isValidEmail(customer.email);
+    const invalidPhone = !isValidUsPhone(customer.phone);
 
     setFirstNameError(missingFirstName);
     setLastNameError(missingLastName);
     setEmailError(invalidEmail);
+    setPhoneError(invalidPhone);
 
-    if (missingFirstName || missingLastName || invalidEmail) {
+    if (missingFirstName || missingLastName || invalidEmail || invalidPhone) {
       if (missingFirstName) firstNameInputRef.current?.focus();
-      showToast("Fill in the required fields before saving", "error");
+      showToast(
+        invalidPhone && !missingFirstName && !missingLastName && !invalidEmail
+          ? "Enter a valid 10-digit US phone number"
+          : "Fill in the required fields before saving",
+        "error",
+      );
       return;
     }
 
@@ -132,6 +146,7 @@ export default function AddCustomerForm({ customerId }) {
     setFirstNameError(false);
     setLastNameError(false);
     setEmailError(false);
+    setPhoneError(false);
   }
 
   if (loading) {
@@ -153,10 +168,11 @@ export default function AddCustomerForm({ customerId }) {
             email={customer.email}
             emailError={emailError}
             phone={customer.phone}
+            phoneError={phoneError}
             onFirstNameChange={handleFirstNameChange}
             onLastNameChange={handleLastNameChange}
             onEmailChange={handleEmailChange}
-            onPhoneChange={(value) => setField("phone", value)}
+            onPhoneChange={handlePhoneChange}
           />
         </div>
 

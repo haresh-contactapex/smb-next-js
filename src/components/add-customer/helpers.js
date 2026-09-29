@@ -1,3 +1,5 @@
+import { formatUsPhone } from "@/lib/phone";
+
 export const DEFAULT_CUSTOMER = {
   firstName: "",
   lastName: "",
@@ -8,12 +10,20 @@ export const DEFAULT_CUSTOMER = {
   acceptsMarketing: false,
 };
 
+// Stored numbers may carry a +1 country code (e.g. "+1 415 555 0107"); the
+// form uses the app's 10-digit US format, so drop it before formatting.
+function toFormPhone(value) {
+  const digits = (value || "").replace(/\D/g, "");
+  if (!digits) return "";
+  return formatUsPhone(digits.length === 11 && digits.startsWith("1") ? digits.slice(1) : digits);
+}
+
 export function buildCustomerFromData(data) {
   return {
     firstName: data.firstName || "",
     lastName: data.lastName || "",
     email: data.email || "",
-    phone: data.phone || "",
+    phone: toFormPhone(data.phone),
     customerGroup: data.customerGroup || "Retail",
     loyaltyPoints: data.loyaltyPoints ?? "",
     acceptsMarketing: Boolean(data.acceptsMarketing),

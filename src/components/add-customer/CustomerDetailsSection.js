@@ -7,6 +7,7 @@ export default function CustomerDetailsSection({
   email,
   emailError,
   phone,
+  phoneError,
   onFirstNameChange,
   onLastNameChange,
   onEmailChange,
@@ -75,10 +76,11 @@ export default function CustomerDetailsSection({
             type="tel"
             value={phone}
             onChange={(e) => onPhoneChange(e.target.value)}
-            placeholder="Optional"
+            placeholder="(555) 123-4567"
             aria-label="Phone"
-            className="field-input system-field"
+            className={`field-input system-field${phoneError ? " border-red-400" : ""}`}
           />
+          {phoneError && <p className="text-xs text-error mt-1">Enter a valid 10-digit US phone number.</p>}
         </div>
       </div>
     </section>
