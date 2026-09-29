@@ -1,11 +1,11 @@
 // Storefront category links. Category pages don't exist yet, so they all
-// point at the listing for now.
+// point at the full product listing for now.
 export const STORE_NAV_LINKS = [
-  { label: "Wedding Bands", href: "/" },
-  { label: "Anniversary Bands", href: "/" },
-  { label: "Classic Bands", href: "/" },
-  { label: "Eternity Bands", href: "/" },
-  { label: "New Arrivals", href: "/" },
+  { label: "Wedding Bands", href: "/women-wedding-bands" },
+  { label: "Anniversary Bands", href: "/women-wedding-bands" },
+  { label: "Classic Bands", href: "/women-wedding-bands" },
+  { label: "Eternity Bands", href: "/women-wedding-bands" },
+  { label: "New Arrivals", href: "/women-wedding-bands" },
 ];
 
 export const STORE_FOOTER_LINES = [

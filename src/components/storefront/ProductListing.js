@@ -21,7 +21,7 @@ const PRICE_INPUT =
 
 // Filter bar + product grid. Price filtering is live; metal and band size are
 // captured in state ready for when products carry that data.
-export default function ProductListing({ products, currency = "USD" }) {
+export default function ProductListing({ products, currency = "USD", failed = false }) {
   const [metals, setMetals] = useState([]);
   const [size, setSize] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -122,7 +122,13 @@ export default function ProductListing({ products, currency = "USD" }) {
       </section>
 
       {visible.length === 0 ? (
-        <p className="text-center py-20 text-sm">No products match your filters.</p>
+        <p role="status" className="text-center py-20 text-sm">
+          {failed
+            ? "We couldn’t load our products right now. Please try again shortly."
+            : products.length === 0
+              ? "Our collection is coming soon."
+              : "No products match your filters."}
+        </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-10 sm:pt-12 pb-16 sm:pb-24">
           {visible.map((product, index) => (
