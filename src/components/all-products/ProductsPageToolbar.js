@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import ExportProductsButton from "./ExportProductsButton";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
@@ -18,22 +19,22 @@ export default function ProductsPageToolbar() {
           <ExportProductsButton />
         </Can>
         <Can permission="products.import">
-          <a
+          <Link
             href="/admin/all-products/import"
             className="inline-flex items-center gap-2 px-4 h-10 rounded-xl border border-slate-200 dark:border-white/10 text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors w-fit"
           >
             <Icon name="upload-cloud" className="w-4 h-4" />
             Import
-          </a>
+          </Link>
         </Can>
         <Can permission="products.create">
-          <a
+          <Link
             href="/admin/add-product"
             className="inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-sm font-semibold shadow-sm transition-colors w-fit"
           >
             <Icon name="plus-circle" className="w-4 h-4" />
             Add Product
-          </a>
+          </Link>
         </Can>
       </div>
     </div>

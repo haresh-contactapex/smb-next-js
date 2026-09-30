@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 
@@ -13,13 +14,13 @@ export default function CouponsPageToolbar() {
         <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">All Coupons</h1>
       </div>
       <Can permission="coupons.create">
-        <a
+        <Link
           href="/admin/create-coupon"
           className="inline-flex items-center gap-2 px-4 h-10 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-sm font-semibold shadow-sm transition-colors shrink-0 w-fit"
         >
           <Icon name="plus-circle" className="w-4 h-4" />
           Create Coupon
-        </a>
+        </Link>
       </Can>
     </div>
   );
