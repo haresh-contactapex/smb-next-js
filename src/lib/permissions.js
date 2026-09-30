@@ -92,9 +92,9 @@ export const KNOWN_MODULES = {
   },
   reviews: {
     label: "Reviews",
-    singular: "Reviews",
+    singular: "Review",
     plural: "Reviews",
-    actions: ["view", "approve", "edit", "delete"],
+    actions: ["view", "create", "approve", "edit", "delete"],
     alwaysInclude: true,
   },
   content: {

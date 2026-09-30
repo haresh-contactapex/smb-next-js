@@ -45,6 +45,10 @@ const ROUTE_RULES = [
   { path: "/admin/create-coupon", permission: "coupons.create" },
   { prefix: "/admin/edit-coupon", permission: "coupons.edit" },
 
+  { path: "/admin/all-reviews", permission: "reviews.view" },
+  { path: "/admin/add-review", permission: "reviews.create" },
+  { prefix: "/admin/edit-review", permission: "reviews.edit" },
+
   { prefix: "/admin/media", permission: "media.view" },
 
   { path: "/admin/users/new", permission: "users.create" },

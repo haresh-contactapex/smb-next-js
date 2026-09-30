@@ -14,6 +14,7 @@ export const ENTITY_ICONS = {
   order: "shopping-bag",
   customer: "user",
   coupon: "tag",
+  review: "star",
   media: "image",
   settings: "settings",
   system: "alert-triangle",
@@ -28,6 +29,7 @@ export const ENTITY_LABELS = {
   order: "Orders",
   customer: "Customers",
   coupon: "Coupons",
+  review: "Reviews",
   media: "Media",
   settings: "Settings",
   system: "System",
@@ -69,6 +71,8 @@ export function notificationHref(n) {
       return `/admin/edit-category/${id}`;
     case "coupon":
       return `/admin/edit-coupon/${id}`;
+    case "review":
+      return `/admin/edit-review/${id}`;
     case "user":
       return `/admin/users/${id}/edit`;
     case "role":

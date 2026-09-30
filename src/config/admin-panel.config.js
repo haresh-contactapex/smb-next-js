@@ -93,6 +93,16 @@ export const adminPanelConfig = {
         { id: "create-coupon", label: "Create Coupon", href: "/admin/create-coupon" },
       ],
     },
+    {
+      type: "submenu",
+      id: "reviews",
+      label: "Product Reviews",
+      icon: "star",
+      items: [
+        { id: "all-reviews", label: "All Reviews", href: "/admin/all-reviews" },
+        { id: "add-review", label: "Add Review", href: "/admin/add-review" },
+      ],
+    },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/admin/media" },
     { type: "link", id: "reports", label: "Reports", icon: "bar-chart-2", href: "/admin/reports" },
     {
