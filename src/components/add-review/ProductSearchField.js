@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import { INVALID_FIELD_CLASSES } from "./helpers";
 
 const DEBOUNCE_MS = 250;
 const LISTBOX_ID = "f-product-listbox";
@@ -154,7 +155,7 @@ export default function ProductSearchField({ selectedId, selectedTitle, error, i
         }}
         onKeyDown={handleKeyDown}
         placeholder="Search products by name or SKU…"
-        className={`field-input pl-10 pr-10${error ? " border-red-400" : ""}`}
+        className={`field-input pl-10 pr-10${error ? INVALID_FIELD_CLASSES : ""}`}
       />
       {inputValue && (
         <button

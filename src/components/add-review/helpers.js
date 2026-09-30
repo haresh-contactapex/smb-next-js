@@ -1,6 +1,11 @@
 import { isValidEmail } from "@/components/auth/helpers";
 import { MAX_EMAIL_LENGTH } from "@/lib/reviewFields";
 
+// Appended to an input with a validation error: light pink fill and red
+// border, kept while focused. Same look as the shared settings fields (Add User).
+export const INVALID_FIELD_CLASSES =
+  " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10";
+
 export const DEFAULT_REVIEW = {
   productId: "",
   productTitle: "",

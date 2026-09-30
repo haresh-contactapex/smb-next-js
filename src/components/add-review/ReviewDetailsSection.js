@@ -1,6 +1,7 @@
 "use client";
 
 import { MAX_CONTENT_LENGTH, MAX_TITLE_LENGTH } from "@/lib/reviewFields";
+import { INVALID_FIELD_CLASSES } from "./helpers";
 import ProductSearchField from "./ProductSearchField";
 import RatingInput from "./RatingInput";
 
@@ -65,7 +66,7 @@ export default function ReviewDetailsSection({
             placeholder="Sum it up in a few words"
             aria-invalid={errors.title ? "true" : undefined}
             aria-describedby={errors.title ? "f-title-error" : undefined}
-            className={`field-input${errors.title ? " border-red-400" : ""}`}
+            className={`field-input${errors.title ? INVALID_FIELD_CLASSES : ""}`}
           />
           {errors.title && (
             <p id="f-title-error" className="text-xs text-error mt-1">
@@ -88,9 +89,9 @@ export default function ReviewDetailsSection({
             placeholder="What did the reviewer think of the product?"
             aria-invalid={errors.content ? "true" : undefined}
             aria-describedby={errors.content ? "f-content-error" : undefined}
-            className={`w-full p-3 rounded-xl bg-slate-100 dark:bg-darksurface2 border ${
-              errors.content ? "border-red-400" : "border-transparent"
-            } focus:border-primary-400 dark:focus:border-accent-500 focus:bg-white dark:focus:bg-darksurface2 focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm transition-all font-medium text-slate-800 dark:text-white resize-y`}
+            className={`w-full p-3 rounded-xl bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:bg-white dark:focus:bg-darksurface2 focus:outline-none focus:ring-4 focus:ring-primary-500/10 text-sm transition-all font-medium text-slate-800 dark:text-white resize-y${
+              errors.content ? INVALID_FIELD_CLASSES : ""
+            }`}
           />
           <div className="flex items-start justify-between gap-3 mt-1">
             {errors.content ? (
