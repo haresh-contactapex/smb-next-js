@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import StoreIcon from "./icons";
 import { formatCurrency } from "@/lib/currency";
 
@@ -142,7 +142,15 @@ export default function ProductListing({ products, currency = "USD", failed = fa
 
 function ProductCard({ product, currency, delay }) {
   const layer =
-    "absolute inset-0 flex items-center justify-center p-6 sm:p-8 bg-[#FAFAFA] transform transition-all duration-700 ease-out z-10";
+    "absolute inset-0 flex items-center justify-center p-6 sm:p-8 transform transition-all duration-700 ease-out z-10";
+  // Shimmer until the main image has loaded (or failed, so it never shimmers forever).
+  const [loaded, setLoaded] = useState(false);
+  const imageRef = useRef(null);
+
+  // The image may already be complete (cached) before React attaches onLoad.
+  useEffect(() => {
+    if (imageRef.current?.complete) setLoaded(true);
+  }, []);
 
   return (
     <div className="group cursor-pointer fade-in-up" style={{ animationDelay: `${delay}ms` }}>
@@ -153,14 +161,21 @@ function ProductCard({ product, currency, delay }) {
         {product.image ? (
           <>
             {/* Hover image */}
-            <div className={`${layer} opacity-0 group-hover:opacity-100 scale-110 group-hover:scale-100`}>
+            <div className={`${layer} bg-[#FAFAFA] opacity-0 group-hover:opacity-100 scale-110 group-hover:scale-100`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={product.hoverImage || product.image} alt="" className="object-contain mix-blend-multiply w-[90%] h-[90%]" />
             </div>
             {/* Base image */}
-            <div className={`${layer} group-hover:opacity-0 group-hover:scale-95`}>
+            <div className={`${layer} ${loaded ? "bg-[#FAFAFA]" : "shimmer"} group-hover:opacity-0 group-hover:scale-95`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={product.image} alt={product.title} className="object-contain mix-blend-multiply w-[90%] h-[90%]" />
+              <img
+                ref={imageRef}
+                src={product.image}
+                alt={product.title}
+                onLoad={() => setLoaded(true)}
+                onError={() => setLoaded(true)}
+                className={`object-contain mix-blend-multiply w-[90%] h-[90%] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+              />
             </div>
           </>
         ) : (
