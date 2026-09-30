@@ -160,7 +160,7 @@ function reviewValues(payload) {
 
   if (!UUID_PATTERN.test(productId)) throw new ReviewError("Choose the product this review is for.");
   if (!isValidRating(rating)) {
-    throw new ReviewError(`Rating must be a whole number from ${RATING_MIN} to ${RATING_MAX}.`);
+    throw new ReviewError(`Rating must be from ${RATING_MIN} to ${RATING_MAX} stars, in half-star steps.`);
   }
   if (!title) throw new ReviewError("Review title is required.");
   if (title.length > MAX_TITLE_LENGTH) {

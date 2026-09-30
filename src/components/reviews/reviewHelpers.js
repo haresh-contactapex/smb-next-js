@@ -1,9 +1,9 @@
-import { RATING_MAX, RATING_MIN, REVIEW_STATUSES, STATUS_BADGE_CLASSES, STATUS_LABELS } from "@/lib/reviewFields";
+import { RATING_VALUES, REVIEW_STATUSES, STATUS_BADGE_CLASSES, STATUS_LABELS, formatRating } from "@/lib/reviewFields";
 
-export { STATUS_LABELS, STATUS_BADGE_CLASSES, REVIEW_STATUSES };
+export { STATUS_LABELS, STATUS_BADGE_CLASSES, REVIEW_STATUSES, formatRating };
 
-// Highest rating first, matching how shoppers filter by "4 stars & up".
-export const RATING_FILTER_OPTIONS = Array.from({ length: RATING_MAX - RATING_MIN + 1 }, (_, i) => RATING_MAX - i);
+// Every selectable rating, highest first.
+export const RATING_FILTER_OPTIONS = [...RATING_VALUES].reverse();
 
 export function formatReviewDate(iso) {
   return new Date(iso).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });

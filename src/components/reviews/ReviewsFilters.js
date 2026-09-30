@@ -1,5 +1,5 @@
 import Icon from "@/components/admin-panel/Icon";
-import { RATING_FILTER_OPTIONS, REVIEW_STATUSES, STATUS_LABELS } from "./reviewHelpers";
+import { RATING_FILTER_OPTIONS, REVIEW_STATUSES, STATUS_LABELS, formatRating } from "./reviewHelpers";
 
 function SelectFilter({ value, onChange, label, widthClass, children }) {
   return (
@@ -60,7 +60,7 @@ export default function ReviewsFilters({
           <option value="">All ratings</option>
           {RATING_FILTER_OPTIONS.map((value) => (
             <option key={value} value={value}>
-              {value} star{value === 1 ? "" : "s"}
+              {formatRating(value)} star{value === 1 ? "" : "s"}
             </option>
           ))}
         </SelectFilter>

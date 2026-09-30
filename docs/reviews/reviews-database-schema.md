@@ -6,11 +6,17 @@ dialect. The SQL lives in [`reviews-table-only.sql`](reviews-table-only.sql);
 apply it with `npm run db:migrate:reviews` (needs the `products` table from
 `npm run db:migrate` first).
 
+Ratings started out as whole stars (`SMALLINT`, 1–5). A table created that
+way is upgraded to half stars by
+[`reviews-half-star-ratings-only.sql`](reviews-half-star-ratings-only.sql)
+(`npm run db:migrate:reviews-half-stars`); it keeps existing ratings and is
+safe to re-run. A fresh `db:migrate:reviews` already creates the new column.
+
 ## Review form fields
 
 | Form field     | Column         | Type           | Rules                                            |
 | -------------- | -------------- | -------------- | ------------------------------------------------ |
-| Rating         | `rating`       | `SMALLINT`     | Required, whole number 1–5 (`CHECK`)              |
+| Rating         | `rating`       | `NUMERIC(2,1)` | Required, 0.5–5 in half-star steps (`CHECK`); shown as whole and half stars |
 | Review title   | `title`        | `VARCHAR(150)` | Required                                          |
 | Review content | `content`      | `TEXT`         | Required, up to 5,000 characters (app-enforced)   |
 | Display name   | `display_name` | `VARCHAR(100)` | Required; the public name shown with the review   |
