@@ -1,19 +1,14 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
 import { toggleDropdown } from "@/components/admin-panel/adminPanelActions";
 import { DASHBOARD_RANGES } from "@/lib/dashboardRanges";
-import DiamondLoader from "./DiamondLoader";
 
-export default function WelcomeHeader({ name, range }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+export default function WelcomeHeader({ name, range, onRangeChange }) {
   const label = (DASHBOARD_RANGES.find((r) => r.key === range) || DASHBOARD_RANGES[1]).label;
 
   function pick(key) {
-    if (key !== range) startTransition(() => router.push(key === "7d" ? "/admin" : `/admin?range=${key}`));
+    onRangeChange(key);
     toggleDropdown("panelDateRange");
   }
 
@@ -25,7 +20,6 @@ export default function WelcomeHeader({ name, range }) {
           Here&apos;s what&apos;s happening with your store today.
         </p>
       </div>
-      <DiamondLoader active={isPending} subtitle="Updating your dashboard" />
       <div className="relative shrink-0">
         <button
           id="btnDateRange"

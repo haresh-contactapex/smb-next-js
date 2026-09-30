@@ -1,4 +1,4 @@
-import WelcomeHeader from "@/components/dashboard/WelcomeHeader";
+import DashboardContent from "@/components/dashboard/DashboardContent";
 import OrderStatsSection from "@/components/dashboard/OrderStatsSection";
 import MiniStatGrid from "@/components/dashboard/MiniStatGrid";
 import SalesChart from "@/components/dashboard/SalesChart";
@@ -35,9 +35,7 @@ export default async function DashboardPage({ searchParams }) {
   const data = await getDashboardData({ rangeKey: range, currency });
 
   return (
-    <>
-      <WelcomeHeader name={staffUser?.firstName || adminPanelConfig.user.name} range={data.range} />
-
+    <DashboardContent name={staffUser?.firstName || adminPanelConfig.user.name} range={data.range}>
       {data.orderStats && data.totalSales && <OrderStatsSection stats={data.orderStats} totalSales={data.totalSales} />}
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -58,6 +56,6 @@ export default async function DashboardPage({ searchParams }) {
         <QuickActions actions={quickActions} />
         <TopCustomers customers={data.topCustomers} viewAllHref="/admin/all-customers" />
       </div>
-    </>
+    </DashboardContent>
   );
 }
