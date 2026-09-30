@@ -18,7 +18,7 @@ const TOAST_AUTO_DISMISS_MS = 10000;
 // On-screen order, so the first invalid field is the one that gets focus.
 const FIELD_ORDER = ["productId", "rating", "title", "content", "displayName", "email"];
 
-export default function AddReviewForm({ reviewId, products = [] }) {
+export default function AddReviewForm({ reviewId }) {
   const isEdit = Boolean(reviewId);
   const router = useRouter();
   const can = useCan();
@@ -35,6 +35,8 @@ export default function AddReviewForm({ reviewId, products = [] }) {
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  // Bumped on Discard so the product search box drops any half-typed text.
+  const [resetCount, setResetCount] = useState(0);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const fieldRefs = useRef({});
@@ -88,6 +90,12 @@ export default function AddReviewForm({ reviewId, products = [] }) {
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   }
 
+  // Picking (or clearing) a product changes the id and its display title together.
+  function setProduct(product) {
+    setReview((prev) => ({ ...prev, productId: product?.id ?? "", productTitle: product?.title ?? "" }));
+    if (product) setErrors((prev) => (prev.productId ? { ...prev, productId: undefined } : prev));
+  }
+
   function handleSave(e) {
     e?.preventDefault();
     if (savingRef.current) return;
@@ -135,6 +143,7 @@ export default function AddReviewForm({ reviewId, products = [] }) {
     if (!window.confirm("Discard all changes and start over?")) return;
     setReview(newReview());
     setErrors({});
+    setResetCount((count) => count + 1);
   }
 
   if (loading) {
@@ -159,14 +168,17 @@ export default function AddReviewForm({ reviewId, products = [] }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <ReviewDetailsSection
-            products={products}
+            key={resetCount}
             productId={review.productId}
+            productTitle={review.productTitle}
             rating={review.rating}
             title={review.title}
             content={review.content}
             errors={errors}
             registerRef={registerRef}
             onFieldChange={setField}
+            onProductSelect={setProduct}
+            onProductClear={() => setProduct(null)}
           />
 
           <ReviewerSection

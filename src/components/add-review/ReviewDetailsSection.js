@@ -1,18 +1,20 @@
 "use client";
 
-import Icon from "@/components/admin-panel/Icon";
 import { MAX_CONTENT_LENGTH, MAX_TITLE_LENGTH } from "@/lib/reviewFields";
+import ProductSearchField from "./ProductSearchField";
 import RatingInput from "./RatingInput";
 
 export default function ReviewDetailsSection({
-  products,
   productId,
+  productTitle,
   rating,
   title,
   content,
   errors,
   registerRef,
   onFieldChange,
+  onProductSelect,
+  onProductClear,
 }) {
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
@@ -23,31 +25,21 @@ export default function ReviewDetailsSection({
           <label className="field-label" htmlFor="f-product">
             Product
           </label>
-          <div className="relative">
-            <select
-              id="f-product"
-              ref={registerRef("productId")}
-              value={productId}
-              onChange={(e) => onFieldChange("productId", e.target.value)}
-              aria-invalid={errors.productId ? "true" : undefined}
-              aria-describedby={errors.productId ? "f-product-error" : undefined}
-              className={`field-input appearance-none pr-8 cursor-pointer${errors.productId ? " border-red-400" : ""}`}
-            >
-              <option value="">Select a product…</option>
-              {products.map((product) => (
-                <option key={product.id} value={product.id}>
-                  {product.title}
-                  {product.sku ? ` (${product.sku})` : ""}
-                </option>
-              ))}
-            </select>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">
-              <Icon name="chevron-down" className="w-4 h-4" />
-            </span>
-          </div>
-          {errors.productId && (
+          <ProductSearchField
+            selectedId={productId}
+            selectedTitle={productTitle}
+            error={errors.productId}
+            inputRef={registerRef("productId")}
+            onSelect={onProductSelect}
+            onClear={onProductClear}
+          />
+          {errors.productId ? (
             <p id="f-product-error" className="text-xs text-error mt-1">
               {errors.productId}
+            </p>
+          ) : (
+            <p id="f-product-help" className="text-[11px] text-slate-400 mt-1.5">
+              Start typing a product name or SKU, then pick it from the suggestions.
             </p>
           )}
         </div>

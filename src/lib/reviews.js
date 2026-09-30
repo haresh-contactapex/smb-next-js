@@ -110,10 +110,39 @@ export async function getPublicReviewsForProduct(productId, limit = 50) {
   };
 }
 
-// Lightweight product picker options for the review form.
-export async function listReviewProducts() {
-  const rows = await sql`SELECT id, title, sku FROM products ORDER BY title ASC`;
-  return rows.map((row) => ({ id: row.id, title: row.title, sku: row.sku || "" }));
+const PRODUCT_SEARCH_MAX_LENGTH = 100;
+const PRODUCT_SEARCH_DEFAULT_LIMIT = 8;
+
+// Suggestions for the review form's product picker: products whose title or
+// SKU contains the text, titles that start with it first. An empty query
+// returns the first products alphabetically so the picker can be browsed.
+export async function searchReviewProducts(query, limit = PRODUCT_SEARCH_DEFAULT_LIMIT) {
+  const term = String(query ?? "").trim().slice(0, PRODUCT_SEARCH_MAX_LENGTH);
+  const max = Math.min(Math.max(parseInt(limit, 10) || PRODUCT_SEARCH_DEFAULT_LIMIT, 1), 20);
+  // Escape LIKE wildcards so "50%" or "a_b" are searched literally.
+  const escaped = term.replace(/[\\%_]/g, "\\$&");
+  const contains = `%${escaped}%`;
+  const startsWith = `${escaped}%`;
+  const rows = await sql`
+    SELECT p.id, p.title, p.sku, m.url AS thumbnail
+    FROM products p
+    -- The main image; blob: URLs are dead local previews, so they're skipped.
+    LEFT JOIN LATERAL (
+      SELECT url FROM product_media
+      WHERE product_id = p.id AND type = 'image' AND url NOT LIKE 'blob:%'
+      ORDER BY position
+      LIMIT 1
+    ) m ON true
+    WHERE p.title ILIKE ${contains} OR p.sku ILIKE ${contains}
+    ORDER BY (p.title ILIKE ${startsWith}) DESC, p.title ASC
+    LIMIT ${max}
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    sku: row.sku || "",
+    thumbnail: row.thumbnail || null,
+  }));
 }
 
 function requireStatus(value) {

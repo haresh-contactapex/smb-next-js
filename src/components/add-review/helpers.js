@@ -3,6 +3,7 @@ import { MAX_EMAIL_LENGTH } from "@/lib/reviewFields";
 
 export const DEFAULT_REVIEW = {
   productId: "",
+  productTitle: "",
   rating: 0,
   title: "",
   content: "",
@@ -14,6 +15,7 @@ export const DEFAULT_REVIEW = {
 export function buildReviewFromData(data) {
   return {
     productId: data.productId || "",
+    productTitle: data.productTitle || "",
     rating: data.rating || 0,
     title: data.title || "",
     content: data.content || "",
@@ -26,7 +28,7 @@ export function buildReviewFromData(data) {
 // Keys are in on-screen order, so the first invalid field is the one to focus.
 export function validateReview(review) {
   const errors = {};
-  if (!review.productId) errors.productId = "Choose the product this review is for.";
+  if (!review.productId) errors.productId = "Search for the product and pick it from the suggestions.";
   if (!review.rating) errors.rating = "Select a rating from 1 to 5 stars.";
   if (!review.title.trim()) errors.title = "Review title is required.";
   if (!review.content.trim()) errors.content = "Review content is required.";

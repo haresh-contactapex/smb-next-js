@@ -43,9 +43,16 @@ Indexes: `product_id`, `status`, `created_at DESC`.
 | `/admin/add-review`         | `reviews.create`  | Add a review by hand                               |
 | `/admin/edit-review/[id]`   | `reviews.edit`    | Edit a review                                      |
 
+The **Product** field on the form is a type-to-search box: it asks
+`/api/reviews/products?q=` for up to 8 matching products (title or SKU
+contains the text, titles starting with it first, thumbnail included) and
+only stores the chosen product's id. Typing after picking a product clears
+the selection, so the saved product always matches what is shown.
+
 | Route                       | Method | Permission        |
 | --------------------------- | ------ | ----------------- |
 | `/api/reviews`              | GET    | `reviews.view`    |
+| `/api/reviews/products`     | GET    | `reviews.create` or `reviews.edit` (product suggestions, `?q=`) |
 | `/api/reviews`              | POST   | `reviews.create`  |
 | `/api/reviews/[id]`         | GET    | `reviews.view` or `reviews.edit` |
 | `/api/reviews/[id]`         | PUT    | `reviews.edit`    |
