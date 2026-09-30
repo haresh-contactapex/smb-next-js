@@ -1,18 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import StoreIcon from "./icons";
-import { formatCurrency } from "@/lib/currency";
-
-const METALS = [
-  { code: "14KR", color: "#E5B5A3" },
-  { code: "18KR", color: "#E5B5A3" },
-  { code: "14KW", color: "#E0E0E0" },
-  { code: "18KW", color: "#E0E0E0" },
-  { code: "14KY", color: "#E8C581" },
-  { code: "18KY", color: "#E8C581" },
-  { code: "PT", color: "#D4D4D4" },
-];
+import { useMemo, useState } from "react";
+import ProductCard from "./ProductCard";
+import { METALS } from "./metals";
 
 const BAND_SIZES = ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10"];
 
@@ -137,55 +127,5 @@ export default function ProductListing({ products, currency = "USD", failed = fa
         </div>
       )}
     </>
-  );
-}
-
-function ProductCard({ product, currency, delay }) {
-  const layer =
-    "absolute inset-0 flex items-center justify-center p-6 sm:p-8 transform transition-all duration-700 ease-out z-10";
-  // Shimmer until the main image has loaded (or failed, so it never shimmers forever).
-  const [loaded, setLoaded] = useState(false);
-  const imageRef = useRef(null);
-
-  // The image may already be complete (cached) before React attaches onLoad.
-  useEffect(() => {
-    if (imageRef.current?.complete) setLoaded(true);
-  }, []);
-
-  return (
-    <div className="group cursor-pointer fade-in-up" style={{ animationDelay: `${delay}ms` }}>
-      <div className="relative bg-[#FAFAFA] rounded-md aspect-square overflow-hidden mb-3 sm:mb-4">
-        <button type="button" aria-label="Add to wishlist" className="absolute top-3 right-3 sm:top-4 sm:right-4 hover:text-[#ef9822] transition-colors z-20">
-          <StoreIcon name="heart" />
-        </button>
-        {product.image ? (
-          <>
-            {/* Hover image */}
-            <div className={`${layer} bg-[#FAFAFA] opacity-0 group-hover:opacity-100 scale-110 group-hover:scale-100`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={product.hoverImage || product.image} alt="" className="object-contain mix-blend-multiply w-[90%] h-[90%]" />
-            </div>
-            {/* Base image */}
-            <div className={`${layer} ${loaded ? "bg-[#FAFAFA]" : "shimmer"} group-hover:opacity-0 group-hover:scale-95`}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                ref={imageRef}
-                src={product.image}
-                alt={product.title}
-                onLoad={() => setLoaded(true)}
-                onError={() => setLoaded(true)}
-                className={`object-contain mix-blend-multiply w-[90%] h-[90%] transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
-              />
-            </div>
-          </>
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">No image</div>
-        )}
-      </div>
-      <div className="text-left">
-        <div className="font-semibold text-[#333333] mb-1">{formatCurrency(product.price, currency)}</div>
-        <h3 className="leading-tight text-sm font-[600]">{product.title}</h3>
-      </div>
-    </div>
   );
 }

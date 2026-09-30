@@ -626,9 +626,89 @@ export async function listStorefrontProducts() {
 
   return rows.map((row) => ({
     id: row.id,
+    handle: row.handle,
     title: row.title,
     price: Number(row.price) || 0,
     image: row.images?.[0] || null,
     hoverImage: row.images?.[1] || row.images?.[0] || null,
   }));
+}
+
+function moneyOrNull(value) {
+  return value === null || value === undefined ? null : Number(value);
+}
+
+// Storefront product page: one ACTIVE product by handle, shaped for display.
+// Draft/archived products and unknown handles return null (the page 404s).
+// Variant prices fall back to the product price, and each variant carries an
+// `available` flag so the page never has to interpret inventory rules itself.
+export async function getStorefrontProductByHandle(handle) {
+  const [product] = await sql`
+    SELECT id, title, handle, description, price, compare_at_price, sku, seo_title, seo_description
+    FROM products
+    WHERE handle = ${handle} AND status = 'ACTIVE'
+  `;
+  if (!product) return null;
+
+  const [media, attributes, optionRows, variantRows] = await Promise.all([
+    sql`
+      SELECT url FROM product_media
+      WHERE product_id = ${product.id} AND type = 'image' AND url NOT LIKE 'blob:%'
+      ORDER BY position
+    `,
+    sql`SELECT label, value FROM product_attributes WHERE product_id = ${product.id} ORDER BY position`,
+    sql`
+      SELECT o.name, ov.value
+      FROM product_options o
+      JOIN product_option_values ov ON ov.option_id = o.id
+      WHERE o.product_id = ${product.id}
+      ORDER BY o.position, ov.position
+    `,
+    sql`
+      SELECT
+        v.id, v.sku, v.price, v.compare_at_price, v.inventory_quantity, v.inventory_management,
+        COALESCE(json_object_agg(o.name, ov.value) FILTER (WHERE o.name IS NOT NULL), '{}'::json) AS options
+      FROM product_variants v
+      LEFT JOIN variant_option_values vov ON vov.variant_id = v.id
+      LEFT JOIN product_option_values ov ON ov.id = vov.option_value_id
+      LEFT JOIN product_options o ON o.id = ov.option_id
+      WHERE v.product_id = ${product.id}
+      GROUP BY v.id
+      ORDER BY v.created_at
+    `,
+  ]);
+
+  // Rows arrive as flat (name, value) pairs already ordered by option/value position.
+  const options = [];
+  for (const { name, value } of optionRows) {
+    let option = options.find((o) => o.name === name);
+    if (!option) options.push((option = { name, values: [] }));
+    option.values.push(value);
+  }
+
+  const price = Number(product.price) || 0;
+  const compareAtPrice = moneyOrNull(product.compare_at_price);
+
+  return {
+    id: product.id,
+    handle: product.handle,
+    title: product.title,
+    description: product.description || "",
+    seoTitle: product.seo_title || "",
+    seoDescription: product.seo_description || "",
+    sku: product.sku || "",
+    price,
+    compareAtPrice,
+    images: media.map((m) => m.url),
+    attributes: attributes.map((a) => ({ label: a.label, value: a.value })),
+    options,
+    variants: variantRows.map((v) => ({
+      id: v.id,
+      sku: v.sku || "",
+      options: v.options,
+      price: moneyOrNull(v.price) ?? price,
+      compareAtPrice: moneyOrNull(v.compare_at_price) ?? compareAtPrice,
+      available: !v.inventory_management || v.inventory_quantity > 0,
+    })),
+  };
 }

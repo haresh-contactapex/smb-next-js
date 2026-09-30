@@ -82,6 +82,34 @@ export async function getReviewById(id) {
   return row ? mapReview(row) : null;
 }
 
+// Storefront: APPROVED reviews only, newest first. The reviewer's email is
+// admin-only and deliberately never selected. The count/average cover every
+// approved review even though the returned list is capped.
+export async function getPublicReviewsForProduct(productId, limit = 50) {
+  if (!UUID_PATTERN.test(String(productId))) return { count: 0, average: 0, reviews: [] };
+  const rows = await sql`
+    SELECT
+      id, rating, title, content, display_name, created_at,
+      COUNT(*) OVER () AS total, AVG(rating) OVER () AS average
+    FROM product_reviews
+    WHERE product_id = ${productId} AND status = 'APPROVED'
+    ORDER BY created_at DESC
+    LIMIT ${limit}
+  `;
+  return {
+    count: Number(rows[0]?.total ?? 0),
+    average: Number(rows[0]?.average ?? 0),
+    reviews: rows.map((row) => ({
+      id: row.id,
+      rating: Number(row.rating),
+      title: row.title,
+      content: row.content,
+      displayName: row.display_name,
+      createdAt: new Date(row.created_at).toISOString(),
+    })),
+  };
+}
+
 // Lightweight product picker options for the review form.
 export async function listReviewProducts() {
   const rows = await sql`SELECT id, title, sku FROM products ORDER BY title ASC`;
