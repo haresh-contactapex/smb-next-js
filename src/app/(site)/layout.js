@@ -6,6 +6,7 @@ import SiteFooter from "@/components/storefront/SiteFooter";
 import StorefrontChrome from "@/components/storefront/StorefrontChrome";
 import CartProvider from "@/components/storefront/cart/CartProvider";
 import CartDrawer from "@/components/storefront/cart/CartDrawer";
+import WishlistProvider from "@/components/storefront/wishlist/WishlistProvider";
 import { listShippingCountries } from "@/lib/storefrontCart";
 import "./storefront.css";
 
@@ -29,18 +30,20 @@ export default function SiteLayout({ children }) {
     >
       <GoogleSansFont />
       <CartProvider countries={listShippingCountries()}>
-        <StorefrontChrome
-          header={
-            <>
-              <TopBar />
-              <SiteHeader />
-            </>
-          }
-          footer={<SiteFooter />}
-        >
-          {children}
-        </StorefrontChrome>
-        <CartDrawer />
+        <WishlistProvider>
+          <StorefrontChrome
+            header={
+              <>
+                <TopBar />
+                <SiteHeader />
+              </>
+            }
+            footer={<SiteFooter />}
+          >
+            {children}
+          </StorefrontChrome>
+          <CartDrawer />
+        </WishlistProvider>
       </CartProvider>
     </div>
   );

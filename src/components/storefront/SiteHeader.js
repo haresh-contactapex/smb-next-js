@@ -1,6 +1,7 @@
 import Link from "next/link";
 import MobileMenu from "./MobileMenu";
 import CartButton from "./cart/CartButton";
+import WishlistButton from "./wishlist/WishlistButton";
 import StoreIcon from "./icons";
 import { STORE_NAV_LINKS } from "./navLinks";
 
@@ -34,9 +35,7 @@ export default function SiteHeader() {
           <Link href="/login" aria-label="Account" className={`hidden sm:block ${iconButton}`}>
             <StoreIcon name="user" />
           </Link>
-          <button type="button" aria-label="Wishlist" className={iconButton}>
-            <StoreIcon name="heart" />
-          </button>
+          <WishlistButton className={iconButton} />
           <CartButton className={iconButton} />
         </div>
       </div>

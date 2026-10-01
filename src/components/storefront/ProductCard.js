@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import StoreIcon from "./icons";
+import WishlistHeart from "./wishlist/WishlistHeart";
 import useImageLoaded from "./useImageLoaded";
 import { formatCurrency } from "@/lib/currency";
 
@@ -16,9 +16,12 @@ export default function ProductCard({ product, currency, delay = 0 }) {
   return (
     <div className="group relative fade-in-up" style={{ animationDelay: `${delay}ms` }}>
       <div className="relative bg-[#FAFAFA] rounded-md aspect-square overflow-hidden mb-3 sm:mb-4">
-        <button type="button" aria-label="Add to wishlist" className="absolute top-3 right-3 sm:top-4 sm:right-4 hover:text-[#ef9822] transition-colors z-20">
-          <StoreIcon name="heart" />
-        </button>
+        <WishlistHeart
+          productId={product.id}
+          title={product.title}
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 hover:text-[#ef9822] transition-colors z-20"
+          activeClassName="text-[#ef9822]"
+        />
         {product.image ? (
           <>
             {/* Hover image */}

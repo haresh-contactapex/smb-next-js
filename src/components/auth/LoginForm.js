@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { mergeGuestWishlist } from "@/components/storefront/wishlist/wishlistApi";
 import { DEFAULT_LOGIN, isValidEmail } from "./helpers";
 import PasswordField from "./PasswordField";
 import AuthLayout from "./AuthLayout";
@@ -69,6 +70,8 @@ export default function LoginForm() {
       if (!res.ok || !result.success) {
         throw new Error(result.error || "Unable to sign in.");
       }
+      // Items saved as a guest move into the account's wishlist now that there is one.
+      await mergeGuestWishlist();
       // There's no customer-facing storefront page in this app yet to send
       // them to (only these auth pages exist) — staying put with the cookie
       // set avoids bouncing a signed-in customer into the gated admin panel.
