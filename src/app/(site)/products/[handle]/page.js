@@ -1,7 +1,6 @@
 import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Lato } from "next/font/google";
 import ProductGallery from "@/components/storefront/ProductGallery";
 import ProductPurchasePanel from "@/components/storefront/ProductPurchasePanel";
 import ProductTabs from "@/components/storefront/ProductTabs";
@@ -14,11 +13,6 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // Reads live catalog data, so never prerender it at build time.
 export const dynamic = "force-dynamic";
-
-// Body font for this page only; the rest of the storefront stays on Montserrat.
-// Lato ships 300/400/700/900, so font-medium (500) renders as 400 and
-// font-semibold (600) as 700.
-const lato = Lato({ subsets: ["latin"], weight: ["400", "700"], display: "swap" });
 
 // Shared by generateMetadata and the page so the product is queried once per
 // request. A database failure is kept apart from "no such product" so an outage
@@ -115,7 +109,7 @@ export default async function ProductPage({ params }) {
   };
 
   return (
-    <div className={lato.className}>
+    <div>
       <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-4 sm:px-8 py-6 text-[16px] text-gray-400 font-medium">
         <ol className="flex flex-wrap items-center">
           <li>
@@ -142,7 +136,7 @@ export default async function ProductPage({ params }) {
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16 fade-in-up delay-100">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
-          <ProductGallery key={`gallery-${id}`} images={product.images} title={title} lightboxClassName={lato.className} />
+          <ProductGallery key={`gallery-${id}`} images={product.images} title={title} />
           <ProductPurchasePanel key={id} product={purchaseProduct} currency={currency} reviews={reviews} supportEmail={supportEmail} />
         </div>
 

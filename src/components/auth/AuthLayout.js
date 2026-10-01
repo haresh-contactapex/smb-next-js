@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import GoogleSansFont from "@/components/storefront/GoogleSansFont";
 
 const FEATURES = [
   { icon: "truck", text: "Free shipping on every order, no minimum" },
@@ -14,7 +15,8 @@ export default function AuthLayout({ title, subtitle, children, footer }) {
   const { storeName, logoUrl } = useGeneralSettings();
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-slate-50 dark:bg-darkbg">
+    <div className="font-google-sans min-h-screen grid lg:grid-cols-2 bg-slate-50 dark:bg-darkbg">
+      <GoogleSansFont />
       <div className="hidden lg:flex flex-col justify-between p-10 xl:p-14 bg-gradient-to-br from-primary-600 to-primary-800 text-white relative overflow-hidden">
         <div className="absolute -right-24 -top-24 w-72 h-72 rounded-full bg-white/5" />
         <div className="absolute -left-16 -bottom-24 w-64 h-64 rounded-full bg-white/5" />

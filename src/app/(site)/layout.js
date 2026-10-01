@@ -1,4 +1,5 @@
-import { Montserrat, Playfair_Display } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
+import GoogleSansFont from "@/components/storefront/GoogleSansFont";
 import TopBar from "@/components/storefront/TopBar";
 import SiteHeader from "@/components/storefront/SiteHeader";
 import SiteFooter from "@/components/storefront/SiteFooter";
@@ -8,12 +9,6 @@ import CartDrawer from "@/components/storefront/cart/CartDrawer";
 import { listShippingCountries } from "@/lib/storefrontCart";
 import "./storefront.css";
 
-const montserrat = Montserrat({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-montserrat",
-});
-
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "600", "700"],
@@ -22,15 +17,17 @@ const playfair = Playfair_Display({
 
 // Public storefront shell: announcement bar / header / main container / footer
 // as distinct bands. Always light — the admin dark-mode class on <html> doesn't apply here.
+// Google Sans is the base font; Playfair Display is the display font for headings
+// (applied inline via var(--font-playfair)).
 // The cart provider wraps everything so the header icon, the product page's
 // Add to Cart and the slide-out drawer share one cart.
 export default function SiteLayout({ children }) {
   return (
     <div
       id="storefront-root"
-      className={`${montserrat.variable} ${playfair.variable} min-h-screen flex flex-col bg-white text-[#555555] text-[16px] overflow-x-clip`}
-      style={{ fontFamily: "var(--font-montserrat), sans-serif" }}
+      className={`${playfair.variable} font-google-sans min-h-screen flex flex-col bg-white text-[#555555] text-[16px] overflow-x-clip`}
     >
+      <GoogleSansFont />
       <CartProvider countries={listShippingCountries()}>
         <StorefrontChrome
           header={
