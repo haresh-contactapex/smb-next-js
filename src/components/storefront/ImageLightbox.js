@@ -39,7 +39,7 @@ function LightboxImage({ src, alt }) {
 // Full-screen photo viewer: dark backdrop, round prev/next arrows, a close
 // button and an "n / total" counter. Keyboard (Esc, arrows, Tab trap), swipe
 // and backdrop click all work; page scroll is locked and focus is restored.
-export default function ImageLightbox({ images, title, startIndex = 0, onClose }) {
+export default function ImageLightbox({ images, title, startIndex = 0, onClose, className = "" }) {
   const [index, setIndex] = useState(startIndex);
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
@@ -122,7 +122,7 @@ export default function ImageLightbox({ images, title, startIndex = 0, onClose }
       onClick={(event) => event.target === event.currentTarget && onClose()}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
-      className="lightbox-enter fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+      className={`lightbox-enter fixed inset-0 z-[100] flex items-center justify-center bg-black/80 ${className}`}
     >
       <LightboxImage key={images[index]} src={images[index]} alt={imageAlt(title, index)} />
 

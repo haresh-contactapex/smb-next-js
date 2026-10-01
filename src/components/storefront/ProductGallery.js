@@ -6,7 +6,7 @@ import ImageLightbox, { imageAlt } from "./ImageLightbox";
 
 // Two-column photo grid, in the order the admin arranged the product media.
 // Any photo opens in the lightbox at that position.
-export default function ProductGallery({ images, title }) {
+export default function ProductGallery({ images, title, lightboxClassName = "" }) {
   const [openIndex, setOpenIndex] = useState(null);
   const close = useCallback(() => setOpenIndex(null), []);
 
@@ -34,7 +34,9 @@ export default function ProductGallery({ images, title }) {
         />
       ))}
 
-      {openIndex !== null && <ImageLightbox images={images} title={title} startIndex={openIndex} onClose={close} />}
+      {openIndex !== null && (
+        <ImageLightbox images={images} title={title} startIndex={openIndex} onClose={close} className={lightboxClassName} />
+      )}
     </div>
   );
 }
