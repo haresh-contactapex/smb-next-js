@@ -7,10 +7,12 @@ import { postJson } from "./cartApi";
 // id, for the cart page's color / size pickers. Fetched once the cart has
 // loaded, and again only if the cart gains a product it hasn't seen (removing
 // a line needs no request). A product that is no longer sold simply has no
-// entry, and `failed` is set when the lookup couldn't be completed.
+// entry, and `failed` is set when the lookup couldn't be completed. `loading`
+// is true until the first answer (either way) arrives.
 export default function useCartProducts(items, enabled) {
   const [products, setProducts] = useState({});
   const [failed, setFailed] = useState(false);
+  const [settled, setSettled] = useState(false);
   const loadedRef = useRef(products);
   loadedRef.current = products;
 
@@ -24,6 +26,7 @@ export default function useCartProducts(items, enabled) {
     const controller = new AbortController();
     postJson("/api/cart/variants", { productIds: ids }, controller.signal).then((result) => {
       if (result.aborted) return;
+      setSettled(true);
       if (!result.ok || !Array.isArray(result.data)) {
         setFailed(true);
         return;
@@ -34,5 +37,5 @@ export default function useCartProducts(items, enabled) {
     return () => controller.abort();
   }, [enabled, idsKey]);
 
-  return { products, failed };
+  return { products, failed, loading: enabled && Boolean(idsKey) && !settled };
 }

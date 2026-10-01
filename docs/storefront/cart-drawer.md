@@ -19,6 +19,7 @@ endpoints answer the questions the browser can't.
 | Full cart page at `/cart` | `src/app/(site)/cart/page.js`, `CartPage.js` |
 | Cart page lines with editable color / size | `CartPageLine.js`, `CartOptionSelect.js`, `useCartProducts.js` |
 | Cart page order summary, recommended products | `CartSummary.js`, `CartRecommended.js` |
+| Shimmer skeletons | `CartPageSkeleton.js`, `src/app/(site)/cart/loading.js`, `CartDrawerSkeleton.js` |
 | Header icon + count badge | `CartButton.js` |
 | Server lookups | `src/lib/storefrontCart.js`, `getCouponByCode()` in `src/lib/coupons.js` |
 | Public endpoints | `src/app/api/cart/coupon/route.js`, `src/app/api/cart/shipping/route.js`, `src/app/api/cart/variants/route.js` |
@@ -61,6 +62,14 @@ endpoints answer the questions the browser can't.
   - "Sales tax" says **Included** when Settings → Currency & Tax has *prices
     include tax*; otherwise **Calculated at checkout**. The cart doesn't
     calculate tax; the checkout page estimates it.
+- **Loading states** use the storefront `.shimmer` placeholder, like the product
+  listing and detail pages. `/cart` has a `loading.js` (breadcrumb, heading,
+  lines, summary, recommended row) for the server render, and `CartPage` shows
+  the same body skeleton until the cart has been read from `localStorage`, so
+  neither page nor drawer ever says "empty" before it knows (the drawer uses
+  `CartDrawerSkeleton` in that window). Line images shimmer until they load
+  (`useImageLoaded`, as on product cards), and on the page each line's color /
+  size pickers shimmer until `/api/cart/variants` answers.
 - Not included on purpose: a "spend X for free shipping" progress bar and a
   "I agree to the Terms & conditions" checkbox.
 - **Checkout** (the drawer's button and the cart page's **Proceed to checkout**)

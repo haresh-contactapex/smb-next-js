@@ -6,6 +6,7 @@ import CartOptionSelect from "./CartOptionSelect";
 import { useCart } from "./CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { isMetalOption } from "../metals";
+import useImageLoaded from "../useImageLoaded";
 import { formatCurrency } from "@/lib/currency";
 import { lineLimit, optionChoices } from "./cartHelpers";
 
@@ -14,11 +15,13 @@ const STEP_BUTTON =
 
 // One product line on the cart page: image, name, price, editable color and
 // size, quantity and remove. `product` ({ options, variants }) is what the
-// pickers choose from; without it (still loading, or the product is no longer
-// sold) the line's current options are shown but can't be changed.
-export default function CartPageLine({ item, product, onVariantChange }) {
+// pickers choose from. While it is still being fetched (`loading`) the pickers
+// shimmer; if the product is no longer sold, the line's current options are
+// shown but can't be changed.
+export default function CartPageLine({ item, product, loading = false, onVariantChange }) {
   const { removeItem, setQuantity } = useCart();
   const { currency } = useGeneralSettings();
+  const { loaded: imageLoaded, imageProps } = useImageLoaded();
 
   const variant = product?.variants.find((candidate) => candidate.id === item.variantId) || null;
   const editable = Boolean(product && variant);
@@ -40,10 +43,15 @@ export default function CartPageLine({ item, product, onVariantChange }) {
   const atLimit = item.quantity >= lineLimit(item);
   const stockLimited = atLimit && item.maxQuantity > 0 && item.quantity >= item.maxQuantity;
   const image = (
-    <div className="aspect-square w-full rounded bg-[#FAFAFA] p-3 sm:p-4">
+    <div className={`aspect-square w-full rounded p-3 sm:p-4 ${item.image && !imageLoaded ? "shimmer" : "bg-[#FAFAFA]"}`}>
       {item.image ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.image} alt="" className="h-full w-full object-contain mix-blend-multiply" />
+        <img
+          {...imageProps}
+          src={item.image}
+          alt=""
+          className={`h-full w-full object-contain mix-blend-multiply transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+        />
       ) : (
         <div className="flex h-full w-full items-center justify-center text-[11px] text-gray-400">No image</div>
       )}
@@ -93,23 +101,35 @@ export default function CartPageLine({ item, product, onVariantChange }) {
           </button>
         </div>
 
-        {pickers.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4 sm:mt-7">
+        {loading && !product ? (
+          // Same captions as the real pickers, with a shimmer where the select goes.
+          <div aria-hidden="true" className="mt-5 flex flex-wrap gap-x-8 gap-y-4 sm:mt-7">
             {pickers.map((picker) => (
-              <CartOptionSelect
-                key={picker.name}
-                name={picker.name}
-                value={picker.value}
-                choices={picker.choices}
-                swatch={picker.swatch}
-                disabled={!editable}
-                onChange={(value) => {
-                  const choice = picker.choices.find((candidate) => candidate.value === value);
-                  if (choice?.variant) onVariantChange(item, choice.variant);
-                }}
-              />
+              <div key={picker.name}>
+                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#555555]">{picker.name}</span>
+                <div className="shimmer h-[37px] w-36 rounded" />
+              </div>
             ))}
           </div>
+        ) : (
+          pickers.length > 0 && (
+            <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4 sm:mt-7">
+              {pickers.map((picker) => (
+                <CartOptionSelect
+                  key={picker.name}
+                  name={picker.name}
+                  value={picker.value}
+                  choices={picker.choices}
+                  swatch={picker.swatch}
+                  disabled={!editable}
+                  onChange={(value) => {
+                    const choice = picker.choices.find((candidate) => candidate.value === value);
+                    if (choice?.variant) onVariantChange(item, choice.variant);
+                  }}
+                />
+              ))}
+            </div>
+          )
         )}
 
         <div className="mt-5 flex items-center gap-5 sm:mt-7">

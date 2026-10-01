@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import StoreIcon from "../icons";
 import CartPageLine from "./CartPageLine";
+import CartPageSkeleton from "./CartPageSkeleton";
 import CartSummary from "./CartSummary";
 import CartRecommended from "./CartRecommended";
 import useCartProducts from "./useCartProducts";
@@ -14,11 +15,11 @@ import { useCart } from "./CartProvider";
 // on the right, and a few recommended products underneath.
 export default function CartPage({ recommended = [], pricesIncludeTax = null }) {
   const { items, hydrated, changeVariant } = useCart();
-  const { products, failed } = useCartProducts(items, hydrated);
+  const { products, failed, loading } = useCartProducts(items, hydrated);
   const [notice, setNotice] = useState("");
 
   // The cart is read from localStorage after mount; don't flash "empty" before then.
-  if (!hydrated) return <div className="min-h-[40vh]" aria-busy="true" />;
+  if (!hydrated) return <CartPageSkeleton />;
 
   // A line's own key (product + variant) changes when its color or size does,
   // which would remount it and drop keyboard focus mid-edit. Number the lines
@@ -53,7 +54,13 @@ export default function CartPage({ recommended = [], pricesIncludeTax = null }) 
           <div>
             <ul className="divide-y divide-gray-300 border-b border-gray-300">
               {items.map((item, index) => (
-                <CartPageLine key={lineKeys[index]} item={item} product={products[item.productId]} onVariantChange={switchVariant} />
+                <CartPageLine
+                  key={lineKeys[index]}
+                  item={item}
+                  product={products[item.productId]}
+                  loading={loading}
+                  onVariantChange={switchVariant}
+                />
               ))}
             </ul>
             <p role="status" className={`text-[13px] text-gray-500 ${notice || failed ? "mt-4" : ""}`}>

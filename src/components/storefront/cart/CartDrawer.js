@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import StoreIcon from "../icons";
 import CartLine from "./CartLine";
+import CartDrawerSkeleton from "./CartDrawerSkeleton";
 import CartOptions from "./CartOptions";
 import CartTotals from "./CartTotals";
 import CartCheckoutButton from "./CartCheckoutButton";
@@ -15,7 +16,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 // Slide-out cart from the right edge: the lines, then the note / shipping /
 // coupon options, the running totals, View Cart and Checkout.
 export default function CartDrawer() {
-  const { items, count, isOpen, closeCart } = useCart();
+  const { items, count, hydrated, isOpen, closeCart } = useCart();
   const [activeOption, setActiveOption] = useState(null);
   const drawerRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -97,7 +98,9 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {items.length === 0 ? (
+        {!hydrated ? (
+          <CartDrawerSkeleton />
+        ) : items.length === 0 ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
             <StoreIcon name="bag" className="w-12 h-12 text-gray-300" />
             <p className="text-[16px] text-[#555555]">Your cart is empty.</p>

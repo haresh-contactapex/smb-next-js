@@ -3,6 +3,7 @@
 import Link from "next/link";
 import StoreIcon from "../icons";
 import { useCart } from "./CartProvider";
+import useImageLoaded from "../useImageLoaded";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { formatCurrency } from "@/lib/currency";
 import { lineLimit, round2 } from "./cartHelpers";
@@ -15,6 +16,7 @@ const STEP_BUTTON =
 export default function CartLine({ item }) {
   const { closeCart, removeItem, setQuantity } = useCart();
   const { currency } = useGeneralSettings();
+  const { loaded: imageLoaded, imageProps } = useImageLoaded();
 
   const optionText = Object.entries(item.options)
     .map(([name, value]) => `${name}: ${value}`)
@@ -24,10 +26,15 @@ export default function CartLine({ item }) {
 
   return (
     <li className="flex gap-4 py-4">
-      <div className="w-20 h-20 flex-shrink-0 rounded bg-[#FAFAFA] p-2">
+      <div className={`w-20 h-20 flex-shrink-0 rounded p-2 ${item.image && !imageLoaded ? "shimmer" : "bg-[#FAFAFA]"}`}>
         {item.image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={item.image} alt="" className="w-full h-full object-contain mix-blend-multiply" />
+          <img
+            {...imageProps}
+            src={item.image}
+            alt=""
+            className={`w-full h-full object-contain mix-blend-multiply transition-opacity duration-500 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-[10px] text-gray-400">No image</div>
         )}
