@@ -13,6 +13,7 @@ import {
   sanitizeCoupon,
   sanitizeShipping,
 } from "./cartHelpers";
+import { postJson } from "./cartApi";
 
 const CartContext = createContext(null);
 
@@ -20,26 +21,6 @@ export function useCart() {
   const cart = useContext(CartContext);
   if (!cart) throw new Error("useCart must be used inside <CartProvider>.");
   return cart;
-}
-
-// Resolves to { ok, data } or { ok: false, error } so callers never need a try/catch.
-async function postJson(url, body, signal) {
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    });
-    const json = await response.json().catch(() => null);
-    if (!response.ok || !json?.success) {
-      return { ok: false, status: response.status, error: json?.error || "Something went wrong. Please try again." };
-    }
-    return { ok: true, data: json.data };
-  } catch (error) {
-    if (error?.name === "AbortError") return { ok: false, aborted: true, error: "" };
-    return { ok: false, status: 0, error: "We couldn't reach the store. Check your connection and try again." };
-  }
 }
 
 const productIdsOf = (items) => [...new Set(items.map((item) => item.productId))];
@@ -156,6 +137,35 @@ export default function CartProvider({ countries = [], children }) {
     setCouponNotice("");
   }, []);
 
+  // Switches a line to another variant of the same product (e.g. a different
+  // color or size): price, stock limit and SKU come from the new variant, and
+  // if the cart already has a line for it the two lines merge into one.
+  const changeVariant = useCallback((key, variant) => {
+    setCart((current) => {
+      const line = current.items.find((item) => item.key === key);
+      if (!line) return current;
+      const changed = normalizeCartItem({
+        ...line,
+        variantId: variant.id,
+        options: variant.options,
+        sku: variant.sku,
+        price: variant.price,
+        compareAtPrice: variant.compareAtPrice > variant.price ? variant.compareAtPrice : null,
+        maxQuantity: variant.maxQuantity,
+      });
+      if (!changed || changed.key === key) return current;
+
+      const target = current.items.find((item) => item.key === changed.key);
+      if (!target) return { ...current, items: current.items.map((item) => (item.key === key ? changed : item)) };
+
+      const merged = { ...changed, quantity: clampQuantity(target.quantity + line.quantity, changed) };
+      return {
+        ...current,
+        items: current.items.filter((item) => item.key !== key).map((item) => (item.key === changed.key ? merged : item)),
+      };
+    });
+  }, []);
+
   const setNote = useCallback((note) => {
     setCart((current) => ({ ...current, note: String(note).slice(0, NOTE_MAX_LENGTH) }));
   }, []);
@@ -216,6 +226,7 @@ export default function CartProvider({ countries = [], children }) {
       closeCart,
       addItem,
       setQuantity,
+      changeVariant,
       removeItem,
       setNote,
       applyCoupon,
@@ -225,7 +236,7 @@ export default function CartProvider({ countries = [], children }) {
       selectShippingRate,
     }),
     [
-      cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, setQuantity, removeItem,
+      cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, setQuantity, changeVariant, removeItem,
       setNote, applyCoupon, removeCoupon, estimateShipping, clearShipping, selectShippingRate,
     ]
   );

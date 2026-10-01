@@ -26,3 +26,10 @@ export function metalColor(value) {
   if (/white|^\d+k?w$/.test(text)) return WHITE;
   return null;
 }
+
+const METAL_OPTION = /colou?r|metal/i;
+
+// A color/metal option becomes swatches only when every value is a recognizable metal.
+export function isMetalOption(option) {
+  return METAL_OPTION.test(option.name) && option.values.every((value) => metalColor(value));
+}

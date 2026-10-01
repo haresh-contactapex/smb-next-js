@@ -3,28 +3,19 @@
 import { useEffect, useId, useRef, useState } from "react";
 import StoreIcon from "./icons";
 import StarRating from "./StarRating";
-import { metalColor } from "./metals";
+import { isMetalOption, metalColor } from "./metals";
 import { useCart } from "./cart/CartProvider";
+import { findVariant } from "./cart/cartHelpers";
 import { formatCurrency } from "@/lib/currency";
 
 const FIELDSET = "border border-gray-200 rounded px-5 pb-5 pt-1 mb-6 min-w-0";
 const LEGEND = "px-2 text-[16px] font-semibold text-[#333333]";
 const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#ef9822] transition-colors";
-const METAL_OPTION = /colou?r|metal/i;
 
 // Start on the first purchasable variant so the page never opens on "Out of stock".
 function defaultSelection(product) {
   const first = product.variants.find((variant) => variant.available) || product.variants[0];
   return Object.fromEntries(product.options.map((option) => [option.name, first?.options[option.name] ?? option.values[0]]));
-}
-
-function findVariant(product, selection) {
-  return product.variants.find((variant) => product.options.every((option) => variant.options[option.name] === selection[option.name]));
-}
-
-// A color/metal option becomes swatches only when every value is a recognizable metal.
-function isMetalOption(option) {
-  return METAL_OPTION.test(option.name) && option.values.every((value) => metalColor(value));
 }
 
 export default function ProductPurchasePanel({ product, currency, reviews, supportEmail = "" }) {

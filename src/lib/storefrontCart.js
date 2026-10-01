@@ -1,6 +1,7 @@
 import { sql } from "./db";
 import { getCouponByCode } from "./coupons";
 import { getShippingSettings } from "./shippingSettings";
+import { listStorefrontProductVariants } from "./products";
 import { LOCATIONS } from "@/data/locationData";
 
 // Server side of the storefront cart drawer. The cart itself lives in the
@@ -84,6 +85,14 @@ export async function lookupCartCoupon(rawCode, rawProductIds) {
     minPurchase: coupon.minPurchase,
     eligibleProductIds,
   };
+}
+
+// The option lists and variants of the products in a cart, so the cart page
+// can offer the other colors and sizes of each line.
+export async function lookupCartProducts(rawProductIds) {
+  const productIds = parseProductIds(rawProductIds);
+  if (productIds.length === 0) throw new CartError("There are no products to look up.");
+  return listStorefrontProductVariants(productIds);
 }
 
 // Countries offered in the estimator, with how their postal code is labelled.

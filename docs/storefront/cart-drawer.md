@@ -16,9 +16,11 @@ endpoints answer the questions the browser can't.
 | Icon row + the section each icon opens (shared by drawer and cart page) | `CartOptions.js` → `CartNote.js`, `CartShipping.js`, `CartCoupon.js` |
 | Totals and the (disabled) Checkout button, shared | `CartTotals.js`, `CartCheckoutButton.js` |
 | Full cart page at `/cart` | `src/app/(site)/cart/page.js`, `CartPage.js` |
+| Cart page lines with editable color / size | `CartPageLine.js`, `CartOptionSelect.js`, `useCartProducts.js` |
+| Cart page order summary, recommended products | `CartSummary.js`, `CartRecommended.js` |
 | Header icon + count badge | `CartButton.js` |
 | Server lookups | `src/lib/storefrontCart.js`, `getCouponByCode()` in `src/lib/coupons.js` |
-| Public endpoints | `src/app/api/cart/coupon/route.js`, `src/app/api/cart/shipping/route.js` |
+| Public endpoints | `src/app/api/cart/coupon/route.js`, `src/app/api/cart/shipping/route.js`, `src/app/api/cart/variants/route.js` |
 
 `CartProvider` and `CartDrawer` are mounted once in `src/app/(site)/layout.js`.
 
@@ -37,7 +39,27 @@ endpoints answer the questions the browser can't.
   - **Shipping** – pick a country and postal code, then choose a rate.
   - **Coupon** – enter a code from *Vouchers / Coupons*.
 - Under the totals the drawer has **View Cart** (opens `/cart`) above
-  **Checkout**. `/cart` shows the same lines, options and totals as a full page.
+  **Checkout**.
+- **`/cart`** is the full page: the lines on the left (large image, name, price,
+  color and size, quantity, remove), an order summary on the right (a row per
+  line, the note / shipping / coupon icons, discount and shipping rows, sales
+  tax, total, and the disabled checkout button) and **Recommended Products**
+  underneath. The drawer keeps its compact lines.
+  - **Color and size are editable on the page.** Each option of a line is a
+    select filled from the product's variants (`/api/cart/variants`).
+    Changing one keeps the line's other choices and swaps in that variant's
+    SKU, price and stock limit (`changeVariant()` in `CartProvider.js`), clamping
+    the quantity to the new stock. A value is disabled when that exact variant
+    doesn't exist ("unavailable") or is out of stock ("sold out"). If the new
+    variant is already another line in the cart, the two merge into one and
+    the page says so. A line whose product is no longer sold, or while the
+    options are still loading, shows its current options but can't change them.
+  - Recommended products are the store's newest active products, loaded by the
+    server page. It passes eight and the page hides the ones already in the cart
+    and shows four.
+  - "Sales tax" says **Included** when Settings → Currency & Tax has *prices
+    include tax*; otherwise **Calculated at checkout**. The storefront doesn't
+    calculate tax.
 - Not included on purpose: a "spend X for free shipping" progress bar and a
   "I agree to the Terms & conditions" checkbox.
 - **Checkout is disabled.** Checkout isn't built on the storefront yet (Buy Now
@@ -45,7 +67,7 @@ endpoints answer the questions the browser can't.
 
 ## Endpoints
 
-Both are `POST`, unauthenticated (storefront visitors), and use the standard
+All three are `POST`, unauthenticated (storefront visitors), and use the standard
 `{ success, data }` / `{ success: false, error }` envelope.
 
 `/api/cart/coupon` – body `{ code, productIds }`. The code is normalized the same
@@ -60,6 +82,13 @@ description and usage counters are never returned.
 `src/data/locationData.js`; the postal code is checked against that country's
 format. Returns the Settings → Shipping values: `{ carrier, flatRate,
 freeShippingThreshold, localPickup, processingDays }`.
+
+`/api/cart/variants` – body `{ productIds }` (UUIDs, at most 100). Returns
+`[{ id, options: [{ name, values }], variants: [{ id, sku, options, price,
+compareAtPrice, available, maxQuantity }] }]` for the active products among
+them, in the same shape the product page uses (`listStorefrontProductVariants()`
+in `src/lib/products.js`). Draft and archived products are left out. Rejected
+(400) when none of the ids is a valid product id.
 
 The browser applies those rules to the live cart (`couponEffect()`,
 `shippingRates()` in `cartHelpers.js`), so totals update without another request:

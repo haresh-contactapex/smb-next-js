@@ -99,6 +99,25 @@ export function cartTotals(cart) {
   };
 }
 
+// --- Changing a line's color / size --------------------------------------------
+
+// The variant of `product` ({ options, variants }) that has the chosen value
+// for every option, or undefined when no such combination exists.
+export function findVariant(product, selection) {
+  return product.variants.find((variant) => product.options.every((option) => variant.options[option.name] === selection[option.name]));
+}
+
+// What switching one option of a line does. Changing the color keeps the line's
+// size (and vice versa), so a value is only offered when that exact variant
+// exists and is in stock; `state` says why not otherwise.
+export function optionChoices(product, variant, option) {
+  return option.values.map((value) => {
+    if (variant.options[option.name] === value) return { value, state: "current", variant };
+    const target = findVariant(product, { ...variant.options, [option.name]: value });
+    return { value, state: !target ? "unavailable" : target.available ? "ok" : "soldout", variant: target };
+  });
+}
+
 // --- localStorage round trip -------------------------------------------------
 
 const finiteNumber = (value) => (Number.isFinite(Number(value)) ? Number(value) : null);
