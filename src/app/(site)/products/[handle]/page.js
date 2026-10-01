@@ -125,7 +125,7 @@ export default async function ProductPage({ params }) {
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16 fade-in-up delay-100">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
-          <ProductGallery images={product.images} title={title} />
+          <ProductGallery key={`gallery-${id}`} images={product.images} title={title} />
           <ProductPurchasePanel key={id} product={purchaseProduct} currency={currency} reviews={reviews} supportEmail={supportEmail} />
         </div>
 

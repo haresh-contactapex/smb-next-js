@@ -21,6 +21,7 @@ const playfair = Playfair_Display({
 export default function SiteLayout({ children }) {
   return (
     <div
+      id="storefront-root"
       className={`${montserrat.variable} ${playfair.variable} min-h-screen flex flex-col bg-white text-[#555555] text-[16px] overflow-x-clip`}
       style={{ fontFamily: "var(--font-montserrat), sans-serif" }}
     >

@@ -50,6 +50,18 @@
   .fade-in-up { animation: none; opacity: 1; }
 }
 
+/* Product image lightbox */
+@keyframes lightboxIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.lightbox-enter { animation: lightboxIn 0.2s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lightbox-enter { animation: none; }
+}
+
 /* Shimmer skeleton placeholders */
 @keyframes shimmer {
   0% { background-position: 200% 0; }
