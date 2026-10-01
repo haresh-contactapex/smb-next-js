@@ -8,9 +8,23 @@ import { useCart } from "./cart/CartProvider";
 import { findVariant } from "./cart/cartHelpers";
 import { formatCurrency } from "@/lib/currency";
 
-const FIELDSET = "border border-gray-200 rounded px-5 pb-5 pt-1 mb-6 min-w-0";
-const LEGEND = "px-2 text-[16px] font-semibold text-[#333333]";
 const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#ef9822] transition-colors";
+
+// Rounded card whose title is a small bordered pill centered on the top edge.
+function Section({ title, children }) {
+  const headingId = useId();
+  return (
+    <section aria-labelledby={headingId} className="relative min-w-0 mb-6 rounded-xl border border-gray-200 px-5 pb-5 pt-7">
+      <h2
+        id={headingId}
+        className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-4 py-1 text-[13px] font-medium text-[#333333]"
+      >
+        {title}
+      </h2>
+      {children}
+    </section>
+  );
+}
 
 // Start on the first purchasable variant so the page never opens on "Out of stock".
 function defaultSelection(product) {
@@ -108,8 +122,7 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
       </div>
 
       {hasAbout && (
-        <fieldset className={FIELDSET}>
-          <legend className={LEGEND}>About Item</legend>
+        <Section title="About Item">
           <dl className="text-[16px] text-[#555555] space-y-1.5">
             {sku && (
               <div>
@@ -124,13 +137,12 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
               </div>
             ))}
           </dl>
-        </fieldset>
+        </Section>
       )}
 
       {product.options.length > 0 && (
-        <fieldset className={FIELDSET}>
-          <legend className={LEGEND}>Customize</legend>
-          <div className="pt-2 space-y-6">
+        <Section title="Customize">
+          <div className="space-y-6">
             {product.options.map((option, index) => {
               const fieldId = `${baseId}-${index}`;
               const selected = selection[option.name];
@@ -199,7 +211,7 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
               );
             })}
           </div>
-        </fieldset>
+        </Section>
       )}
 
       <p role="status" className={`text-sm text-error ${notice ? "mb-3" : ""}`}>
