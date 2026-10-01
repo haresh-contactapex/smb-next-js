@@ -3,6 +3,7 @@
 import Link from "next/link";
 import StoreIcon from "../icons";
 import WishlistCard from "./WishlistCard";
+import WishlistSkeleton from "./WishlistSkeleton";
 import useWishlistProducts from "./useWishlistProducts";
 import { useWishlist } from "./WishlistProvider";
 
@@ -13,7 +14,8 @@ export default function WishlistPage() {
   const { products, loading, failed, retry } = useWishlistProducts(items, hydrated);
 
   // The list is read from the browser / account after mount; don't flash "empty" before then.
-  if (!hydrated) return <div className="min-h-[40vh]" aria-busy="true" />;
+  // A guest's items are known as soon as the page mounts, so size the placeholder to them.
+  if (!hydrated) return <WishlistSkeleton cards={Math.min(items.length || 4, 8)} />;
 
   if (items.length === 0) {
     return (

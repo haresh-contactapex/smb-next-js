@@ -7,6 +7,7 @@ import CartOptionSelect from "../cart/CartOptionSelect";
 import { useCart } from "../cart/CartProvider";
 import { optionChoices } from "../cart/cartHelpers";
 import { isMetalOption } from "../metals";
+import { WishlistCardSkeleton } from "./WishlistSkeleton";
 import { useWishlist } from "./WishlistProvider";
 import { defaultVariant } from "./wishlistHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
@@ -17,16 +18,6 @@ const LOW_STOCK_AT = 5;
 const REMOVE_BUTTON =
   "inline-flex items-center justify-center gap-1.5 text-[13px] font-medium text-gray-500 transition-colors hover:text-red-500";
 
-function CardSkeleton() {
-  return (
-    <div aria-hidden="true">
-      <div className="shimmer mb-4 aspect-square rounded-md" />
-      <div className="shimmer mb-2 h-4 w-3/4 rounded" />
-      <div className="shimmer h-4 w-1/3 rounded" />
-    </div>
-  );
-}
-
 // One saved item: image, name, price (with the regular price struck through
 // when on sale), rating, stock status, its color / size pickers, Add to Cart
 // and Remove. `product` is the live catalog entry; it is undefined while it
@@ -36,7 +27,7 @@ export default function WishlistCard({ item, product, loading }) {
   const { addItem } = useCart();
   const { currency } = useGeneralSettings();
 
-  if (!product && loading) return <CardSkeleton />;
+  if (!product && loading) return <WishlistCardSkeleton />;
 
   if (!product) {
     return (
