@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
 import { getSystemMaintenanceSettings } from "@/lib/systemMaintenanceSettings";
 import { getGeneralSettings } from "@/lib/generalSettings";
+import GoogleSansFont from "@/components/storefront/GoogleSansFont";
 
 // Always reads the live setting so a storefront visitor rewritten here mid-
 // maintenance-window sees the current message, and so this page bounces
@@ -38,7 +39,8 @@ export default async function MaintenancePage() {
   const message = maintenance.maintenanceMessage.trim() || "We'll be back soon — thanks for your patience!";
 
   return (
-    <div className="min-h-screen grid place-items-center bg-slate-50 dark:bg-darkbg p-6">
+    <div className="font-google-sans min-h-screen grid place-items-center bg-slate-50 dark:bg-darkbg p-6">
+      <GoogleSansFont />
       <div className="w-full max-w-sm text-center">
         <div className="flex items-center justify-center gap-2.5 mb-8">
           {logoUrl ? (

@@ -22,6 +22,12 @@ textarea {
   font-family: inherit;
 }
 
+/* Customer-facing font (storefront, customer auth pages, maintenance page).
+   The stylesheet comes from <GoogleSansFont />; the admin panel stays on Inter. */
+.font-google-sans {
+  font-family: "Google Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
 /* ==========================================================
    Shared design-system utilities (form fields, chips, editor, etc.)
    Ported from admin-dashboard-template add-product.html
