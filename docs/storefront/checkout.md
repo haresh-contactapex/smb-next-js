@@ -21,6 +21,7 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 | Order summary, promo code | `OrderSummary.js`, `CheckoutPromo.js` |
 | Own header / footer | `CheckoutHeader.js`, `CheckoutFooter.js` |
 | Validation, phone countries, tax total | `checkoutHelpers.js` |
+| One address block, used for billing and for shipping | `CheckoutAddressFields.js` |
 | Shared field markup, class strings | `CheckoutField.js`, `checkoutStyles.js` |
 
 ## Behavior
@@ -33,9 +34,13 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   1. **Contact** – first / last name, email, phone with a calling-code picker
      (the eight shipping countries; +1 numbers are 10 digits, others 6–14), and
      the "keep me updated" checkbox.
-  2. **Billing** – country (a dropdown), street address, optional apartment,
-     and city, state / province and postal code, which are typed. One address is
-     used for billing and delivery. The typed state and city are matched against
+  2. **Billing** – a **Billing Address** and a **Shipping Address**, each with a
+     country (a dropdown), street address, optional apartment, and city, state /
+     province and postal code, which are typed. **Same as billing address**
+     (checked by default) copies the billing address into the shipping fields,
+     keeps them in step as billing is edited, and disables them; unchecking it
+     enables them with that copy in place to edit on their own. Each typed
+     state and city is matched against
      `src/data/locationData.js`, the same list the account address forms use, so
      only places in it are accepted (add a state or city there to offer it).
      Matching ignores case and extra spaces, and a verified state or city is
@@ -56,11 +61,19 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   to a different city is rejected, with the message on the field at fault.
   Editing the country, state or city clears the stale messages for the fields
   that depend on it (`ADDRESS_DEPENDENTS`).
-- **Saving the address runs the cart's shipping estimate**
-  (`estimateShipping()` → `POST /api/cart/shipping`) with the country, state,
-  city and postal code. The server repeats the location check (the browser's
-  check isn't trusted) and answers `400` with the offending `field`; the
-  estimate then fills the summary's Shipping row (`FREE` or the rate).
+- **Validation follows the checkbox.** Checked: the shipping address *is* the
+  billing one, so it is validated once and any problem shows on the billing
+  fields (the disabled shipping fields never show errors). Unchecked: both
+  addresses are validated, each on its own fields, and focus goes to the first
+  invalid field in form order. Switching the checkbox clears the messages on the
+  shipping fields.
+- **Saving the addresses runs the cart's shipping estimate** for the *shipping*
+  address (`estimateShipping()` → `POST /api/cart/shipping`) with its country,
+  state, city and postal code. The server repeats the location check (the
+  browser's check isn't trusted) and answers `400` with the offending `field`,
+  shown on the shipping fields (or the billing ones when the two are the same);
+  the estimate then fills the summary's Shipping row (`FREE` or the rate). The
+  billing address is checked in the browser only for now.
 - **Validation** runs in the browser first (`validateContact()`, `validateAddress()`):
   invalid fields get the pink fill and red border, an inline message, and focus
   moves to the first one.
@@ -71,8 +84,9 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   applied to the discounted subtotal (plus shipping when *apply tax to shipping*
   is on). When *prices include tax* is on it shows **Included** and adds nothing.
   The rate is store-wide; there is no per-region tax yet.
-- Typed values (not the payment choice) are kept in `sessionStorage["smb:checkout"]`
-  so they survive **Edit Cart** and back. Session storage, not local storage, so
+- Typed values and the checkbox (not the payment choice) are kept in
+  `sessionStorage["smb:checkout"]` as `{ contact, billing, shipping,
+  sameAsBilling }` so they survive **Edit Cart** and back. Session storage, not local storage, so
   personal details don't outlive the tab.
 - An empty cart shows "Your cart is empty" with a link back to the shop.
 
@@ -82,7 +96,9 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   button. Nothing is saved or sent: no order row, no payment, no email. When it
   is built, re-price the cart from the database and re-check the coupon, stock
   and tax server-side rather than trusting the browser's cart (see "Not enforced
-  yet" in [cart-drawer.md](cart-drawer.md)).
+  yet" in [cart-drawer.md](cart-drawer.md)), and validate **both** addresses
+  again with `validateTypedLocation()`: only the shipping one reaches the server
+  today.
 - **Marketing consent.** The "keep me updated on order status and special
   offers" checkbox is pre-checked, as in the design, and its value is not stored
   anywhere. Before it is persisted, split transactional updates from marketing
@@ -90,5 +106,5 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 - **Payment badges** in the footer (Visa, Mastercard, Amex, PayPal, Apple Pay)
   are fixed marks from the design, not driven by *Settings → Payment*. Trim
   `PAYMENT_BADGES` in `CheckoutFooter.js` to what the gateway really accepts.
-- Saved addresses for signed-in customers, a separate shipping address, and a
-  shipping-method choice (local pickup) on this page.
+- Saved addresses for signed-in customers, and a shipping-method choice (local
+  pickup) on this page.

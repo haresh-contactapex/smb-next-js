@@ -10,7 +10,15 @@ import BillingStep from "./BillingStep";
 import PaymentStep from "./PaymentStep";
 import OrderSummary from "./OrderSummary";
 import { useCart } from "../cart/CartProvider";
-import { CHECKOUT_STEPS, CHECKOUT_STORAGE_KEY, EMPTY_ADDRESS, EMPTY_CONTACT, checkoutTotals, sanitizeAddress } from "./checkoutHelpers";
+import {
+  CHECKOUT_STEPS,
+  CHECKOUT_STORAGE_KEY,
+  EMPTY_ADDRESS,
+  EMPTY_CONTACT,
+  checkoutTotals,
+  formatAddress,
+  sanitizeAddress,
+} from "./checkoutHelpers";
 
 const STEP_IDS = CHECKOUT_STEPS.map((step) => step.id);
 
@@ -24,7 +32,11 @@ function readSaved() {
       Object.fromEntries(
         Object.entries(defaults).map(([key, fallback]) => [key, typeof fallback === "boolean" ? source?.[key] !== false : String(source?.[key] ?? fallback)])
       );
-    return { contact: text(saved.contact, EMPTY_CONTACT), address: text(saved.address, EMPTY_ADDRESS) };
+    const sameAsBilling = saved.sameAsBilling !== false;
+    // `address` is what an earlier version saved: one address for both purposes.
+    const billing = sanitizeAddress(text(saved.billing ?? saved.address, EMPTY_ADDRESS));
+    const shipping = sameAsBilling ? billing : sanitizeAddress(text(saved.shipping, EMPTY_ADDRESS));
+    return { contact: text(saved.contact, EMPTY_CONTACT), billing, shipping, sameAsBilling };
   } catch {
     return null;
   }
@@ -34,10 +46,16 @@ function readSaved() {
 // summary. This component owns every step's values and which step is open; a
 // step is only reachable once the one before it has been saved, and editing a
 // saved step reopens the gate behind it.
+//
+// The Billing step holds two addresses. While "Same as billing address" is on,
+// the shipping address is a copy of the billing one that follows every edit to it;
+// turning it off leaves that copy in place to be edited on its own.
 export default function CheckoutPage({ settings }) {
-  const { items, hydrated, totals, shipping, countries } = useCart();
+  const { items, hydrated, totals, shipping: cartShipping, countries } = useCart();
   const [contact, setContact] = useState(EMPTY_CONTACT);
-  const [address, setAddress] = useState(EMPTY_ADDRESS);
+  const [billingAddress, setBillingAddress] = useState(EMPTY_ADDRESS);
+  const [shippingAddress, setShippingAddress] = useState(EMPTY_ADDRESS);
+  const [sameAsBilling, setSameAsBilling] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [step, setStep] = useState("contact");
   const [done, setDone] = useState({ contact: false, billing: false });
@@ -48,38 +66,61 @@ export default function CheckoutPage({ settings }) {
     const saved = readSaved();
     if (saved) {
       setContact(saved.contact);
-      setAddress(sanitizeAddress(saved.address));
+      setBillingAddress(saved.billing);
+      setShippingAddress(saved.shipping);
+      setSameAsBilling(saved.sameAsBilling);
     }
     setRestored(true);
   }, []);
 
-  // Start the address from the destination already chosen in the cart, or the store's first country.
+  // Start the addresses from the destination already chosen in the cart, or the store's first country.
   useEffect(() => {
     if (!restored || !hydrated || addressPrefilled.current) return;
     addressPrefilled.current = true;
-    setAddress((current) =>
-      current.country ? current : { ...current, country: shipping?.country || countries[0]?.name || "", zip: current.zip || shipping?.zip || "" }
-    );
-  }, [restored, hydrated, shipping, countries]);
+    const fill = (current) =>
+      current.country ? current : { ...current, country: cartShipping?.country || countries[0]?.name || "", zip: current.zip || cartShipping?.zip || "" };
+    setBillingAddress(fill);
+    setShippingAddress(fill);
+  }, [restored, hydrated, cartShipping, countries]);
 
   useEffect(() => {
     if (!restored) return;
     try {
-      window.sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify({ contact, address }));
+      window.sessionStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify({ contact, billing: billingAddress, shipping: shippingAddress, sameAsBilling }));
     } catch {
       // Storage blocked (private mode): the form still works for this page view.
     }
-  }, [restored, contact, address]);
+  }, [restored, contact, billingAddress, shippingAddress, sameAsBilling]);
 
   const updateContact = useCallback((patch) => {
     setContact((current) => ({ ...current, ...patch }));
     setDone((current) => ({ ...current, contact: false }));
   }, []);
 
-  const updateAddress = useCallback((patch) => {
-    setAddress((current) => ({ ...current, ...patch }));
+  // Editing the billing address also edits the shipping copy while "same as billing" is on.
+  const updateBilling = useCallback(
+    (patch) => {
+      setBillingAddress((current) => ({ ...current, ...patch }));
+      if (sameAsBilling) setShippingAddress((current) => ({ ...current, ...patch }));
+      setDone((current) => ({ ...current, billing: false }));
+    },
+    [sameAsBilling]
+  );
+
+  const updateShipping = useCallback((patch) => {
+    setShippingAddress((current) => ({ ...current, ...patch }));
     setDone((current) => ({ ...current, billing: false }));
   }, []);
+
+  // Checking the box copies the billing address over; unchecking keeps that copy, now editable.
+  const changeSameAsBilling = useCallback(
+    (checked) => {
+      setSameAsBilling(checked);
+      if (checked) setShippingAddress(billingAddress);
+      setDone((current) => ({ ...current, billing: false }));
+    },
+    [billingAddress]
+  );
 
   const checkout = useMemo(() => checkoutTotals(totals, settings.tax), [totals, settings.tax]);
 
@@ -114,7 +155,9 @@ export default function CheckoutPage({ settings }) {
 
   const statuses = Object.fromEntries(STEP_IDS.map((id) => [id, id === step ? "current" : done[id] ? "complete" : "upcoming"]));
   const contactSummary = `${contact.firstName.trim()} ${contact.lastName.trim()} · ${contact.email.trim()}`;
-  const billingSummary = [address.line1.trim(), address.city.trim(), `${address.state.trim()} ${address.zip.trim()}`.trim()].filter(Boolean).join(", ");
+  const billingSummary = sameAsBilling
+    ? formatAddress(billingAddress)
+    : `Billing: ${formatAddress(billingAddress)} · Shipping: ${formatAddress(shippingAddress)}`;
 
   return (
     <div className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-14 pt-8 sm:px-8 lg:pt-10">
@@ -146,7 +189,7 @@ export default function CheckoutPage({ settings }) {
             <CheckoutSection
               id="checkout-billing"
               title="Billing Information"
-              subtitle="Select or add a billing address"
+              subtitle="Add your billing and shipping addresses"
               summary={billingSummary}
               open={step === "billing"}
               done={done.billing}
@@ -154,8 +197,12 @@ export default function CheckoutPage({ settings }) {
               onOpen={() => open("billing")}
             >
               <BillingStep
-                address={address}
-                onChange={updateAddress}
+                billing={billingAddress}
+                shipping={shippingAddress}
+                sameAsBilling={sameAsBilling}
+                onBillingChange={updateBilling}
+                onShippingChange={updateShipping}
+                onSameChange={changeSameAsBilling}
                 onComplete={() => {
                   setDone((current) => ({ ...current, billing: true }));
                   setStep("payment");

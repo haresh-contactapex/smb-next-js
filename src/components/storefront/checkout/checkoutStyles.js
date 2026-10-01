@@ -7,7 +7,9 @@ export const CHECKOUT_LABEL = "mb-2 block text-[14px] font-medium text-[#333333]
 export const CHECKOUT_FIELD_BOX =
   "rounded-lg border border-[#E4E4E4] bg-white transition-colors hover:border-[#EF9822]/60 focus-within:border-[#EF9822] focus-within:ring-1 focus-within:ring-[#EF9822]";
 
-export const CHECKOUT_FIELD = `w-full px-4 py-3.5 text-[15px] text-[#333333] placeholder:text-[#B5B5B5] outline-none ${CHECKOUT_FIELD_BOX}`;
+// A disabled field (the shipping address while it copies the billing one) is greyed and
+// loses the hover highlight, so it reads as read-only rather than broken.
+export const CHECKOUT_FIELD = `w-full px-4 py-3.5 text-[15px] text-[#333333] placeholder:text-[#B5B5B5] outline-none ${CHECKOUT_FIELD_BOX} disabled:cursor-not-allowed disabled:bg-[#F6F6F6] disabled:text-[#7A7A7A] disabled:hover:border-[#E4E4E4]`;
 
 // Matches the pink fill + red border the storefront uses for invalid fields.
 export const CHECKOUT_FIELD_ERROR = "!border-error !bg-error/5";

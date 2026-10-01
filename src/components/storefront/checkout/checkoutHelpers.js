@@ -63,6 +63,11 @@ export function sanitizeAddress(address) {
   return { ...address, country: getCountryNames().includes(address.country) ? address.country : "" };
 }
 
+// "115 Foothill Blvd, Los Angeles, California 90017" for the collapsed step header.
+export function formatAddress(address) {
+  return [address.line1.trim(), address.city.trim(), `${address.state.trim()} ${address.zip.trim()}`.trim()].filter(Boolean).join(", ");
+}
+
 // What typing in a field makes stale: a changed country voids the messages about
 // the state, city and postal code under it, a changed state those about the city
 // and postal code, and so on.
