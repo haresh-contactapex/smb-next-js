@@ -137,6 +137,7 @@ export default function WishlistCard({ item, product, loading }) {
               value={picker.value}
               choices={picker.choices}
               swatch={picker.swatch}
+              inset
               onChange={(value) => {
                 const choice = picker.choices.find((candidate) => candidate.value === value);
                 if (choice?.variant) changeVariant(product.id, item.variantId, choice.variant.id);
