@@ -3,6 +3,7 @@
 import Link from "next/link";
 import StoreIcon from "../icons";
 import CheckoutPromo from "./CheckoutPromo";
+import useImageLoaded from "../useImageLoaded";
 import { useCart } from "../cart/CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { formatCurrency } from "@/lib/currency";
@@ -43,6 +44,28 @@ function TaxInfo({ children }) {
 }
 
 const money = (amount, currency) => formatCurrency(amount, currency);
+
+// A line's thumbnail: shimmer until the photo arrives, as on the product pages.
+function LineImage({ src }) {
+  const { loaded, imageProps } = useImageLoaded();
+
+  if (!src) {
+    return (
+      <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-lg bg-[#F5F3EF] p-2 text-center text-[10px] text-gray-400">No image</div>
+    );
+  }
+  return (
+    <div className={`h-20 w-20 flex-shrink-0 rounded-lg p-2 ${loaded ? "bg-[#F5F3EF]" : "shimmer"}`}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        {...imageProps}
+        src={src}
+        alt=""
+        className={`h-full w-full object-contain mix-blend-multiply transition-opacity duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </div>
+  );
+}
 
 // The reassurance block at the foot of the summary. The wording mirrors the
 // announcement bar; the free-shipping threshold is the store's real one once
@@ -89,14 +112,7 @@ export default function OrderSummary({ checkout, tax }) {
       <ul className="mt-6 space-y-5">
         {items.map((item) => (
           <li key={item.key} className="flex items-start gap-4">
-            <div className="h-20 w-20 flex-shrink-0 rounded-lg bg-[#F5F3EF] p-2">
-              {item.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.image} alt="" className="h-full w-full object-contain mix-blend-multiply" />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-center text-[10px] text-gray-400">No image</div>
-              )}
-            </div>
+            <LineImage src={item.image} />
             <div className="min-w-0 flex-1">
               <p className="text-[16px] font-semibold leading-snug text-[#222222]">{item.title}</p>
               {lineDetails(item).length > 0 && (

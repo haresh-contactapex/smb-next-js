@@ -2,6 +2,12 @@
 // storefront's orange accent (#ef9822) as the highlight colour.
 export const CHECKOUT_CARD = "rounded-2xl border border-[#EEEEEE] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.05)]";
 
+// The page frame and its two-column grid. The loading skeleton uses the same
+// classes as the real page, so the content replaces it without anything jumping.
+export const CHECKOUT_CONTAINER = "mx-auto w-full max-w-[1200px] flex-1 px-4 pb-14 pt-8 sm:px-8 lg:pt-10";
+export const CHECKOUT_GRID =
+  "grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_420px] xl:gap-14";
+
 export const CHECKOUT_LABEL = "mb-2 block text-[14px] font-medium text-[#333333]";
 
 export const CHECKOUT_FIELD_BOX =

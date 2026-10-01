@@ -9,6 +9,8 @@ import ContactStep from "./ContactStep";
 import BillingStep from "./BillingStep";
 import PaymentStep from "./PaymentStep";
 import OrderSummary from "./OrderSummary";
+import CheckoutSkeleton from "./CheckoutSkeleton";
+import { CHECKOUT_CONTAINER, CHECKOUT_GRID } from "./checkoutStyles";
 import { useCart } from "../cart/CartProvider";
 import {
   CHECKOUT_STEPS,
@@ -129,8 +131,8 @@ export default function CheckoutPage({ settings }) {
   const chosen = methods.find((method) => method.id === paymentMethod && !(method.minOrder > 0 && checkout.total < method.minOrder));
   const selectedMethod = chosen || firstAvailable || null;
 
-  // The cart is read from localStorage after mount; don't flash "empty" before then.
-  if (!hydrated) return <div className="min-h-[50vh] flex-1" aria-busy="true" />;
+  // The cart is read from localStorage after mount; show the skeleton rather than flash "empty" before then.
+  if (!hydrated) return <CheckoutSkeleton />;
 
   if (items.length === 0) {
     return (
@@ -160,9 +162,9 @@ export default function CheckoutPage({ settings }) {
     : `Billing: ${formatAddress(billingAddress)} · Shipping: ${formatAddress(shippingAddress)}`;
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] flex-1 px-4 pb-14 pt-8 sm:px-8 lg:pt-10">
+    <div className={CHECKOUT_CONTAINER}>
       <h1 className="sr-only">Checkout</h1>
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_400px] xl:grid-cols-[minmax(0,1fr)_420px] xl:gap-14">
+      <div className={CHECKOUT_GRID}>
         <div>
           <CheckoutStepper steps={CHECKOUT_STEPS} statuses={statuses} />
 

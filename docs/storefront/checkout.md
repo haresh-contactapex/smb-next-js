@@ -20,6 +20,7 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 | The three steps | `ContactStep.js`, `BillingStep.js`, `PaymentStep.js` |
 | Order summary, promo code | `OrderSummary.js`, `CheckoutPromo.js` |
 | Own header / footer | `CheckoutHeader.js`, `CheckoutFooter.js` |
+| Shimmer loading skeleton | `CheckoutSkeleton.js`, `src/app/(site)/checkout/loading.js` |
 | Validation, phone countries, tax total | `checkoutHelpers.js` |
 | One address block, used for billing and for shipping | `CheckoutAddressFields.js` |
 | Shared field markup, class strings | `CheckoutField.js`, `checkoutStyles.js` |
@@ -88,6 +89,22 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   `sessionStorage["smb:checkout"]` as `{ contact, billing, shipping,
   sameAsBilling }` so they survive **Edit Cart** and back. Session storage, not local storage, so
   personal details don't outlive the tab.
+- **Loading shimmer**, the same `.shimmer` placeholder the listing and product
+  pages use (`storefront.css`):
+  - `CheckoutSkeleton` mirrors the page (stepper, the open Contact card, the two
+    collapsed cards, the order summary). `loading.js` shows it inside the
+    checkout's own header and footer while `page.js` reads the tax and payment
+    settings. `CheckoutPage` shows it again until the cart has been read from
+    the browser, so the server HTML is the skeleton rather than a blank gap or a
+    flash of "empty cart".
+  - Its bars are sized to the line of text they stand in for, and it shares the
+    page frame (`CHECKOUT_CONTAINER`, `CHECKOUT_GRID` in `checkoutStyles.js`) with
+    the real page, so content replaces it without jumping. If the page's text
+    sizes or spacing change, re-measure and adjust the slot heights in
+    `CheckoutSkeleton.js`. Product names that wrap make the real summary taller
+    than the skeleton's.
+  - The summary's product thumbnails shimmer until the photo arrives
+    (`useImageLoaded`); a photo that fails to load stops shimmering.
 - An empty cart shows "Your cart is empty" with a link back to the shop.
 
 ## Not built yet
