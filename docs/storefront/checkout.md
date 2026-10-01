@@ -33,19 +33,35 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   1. **Contact** – first / last name, email, phone with a calling-code picker
      (the eight shipping countries; +1 numbers are 10 digits, others 6–14), and
      the "keep me updated" checkbox.
-  2. **Billing** – country, street address, optional apartment, city,
-     state / province, postal code. One address is used for billing and delivery.
+  2. **Billing** – country (a dropdown), street address, optional apartment,
+     and city, state / province and postal code, which are typed. One address is
+     used for billing and delivery. The typed state and city are matched against
+     `src/data/locationData.js`, the same list the account address forms use, so
+     only places in it are accepted (add a state or city there to offer it).
+     Matching ignores case and extra spaces, and a verified state or city is
+     rewritten to the list's spelling ("surat" becomes "Surat"). The street
+     address itself is only checked for being present — there is no
+     address-verification service.
   3. **Payment** – the methods switched on in *Settings → Payment* (card,
      PayPal, Razorpay, cash on delivery). Cash on delivery is disabled below its
      minimum order amount.
 - A step opens only once the ones before it are saved. Saved steps collapse to
   a summary and can be reopened; editing a field makes that step "unsaved" again
   and locks the steps after it.
+- **The location must agree with itself.** Country → state → city → postal code
+  are checked with `validateTypedLocation()` (`src/lib/validateAddress.js`), the
+  typed-input version of the `validateLocationHierarchy()` check the account
+  address forms use: a state not in the country, a city not in the state, a
+  postal code in the wrong format for the country, or one whose prefix belongs
+  to a different city is rejected, with the message on the field at fault.
+  Editing the country, state or city clears the stale messages for the fields
+  that depend on it (`ADDRESS_DEPENDENTS`).
 - **Saving the address runs the cart's shipping estimate**
-  (`estimateShipping()` → `POST /api/cart/shipping`) for that country and postal
-  code. A bad postal code is reported on the field; the same estimate then fills
-  the summary's Shipping row (`FREE` or the rate).
-- **Validation** is client-side (`validateContact()`, `validateAddress()`):
+  (`estimateShipping()` → `POST /api/cart/shipping`) with the country, state,
+  city and postal code. The server repeats the location check (the browser's
+  check isn't trusted) and answers `400` with the offending `field`; the
+  estimate then fills the summary's Shipping row (`FREE` or the rate).
+- **Validation** runs in the browser first (`validateContact()`, `validateAddress()`):
   invalid fields get the pink fill and red border, an inline message, and focus
   moves to the first one.
 - **Order summary** shows the cart lines, the promo code field (the cart's own

@@ -3,6 +3,7 @@ import { getCouponByCode } from "./coupons";
 import { getShippingSettings } from "./shippingSettings";
 import { listStorefrontProductVariants } from "./products";
 import { LOCATIONS } from "@/data/locationData";
+import { validateTypedLocation } from "./validateAddress";
 
 // Server side of the storefront cart drawer. The cart itself lives in the
 // visitor's browser; these helpers only answer the two questions it can't:
@@ -14,10 +15,12 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
 const MAX_CART_PRODUCTS = 100;
 
 // Thrown for problems the visitor can fix; route handlers turn `status` into the HTTP status.
+// `field` names the form field at fault ("state", "city", "zip", ...) when there is one.
 export class CartError extends Error {
-  constructor(message, status = 400) {
+  constructor(message, status = 400, field = null) {
     super(message);
     this.status = status;
+    this.field = field;
   }
 }
 
@@ -108,15 +111,23 @@ export function listShippingCountries() {
 
 // Validates the destination and returns the store's shipping rules. Settings ->
 // Shipping has a single flat rate for every destination (no zones yet), so the
-// country/postal code only need to be real; they don't change the price.
-export async function lookupShippingRules(rawCountry, rawZip) {
+// destination only needs to be real; it doesn't change the price.
+//
+// The cart's estimator sends just a country and postal code, which are checked
+// for format. The checkout also sends the state and city the visitor typed, and
+// then the whole location has to agree (country -> state -> city -> postal code),
+// as the account address forms require; the typed names match regardless of case.
+export async function lookupShippingRules(rawCountry, rawZip, rawState, rawCity) {
   const countryName = String(rawCountry || "").trim();
   const country = LOCATIONS[countryName];
-  if (!country) throw new CartError("Select a country to estimate shipping.");
+  if (!country) throw new CartError("Select a country to estimate shipping.", 400, "country");
 
   const zip = String(rawZip || "").trim().slice(0, 12);
-  if (country.postalFormat) {
-    if (!country.postalFormat.test(zip)) throw new CartError(`Enter ${country.postalHint} for ${countryName}.`);
+  if (rawState !== undefined || rawCity !== undefined) {
+    const location = validateTypedLocation({ country: countryName, state: rawState, city: rawCity, postalCode: zip });
+    if (!location.valid) throw new CartError(location.message, 400, location.field);
+  } else if (country.postalFormat) {
+    if (!country.postalFormat.test(zip)) throw new CartError(`Enter ${country.postalHint} for ${countryName}.`, 400, "zip");
   }
 
   const settings = await getShippingSettings();

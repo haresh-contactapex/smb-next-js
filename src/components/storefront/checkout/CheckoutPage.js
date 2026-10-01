@@ -10,7 +10,7 @@ import BillingStep from "./BillingStep";
 import PaymentStep from "./PaymentStep";
 import OrderSummary from "./OrderSummary";
 import { useCart } from "../cart/CartProvider";
-import { CHECKOUT_STEPS, CHECKOUT_STORAGE_KEY, EMPTY_ADDRESS, EMPTY_CONTACT, checkoutTotals } from "./checkoutHelpers";
+import { CHECKOUT_STEPS, CHECKOUT_STORAGE_KEY, EMPTY_ADDRESS, EMPTY_CONTACT, checkoutTotals, sanitizeAddress } from "./checkoutHelpers";
 
 const STEP_IDS = CHECKOUT_STEPS.map((step) => step.id);
 
@@ -48,7 +48,7 @@ export default function CheckoutPage({ settings }) {
     const saved = readSaved();
     if (saved) {
       setContact(saved.contact);
-      setAddress(saved.address);
+      setAddress(sanitizeAddress(saved.address));
     }
     setRestored(true);
   }, []);

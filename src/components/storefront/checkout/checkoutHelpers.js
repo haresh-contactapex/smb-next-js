@@ -1,6 +1,8 @@
 // Pure checkout logic: form defaults and validation, the phone country list,
 // and the tax-inclusive total. Nothing here touches the DOM or the network.
 import { isValidEmail } from "@/components/auth/helpers";
+import { getCountryNames } from "@/data/locationData";
+import { validateTypedLocation } from "@/lib/validateAddress";
 import { formatUsPhone } from "@/lib/phone";
 import { round2 } from "../cart/cartHelpers";
 
@@ -56,8 +58,23 @@ export function validateContact(contact) {
   return errors;
 }
 
+// Keeps a restored address honest: a saved country the store no longer lists is dropped.
+export function sanitizeAddress(address) {
+  return { ...address, country: getCountryNames().includes(address.country) ? address.country : "" };
+}
+
+// What typing in a field makes stale: a changed country voids the messages about
+// the state, city and postal code under it, a changed state those about the city
+// and postal code, and so on.
+export const ADDRESS_DEPENDENTS = { country: ["state", "city", "zip"], state: ["city", "zip"], city: ["zip"] };
+
 // `countries` is the cart's list of shipping countries ({ name, postalLabel, postalRequired }).
-// The postal code's format is checked by the shipping lookup when the step is saved.
+// Beyond the required fields, the typed state and city must exist in the country
+// and the postal code must belong to that city (the same check the account
+// address forms and the shipping lookup make), so a ZIP from one city can't be
+// paired with another. Returns { errors } or, when everything agrees,
+// { errors: {}, place: { state, city } } with the state and city spelled
+// canonically, so "surat" is saved and shown as "Surat".
 export function validateAddress(address, countries) {
   const errors = {};
   const country = countries.find((candidate) => candidate.name === address.country);
@@ -66,7 +83,10 @@ export function validateAddress(address, countries) {
   if (!address.city.trim()) errors.city = "Enter your city.";
   if (!address.state.trim()) errors.state = "Enter your state or province.";
   if (country?.postalRequired && !address.zip.trim()) errors.zip = `Enter your ${country.postalLabel.toLowerCase()}.`;
-  return errors;
+  if (Object.keys(errors).length > 0) return { errors };
+
+  const location = validateTypedLocation({ country: address.country, state: address.state, city: address.city, postalCode: address.zip });
+  return location.valid ? { errors: {}, place: { state: location.state, city: location.city } } : { errors: { [location.field]: location.message } };
 }
 
 // Moves focus to the first field flagged invalid once React has rendered the errors.

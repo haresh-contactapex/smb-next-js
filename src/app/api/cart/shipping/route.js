@@ -6,11 +6,11 @@ import { CartError, lookupShippingRules } from "@/lib/storefrontCart";
 export async function POST(request) {
   try {
     const body = await request.json().catch(() => ({}));
-    const data = await lookupShippingRules(body?.country, body?.zip);
+    const data = await lookupShippingRules(body?.country, body?.zip, body?.state, body?.city);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     if (error instanceof CartError) {
-      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+      return NextResponse.json({ success: false, error: error.message, field: error.field || undefined }, { status: error.status });
     }
     console.error("Cart shipping estimate failed", error);
     return NextResponse.json({ success: false, error: "We couldn't estimate shipping right now. Please try again." }, { status: 500 });

@@ -1,4 +1,5 @@
 // Resolves to { ok, data } or { ok: false, error } so callers never need a try/catch.
+// A rejected request may also carry `field`, the form field the server found fault with.
 export async function postJson(url, body, signal) {
   try {
     const response = await fetch(url, {
@@ -9,7 +10,7 @@ export async function postJson(url, body, signal) {
     });
     const json = await response.json().catch(() => null);
     if (!response.ok || !json?.success) {
-      return { ok: false, status: response.status, error: json?.error || "Something went wrong. Please try again." };
+      return { ok: false, status: response.status, error: json?.error || "Something went wrong. Please try again.", field: json?.field };
     }
     return { ok: true, data: json.data };
   } catch (error) {

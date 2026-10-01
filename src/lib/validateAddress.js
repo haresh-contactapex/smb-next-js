@@ -64,3 +64,46 @@ export function validateLocationHierarchy({ country, state, city, postalCode }) 
 
   return { valid: true };
 }
+
+// Collapses stray spaces and case so "  surat " and "Surat" compare equal.
+function looseKey(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function findName(names, typed) {
+  const wanted = looseKey(typed);
+  return wanted ? Object.keys(names).find((name) => looseKey(name) === wanted) : undefined;
+}
+
+// Same rules as validateLocationHierarchy, for a state and city the visitor
+// typed rather than picked from a list: case and extra spaces don't matter, and
+// the valid result carries the state and city spelled the way the location data
+// has them ("surat" -> "Surat") so they can be stored and shown consistently.
+// Returns { valid: true, state, city } or { valid: false, field, message }.
+export function validateTypedLocation({ country, state, city, postalCode }) {
+  const countryData = LOCATIONS[country];
+  if (!countryData) {
+    return { valid: false, field: "country", message: `"${country}" is not a supported country.` };
+  }
+
+  const stateName = findName(countryData.states, state);
+  if (!stateName) {
+    return {
+      valid: false,
+      field: "state",
+      message: `We couldn't match "${String(state || "").trim()}" to a state or province in ${country}. Check the spelling and try again.`,
+    };
+  }
+
+  const cityName = findName(countryData.states[stateName], city);
+  if (!cityName) {
+    return {
+      valid: false,
+      field: "city",
+      message: `We couldn't match "${String(city || "").trim()}" to a city in ${stateName}. Check the spelling, or that the city is in this state.`,
+    };
+  }
+
+  const location = validateLocationHierarchy({ country, state: stateName, city: cityName, postalCode });
+  return location.valid ? { valid: true, state: stateName, city: cityName } : location;
+}

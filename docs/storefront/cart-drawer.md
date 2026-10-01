@@ -81,10 +81,16 @@ product in the cart. `eligibleProductIds` is `null` for store-wide codes;
 category codes include products in sub-categories. The coupon's internal
 description and usage counters are never returned.
 
-`/api/cart/shipping` – body `{ country, zip }`. Country must be one of
-`src/data/locationData.js`; the postal code is checked against that country's
-format. Returns the Settings → Shipping values: `{ carrier, flatRate,
-freeShippingThreshold, localPickup, processingDays }`.
+`/api/cart/shipping` – body `{ country, zip }`, plus `state` and `city` when
+the checkout sends them. Country must be one of `src/data/locationData.js`; the
+postal code is checked against that country's format. When `state` or `city` is
+present the whole location must agree (`validateTypedLocation()`: the state
+belongs to the country, the city to the state, the postal code to the city;
+names match regardless of case and extra spaces).
+Returns the Settings → Shipping values: `{ carrier, flatRate,
+freeShippingThreshold, localPickup, processingDays }`. A rejection is a `400`
+whose body also names the offending form field: `{ success: false, error,
+field }`.
 
 `/api/cart/variants` – body `{ productIds }` (UUIDs, at most 100). Returns
 `[{ id, options: [{ name, values }], variants: [{ id, sku, options, price,

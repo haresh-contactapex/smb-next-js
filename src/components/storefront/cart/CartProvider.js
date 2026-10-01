@@ -188,8 +188,9 @@ export default function CartProvider({ countries = [], children }) {
     setCart((current) => ({ ...current, coupon: null }));
   }, []);
 
-  const estimateShipping = useCallback(async ({ country, zip }) => {
-    const result = await postJson("/api/cart/shipping", { country, zip });
+  // The checkout also passes the state and city, which makes the server check that the whole location agrees.
+  const estimateShipping = useCallback(async ({ country, zip, state, city }) => {
+    const result = await postJson("/api/cart/shipping", { country, zip, state, city });
     if (!result.ok) return result;
 
     setCart((current) => ({

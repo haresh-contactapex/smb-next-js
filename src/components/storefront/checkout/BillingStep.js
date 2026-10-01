@@ -2,14 +2,19 @@
 
 import { useRef, useState } from "react";
 import StoreIcon from "../icons";
-import CheckoutField, { FieldShell, fieldA11y } from "./CheckoutField";
+import CheckoutField, { SelectField } from "./CheckoutField";
 import { useCart } from "../cart/CartProvider";
-import { CHECKOUT_BUTTON, CHECKOUT_FIELD, CHECKOUT_FIELD_ERROR } from "./checkoutStyles";
-import { focusFirstInvalid, validateAddress } from "./checkoutHelpers";
+import { CHECKOUT_BUTTON } from "./checkoutStyles";
+import { ADDRESS_DEPENDENTS, focusFirstInvalid, validateAddress } from "./checkoutHelpers";
 
-// Step 2: the address the order is billed to and delivered to. Saving it also
-// runs the cart's shipping estimate for that destination, so the postal code
-// is checked against the country's format and the summary can show shipping.
+const ADDRESS_FIELDS = ["country", "line1", "state", "city", "zip"];
+
+// Step 2: the address the order is billed to and delivered to. The country is
+// picked; the state and city are typed. They have to exist in that country, the
+// city in that state, and the postal code has to belong to that city (case and
+// extra spaces don't matter, and a verified state or city is tidied to its proper
+// spelling). Saving runs the cart's shipping estimate with the same location,
+// where the server repeats the check, and the summary can then show shipping.
 export default function BillingStep({ address, onChange, onComplete }) {
   const { countries, estimateShipping } = useCart();
   const [errors, setErrors] = useState({});
@@ -21,7 +26,10 @@ export default function BillingStep({ address, onChange, onComplete }) {
 
   function update(patch) {
     onChange(patch);
-    const touched = Object.keys(patch).filter((key) => errors[key]);
+    // A message about the postal code ("doesn't match the city") or the city is stale once what it depends on changes.
+    const cleared = new Set(Object.keys(patch));
+    for (const key of Object.keys(patch)) (ADDRESS_DEPENDENTS[key] || []).forEach((dependent) => cleared.add(dependent));
+    const touched = [...cleared].filter((key) => errors[key]);
     if (touched.length > 0) setErrors((current) => ({ ...current, ...Object.fromEntries(touched.map((key) => [key, ""])) }));
     if (formError) setFormError("");
   }
@@ -30,24 +38,26 @@ export default function BillingStep({ address, onChange, onComplete }) {
     event.preventDefault();
     if (savingRef.current) return;
 
-    const found = validateAddress(address, countries);
+    const { errors: found, place } = validateAddress(address, countries);
     setErrors(found);
     if (Object.keys(found).length > 0) {
       focusFirstInvalid(formRef.current);
       return;
     }
+    // Show the state and city the way the location data spells them.
+    if (place.state !== address.state || place.city !== address.city) onChange(place);
 
     savingRef.current = true;
     setSaving(true);
     setFormError("");
-    const result = await estimateShipping({ country: address.country, zip: address.zip.trim() });
+    const result = await estimateShipping({ country: address.country, state: place.state, city: place.city, zip: address.zip.trim() });
     savingRef.current = false;
     setSaving(false);
 
     if (!result.ok) {
-      // A 400 means the postal code isn't valid for the country; anything else is a connection or server problem.
+      // A 400 names the field that doesn't fit; anything else is a connection or server problem.
       if (result.status === 400) {
-        setErrors({ zip: result.error });
+        setErrors({ [ADDRESS_FIELDS.includes(result.field) ? result.field : "zip"]: result.error });
         focusFirstInvalid(formRef.current);
       } else {
         setFormError(result.error);
@@ -59,26 +69,16 @@ export default function BillingStep({ address, onChange, onComplete }) {
 
   return (
     <form ref={formRef} onSubmit={submit} noValidate>
-      <FieldShell id="checkout-country" label="Country" error={errors.country}>
-        <div className="relative">
-          <select
-            id="checkout-country"
-            value={address.country}
-            onChange={(event) => update({ country: event.target.value })}
-            autoComplete="country-name"
-            {...fieldA11y("checkout-country", true, errors.country)}
-            className={`${CHECKOUT_FIELD} appearance-none pr-11 ${errors.country ? CHECKOUT_FIELD_ERROR : ""}`}
-          >
-            {!country && <option value="">Select a country</option>}
-            {countries.map((candidate) => (
-              <option key={candidate.name} value={candidate.name}>
-                {candidate.name}
-              </option>
-            ))}
-          </select>
-          <StoreIcon name="chevronDown" className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#777777]" />
-        </div>
-      </FieldShell>
+      <SelectField
+        id="checkout-country"
+        label="Country"
+        error={errors.country}
+        value={address.country}
+        onChange={(event) => update({ country: event.target.value })}
+        autoComplete="country-name"
+        placeholder={country ? undefined : "Select a country"}
+        options={countries.map((candidate) => candidate.name)}
+      />
 
       <CheckoutField
         id="checkout-address-1"
