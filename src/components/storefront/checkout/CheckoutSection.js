@@ -6,16 +6,16 @@ import { CHECKOUT_CARD } from "./checkoutStyles";
 function StatusMark({ state }) {
   if (state === "done") {
     return (
-      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#AF8C5A] text-white">
+      <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-[#EF9822] text-white">
         <StoreIcon name="check" className="h-4 w-4 [stroke-width:2.5]" />
       </span>
     );
   }
   return (
     <span
-      className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 ${state === "open" ? "border-[#AF8C5A]" : "border-[#D9D9D9]"}`}
+      className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full border-2 ${state === "open" ? "border-[#EF9822]" : "border-[#D9D9D9]"}`}
     >
-      {state === "open" && <span className="h-3.5 w-3.5 rounded-full bg-[#AF8C5A]" />}
+      {state === "open" && <span className="h-3.5 w-3.5 rounded-full bg-[#EF9822]" />}
     </span>
   );
 }
@@ -39,7 +39,7 @@ export default function CheckoutSection({ id, title, subtitle, summary, open, do
           aria-controls={panelId}
           aria-disabled={locked || undefined}
           title={locked ? "Complete the previous step first" : undefined}
-          className={`flex w-full items-center gap-4 rounded-2xl p-5 text-left sm:p-7 ${locked ? "cursor-not-allowed" : ""} focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#AF8C5A]`}
+          className={`flex w-full items-center gap-4 rounded-2xl p-5 text-left sm:p-7 ${locked ? "cursor-not-allowed" : ""} focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-[#EF9822]`}
         >
           <StatusMark state={state} />
           <span className="min-w-0 flex-1">

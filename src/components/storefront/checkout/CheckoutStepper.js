@@ -14,7 +14,7 @@ export default function CheckoutStepper({ steps, statuses }) {
             <div className="flex w-[84px] flex-col items-center text-center sm:w-[120px]">
               <span
                 className={`flex h-10 w-10 items-center justify-center rounded-full border text-[16px] font-semibold sm:h-11 sm:w-11 ${
-                  status === "upcoming" ? "border-[#D9D9D9] bg-white text-[#555555]" : "border-[#AF8C5A] bg-[#AF8C5A] text-white"
+                  status === "upcoming" ? "border-[#D9D9D9] bg-white text-[#555555]" : "border-[#EF9822] bg-[#EF9822] text-white"
                 }`}
               >
                 {status === "complete" ? <StoreIcon name="check" className="h-5 w-5 [stroke-width:2.5]" /> : index + 1}
@@ -27,7 +27,7 @@ export default function CheckoutStepper({ steps, statuses }) {
             {!isLast && (
               <span aria-hidden="true" className="relative mt-[19px] h-0.5 flex-1 bg-[#E6E6E6] sm:mt-[21px]">
                 <span
-                  className="absolute inset-y-0 left-0 bg-[#AF8C5A]"
+                  className="absolute inset-y-0 left-0 bg-[#EF9822]"
                   style={{ width: status === "complete" ? "100%" : status === "current" ? "18%" : "0%" }}
                 />
               </span>

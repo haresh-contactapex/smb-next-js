@@ -109,7 +109,7 @@ export default function ContactStep({ contact, onChange, onComplete }) {
           type="checkbox"
           checked={contact.updates}
           onChange={(event) => update({ updates: event.target.checked })}
-          className="mt-0.5 h-5 w-5 flex-shrink-0 cursor-pointer rounded accent-[#AF8C5A]"
+          className="mt-0.5 h-5 w-5 flex-shrink-0 cursor-pointer rounded accent-[#EF9822]"
         />
         Keep me updated on order status and special offers
       </label>

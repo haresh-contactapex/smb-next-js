@@ -49,7 +49,7 @@ export default function CheckoutPromo() {
   return (
     <div>
       {coupon && (
-        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[#AF8C5A]/40 bg-[#FCF9F3] px-3.5 py-2.5 text-[14px]">
+        <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[#EF9822]/40 bg-[#FCF9F3] px-3.5 py-2.5 text-[14px]">
           <p className="min-w-0 truncate">
             <span className="font-semibold text-[#333333]">{coupon.code}</span>
             <span className="text-[#777777]"> applied</span>
@@ -58,7 +58,7 @@ export default function CheckoutPromo() {
             type="button"
             onClick={removeCoupon}
             aria-label={`Remove promo code ${coupon.code}`}
-            className="flex-shrink-0 font-medium text-[#777777] underline transition-colors hover:text-[#AF8C5A]"
+            className="flex-shrink-0 font-medium text-[#777777] underline transition-colors hover:text-[#EF9822]"
           >
             Remove
           </button>
@@ -94,7 +94,7 @@ export default function CheckoutPromo() {
           <button
             type="submit"
             disabled={applying}
-            className="flex-shrink-0 rounded-lg bg-[#F7EDE3] px-6 text-[15px] font-semibold text-[#7A5C32] transition-colors hover:bg-[#F0E0CE] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#AF8C5A] disabled:pointer-events-none disabled:opacity-60"
+            className="flex-shrink-0 rounded-lg bg-[#FEF1DD] px-6 text-[15px] font-semibold text-[#8A5000] transition-colors hover:bg-[#FCE5C2] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF9822] disabled:pointer-events-none disabled:opacity-60"
           >
             {applying ? "Applying…" : "Apply"}
           </button>
