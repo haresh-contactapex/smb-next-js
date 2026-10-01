@@ -185,28 +185,35 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
               }
 
               return (
-                <div key={option.name}>
-                  <label htmlFor={fieldId} className="block text-[16px] text-[#555555] mb-2">
+                <div key={option.name} role="radiogroup" aria-labelledby={`${fieldId}-label`}>
+                  <p id={`${fieldId}-label`} className="text-[16px] text-[#555555] mb-3">
                     {option.name}: <span className="text-gray-800 font-medium">{selected}</span>
-                  </label>
-                  <div className="relative w-full">
-                    <select
-                      id={fieldId}
-                      value={selected}
-                      onChange={(event) => select(option.name, event.target.value)}
-                      className="w-full appearance-none bg-[#F8F8F8] border border-gray-200 text-[13px] text-gray-700 rounded px-4 py-2.5 focus:outline-none focus:ring-1 focus:ring-[#ef9822] cursor-pointer hover:border-[#ef9822] transition-colors"
-                    >
-                      {option.values.map((value) => (
-                        <option key={value} value={value}>
-                          {value}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" aria-hidden="true">
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                      </svg>
-                    </div>
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {option.values.map((value) => {
+                      const checked = selected === value;
+                      return (
+                        <label key={value} className="cursor-pointer">
+                          <input
+                            type="radio"
+                            name={fieldId}
+                            value={value}
+                            checked={checked}
+                            onChange={() => select(option.name, value)}
+                            className="peer sr-only"
+                          />
+                          <span
+                            className={`flex h-9 min-w-[36px] items-center justify-center rounded-[2px] border px-3 text-[14px] leading-tight transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#ef9822] peer-focus-visible:ring-offset-1 ${
+                              checked
+                                ? "border-[#1c3b6a] bg-[#1c3b6a] text-white"
+                                : "border-gray-300 text-[#555555] hover:border-[#ef9822] hover:text-[#ef9822]"
+                            }`}
+                          >
+                            {value}
+                          </span>
+                        </label>
+                      );
+                    })}
                   </div>
                 </div>
               );
