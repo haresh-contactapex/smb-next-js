@@ -14,7 +14,8 @@ endpoints answer the questions the browser can't.
 | Pure pricing/sanitizing logic (coupon, shipping, totals) | `src/components/storefront/cart/cartHelpers.js` |
 | Drawer, line items | `CartDrawer.js`, `CartLine.js` |
 | Icon row + the section each icon opens (shared by drawer and cart page) | `CartOptions.js` → `CartNote.js`, `CartShipping.js`, `CartCoupon.js` |
-| Totals and the (disabled) Checkout button, shared | `CartTotals.js`, `CartCheckoutButton.js` |
+| Totals and the Checkout link, shared | `CartTotals.js`, `CartCheckoutButton.js` |
+| Checkout page at `/checkout` | see [checkout.md](checkout.md) |
 | Full cart page at `/cart` | `src/app/(site)/cart/page.js`, `CartPage.js` |
 | Cart page lines with editable color / size | `CartPageLine.js`, `CartOptionSelect.js`, `useCartProducts.js` |
 | Cart page order summary, recommended products | `CartSummary.js`, `CartRecommended.js` |
@@ -43,7 +44,7 @@ endpoints answer the questions the browser can't.
 - **`/cart`** is the full page: the lines on the left (large image, name, price,
   color and size, quantity, remove), an order summary on the right (a row per
   line, the note / shipping / coupon icons, discount and shipping rows, sales
-  tax, total, and the disabled checkout button) and **Recommended Products**
+  tax, total, and the checkout button) and **Recommended Products**
   underneath. The drawer keeps its compact lines.
   - **Color and size are editable on the page.** Each option of a line is a
     select filled from the product's variants (`/api/cart/variants`).
@@ -58,12 +59,14 @@ endpoints answer the questions the browser can't.
     server page. It passes eight and the page hides the ones already in the cart
     and shows four.
   - "Sales tax" says **Included** when Settings → Currency & Tax has *prices
-    include tax*; otherwise **Calculated at checkout**. The storefront doesn't
-    calculate tax.
+    include tax*; otherwise **Calculated at checkout**. The cart doesn't
+    calculate tax; the checkout page estimates it.
 - Not included on purpose: a "spend X for free shipping" progress bar and a
   "I agree to the Terms & conditions" checkbox.
-- **Checkout is disabled.** Checkout isn't built on the storefront yet (Buy Now
-  is inert for the same reason).
+- **Checkout** (the drawer's button and the cart page's **Proceed to checkout**)
+  links to the `/checkout` page and closes the drawer on the way
+  ([checkout.md](checkout.md)). Placing an order isn't built yet, and Buy Now is
+  still inert.
 
 ## Endpoints
 

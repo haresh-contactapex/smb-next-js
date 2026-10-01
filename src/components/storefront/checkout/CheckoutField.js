@@ -1,0 +1,40 @@
+import { CHECKOUT_FIELD, CHECKOUT_FIELD_ERROR, CHECKOUT_LABEL } from "./checkoutStyles";
+
+// Label, control and error line for one checkout field. Used directly for
+// controls that aren't a plain input (the phone number, the country select).
+export function FieldShell({ id, label, required = true, error, className = "", children }) {
+  return (
+    <div className={className}>
+      <label htmlFor={id} className={CHECKOUT_LABEL}>
+        {label}
+        {required && (
+          <span aria-hidden="true" className="text-error">
+            {" "}
+            *
+          </span>
+        )}
+      </label>
+      {children}
+      <p id={`${id}-error`} role="alert" className="mt-1.5 text-[13px] text-error empty:hidden">
+        {error}
+      </p>
+    </div>
+  );
+}
+
+// The ARIA attributes every control in a FieldShell shares.
+export function fieldA11y(id, required, error) {
+  return {
+    "aria-required": required || undefined,
+    "aria-invalid": error ? "true" : undefined,
+    "aria-describedby": error ? `${id}-error` : undefined,
+  };
+}
+
+export default function CheckoutField({ id, label, required = true, error, className, ...inputProps }) {
+  return (
+    <FieldShell id={id} label={label} required={required} error={error} className={className}>
+      <input id={id} {...fieldA11y(id, required, error)} className={`${CHECKOUT_FIELD} ${error ? CHECKOUT_FIELD_ERROR : ""}`} {...inputProps} />
+    </FieldShell>
+  );
+}

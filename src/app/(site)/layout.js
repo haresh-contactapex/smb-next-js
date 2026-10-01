@@ -2,6 +2,7 @@ import { Montserrat, Playfair_Display } from "next/font/google";
 import TopBar from "@/components/storefront/TopBar";
 import SiteHeader from "@/components/storefront/SiteHeader";
 import SiteFooter from "@/components/storefront/SiteFooter";
+import StorefrontChrome from "@/components/storefront/StorefrontChrome";
 import CartProvider from "@/components/storefront/cart/CartProvider";
 import CartDrawer from "@/components/storefront/cart/CartDrawer";
 import { listShippingCountries } from "@/lib/storefrontCart";
@@ -31,10 +32,17 @@ export default function SiteLayout({ children }) {
       style={{ fontFamily: "var(--font-montserrat), sans-serif" }}
     >
       <CartProvider countries={listShippingCountries()}>
-        <TopBar />
-        <SiteHeader />
-        <main className="flex-1 bg-white">{children}</main>
-        <SiteFooter />
+        <StorefrontChrome
+          header={
+            <>
+              <TopBar />
+              <SiteHeader />
+            </>
+          }
+          footer={<SiteFooter />}
+        >
+          {children}
+        </StorefrontChrome>
         <CartDrawer />
       </CartProvider>
     </div>

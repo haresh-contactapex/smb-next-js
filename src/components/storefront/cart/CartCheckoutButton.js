@@ -1,14 +1,20 @@
-// Checkout isn't built on the storefront yet (Buy Now is inert for the same
-// reason), so this stays disabled until there is a checkout to go to.
+"use client";
+
+import Link from "next/link";
+import { useCart } from "./CartProvider";
+
+// Goes to the checkout page. The drawer is mounted in the layout and stays
+// open across navigation, so it is closed on the way out.
 export default function CartCheckoutButton({ label = "Checkout", className = "" }) {
+  const { closeCart } = useCart();
+
   return (
-    <button
-      type="button"
-      disabled
-      title="Checkout is coming soon"
-      className={`w-full rounded bg-[#4A4A4A] py-3.5 text-[16px] font-semibold text-white transition-colors hover:bg-[#ef9822] disabled:opacity-50 disabled:pointer-events-none ${className}`}
+    <Link
+      href="/checkout"
+      onClick={closeCart}
+      className={`block w-full rounded bg-[#4A4A4A] py-3.5 text-center text-[16px] font-semibold text-white transition-colors hover:bg-[#ef9822] ${className}`}
     >
       {label}
-    </button>
+    </Link>
   );
 }
