@@ -103,7 +103,10 @@ export default async function ProductPage({ params }) {
     id,
     handle: product.handle,
     title,
+    sku,
     price,
+    compareAtPrice,
+    hasVariants: variants.length > 0,
     image: product.images[0] || null,
     hoverImage: product.images[1] || product.images[0] || null,
   };

@@ -604,13 +604,18 @@ export async function deleteProduct(id) {
 
 // Storefront listing: only ACTIVE products, with the first two images (main +
 // hover) from the product's media order. blob: URLs are skipped as above.
+// `hasVariants` tells a card whether it can add the product straight to the cart
+// (a simple product) or must send the shopper to the product page to choose.
 export async function listStorefrontProducts() {
   const rows = await sql`
     SELECT
       p.id,
       p.title,
       p.handle,
+      p.sku,
       p.price,
+      p.compare_at_price,
+      EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id) AS has_variants,
       (
         SELECT ARRAY_AGG(url ORDER BY position) FROM (
           SELECT url, position FROM product_media
@@ -628,7 +633,10 @@ export async function listStorefrontProducts() {
     id: row.id,
     handle: row.handle,
     title: row.title,
+    sku: row.sku || "",
     price: Number(row.price) || 0,
+    compareAtPrice: moneyOrNull(row.compare_at_price),
+    hasVariants: Boolean(row.has_variants),
     image: row.images?.[0] || null,
     hoverImage: row.images?.[1] || row.images?.[0] || null,
   }));
