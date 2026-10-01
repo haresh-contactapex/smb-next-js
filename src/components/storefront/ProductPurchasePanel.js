@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import StoreIcon from "./icons";
 import StarRating from "./StarRating";
 import { metalColor } from "./metals";
+import { useCart } from "./cart/CartProvider";
 import { formatCurrency } from "@/lib/currency";
 
 const FIELDSET = "border border-gray-200 rounded px-5 pb-5 pt-1 mb-6 min-w-0";
@@ -28,6 +29,7 @@ function isMetalOption(option) {
 
 export default function ProductPurchasePanel({ product, currency, reviews, supportEmail = "" }) {
   const baseId = useId();
+  const { addItem } = useCart();
   const [selection, setSelection] = useState(() => defaultSelection(product));
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef(null);
@@ -46,6 +48,24 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
   const canBuy = !notice;
 
   const select = (name, value) => setSelection((current) => ({ ...current, [name]: value }));
+
+  // Adds the selected variant (or the plain product) and opens the cart drawer.
+  function addToCart() {
+    if (!canBuy) return;
+    addItem({
+      productId: product.id,
+      variantId: variant?.id ?? null,
+      handle: product.handle,
+      title: product.title,
+      image: product.image,
+      // In the product's own option order; the variant's keys come back from SQL in no fixed order.
+      options: variant ? Object.fromEntries(product.options.map((option) => [option.name, variant.options[option.name]])) : {},
+      sku,
+      price,
+      compareAtPrice: compareAtPrice > price ? compareAtPrice : null,
+      maxQuantity: variant?.maxQuantity ?? null,
+    });
+  }
 
   async function share() {
     const url = window.location.href;
@@ -195,10 +215,11 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
         {notice}
       </p>
 
-      {/* Cart and checkout aren't built on the storefront yet, so these are inert placeholders. */}
+      {/* Checkout isn't built on the storefront yet, so Buy Now is an inert placeholder. */}
       <div className="flex items-center gap-3 mb-5">
         <button
           type="button"
+          onClick={addToCart}
           disabled={!canBuy}
           className="flex-1 py-3 bg-white border border-gray-300 rounded text-[18px] font-semibold text-gray-800 hover:border-[#ef9822] hover:text-[#ef9822] transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >

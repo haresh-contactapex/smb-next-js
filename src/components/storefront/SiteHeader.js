@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MobileMenu from "./MobileMenu";
+import CartButton from "./cart/CartButton";
 import StoreIcon from "./icons";
 import { STORE_NAV_LINKS } from "./navLinks";
 
@@ -36,9 +37,7 @@ export default function SiteHeader() {
           <button type="button" aria-label="Wishlist" className={iconButton}>
             <StoreIcon name="heart" />
           </button>
-          <button type="button" aria-label="Cart" className={iconButton}>
-            <StoreIcon name="bag" />
-          </button>
+          <CartButton className={iconButton} />
         </div>
       </div>
     </header>

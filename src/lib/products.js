@@ -709,6 +709,8 @@ export async function getStorefrontProductByHandle(handle) {
       price: moneyOrNull(v.price) ?? price,
       compareAtPrice: moneyOrNull(v.compare_at_price) ?? compareAtPrice,
       available: !v.inventory_management || v.inventory_quantity > 0,
+      // Units on hand when stock is tracked, so the cart can cap the quantity; null means unlimited.
+      maxQuantity: v.inventory_management ? Math.max(0, Number(v.inventory_quantity) || 0) : null,
     })),
   };
 }

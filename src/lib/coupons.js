@@ -60,6 +60,25 @@ export async function getCouponById(id) {
   return mapCoupon(row);
 }
 
+// Storefront lookup by the (already normalized) code. Unlike the admin reads
+// above it never writes: the stored status can lag behind the calendar, so it
+// is re-derived from the dates instead of being synced on a public request.
+export async function getCouponByCode(code) {
+  const [row] = await sql`
+    SELECT
+      c.id, c.code, c.description, c.discount_type, c.discount_value, c.min_purchase_amount,
+      c.usage_limit, c.usage_count, c.one_per_customer, c.status,
+      c.start_date::text AS start_date, c.end_date::text AS end_date,
+      c.applies_to, c.category_id, cat.name AS category_name
+    FROM coupons c
+    LEFT JOIN categories cat ON cat.id = c.category_id
+    WHERE c.code = ${code}
+  `;
+  if (!row) return null;
+  const coupon = mapCoupon(row);
+  return { ...coupon, status: computeCouponStatus(coupon.startDate, coupon.endDate) };
+}
+
 function mapCoupon(row) {
   return {
     id: row.id,

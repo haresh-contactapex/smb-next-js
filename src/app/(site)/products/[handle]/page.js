@@ -87,7 +87,18 @@ export default async function ProductPage({ params }) {
 
   // Only what the client components need; the description and image list stay server-side.
   const { id, title, sku, price, compareAtPrice, attributes, options, variants } = product;
-  const purchaseProduct = { title, sku, price, compareAtPrice, attributes, options, variants };
+  const purchaseProduct = {
+    id,
+    handle: product.handle,
+    image: product.images[0] || null,
+    title,
+    sku,
+    price,
+    compareAtPrice,
+    attributes,
+    options,
+    variants,
+  };
   const recentlyViewedEntry = {
     id,
     handle: product.handle,
