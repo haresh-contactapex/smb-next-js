@@ -40,6 +40,9 @@ endpoints answer the questions the browser can't.
   - **Order note** – free text, up to 500 characters, saved with the cart.
   - **Shipping** – pick a country and postal code, then choose a rate.
   - **Coupon** – enter a code from *Vouchers / Coupons*.
+- **Removing a line asks first** (`Remove "<name>" from your cart?`, the same
+  native confirm the admin uses for deletes) in both the drawer and on `/cart`;
+  cancelling leaves the cart untouched.
 - Under the totals the drawer has **View Cart** (opens `/cart`) above
   **Checkout**.
 - **`/cart`** is the full page: the lines on the left (large image, name, price,

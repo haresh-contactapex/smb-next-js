@@ -127,9 +127,15 @@ export default function CartProvider({ countries = [], children }) {
     }));
   }, []);
 
-  // Removing the last line starts a fresh cart, so an old note, code or
-  // shipping estimate doesn't reappear on whatever is added next.
+  // Asks first, as every delete in the app does: the remove button sits right
+  // next to the quantity controls and is easy to hit by mistake. Declining
+  // leaves the cart untouched. Removing the last line starts a fresh cart, so
+  // an old note, code or shipping estimate doesn't reappear on whatever is
+  // added next.
   const removeItem = useCallback((key) => {
+    const line = cartRef.current.items.find((item) => item.key === key);
+    if (!line || !window.confirm(`Remove "${line.title}" from your cart?`)) return;
+
     setCart((current) => {
       const items = current.items.filter((item) => item.key !== key);
       return items.length > 0 ? { ...current, items } : EMPTY_CART;
