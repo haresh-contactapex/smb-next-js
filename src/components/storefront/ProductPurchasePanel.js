@@ -6,6 +6,7 @@ import StarRating from "./StarRating";
 import { isMetalOption, metalColor } from "./metals";
 import { useCart } from "./cart/CartProvider";
 import { findVariant } from "./cart/cartHelpers";
+import WishlistHeart from "./wishlist/WishlistHeart";
 import { formatCurrency } from "@/lib/currency";
 
 const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#ef9822] transition-colors";
@@ -228,13 +229,13 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
         >
           Add To Cart
         </button>
-        <button
-          type="button"
-          aria-label="Add to wishlist"
-          className="w-[48px] h-[53px] flex-shrink-0 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-red-500 hover:border-red-500 transition-colors"
-        >
-          <StoreIcon name="heart" />
-        </button>
+        <WishlistHeart
+          productId={product.id}
+          variantId={variant?.id ?? null}
+          title={product.title}
+          className="w-[48px] h-[53px] flex-shrink-0 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-red-500 hover:border-red-500 transition-colors disabled:pointer-events-none"
+          activeClassName="!text-red-500 !border-red-500"
+        />
         <button
           type="button"
           disabled={!canBuy}

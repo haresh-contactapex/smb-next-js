@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { mergeGuestWishlist } from "@/components/storefront/wishlist/wishlistApi";
 import { DEFAULT_REGISTER, isValidEmail, isValidPassword } from "./helpers";
 import PasswordField from "./PasswordField";
 import AuthLayout from "./AuthLayout";
@@ -75,6 +76,8 @@ export default function RegisterForm() {
       if (!res.ok || !result.success) {
         throw new Error(result.error || "Unable to create your account.");
       }
+      // Items saved as a guest move into the new account's wishlist.
+      await mergeGuestWishlist();
       // There's no customer-facing storefront page in this app yet to send
       // them to (only these auth pages exist) — staying put with the cookie
       // set avoids bouncing a signed-in customer into the gated admin panel.

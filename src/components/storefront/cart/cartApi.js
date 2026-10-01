@@ -1,11 +1,12 @@
 // Resolves to { ok, data } or { ok: false, error } so callers never need a try/catch.
 // A rejected request may also carry `field`, the form field the server found fault with.
-export async function postJson(url, body, signal) {
+// `body` is optional (a plain GET has none).
+export async function requestJson(method, url, body, signal) {
   try {
     const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      method,
+      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
       signal,
     });
     const json = await response.json().catch(() => null);
@@ -17,4 +18,8 @@ export async function postJson(url, body, signal) {
     if (error?.name === "AbortError") return { ok: false, aborted: true, error: "" };
     return { ok: false, status: 0, error: "We couldn't reach the store. Check your connection and try again." };
   }
+}
+
+export function postJson(url, body, signal) {
+  return requestJson("POST", url, body, signal);
 }
