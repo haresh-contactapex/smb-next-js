@@ -12,8 +12,10 @@ endpoints answer the questions the browser can't.
 | --- | --- |
 | Cart state, `localStorage` persistence, `useCart()` | `src/components/storefront/cart/CartProvider.js` |
 | Pure pricing/sanitizing logic (coupon, shipping, totals) | `src/components/storefront/cart/cartHelpers.js` |
-| Drawer, line items, icon row | `CartDrawer.js`, `CartLine.js` |
-| Icon sections: note / shipping / coupon | `CartNote.js`, `CartShipping.js`, `CartCoupon.js` |
+| Drawer, line items | `CartDrawer.js`, `CartLine.js` |
+| Icon row + the section each icon opens (shared by drawer and cart page) | `CartOptions.js` → `CartNote.js`, `CartShipping.js`, `CartCoupon.js` |
+| Totals and the (disabled) Checkout button, shared | `CartTotals.js`, `CartCheckoutButton.js` |
+| Full cart page at `/cart` | `src/app/(site)/cart/page.js`, `CartPage.js` |
 | Header icon + count badge | `CartButton.js` |
 | Server lookups | `src/lib/storefrontCart.js`, `getCouponByCode()` in `src/lib/coupons.js` |
 | Public endpoints | `src/app/api/cart/coupon/route.js`, `src/app/api/cart/shipping/route.js` |
@@ -34,6 +36,8 @@ endpoints answer the questions the browser can't.
   - **Order note** – free text, up to 500 characters, saved with the cart.
   - **Shipping** – pick a country and postal code, then choose a rate.
   - **Coupon** – enter a code from *Vouchers / Coupons*.
+- Under the totals the drawer has **View Cart** (opens `/cart`) above
+  **Checkout**. `/cart` shows the same lines, options and totals as a full page.
 - Not included on purpose: a "spend X for free shipping" progress bar and a
   "I agree to the Terms & conditions" checkbox.
 - **Checkout is disabled.** Checkout isn't built on the storefront yet (Buy Now

@@ -209,6 +209,7 @@ export default function CartProvider({ countries = [], children }) {
       count,
       totals,
       countries,
+      hydrated,
       isOpen,
       couponNotice,
       openCart,
@@ -224,7 +225,7 @@ export default function CartProvider({ countries = [], children }) {
       selectShippingRate,
     }),
     [
-      cart, count, totals, countries, isOpen, couponNotice, openCart, closeCart, addItem, setQuantity, removeItem,
+      cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, setQuantity, removeItem,
       setNote, applyCoupon, removeCoupon, estimateShipping, clearShipping, selectShippingRate,
     ]
   );
