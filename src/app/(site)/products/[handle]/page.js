@@ -120,16 +120,16 @@ export default async function ProductPage({ params }) {
               Home
             </Link>
           </li>
-          <li aria-hidden="true" className="mx-1.5">
-            &gt;
+          <li aria-hidden="true" className="mx-2">
+            /
           </li>
           <li>
             <Link href="/women-wedding-bands" className="hover:text-[#ef9822] transition-colors">
               Women&apos;s Wedding Bands
             </Link>
           </li>
-          <li aria-hidden="true" className="mx-1.5">
-            &gt;
+          <li aria-hidden="true" className="mx-2">
+            /
           </li>
           <li aria-current="page" className="text-gray-500">
             {title}
