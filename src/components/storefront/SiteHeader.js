@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MobileMenu from "./MobileMenu";
+import NavMegaMenu from "./NavMegaMenu";
 import CartButton from "./cart/CartButton";
 import WishlistButton from "./wishlist/WishlistButton";
 import StoreIcon from "./icons";
@@ -21,11 +22,15 @@ export default function SiteHeader() {
         </Link>
 
         <nav aria-label="Main" className="hidden lg:flex lg:space-x-3 xl:space-x-6 2xl:space-x-8 lg:text-[11px] xl:text-[13px] 2xl:text-[16px] font-medium tracking-wide uppercase flex-shrink">
-          {STORE_NAV_LINKS.map((link) => (
-            <Link key={link.label} href={link.href} className="hover:text-[#ef9822] transition-colors whitespace-nowrap">
-              {link.label}
-            </Link>
-          ))}
+          {STORE_NAV_LINKS.map((link) =>
+            link.megaMenu ? (
+              <NavMegaMenu key={link.label} link={link} />
+            ) : (
+              <Link key={link.label} href={link.href} className="hover:text-[#ef9822] transition-colors whitespace-nowrap">
+                {link.label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-3 xl:space-x-5 2xl:space-x-6 text-[#555555] flex-shrink-0">
