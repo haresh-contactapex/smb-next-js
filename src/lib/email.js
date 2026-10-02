@@ -109,7 +109,8 @@ function withFooter({ html, text }, footerText) {
 // Sends best-effort: returns false and logs instead of throwing, so callers
 // (e.g. forgot-password) don't have to branch their response on email
 // delivery and risk leaking account-existence info through status codes.
-export async function sendEmail({ to, subject, html, text }) {
+// `replyTo` is optional: an address, or { name, address }.
+export async function sendEmail({ to, subject, html, text, replyTo }) {
   const config = await readSmtpConfig();
   if (!isCompleteConfig(config)) {
     console.error("sendEmail: SMTP is not configured in Settings -> Email or SMTP_* env vars — email not sent.");
@@ -118,7 +119,7 @@ export async function sendEmail({ to, subject, html, text }) {
 
   try {
     const body = withFooter({ html, text }, config.footerText);
-    await getTransporter(config).sendMail({ from: config.from, to, subject, ...body });
+    await getTransporter(config).sendMail({ from: config.from, to, subject, replyTo, ...body });
     return true;
   } catch (error) {
     console.error("sendEmail: failed to send", error);
@@ -186,4 +187,74 @@ export async function sendStaffWelcomeEmail({ to, firstName, storeName, temporar
   `;
 
   return sendEmail({ to, subject, html, text });
+}
+
+// Subjects and display names must stay on one line.
+const oneLine = (value) => String(value).replace(/\s+/g, " ").trim();
+
+const MUTED = "color:#64748b";
+const QUOTE = "margin:0;padding:12px 14px;background:#f4f4f4;border-left:3px solid #ef9822;white-space:pre-wrap";
+
+// Sent to the store when a shopper uses "Ask a question" on a product page.
+// Reply-To is the shopper, so answering the email answers them directly.
+// Everything in `question` is visitor input and is escaped.
+export async function sendProductQuestionAdminEmail({ to, storeName, question, product }) {
+  const subject = `New question about ${oneLine(product.title)} from ${question.name}`;
+  const text = [
+    `A customer asked a question about a product on ${storeName}.`,
+    "",
+    `Name: ${question.name}`,
+    `Email: ${question.email}`,
+    `Phone: ${question.phone}`,
+    `Product: ${product.title}${product.sku ? ` (SKU ${product.sku})` : ""}`,
+    `Product page: ${product.url}`,
+    "",
+    "Question:",
+    question.question,
+    "",
+    `Reply to this email to answer ${question.name} directly.`,
+  ].join("\n");
+  const row = (label, value) =>
+    `<tr><td style="padding:3px 16px 3px 0;${MUTED}">${label}</td><td style="padding:3px 0">${value}</td></tr>`;
+  const html = `
+    <p>A customer asked a question about a product on <strong>${escapeHtml(storeName)}</strong>.</p>
+    <table style="border-collapse:collapse;font-size:14px">
+      ${row("Name", escapeHtml(question.name))}
+      ${row("Email", `<a href="mailto:${escapeHtml(question.email)}">${escapeHtml(question.email)}</a>`)}
+      ${row("Phone", escapeHtml(question.phone))}
+      ${row("Product", `<a href="${escapeHtml(product.url)}">${escapeHtml(product.title)}</a>`)}
+      ${product.sku ? row("SKU", escapeHtml(product.sku)) : ""}
+    </table>
+    <p style="margin:18px 0 6px;${MUTED}">Question</p>
+    <p style="${QUOTE}">${escapeHtml(question.question)}</p>
+    <p style="${MUTED};font-size:13px">Reply to this email to answer ${escapeHtml(question.name)} directly.</p>
+  `;
+
+  return sendEmail({ to, subject, html, text, replyTo: { name: question.name, address: question.email } });
+}
+
+// Sent to the shopper to confirm the store received their question. Replies go
+// to `replyTo` (the store's support address) rather than the no-reply sender.
+export async function sendProductQuestionConfirmationEmail({ to, storeName, question, product, replyTo }) {
+  const firstName = question.name.split(" ")[0];
+  const subject = `We received your question about ${oneLine(product.title)}`;
+  const text = [
+    `Hi ${firstName},`,
+    "",
+    `Thanks for contacting ${storeName}. We've received your question about ${product.title} and will reply as soon as we can.`,
+    "",
+    "Your question:",
+    question.question,
+    "",
+    "If there's anything you'd like to add, just reply to this email.",
+  ].join("\n");
+  const html = `
+    <p>Hi ${escapeHtml(firstName)},</p>
+    <p>Thanks for contacting <strong>${escapeHtml(storeName)}</strong>. We've received your question about <a href="${escapeHtml(product.url)}">${escapeHtml(product.title)}</a> and will reply as soon as we can.</p>
+    <p style="margin:18px 0 6px;${MUTED}">Your question</p>
+    <p style="${QUOTE}">${escapeHtml(question.question)}</p>
+    <p>If there's anything you'd like to add, just reply to this email.</p>
+  `;
+
+  return sendEmail({ to, subject, html, text, replyTo: replyTo || undefined });
 }

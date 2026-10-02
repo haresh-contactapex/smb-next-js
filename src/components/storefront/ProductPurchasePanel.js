@@ -7,6 +7,7 @@ import { isMetalOption, metalColor } from "./metals";
 import { useCart } from "./cart/CartProvider";
 import { findVariant } from "./cart/cartHelpers";
 import WishlistHeart from "./wishlist/WishlistHeart";
+import AskQuestionModal from "./ask-question/AskQuestionModal";
 import { formatCurrency } from "@/lib/currency";
 
 const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#ef9822] transition-colors";
@@ -38,6 +39,7 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
   const { addItem } = useCart();
   const [selection, setSelection] = useState(() => defaultSelection(product));
   const [copied, setCopied] = useState(false);
+  const [askOpen, setAskOpen] = useState(false);
   const copiedTimer = useRef(null);
 
   useEffect(() => () => clearTimeout(copiedTimer.current), []);
@@ -253,15 +255,10 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
       </div>
 
       <div className="flex items-center gap-5 text-[14px] text-[#555555] font-medium mb-6 uppercase tracking-wider">
-        {supportEmail && (
-          <a
-            href={`mailto:${supportEmail}?subject=${encodeURIComponent(`Question about ${product.title}`)}`}
-            className={MINI_ACTION}
-          >
-            <StoreIcon name="mail" className="w-[14px] h-[14px]" />
-            Ask a question
-          </a>
-        )}
+        <button type="button" onClick={() => setAskOpen(true)} aria-haspopup="dialog" className={MINI_ACTION}>
+          <StoreIcon name="mail" className="w-[14px] h-[14px]" />
+          Ask a question
+        </button>
         <button type="button" onClick={share} className={MINI_ACTION}>
           <StoreIcon name="share" className="w-[14px] h-[14px]" />
           {copied ? "Link copied" : "Share"}
@@ -270,6 +267,15 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
           {copied ? "Link copied to clipboard" : ""}
         </span>
       </div>
+
+      {askOpen && (
+        <AskQuestionModal
+          product={{ title: product.title, handle: product.handle, image: product.image }}
+          priceLabel={formatCurrency(price, currency)}
+          supportEmail={supportEmail}
+          onClose={() => setAskOpen(false)}
+        />
+      )}
 
       <ul className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[14px] text-[#555555] mb-8 font-[500]">
         {[
