@@ -13,7 +13,18 @@ function FilterGroup({ children }) {
   );
 }
 
-export default function ProductListingSkeleton({ cards = 8 }) {
+// One product card placeholder; also shown under the grid while "Load more" fetches.
+export function ProductCardSkeleton() {
+  return (
+    <div>
+      <div className="shimmer rounded-md aspect-square mb-3 sm:mb-4" />
+      <Bar className="h-4 w-20 mb-2" />
+      <Bar className="h-3.5 w-4/5" />
+    </div>
+  );
+}
+
+export default function ProductListingSkeleton({ cards = 12 }) {
   return (
     <div role="status" aria-busy="true" aria-live="polite">
       <span className="sr-only">Loading products…</span>
@@ -62,11 +73,7 @@ export default function ProductListingSkeleton({ cards = 8 }) {
           {/* Product grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-10 sm:pt-12 pb-16 sm:pb-24">
             {Array.from({ length: cards }, (_, i) => (
-              <div key={i}>
-                <div className="shimmer rounded-md aspect-square mb-3 sm:mb-4" />
-                <Bar className="h-4 w-20 mb-2" />
-                <Bar className="h-3.5 w-4/5" />
-              </div>
+              <ProductCardSkeleton key={i} />
             ))}
           </div>
         </div>

@@ -1,5 +1,5 @@
 import ProductListing from "@/components/storefront/ProductListing";
-import { listStorefrontProducts } from "@/lib/products";
+import { STOREFRONT_PAGE_SIZE, listStorefrontProductsPage } from "@/lib/products";
 import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 
 // Reads live catalog data, so never prerender it at build time.
@@ -9,13 +9,15 @@ export const metadata = {
   title: "Women Wedding Bands | shopmyband.com",
 };
 
-// Every ACTIVE product from the admin catalog. A database failure is reported
-// to the visitor rather than silently showing an empty shop.
+// The first page of ACTIVE products from the admin catalog; the listing loads
+// the rest on demand ("Load more"). A database failure is reported to the
+// visitor rather than silently showing an empty shop.
 async function loadProducts() {
   try {
-    return { products: await listStorefrontProducts(), failed: false };
+    const { products, total } = await listStorefrontProductsPage({ limit: STOREFRONT_PAGE_SIZE });
+    return { products, total, failed: false };
   } catch {
-    return { products: [], failed: true };
+    return { products: [], total: 0, failed: true };
   }
 }
 
@@ -28,7 +30,7 @@ async function loadCurrency() {
 }
 
 export default async function WomenWeddingBandsPage() {
-  const [{ products, failed }, currency] = await Promise.all([loadProducts(), loadCurrency()]);
+  const [{ products, total, failed }, currency] = await Promise.all([loadProducts(), loadCurrency()]);
 
   return (
     <>
@@ -65,7 +67,7 @@ export default async function WomenWeddingBandsPage() {
             </p>
           </div>
 
-          <ProductListing products={products} currency={currency} failed={failed} />
+          <ProductListing initialProducts={products} initialTotal={total} pageSize={STOREFRONT_PAGE_SIZE} currency={currency} failed={failed} />
         </div>
       </div>
     </>

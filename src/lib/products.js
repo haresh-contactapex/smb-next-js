@@ -606,7 +606,10 @@ export async function deleteProduct(id) {
 // hover) from the product's media order. blob: URLs are skipped as above.
 // `hasVariants` tells a card whether it can add the product straight to the cart
 // (a simple product) or must send the shopper to the product page to choose.
-export async function listStorefrontProducts() {
+//
+// `limit` null returns every match. The id tiebreaker keeps the order stable when
+// products share a created_at, so offset paging never skips or repeats one.
+async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = null, maxPrice = null } = {}) {
   const rows = await sql`
     SELECT
       p.id,
@@ -626,7 +629,10 @@ export async function listStorefrontProducts() {
       ) AS images
     FROM products p
     WHERE p.status = 'ACTIVE'
-    ORDER BY p.created_at DESC
+      AND (${minPrice}::numeric IS NULL OR p.price >= ${minPrice}::numeric)
+      AND (${maxPrice}::numeric IS NULL OR p.price <= ${maxPrice}::numeric)
+    ORDER BY p.created_at DESC, p.id
+    LIMIT ${limit}::int OFFSET ${offset}::int
   `;
 
   return rows.map((row) => ({
@@ -640,6 +646,33 @@ export async function listStorefrontProducts() {
     image: row.images?.[0] || null,
     hoverImage: row.images?.[1] || row.images?.[0] || null,
   }));
+}
+
+export async function listStorefrontProducts() {
+  return queryStorefrontProducts();
+}
+
+export const STOREFRONT_PAGE_SIZE = 12;
+export const STOREFRONT_MAX_PAGE_SIZE = 48;
+
+// One page of the storefront listing for "Load more": the products plus the
+// total number matching the price filter, so the shopper sees "12 of 60" and
+// the button disappears after the last page.
+export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE, offset = 0, minPrice = null, maxPrice = null } = {}) {
+  const pageSize = Math.min(Math.max(Math.floor(limit) || STOREFRONT_PAGE_SIZE, 1), STOREFRONT_MAX_PAGE_SIZE);
+  const start = Math.max(Math.floor(offset) || 0, 0);
+
+  const [products, [{ total }]] = await Promise.all([
+    queryStorefrontProducts({ limit: pageSize, offset: start, minPrice, maxPrice }),
+    sql`
+      SELECT COUNT(*)::int AS total FROM products p
+      WHERE p.status = 'ACTIVE'
+        AND (${minPrice}::numeric IS NULL OR p.price >= ${minPrice}::numeric)
+        AND (${maxPrice}::numeric IS NULL OR p.price <= ${maxPrice}::numeric)
+    `,
+  ]);
+
+  return { products, total, hasMore: start + products.length < total };
 }
 
 function moneyOrNull(value) {
