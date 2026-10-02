@@ -53,7 +53,7 @@ the account list into `localStorage`.
 
 - Every heart means "this product is on my wishlist": it is filled whichever
   color / size was saved, and clicking a filled heart removes the product (every
-  saved variant of it). Saving from the product page remembers the **selected
+  saved variant of it) after a confirmation. Saving from the product page remembers the **selected
   variant**; saving from a listing card, which has none to choose, saves the
   product alone and the wishlist page then shows its default variant. The saved
   variant is changed on the wishlist page, not by the heart.
@@ -71,7 +71,9 @@ and a Sale tag when on sale), average approved-review rating, availability
 (`In stock`, `Only N left` at 5 or fewer tracked units, `Out of stock`), the
 selected variant as editable color / size pickers, **Add To Cart** (opens the
 cart drawer; disabled when the variant is out of stock) and **Remove from
-wishlist**. Changing a picker updates the saved entry. A product that is no
+wishlist**. Both Remove and an un-heart ask first (`confirmWishlistRemoval()`
+in `wishlistHelpers.js`, the browser's confirm box like the app's other
+removals); cancelling changes nothing. Changing a picker updates the saved entry. A product that is no
 longer sold shows a placeholder card that can only be removed. Guests see a
 note offering sign-in, since that is what carries the list to other devices.
 

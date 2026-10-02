@@ -9,7 +9,7 @@ import { optionChoices } from "../cart/cartHelpers";
 import { isMetalOption } from "../metals";
 import { WishlistCardSkeleton } from "./WishlistSkeleton";
 import { useWishlist } from "./WishlistProvider";
-import { defaultVariant } from "./wishlistHelpers";
+import { confirmWishlistRemoval, defaultVariant } from "./wishlistHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { formatCurrency } from "@/lib/currency";
 
@@ -27,10 +27,10 @@ export default function WishlistCard({ item, product, loading }) {
   const { addItem } = useCart();
   const { currency } = useGeneralSettings();
 
-  // Removing is only done after the shopper agrees, so a stray tap can't drop an item.
-  // `name` is the product's title, or a generic phrase for a product that is no longer sold.
+  // Removing is only done after the shopper agrees. `name` is the product's title in quotes,
+  // or a generic phrase for a product that is no longer sold.
   function confirmRemove(name) {
-    if (!window.confirm(`Remove ${name} from your wishlist?`)) return;
+    if (!confirmWishlistRemoval(name)) return;
     remove(item.productId, item.variantId);
   }
 
