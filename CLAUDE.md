@@ -31,6 +31,7 @@ npm run db:migrate
 npm run db:migrate:media
 npm run db:migrate:coupons
 npm run db:migrate:customers
+npm run db:migrate:account
 npm run db:migrate:auth
 npm run db:migrate:staff-users
 npm run db:migrate:currency-tax
@@ -71,7 +72,7 @@ For a new persisted feature, follow the existing vertical slice:
 - The admin panel is served under `/admin`: every admin `href`, `router.push`, and permission rule in `src/lib/routePermissions.js` must include the `/admin` prefix. `/api/*` routes are not prefixed.
 - Admin auth pages listed in both `src/middleware.js` and `src/components/admin-panel/ConditionalShell.js` render without the admin shell. Keep those lists synchronized when adding standalone routes.
 - `src/app/admin/layout.js` owns the staff session, role-filtered nav, and admin shell. The root layout only provides fonts, theme, and `GeneralSettingsProvider`. The storefront shell is `src/app/(site)/layout.js` (light-only, Google Sans/Playfair). Customer-facing pages (storefront, customer auth pages, `/maintenance`) use Google Sans via `<GoogleSansFont />` plus the `.font-google-sans` class; `/admin/**` stays on Inter.
-- Middleware only gates `/admin/**`; everything else is public storefront and is subject to maintenance mode.
+- Middleware gates `/admin/**` (staff session) and `/account/**` (customer session, redirecting to `/login?next=`); everything else is public storefront and is subject to maintenance mode. The `/account` redirect is only a convenience: account pages call `requireCustomerPage()` and `/api/account/**` handlers call `requireCustomer()`, which are the real authorization. See `docs/account/customer-account.md`.
 - The root layout obtains store settings and staff identity server-side and supplies global settings through `GeneralSettingsProvider`. Extend that provider deliberately when a client-wide store setting is needed.
 - Database-backed server pages that must always show fresh values should follow the existing `export const dynamic = "force-dynamic"` pattern.
 

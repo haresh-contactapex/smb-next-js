@@ -8,8 +8,9 @@ import useWishlistProducts from "./useWishlistProducts";
 import { useWishlist } from "./WishlistProvider";
 
 // The saved items as a grid of cards. Guests see a nudge to sign in, because
-// that is what makes the list follow them to other devices.
-export default function WishlistPage() {
+// that is what makes the list follow them to other devices. `gridClassName`
+// overrides the card grid for a narrower container (the account area's).
+export default function WishlistPage({ gridClassName = "grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4" }) {
   const { items, hydrated, authenticated } = useWishlist();
   const { products, loading, failed, retry } = useWishlistProducts(items, hydrated);
 
@@ -73,7 +74,7 @@ export default function WishlistPage() {
           </button>
         </div>
       ) : (
-        <ul className="grid grid-cols-1 gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+        <ul className={`grid ${gridClassName}`}>
           {items.map((item, index) => (
             <li key={cardKeys[index]} className="min-w-0">
               <WishlistCard item={item} product={products[item.productId]} loading={loading} />

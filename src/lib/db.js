@@ -20,6 +20,16 @@ export function sql(strings, ...values) {
   return getClient()(strings, ...values);
 }
 
+// Several statements applied together or not at all (over HTTP, so the
+// statements can't read each other's results). `build` receives a tagged
+// template and returns the statements in order:
+//   await sqlTransaction((tx) => [tx`UPDATE ...`, tx`UPDATE ...`]);
+// Statements run in the order given, which matters for partial unique indexes
+// (clear the old row before setting the new one).
+export function sqlTransaction(build) {
+  return getClient().transaction(build);
+}
+
 // Raw parameterized query ($1, $2, ...) for cases the tagged-template form
 // can't express, such as a dynamically-sized multi-row INSERT.
 export function sqlQuery(text, params) {

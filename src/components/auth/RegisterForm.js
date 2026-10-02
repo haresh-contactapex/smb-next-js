@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { mergeGuestWishlist } from "@/components/storefront/wishlist/wishlistApi";
@@ -12,6 +13,7 @@ import Toast from "./Toast";
 import Recaptcha from "./Recaptcha";
 
 export default function RegisterForm() {
+  const router = useRouter();
   const { enableRecaptcha } = useGeneralSettings();
   const [form, setForm] = useState(DEFAULT_REGISTER);
   const [errors, setErrors] = useState({});
@@ -78,10 +80,9 @@ export default function RegisterForm() {
       }
       // Items saved as a guest move into the new account's wishlist.
       await mergeGuestWishlist();
-      // There's no customer-facing storefront page in this app yet to send
-      // them to (only these auth pages exist) — staying put with the cookie
-      // set avoids bouncing a signed-in customer into the gated admin panel.
       showToast("Account created — welcome!");
+      router.replace("/account");
+      router.refresh(); // server components re-read the session cookie
     } catch (error) {
       showToast(error.message, "error");
       setRecaptchaToken("");
