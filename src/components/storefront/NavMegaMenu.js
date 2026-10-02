@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import BandIcon from "./bandIcons";
 import StoreIcon from "./icons";
@@ -9,15 +9,18 @@ import useImageLoaded from "./useImageLoaded";
 // Grace period so the pointer can cross the gap between the link and the panel.
 const CLOSE_DELAY_MS = 150;
 
-// The preview images are real catalog photos: one ACTIVE product per menu item,
-// from the public storefront listing. One request per page load, and only once
-// the menu has been opened. A failure yields no images (the previews still show
-// their text) and is retried the next time the page loads.
+// The preview images are real catalog photos, taken from the public storefront
+// listing. Every mega menu shares one request for the first few ACTIVE products
+// (made once per page load, when the first menu is opened) and each menu takes
+// its own slice of them via its `imageOffset`, so different menus show different
+// products. A failure yields no images (the previews still show their button)
+// and is retried the next time the page loads.
+const MENU_IMAGE_COUNT = 12;
 let menuImagesRequest = null;
 
-function loadMenuImages(count) {
+function loadMenuImages() {
   if (!menuImagesRequest) {
-    menuImagesRequest = fetch(`/api/storefront/products?limit=${count}`)
+    menuImagesRequest = fetch(`/api/storefront/products?limit=${MENU_IMAGE_COUNT}`)
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || "Request failed");
@@ -32,17 +35,17 @@ function loadMenuImages(count) {
 }
 
 // `null` until loaded. With fewer products than menu items the photos repeat.
-function useMenuImages(count, enabled) {
+function useMenuImages(enabled) {
   const [images, setImages] = useState(null);
 
   useEffect(() => {
     if (!enabled || images) return undefined;
     let current = true;
-    loadMenuImages(count).then((list) => current && setImages(list));
+    loadMenuImages().then((list) => current && setImages(list));
     return () => {
       current = false;
     };
-  }, [enabled, images, count]);
+  }, [enabled, images]);
 
   return images;
 }
@@ -92,11 +95,16 @@ function PreviewLayer({ item, image, loading, active, showImage }) {
 // item is active whenever the menu opens. Opens on hover and keyboard focus;
 // Escape closes it.
 //
+// When every column holds a single item, that item stretches to fill the whole
+// column instead of sitting at the top, so a short menu doesn't look empty.
+//
 // The panel is positioned against the sticky <header> (the nearest positioned
 // ancestor), so it spans below the whole navbar rather than under the link.
 export default function NavMegaMenu({ link }) {
-  const { columns } = link.megaMenu;
+  const { columns, imageOffset = 0 } = link.megaMenu;
   const items = columns.flat();
+  const fillColumns = columns.every((column) => column.length === 1);
+  const panelId = useId();
 
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -104,7 +112,7 @@ export default function NavMegaMenu({ link }) {
   const closeTimer = useRef(null);
   const wrapperRef = useRef(null);
   const skipFocusOpen = useRef(false);
-  const images = useMenuImages(items.length, everOpened);
+  const images = useMenuImages(everOpened);
 
   const cancelClose = useCallback(() => {
     clearTimeout(closeTimer.current);
@@ -148,8 +156,6 @@ export default function NavMegaMenu({ link }) {
     skipFocusOpen.current = false;
   }
 
-  const panelId = "mega-menu-wedding-bands";
-
   return (
     <div
       ref={wrapperRef}
@@ -176,22 +182,22 @@ export default function NavMegaMenu({ link }) {
       <div
         id={panelId}
         className={`absolute left-1/2 top-[calc(100%+1px)] z-10 grid w-[min(940px,calc(100vw-2rem))] -translate-x-1/2 grid-cols-[1fr_1fr_1.15fr] gap-7 rounded-b-[18px] border border-t-0 border-[#e9e9e9] bg-white p-[26px] text-[#171717] normal-case font-normal tracking-normal shadow-[0_18px_45px_rgba(0,0,0,0.10)] transition duration-200 ease-out motion-reduce:transition-none ${
-          open ? "visible translate-y-0 opacity-100" : "invisible translate-y-2.5 opacity-0"
-        }`}
+          fillColumns ? "auto-rows-[minmax(280px,auto)]" : ""
+        } ${open ? "visible translate-y-0 opacity-100" : "invisible translate-y-2.5 opacity-0"}`}
       >
         {columns.map((column, columnIndex) => (
           <ul key={columnIndex} className="flex flex-col gap-[3px]">
             {column.map((item) => {
               const index = items.indexOf(item);
               return (
-                <li key={item.label}>
+                <li key={item.label} className={fillColumns ? "flex flex-1" : undefined}>
                   <Link
                     href={item.href}
                     onMouseEnter={() => setActive(index)}
                     onFocus={() => setActive(index)}
-                    className={`flex items-start gap-3 rounded-[9px] px-2.5 py-[11px] transition-colors duration-200 hover:bg-[#f5f5f5] ${
-                      index === active ? "bg-[#f5f5f5]" : ""
-                    }`}
+                    className={`flex items-start gap-3 rounded-[9px] transition-colors duration-200 hover:bg-[#f5f5f5] ${
+                      fillColumns ? "flex-1 px-3.5 py-[18px]" : "px-2.5 py-[11px]"
+                    } ${index === active ? "bg-[#f5f5f5]" : ""}`}
                   >
                     <span className="flex h-7 w-7 flex-none items-center justify-center rounded-[7px] border border-[#dedede] bg-white text-[#666666]">
                       <BandIcon name={item.icon} />
@@ -212,7 +218,7 @@ export default function NavMegaMenu({ link }) {
             <PreviewLayer
               key={item.label}
               item={item}
-              image={images?.length ? images[index % images.length] : null}
+              image={images?.length ? images[(imageOffset + index) % images.length] : null}
               loading={everOpened && images === null}
               active={index === active}
               showImage={everOpened}

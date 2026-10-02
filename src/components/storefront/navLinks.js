@@ -18,13 +18,32 @@ export const WEDDING_BANDS_MENU = {
   ],
 };
 
+// Smaller menus: one item per column. `imageOffset` is where in the shared list
+// of preview photos the menu starts (the Wedding Bands menu uses the first six),
+// so each menu shows different products.
+export const ANNIVERSARY_BANDS_MENU = {
+  imageOffset: 6,
+  columns: [
+    [{ label: "Women's Anniversary Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "women" }],
+    [{ label: "Men's Anniversary Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "men" }],
+  ],
+};
+
+export const CLASSIC_BANDS_MENU = {
+  imageOffset: 8,
+  columns: [
+    [{ label: "Women's Classic Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "women" }],
+    [{ label: "Men's Classic Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "men" }],
+  ],
+};
+
 // Storefront category links. Category pages don't exist yet, so they all
 // point at the full product listing for now. A link with a `megaMenu` opens it
 // on hover (desktop header only; the mobile drawer lists plain links).
 export const STORE_NAV_LINKS = [
   { label: "Wedding Bands", href: "/women-wedding-bands", megaMenu: WEDDING_BANDS_MENU },
-  { label: "Anniversary Bands", href: "/women-wedding-bands" },
-  { label: "Classic Bands", href: "/women-wedding-bands" },
+  { label: "Anniversary Bands", href: "/women-wedding-bands", megaMenu: ANNIVERSARY_BANDS_MENU },
+  { label: "Classic Bands", href: "/women-wedding-bands", megaMenu: CLASSIC_BANDS_MENU },
   { label: "Eternity Bands", href: "/women-wedding-bands" },
   { label: "New Arrivals", href: "/women-wedding-bands" },
 ];
