@@ -635,7 +635,12 @@ async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = nu
     LIMIT ${limit}::int OFFSET ${offset}::int
   `;
 
-  return rows.map((row) => ({
+  return rows.map(toStorefrontCard);
+}
+
+// One listing / search row shaped for a storefront product card.
+function toStorefrontCard(row) {
+  return {
     id: row.id,
     handle: row.handle,
     title: row.title,
@@ -645,7 +650,7 @@ async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = nu
     hasVariants: Boolean(row.has_variants),
     image: row.images?.[0] || null,
     hoverImage: row.images?.[1] || row.images?.[0] || null,
-  }));
+  };
 }
 
 export async function listStorefrontProducts() {
@@ -673,6 +678,79 @@ export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE,
   ]);
 
   return { products, total, hasMore: start + products.length < total };
+}
+
+export const STOREFRONT_SEARCH_MAX_LENGTH = 100;
+const SEARCH_MAX_TERMS = 8;
+
+// Characters that mean something inside a LIKE pattern are matched literally.
+const escapeLike = (text) => text.replace(/[\\%_]/g, "\\$&");
+
+// Cleans up what the shopper typed: whitespace collapsed, length capped, and the
+// words split out (each wrapped as a contains-pattern). Empty text has no terms.
+export function parseStorefrontSearch(raw) {
+  const phrase = String(raw ?? "").replace(/\s+/g, " ").trim().slice(0, STOREFRONT_SEARCH_MAX_LENGTH).trim();
+  const words = [...new Set(phrase.toLowerCase().split(" ").filter(Boolean))].slice(0, SEARCH_MAX_TERMS);
+  return { phrase, terms: words.map((word) => `%${escapeLike(word)}%`) };
+}
+
+// Storefront search: ACTIVE products where every word typed appears somewhere in
+// the title, SKU (product or variant), type, vendor, category or description.
+// Best matches come first: the exact title, a title that starts with the text,
+// one with a word starting with it ("ring" in "Twisted Ring" before "Earrings"),
+// one that contains it, then one holding every word, then the rest by newest.
+// Pages with limit/offset like the listing; `total` counts all matches.
+export async function searchStorefrontProducts({ query, limit = 8, offset = 0 } = {}) {
+  const { phrase, terms } = parseStorefrontSearch(query);
+  const pageSize = Math.min(Math.max(Math.floor(limit) || 8, 1), STOREFRONT_MAX_PAGE_SIZE);
+  const start = Math.max(Math.floor(offset) || 0, 0);
+  if (terms.length === 0) return { query: phrase, products: [], total: 0, hasMore: false };
+
+  const lowered = phrase.toLowerCase();
+  const rows = await sql`
+    SELECT
+      p.id,
+      p.title,
+      p.handle,
+      p.sku,
+      p.price,
+      p.compare_at_price,
+      EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id) AS has_variants,
+      (
+        SELECT ARRAY_AGG(url ORDER BY position) FROM (
+          SELECT url, position FROM product_media
+          WHERE product_id = p.id AND type = 'image' AND url NOT LIKE 'blob:%'
+          ORDER BY position
+          LIMIT 2
+        ) images
+      ) AS images,
+      COUNT(*) OVER ()::int AS total
+    FROM products p
+    LEFT JOIN categories c ON c.id = p.category_id
+    WHERE p.status = 'ACTIVE'
+      AND NOT EXISTS (
+        SELECT 1 FROM unnest(${terms}::text[]) AS t(pattern)
+        WHERE NOT (
+          concat_ws(' ', p.title, p.sku, p.product_type, p.vendor, c.name, p.description) ILIKE t.pattern
+          OR EXISTS (SELECT 1 FROM product_variants v WHERE v.product_id = p.id AND v.sku ILIKE t.pattern)
+        )
+      )
+    ORDER BY
+      CASE
+        WHEN lower(p.title) = ${lowered} THEN 0
+        WHEN p.title ILIKE ${`${escapeLike(phrase)}%`} THEN 1
+        WHEN p.title ILIKE ${`% ${escapeLike(phrase)}%`} THEN 2
+        WHEN p.title ILIKE ${`%${escapeLike(phrase)}%`} THEN 3
+        WHEN NOT EXISTS (SELECT 1 FROM unnest(${terms}::text[]) AS t(pattern) WHERE p.title NOT ILIKE t.pattern) THEN 4
+        ELSE 5
+      END,
+      p.created_at DESC,
+      p.id
+    LIMIT ${pageSize}::int OFFSET ${start}::int
+  `;
+
+  const total = rows[0]?.total ?? 0;
+  return { query: phrase, products: rows.map(toStorefrontCard), total, hasMore: start + rows.length < total };
 }
 
 function moneyOrNull(value) {

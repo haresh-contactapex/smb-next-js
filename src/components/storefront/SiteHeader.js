@@ -3,6 +3,7 @@ import MobileMenu from "./MobileMenu";
 import NavMegaMenu from "./NavMegaMenu";
 import CartButton from "./cart/CartButton";
 import WishlistButton from "./wishlist/WishlistButton";
+import SearchButton from "./search/SearchButton";
 import StoreIcon from "./icons";
 import { STORE_NAV_LINKS } from "./navLinks";
 
@@ -34,9 +35,7 @@ export default function SiteHeader() {
         </nav>
 
         <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-3 xl:space-x-5 2xl:space-x-6 text-[#555555] flex-shrink-0">
-          <button type="button" aria-label="Search" className={`hidden sm:block ${iconButton}`}>
-            <StoreIcon name="search" />
-          </button>
+          <SearchButton className={`hidden sm:block ${iconButton}`} />
           <Link href="/login" aria-label="Account" className={`hidden sm:block ${iconButton}`}>
             <StoreIcon name="user" />
           </Link>

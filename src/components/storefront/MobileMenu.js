@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import StoreIcon from "./icons";
 import { STORE_NAV_LINKS } from "./navLinks";
+import { useSearch } from "./search/SearchProvider";
 
 // Hamburger button + slide-in drawer for < lg screens.
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const { openSearch } = useSearch();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -67,7 +69,14 @@ export default function MobileMenu() {
             </Link>
           ))}
           <div className="h-px bg-gray-100 my-4 w-full" />
-          <button type="button" className="hover:text-[#ef9822] flex items-center gap-3 transition-colors uppercase">
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              openSearch();
+            }}
+            className="hover:text-[#ef9822] flex items-center gap-3 transition-colors uppercase"
+          >
             <StoreIcon name="search" /> Search
           </button>
           <Link href="/login" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
