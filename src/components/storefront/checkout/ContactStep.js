@@ -1,13 +1,16 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import StoreIcon from "../icons";
 import CheckoutField, { FieldShell, fieldA11y } from "./CheckoutField";
 import { CHECKOUT_BUTTON, CHECKOUT_FIELD_BOX, CHECKOUT_FIELD_ERROR } from "./checkoutStyles";
 import { PHONE_COUNTRIES, focusFirstInvalid, formatPhoneInput, phoneCountryOf, validateContact } from "./checkoutHelpers";
 
-// Step 1: who the order is for and how to reach them.
-export default function ContactStep({ contact, onChange, onComplete }) {
+// Step 1: who the order is for and how to reach them. A guest (`showSignIn`) is
+// offered a way to sign in, which brings them back here with their details and
+// saved addresses filled in; the cart and what they have typed are kept.
+export default function ContactStep({ contact, showSignIn = false, onChange, onComplete }) {
   const [errors, setErrors] = useState({});
   const formRef = useRef(null);
   const phoneCountry = phoneCountryOf(contact.phoneCountry);
@@ -31,6 +34,15 @@ export default function ContactStep({ contact, onChange, onComplete }) {
 
   return (
     <form ref={formRef} onSubmit={submit} noValidate>
+      {showSignIn && (
+        <p className="mb-6 rounded-lg bg-[#FAFAFA] px-4 py-3 text-[14px] text-[#555555]">
+          Already have an account?{" "}
+          <Link href="/login?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#EF9822]">
+            Sign in
+          </Link>{" "}
+          to fill in your details and use your saved addresses.
+        </p>
+      )}
       <div className="grid gap-5 sm:grid-cols-2">
         <CheckoutField
           id="checkout-first-name"

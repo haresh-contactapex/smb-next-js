@@ -142,9 +142,11 @@ changes in `customers` or `orders` beyond what already exists
 - **Charging a saved card.** Needs the gateway's tokenised capture (e.g. Stripe
   SetupIntent) to fill `provider_token`; the add-card form would then use the
   gateway's hosted fields instead of the plain number box.
-- **Checkout using the address book.** Checkout still asks for the address each
-  time; it could preselect the default shipping/billing address and offer the saved
-  ones. (Listed under "Not built yet" in [`../storefront/checkout.md`](../storefront/checkout.md).)
+- **Saving an address from checkout.** Checkout reads the address book (defaults
+  preselected, a picker above each address; see
+  [`../storefront/checkout.md`](../storefront/checkout.md)) but a new address typed
+  there isn't offered for saving. It also doesn't carry a saved address's
+  recipient name, phone or delivery notes yet.
 - **Orders appear once checkout places them.** Checkout does not create orders yet,
   so today only orders staff or scripts attach to a customer show up here.
 - **Shipment tracking, invoices/receipts, returns.** No carrier, invoice or return

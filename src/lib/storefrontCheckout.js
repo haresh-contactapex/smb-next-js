@@ -1,10 +1,13 @@
 import { getCurrencyTaxSettings } from "./currencyTaxSettings";
 import { getPaymentSettings } from "./paymentSettings";
+import { getCurrentCustomer } from "./auth/customerSession";
+import { listCustomerAddresses } from "./customerAddresses";
 
 // Server side of the storefront checkout page. The cart itself lives in the
-// visitor's browser (see storefrontCart.js); this only reads the two store
-// settings the page needs and hands over the public parts. Gateway keys in the
-// payment settings never leave the server.
+// visitor's browser (see storefrontCart.js); this reads the two store settings
+// the page needs and hands over the public parts, plus, for a signed-in
+// customer, their own details and saved addresses. Gateway keys in the payment
+// settings never leave the server.
 
 async function readOrNull(label, read) {
   try {
@@ -50,4 +53,41 @@ export async function loadCheckoutSettings() {
     readOrNull("payment", getPaymentSettings),
   ]);
   return { tax: toTax(tax), paymentMethods: toPaymentMethods(payment) };
+}
+
+// The signed-in customer's own details and address book, to prefill the checkout
+// with, or null for a guest. Like the settings above this is an extra: if the
+// session or the database can't be read the checkout is simply the guest one.
+// Only what the checkout fills in is handed over (no phone or delivery notes
+// from the address book, no loyalty data).
+export async function loadCheckoutAccount() {
+  try {
+    const customer = await getCurrentCustomer();
+    if (!customer) return null;
+
+    const addresses = (await readOrNull("saved addresses", () => listCustomerAddresses(customer.id))) || [];
+    return {
+      customer: {
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        email: customer.email,
+        phone: customer.phone || "",
+      },
+      addresses: addresses.map((address) => ({
+        id: address.id,
+        label: address.label,
+        line1: address.line1,
+        line2: address.line2,
+        city: address.city,
+        state: address.state,
+        zip: address.zip,
+        country: address.country,
+        isDefaultShipping: address.isDefaultShipping,
+        isDefaultBilling: address.isDefaultBilling,
+      })),
+    };
+  } catch (error) {
+    console.error("Checkout account failed to load", error);
+    return null;
+  }
 }

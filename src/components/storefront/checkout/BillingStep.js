@@ -1,8 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import StoreIcon from "../icons";
 import CheckoutAddressFields from "./CheckoutAddressFields";
+import SavedAddressPicker from "./SavedAddressPicker";
 import { useCart } from "../cart/CartProvider";
 import { CHECKOUT_BUTTON } from "./checkoutStyles";
 import { ADDRESS_DEPENDENTS, focusFirstInvalid, validateAddress } from "./checkoutHelpers";
@@ -25,7 +27,20 @@ const HEADING = "mb-4 text-[16px] font-semibold text-[#222222]";
 // to belong to that city (case and spacing don't matter, and a verified state or
 // city is tidied to its proper spelling). Saving runs the cart's shipping
 // estimate for the shipping address, where the server repeats the check.
-export default function BillingStep({ billing, shipping, sameAsBilling, onBillingChange, onShippingChange, onSameChange, onComplete }) {
+//
+// A signed-in customer's `savedAddresses` add a picker above each address: choosing
+// one fills the block (and, while "same as billing" is on, the shipping copy too),
+// and a saved address goes through exactly the same checks as a typed one.
+export default function BillingStep({
+  billing,
+  shipping,
+  sameAsBilling,
+  savedAddresses = [],
+  onBillingChange,
+  onShippingChange,
+  onSameChange,
+  onComplete,
+}) {
   const { countries, estimateShipping } = useCart();
   const [errors, setErrors] = useState(NO_ERRORS);
   const [formError, setFormError] = useState("");
@@ -102,6 +117,16 @@ export default function BillingStep({ billing, shipping, sameAsBilling, onBillin
     <form ref={formRef} onSubmit={submit} noValidate>
       <fieldset className="min-w-0">
         <legend className={HEADING}>Billing Address</legend>
+        {savedAddresses.length > 0 && (
+          <>
+            <SavedAddressPicker section="billing" addresses={savedAddresses} address={billing} onPick={(patch) => change("billing", patch)} />
+            <p className="-mt-2 mb-5 text-[13px] text-[#777777]">
+              <Link href="/account/addresses" className="font-medium text-[#444444] underline transition-colors hover:text-[#EF9822]">
+                Manage saved addresses
+              </Link>
+            </p>
+          </>
+        )}
         <CheckoutAddressFields
           section="billing"
           address={billing}
@@ -122,6 +147,15 @@ export default function BillingStep({ billing, shipping, sameAsBilling, onBillin
           />
           Same as billing address
         </label>
+        {savedAddresses.length > 0 && (
+          <SavedAddressPicker
+            section="shipping"
+            addresses={savedAddresses}
+            address={sameAsBilling ? billing : shipping}
+            disabled={sameAsBilling}
+            onPick={(patch) => change("shipping", patch)}
+          />
+        )}
         <CheckoutAddressFields
           section="shipping"
           address={sameAsBilling ? billing : shipping}

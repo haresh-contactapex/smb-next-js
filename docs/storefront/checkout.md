@@ -13,7 +13,7 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 | Piece | Path |
 | --- | --- |
 | Route (server page, loads settings) | `src/app/(site)/checkout/page.js` |
-| Tax + payment-method settings for the page | `src/lib/storefrontCheckout.js` |
+| Tax + payment-method settings, and the signed-in customer's details + saved addresses | `src/lib/storefrontCheckout.js` (`loadCheckoutSettings()`, `loadCheckoutAccount()`) |
 | Hides the store header/footer on `/checkout` | `src/components/storefront/StorefrontChrome.js` (used by `src/app/(site)/layout.js`) |
 | Page container: step state, persistence | `src/components/storefront/checkout/CheckoutPage.js` |
 | Stepper, accordion card | `CheckoutStepper.js`, `CheckoutSection.js` |
@@ -23,6 +23,7 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 | Shimmer loading skeleton | `CheckoutSkeleton.js`, `src/app/(site)/checkout/loading.js` |
 | Validation, phone countries, tax total | `checkoutHelpers.js` |
 | One address block, used for billing and for shipping | `CheckoutAddressFields.js` |
+| "Saved addresses" picker above an address block | `SavedAddressPicker.js` (matching and starting values: `startingCheckout()`, `addressMatches()` in `checkoutHelpers.js`) |
 | Shared field markup, class strings | `CheckoutField.js`, `checkoutStyles.js` |
 
 ## Behavior
@@ -51,6 +52,35 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   3. **Payment** – the methods switched on in *Settings → Payment* (card,
      PayPal, Razorpay, cash on delivery). Cash on delivery is disabled below its
      minimum order amount.
+- **Signed-in customers get their account filled in.** `page.js` reads the customer
+  session and their address book (`loadCheckoutAccount()`); a guest, or a customer
+  whose session or address book can't be read, simply gets the guest checkout.
+  - *Contact* opens with the account's name, email and phone (the phone in US
+    format, as the account stores it). A guest sees "Already have an account? Sign
+    in" instead, which returns here (`/login?next=/checkout`) with the cart and
+    anything typed kept.
+  - *Billing* opens with the customer's **default billing** address as the billing
+    address and their **default shipping** address as the shipping address;
+    **Same as billing address** is on exactly when those are the same saved
+    address.
+  - A **Saved addresses** picker sits above each address block, with a *Manage saved
+    addresses* link to `/account/addresses`. Choosing one fills the block with its
+    street, apartment, city, state, postal code and country (and, while "same as
+    billing" is on, the shipping copy follows); **Enter a different address**
+    empties everything under the country. The picker's selection is worked out from
+    the values, so editing a field after picking one moves it to "different" by
+    itself. The shipping picker is disabled while "same as billing" is on.
+  - Anything already typed in this tab (session storage) wins over these starting
+    values, so coming back from Edit Cart never overwrites an edit; only blank
+    contact fields are filled, and the defaults apply only while no address has
+    been typed yet.
+  - A saved address is not trusted: **Save & Continue** validates it with
+    `validateAddress()` and the server repeats the location check in the shipping
+    estimate, exactly as for a typed one. A saved country the store no longer
+    ships to is dropped like any restored address.
+  - Only the six address fields are copied. A saved address's label, recipient
+    name, company, phone and delivery notes aren't used by the checkout (it has
+    no fields for them yet).
 - A step opens only once the ones before it are saved. Saved steps collapse to
   a summary and can be reopened; editing a field makes that step "unsaved" again
   and locks the steps after it.
@@ -123,5 +153,7 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 - **Payment badges** in the footer (Visa, Mastercard, Amex, PayPal, Apple Pay)
   are fixed marks from the design, not driven by *Settings → Payment*. Trim
   `PAYMENT_BADGES` in `CheckoutFooter.js` to what the gateway really accepts.
-- Saved addresses for signed-in customers, and a shipping-method choice (local
-  pickup) on this page.
+- A shipping-method choice (local pickup) on this page.
+- **Saving a new address from checkout** into the address book (and delivery
+  notes / recipient name per address). Saved addresses are read-only here; they are
+  managed at `/account/addresses` ([account.md](../account/customer-account.md)).
