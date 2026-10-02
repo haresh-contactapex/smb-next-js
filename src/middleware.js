@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
-import { STAFF_SESSION_COOKIE, STAFF_SESSION_SCOPE } from "@/lib/auth/constants";
+import { CUSTOMER_SESSION_COOKIE, CUSTOMER_SESSION_SCOPE, STAFF_SESSION_COOKIE, STAFF_SESSION_SCOPE } from "@/lib/auth/constants";
 import { getStaffSecurityPolicy, isSessionTimedOut, isPasswordExpired } from "@/lib/auth/sessionPolicy";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { getAdminRoleForUser } from "@/lib/adminRoles";
@@ -10,7 +10,8 @@ import { requiredPermissionForPath } from "@/lib/routePermissions";
 // The admin panel's own standalone auth pages (kept in sync with
 // ConditionalShell's STANDALONE_ROUTES) — everything else under /admin
 // requires a valid staff session. Anything outside /admin is the public
-// storefront (including customer login/register), which is never gated here.
+// storefront (including customer login/register), which is never gated here,
+// except /account/**, which needs a customer session (see isAccountPath).
 const PUBLIC_PATHS = new Set([
   "/admin/login",
   "/admin/logout",
@@ -20,6 +21,11 @@ const PUBLIC_PATHS = new Set([
 
 function isAdminPath(pathname) {
   return pathname === "/admin" || pathname.startsWith("/admin/");
+}
+
+// The signed-in customer's account area. Only a customer session may open it.
+function isAccountPath(pathname) {
+  return pathname === "/account" || pathname.startsWith("/account/");
 }
 
 // A password-expired staff member can still reach their own Profile page
@@ -42,14 +48,27 @@ export async function middleware(request) {
     return NextResponse.next();
   }
 
-  // Every customer-facing page (the storefront and the customer auth pages)
-  // is the visitor surface Settings -> System & Maintenance's "maintenance
-  // mode" toggle blocks. Staff/admin paths are never gated here, so admins
-  // keep access while maintenance mode is on.
+  // Every customer-facing page (the storefront, the customer auth pages and
+  // the account area) is the visitor surface Settings -> System & Maintenance's
+  // "maintenance mode" toggle blocks. Staff/admin paths are never gated here, so
+  // admins keep access while maintenance mode is on.
   if (!isAdminPath(pathname)) {
     const maintenance = await checkMaintenanceMode();
     if (maintenance.active) {
       return NextResponse.rewrite(new URL("/maintenance", request.url));
+    }
+
+    // /account/** needs a customer session. This only checks the token (a
+    // redirect before anything renders); each account page and API route still
+    // loads the customer itself, which is the real authorization. A staff
+    // token never passes: the scope claim differs.
+    if (isAccountPath(pathname)) {
+      const customerPayload = await verifyJwt(request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value);
+      if (!(customerPayload && customerPayload.scope === CUSTOMER_SESSION_SCOPE && customerPayload.sub)) {
+        const loginUrl = new URL("/login", request.url);
+        loginUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+        return NextResponse.redirect(loginUrl);
+      }
     }
     return NextResponse.next();
   }

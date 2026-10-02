@@ -16,6 +16,7 @@
     "db:migrate:customers": "node scripts/migrate.mjs docs/auth/customers-table-only.sql",
     "db:migrate:orders": "node scripts/migrate.mjs docs/orders/orders-table-only.sql",
     "db:migrate:wishlist": "node scripts/migrate.mjs docs/storefront/wishlist-table-only.sql",
+    "db:migrate:account": "node scripts/migrate.mjs docs/account/customer-account-tables-only.sql",
     "db:migrate:orders-payment-status": "node scripts/migrate.mjs docs/orders/orders-payment-status-failed-only.sql",
     "db:migrate:auth": "node scripts/migrate.mjs docs/auth/auth-database-schema.sql",
     "db:migrate:staff-users": "node scripts/migrate.mjs docs/my-account/users-table-only.sql",

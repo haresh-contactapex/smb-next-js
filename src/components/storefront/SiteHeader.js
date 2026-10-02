@@ -36,7 +36,8 @@ export default function SiteHeader() {
 
         <div className="flex items-center space-x-2 sm:space-x-4 lg:space-x-3 xl:space-x-5 2xl:space-x-6 text-[#555555] flex-shrink-0">
           <SearchButton className={`hidden sm:block ${iconButton}`} />
-          <Link href="/login" aria-label="Account" className={`hidden sm:block ${iconButton}`}>
+          {/* Signed-out visitors are sent on to sign in, then brought back to their account. */}
+          <Link href="/account" aria-label="My account" className={`hidden sm:block ${iconButton}`}>
             <StoreIcon name="user" />
           </Link>
           <WishlistButton className={iconButton} />

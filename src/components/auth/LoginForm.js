@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { mergeGuestWishlist } from "@/components/storefront/wishlist/wishlistApi";
@@ -11,7 +12,10 @@ import AuthLayout from "./AuthLayout";
 import Toast from "./Toast";
 import Recaptcha from "./Recaptcha";
 
-export default function LoginForm() {
+// `next` is where to go after signing in: the page the visitor was trying to
+// reach (already checked by the login page) or their account.
+export default function LoginForm({ next = "/account" }) {
+  const router = useRouter();
   const { enableRecaptcha } = useGeneralSettings();
   const [form, setForm] = useState(DEFAULT_LOGIN);
   const [emailError, setEmailError] = useState(false);
@@ -72,10 +76,9 @@ export default function LoginForm() {
       }
       // Items saved as a guest move into the account's wishlist now that there is one.
       await mergeGuestWishlist();
-      // There's no customer-facing storefront page in this app yet to send
-      // them to (only these auth pages exist) — staying put with the cookie
-      // set avoids bouncing a signed-in customer into the gated admin panel.
       showToast("Signed in successfully");
+      router.replace(next);
+      router.refresh(); // server components re-read the session cookie
     } catch (error) {
       showToast(error.message, "error");
       // The token is single-use, and a failed submit likely means it's

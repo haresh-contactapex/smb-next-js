@@ -79,7 +79,7 @@ export default function MobileMenu() {
           >
             <StoreIcon name="search" /> Search
           </button>
-          <Link href="/login" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
+          <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
             <StoreIcon name="user" /> Account
           </Link>
         </nav>

@@ -14,6 +14,7 @@ function toPublicCustomer(row) {
     customerGroup: row.customer_group,
     loyaltyPoints: Number(row.loyalty_points) || 0,
     acceptsMarketing: row.accepts_marketing,
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
   };
 }
 
