@@ -120,6 +120,23 @@ export default function CartProvider({ countries = [], children }) {
     setIsOpen(true);
   }, []);
 
+  // For "Buy now": makes sure the line is in the cart without opening the drawer
+  // (the shopper is heading straight to checkout). A line that is already there
+  // keeps its quantity, only refreshing price and stock limit, so pressing Buy
+  // now on something already in the cart doesn't quietly order one more.
+  // Returns false when the line is invalid.
+  const ensureItem = useCallback((line) => {
+    const incoming = normalizeCartItem({ ...line, quantity: 1 });
+    if (!incoming) return false;
+    setCart((current) => {
+      const existing = current.items.find((item) => item.key === incoming.key);
+      if (!existing) return { ...current, items: [...current.items, incoming] };
+      const quantity = clampQuantity(existing.quantity, incoming);
+      return { ...current, items: current.items.map((item) => (item.key === incoming.key ? { ...incoming, quantity } : item)) };
+    });
+    return true;
+  }, []);
+
   const setQuantity = useCallback((key, quantity) => {
     setCart((current) => ({
       ...current,
@@ -232,6 +249,7 @@ export default function CartProvider({ countries = [], children }) {
       openCart,
       closeCart,
       addItem,
+      ensureItem,
       setQuantity,
       changeVariant,
       removeItem,
@@ -243,7 +261,7 @@ export default function CartProvider({ countries = [], children }) {
       selectShippingRate,
     }),
     [
-      cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, setQuantity, changeVariant, removeItem,
+      cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, ensureItem, setQuantity, changeVariant, removeItem,
       setNote, applyCoupon, removeCoupon, estimateShipping, clearShipping, selectShippingRate,
     ]
   );

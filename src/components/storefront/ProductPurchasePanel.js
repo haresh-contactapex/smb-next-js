@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import StoreIcon from "./icons";
 import StarRating from "./StarRating";
 import { isMetalOption, metalColor } from "./metals";
@@ -36,7 +37,8 @@ function defaultSelection(product) {
 
 export default function ProductPurchasePanel({ product, currency, reviews, supportEmail = "" }) {
   const baseId = useId();
-  const { addItem } = useCart();
+  const router = useRouter();
+  const { addItem, ensureItem, closeCart } = useCart();
   const [selection, setSelection] = useState(() => defaultSelection(product));
   const [copied, setCopied] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
@@ -57,10 +59,9 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
 
   const select = (name, value) => setSelection((current) => ({ ...current, [name]: value }));
 
-  // Adds the selected variant (or the plain product) and opens the cart drawer.
-  function addToCart() {
-    if (!canBuy) return;
-    addItem({
+  // The selected variant (or the plain product) as a cart line.
+  function cartLine() {
+    return {
       productId: product.id,
       variantId: variant?.id ?? null,
       handle: product.handle,
@@ -72,7 +73,22 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
       price,
       compareAtPrice: compareAtPrice > price ? compareAtPrice : null,
       maxQuantity: variant?.maxQuantity ?? null,
-    });
+    };
+  }
+
+  // Adds the selected variant and opens the cart drawer.
+  function addToCart() {
+    if (!canBuy) return;
+    addItem(cartLine());
+  }
+
+  // Puts the selected variant in the cart and goes straight to checkout, without
+  // the drawer. The cart provider lives in the layout, so the line is still there
+  // when the checkout page renders.
+  function buyNow() {
+    if (!canBuy || !ensureItem(cartLine())) return;
+    closeCart();
+    router.push("/checkout");
   }
 
   async function share() {
@@ -228,7 +244,6 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
         {notice}
       </p>
 
-      {/* Checkout isn't built on the storefront yet, so Buy Now is an inert placeholder. */}
       <div className="flex items-center gap-3 mb-5">
         <button
           type="button"
@@ -247,6 +262,7 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
         />
         <button
           type="button"
+          onClick={buyNow}
           disabled={!canBuy}
           className="flex-1 py-3.5 bg-[#4A4A4A] rounded text-[18px] font-semibold text-white hover:bg-[#ef9822] transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
