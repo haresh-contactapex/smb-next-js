@@ -53,7 +53,9 @@ function useMenuImages(enabled) {
 // One item's preview: the photo, filling the column, and a Shop now button. All
 // of them are stacked in the same grid cell and cross-faded, so switching items
 // never reflows or flashes. Hidden layers are also `invisible`, which keeps their
-// link out of the tab order.
+// link out of the tab order. The active layer must *inherit* visibility rather
+// than set `visible`: an explicit `visible` overrides the closed panel's
+// `invisible`, leaving the layer hoverable and focusable under a closed menu.
 function PreviewLayer({ item, image, loading, active, showImage }) {
   const { loaded, imageProps } = useImageLoaded();
   const pending = image ? !loaded : loading;
@@ -62,7 +64,7 @@ function PreviewLayer({ item, image, loading, active, showImage }) {
     <div
       aria-hidden={!active}
       className={`col-start-1 row-start-1 flex flex-col transition-[opacity,visibility] duration-300 ease-out motion-reduce:transition-none ${
-        active ? "opacity-100 visible" : "opacity-0 invisible"
+        active ? "opacity-100 [visibility:inherit]" : "opacity-0 invisible"
       }`}
     >
       <div className={`relative min-h-[170px] flex-1 overflow-hidden rounded-[10px] ${pending ? "shimmer" : "bg-[#FAFAFA]"}`}>
@@ -183,7 +185,7 @@ export default function NavMegaMenu({ link }) {
         id={panelId}
         className={`absolute left-1/2 top-[calc(100%+1px)] z-10 grid w-[min(940px,calc(100vw-2rem))] -translate-x-1/2 grid-cols-[1fr_1fr_1.15fr] gap-7 rounded-b-[18px] border border-t-0 border-[#e9e9e9] bg-white p-[26px] text-[#171717] normal-case font-normal tracking-normal shadow-[0_18px_45px_rgba(0,0,0,0.10)] transition duration-200 ease-out motion-reduce:transition-none ${
           fillColumns ? "auto-rows-[minmax(280px,auto)]" : ""
-        } ${open ? "visible translate-y-0 opacity-100" : "invisible translate-y-2.5 opacity-0"}`}
+        } ${open ? "visible translate-y-0 opacity-100" : "pointer-events-none invisible translate-y-2.5 opacity-0"}`}
       >
         {columns.map((column, columnIndex) => (
           <ul key={columnIndex} className="flex flex-col gap-[3px]">
