@@ -47,9 +47,10 @@ function useMenuImages(count, enabled) {
   return images;
 }
 
-// One item's preview. All of them are stacked in the same grid cell and
-// cross-faded, so switching items never reflows or flashes. Hidden layers are
-// also `invisible`, which keeps their link out of the tab order.
+// One item's preview: the photo, filling the column, and a Shop now button. All
+// of them are stacked in the same grid cell and cross-faded, so switching items
+// never reflows or flashes. Hidden layers are also `invisible`, which keeps their
+// link out of the tab order.
 function PreviewLayer({ item, image, loading, active, showImage }) {
   const { loaded, imageProps } = useImageLoaded();
   const pending = image ? !loaded : loading;
@@ -57,29 +58,28 @@ function PreviewLayer({ item, image, loading, active, showImage }) {
   return (
     <div
       aria-hidden={!active}
-      className={`col-start-1 row-start-1 transition-[opacity,visibility] duration-300 ease-out motion-reduce:transition-none ${
+      className={`col-start-1 row-start-1 flex flex-col transition-[opacity,visibility] duration-300 ease-out motion-reduce:transition-none ${
         active ? "opacity-100 visible" : "opacity-0 invisible"
       }`}
     >
-      <div className={`relative h-[170px] overflow-hidden rounded-[10px] ${pending ? "shimmer" : "bg-[#FAFAFA]"}`}>
+      <div className={`relative min-h-[170px] flex-1 overflow-hidden rounded-[10px] ${pending ? "shimmer" : "bg-[#FAFAFA]"}`}>
         {showImage && image && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             {...imageProps}
             src={image}
             alt=""
-            className={`absolute inset-0 h-full w-full object-contain p-3 mix-blend-multiply transition-opacity duration-500 ${
+            className={`absolute inset-0 h-full w-full object-contain p-2 mix-blend-multiply transition-opacity duration-500 ${
               loaded ? "opacity-100" : "opacity-0"
             }`}
           />
         )}
       </div>
-      <h3 className="mx-[3px] mb-1 mt-[13px] text-[14px] font-semibold text-[#171717]">{item.label}</h3>
-      <p className="mx-[3px] mb-3 text-[12px] leading-[17px] text-[#777777]">{item.description}</p>
       <Link
         href={item.href}
         tabIndex={active ? undefined : -1}
-        className="block rounded-lg border border-[#dddddd] bg-white p-[9px] text-center text-[12px] text-[#222222] transition-colors hover:border-[#ef9822] hover:text-[#ef9822]"
+        aria-label={`Shop ${item.label}`}
+        className="mt-3 block rounded-lg border border-[#dddddd] bg-white p-[9px] text-center text-[12px] text-[#222222] transition-colors hover:border-[#ef9822] hover:text-[#ef9822]"
       >
         Shop now&nbsp; →
       </Link>
@@ -207,7 +207,7 @@ export default function NavMegaMenu({ link }) {
           </ul>
         ))}
 
-        <div className="grid min-h-[280px] content-start rounded-[15px] bg-[#f5f5f5] p-[11px]">
+        <div className="grid grid-rows-1 rounded-[15px] bg-[#f5f5f5] p-[11px]">
           {items.map((item, index) => (
             <PreviewLayer
               key={item.label}
