@@ -33,7 +33,8 @@ export function fieldA11y(id, required, error) {
 }
 
 // A native select styled like the inputs, with the chevron the design uses.
-// `placeholder` adds an empty first option; `options` is a list of strings.
+// `placeholder` adds an empty first option; `options` is a list of strings, or of
+// { value, label } when what is submitted differs from what is shown.
 export function SelectField({ id, label, required = true, error, className, options, placeholder, ...selectProps }) {
   return (
     <FieldShell id={id} label={label} required={required} error={error} className={className}>
@@ -45,11 +46,14 @@ export function SelectField({ id, label, required = true, error, className, opti
           {...selectProps}
         >
           {placeholder && <option value="">{placeholder}</option>}
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
+          {options.map((option) => {
+            const { value, label: text } = typeof option === "string" ? { value: option, label: option } : option;
+            return (
+              <option key={value} value={value}>
+                {text}
+              </option>
+            );
+          })}
         </select>
         <StoreIcon name="chevronDown" className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#777777]" />
       </div>

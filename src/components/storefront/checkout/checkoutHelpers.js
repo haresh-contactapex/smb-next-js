@@ -63,6 +63,72 @@ export function sanitizeAddress(address) {
   return { ...address, country: getCountryNames().includes(address.country) ? address.country : "" };
 }
 
+// --- Saved addresses (signed-in customers) -----------------------------------
+// `account` is { customer: { firstName, lastName, email, phone }, addresses: [...] }
+// from loadCheckoutAccount(), or null for a guest. A saved address carries more
+// than the checkout asks for (label, id, default flags); only the six address
+// fields below are ever copied into a checkout address.
+
+const ADDRESS_KEYS = ["country", "line1", "line2", "city", "state", "zip"];
+
+// A saved address as checkout address values. The country is dropped if the store
+// no longer ships there, as for any restored address.
+export function savedToAddress(saved) {
+  return sanitizeAddress(Object.fromEntries(ADDRESS_KEYS.map((key) => [key, String(saved?.[key] ?? "")])));
+}
+
+const loose = (value) => String(value ?? "").trim().replace(/\s+/g, " ").toLowerCase();
+
+// Whether the checkout address currently holds exactly this saved address (spacing
+// and case don't matter). This is how the picker knows what to show as selected:
+// it is derived from the values, so editing a field after picking an address
+// moves the picker to "Enter a different address" with no extra state to keep in step.
+export function addressMatches(saved, address) {
+  return ADDRESS_KEYS.every((key) => loose(saved[key]) === loose(address[key]));
+}
+
+// "Home · 115 Foothill Blvd, Los Angeles"
+export function savedAddressLabel(saved) {
+  return `${saved.label} · ${[saved.line1, saved.city].filter(Boolean).join(", ")}`;
+}
+
+// What choosing "Enter a different address" leaves behind: the country stays (the cart
+// already picked a destination), everything below it is cleared.
+export const CLEARED_ADDRESS = { line1: "", line2: "", city: "", state: "", zip: "" };
+
+const hasTypedAddress = (address) => Boolean(address.line1.trim() || address.city.trim());
+
+// The values the checkout opens with: what this tab already holds (`saved`, from
+// session storage, or null), with a signed-in customer's details filled into
+// anything still blank. Typed values always win, so coming back from Edit Cart
+// never overwrites an edit. With nothing typed yet, the addresses start as the
+// customer's default shipping and default billing addresses, and "same as
+// billing" is on exactly when those are the one address.
+export function startingCheckout(saved, account) {
+  const start = saved || { contact: EMPTY_CONTACT, billing: EMPTY_ADDRESS, shipping: EMPTY_ADDRESS, sameAsBilling: true };
+  if (!account) return start;
+
+  const { customer, addresses } = account;
+  const contact = { ...start.contact };
+  for (const key of ["firstName", "lastName", "email"]) {
+    if (!contact[key].trim()) contact[key] = customer[key] || "";
+  }
+  if (!contact.phone.trim() && customer.phone) {
+    contact.phoneCountry = "US"; // the account stores phone numbers in US format
+    contact.phone = formatPhoneInput(customer.phone, "US");
+  }
+
+  let { billing, shipping, sameAsBilling } = start;
+  if (addresses.length > 0 && !hasTypedAddress(billing) && !hasTypedAddress(shipping)) {
+    const defaultShipping = addresses.find((address) => address.isDefaultShipping) || addresses[0];
+    const defaultBilling = addresses.find((address) => address.isDefaultBilling) || defaultShipping;
+    billing = savedToAddress(defaultBilling);
+    sameAsBilling = defaultBilling.id === defaultShipping.id;
+    shipping = sameAsBilling ? billing : savedToAddress(defaultShipping);
+  }
+  return { contact, billing, shipping, sameAsBilling };
+}
+
 // "115 Foothill Blvd, Los Angeles, California 90017" for the collapsed step header.
 export function formatAddress(address) {
   return [address.line1.trim(), address.city.trim(), `${address.state.trim()} ${address.zip.trim()}`.trim()].filter(Boolean).join(", ");

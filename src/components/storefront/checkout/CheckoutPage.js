@@ -20,6 +20,7 @@ import {
   checkoutTotals,
   formatAddress,
   sanitizeAddress,
+  startingCheckout,
 } from "./checkoutHelpers";
 
 const STEP_IDS = CHECKOUT_STEPS.map((step) => step.id);
@@ -52,7 +53,11 @@ function readSaved() {
 // The Billing step holds two addresses. While "Same as billing address" is on,
 // the shipping address is a copy of the billing one that follows every edit to it;
 // turning it off leaves that copy in place to be edited on its own.
-export default function CheckoutPage({ settings }) {
+//
+// `account` is the signed-in customer's details and saved addresses, or null for a
+// guest. It only supplies starting values (see startingCheckout) and the Billing
+// step's address pickers; everything is still validated as if it had been typed.
+export default function CheckoutPage({ settings, account = null }) {
   const { items, hydrated, totals, shipping: cartShipping, countries } = useCart();
   const [contact, setContact] = useState(EMPTY_CONTACT);
   const [billingAddress, setBillingAddress] = useState(EMPTY_ADDRESS);
@@ -65,14 +70,14 @@ export default function CheckoutPage({ settings }) {
   const addressPrefilled = useRef(false);
 
   useEffect(() => {
-    const saved = readSaved();
-    if (saved) {
-      setContact(saved.contact);
-      setBillingAddress(saved.billing);
-      setShippingAddress(saved.shipping);
-      setSameAsBilling(saved.sameAsBilling);
-    }
+    const start = startingCheckout(readSaved(), account);
+    setContact(start.contact);
+    setBillingAddress(start.billing);
+    setShippingAddress(start.shipping);
+    setSameAsBilling(start.sameAsBilling);
     setRestored(true);
+    // `account` comes from the server render and is fixed for this page view.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Start the addresses from the destination already chosen in the cart, or the store's first country.
@@ -180,6 +185,7 @@ export default function CheckoutPage({ settings }) {
             >
               <ContactStep
                 contact={contact}
+                showSignIn={!account}
                 onChange={updateContact}
                 onComplete={() => {
                   setDone((current) => ({ ...current, contact: true }));
@@ -202,6 +208,7 @@ export default function CheckoutPage({ settings }) {
                 billing={billingAddress}
                 shipping={shippingAddress}
                 sameAsBilling={sameAsBilling}
+                savedAddresses={account?.addresses || []}
                 onBillingChange={updateBilling}
                 onShippingChange={updateShipping}
                 onSameChange={changeSameAsBilling}
