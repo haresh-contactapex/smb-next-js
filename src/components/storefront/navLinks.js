@@ -6,14 +6,14 @@ const MENU_DESCRIPTION = "Lorem Ipsum is simply dummy text of the printing and t
 export const WEDDING_BANDS_MENU = {
   columns: [
     [
-      { label: "Women's Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "◇" },
-      { label: "Men's Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "○" },
-      { label: "Contemporary Metal Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "✦" },
+      { label: "Women's Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "women" },
+      { label: "Men's Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "men" },
+      { label: "Contemporary Metal Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "contemporary" },
     ],
     [
-      { label: "Lab Grown Diamond Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "◈" },
-      { label: "Curved Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "◠" },
-      { label: "Thin Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "▭" },
+      { label: "Lab Grown Diamond Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "labDiamond" },
+      { label: "Curved Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "curved" },
+      { label: "Thin Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "thin" },
     ],
   ],
 };

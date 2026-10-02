@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import BandIcon from "./bandIcons";
 import StoreIcon from "./icons";
 import useImageLoaded from "./useImageLoaded";
 
@@ -192,11 +193,8 @@ export default function NavMegaMenu({ link }) {
                       index === active ? "bg-[#f5f5f5]" : ""
                     }`}
                   >
-                    <span
-                      aria-hidden="true"
-                      className="flex h-7 w-7 flex-none items-center justify-center rounded-[7px] border border-[#dedede] bg-white text-[13px] text-[#666666]"
-                    >
-                      {item.icon}
+                    <span className="flex h-7 w-7 flex-none items-center justify-center rounded-[7px] border border-[#dedede] bg-white text-[#666666]">
+                      <BandIcon name={item.icon} />
                     </span>
                     <span>
                       <strong className="block text-[14px] font-semibold leading-[18px]">{item.label}</strong>
