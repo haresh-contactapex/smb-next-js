@@ -2,10 +2,18 @@
 
 The **Ask a question** action under the buttons on a product page
 (`/products/[handle]`) opens a dialog where a shopper sends the store a question
-about that product. Layout and styling follow the equivalent form on
-mybridalring.com: an underlined title, name and email side by side, phone, a tall
-message box, an outlined **Send Message** button and the product (thumbnail,
-name, current price) underneath.
+about that product. The fields and flow follow the equivalent form on
+mybridalring.com, but the look is the storefront's own **register form**
+(`/register`): a bold title with a one-line subtitle, small uppercase labels above
+soft grey-blue inputs, a mail and a phone icon inside their fields, the rounded
+navy **Send Message** button and `text-xs` red error messages. The product
+(thumbnail, name, current price) sits in a small card underneath.
+
+It reuses the register form's shared `.field-input` / `.field-label` classes from
+`globals.css` rather than a copy. Those classes have `.dark` variants and the
+root layout puts `.dark` on `<html>` for visitors who prefer dark, which would
+turn the inputs dark inside this light-only dialog, so `(site)/storefront.css`
+pins them to their light look inside `#storefront-root`.
 
 Nothing is stored. The question is **emailed**, so there is no table and no
 migration.
@@ -21,15 +29,17 @@ migration.
 | Server flow: validate, rate limit, look up product, send both emails | `src/lib/productQuestions.js` |
 | The two email templates | `sendProductQuestionAdminEmail()`, `sendProductQuestionConfirmationEmail()` in `src/lib/email.js` |
 | In-memory rate limiter | `src/lib/rateLimit.js` |
+| Light-mode pin for the shared field classes | `src/app/(site)/storefront.css` |
+| `phone` icon used by the phone field | `src/components/admin-panel/icons.js` |
 
 ## What the visitor sees
 
 - All four fields are required: **name**, **email**, **phone**, **question**.
   Limits: name 100, email 254, phone 30 (7-15 digits, `+ ( ) . -` and spaces
   allowed), question 2000 characters.
-- Invalid fields show a message under the field and the first one is focused.
-  The placeholders are the visible labels; each field also has a real `<label>`
-  for screen readers.
+- Invalid fields get the register form's pink fill and red border, a message
+  under the field, and the first one is focused. Each field has a visible
+  `<label>` and its message is linked with `aria-describedby`.
 - On success the form is replaced with a thank-you message naming the product.
   It mentions the confirmation email only if that email was actually sent.
 - On failure the message is shown above the button, what was typed is kept, and

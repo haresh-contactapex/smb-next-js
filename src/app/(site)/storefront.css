@@ -62,6 +62,26 @@
   .lightbox-enter { animation: none; }
 }
 
+/* The storefront is light-only, but <html> still carries the admin's .dark class
+   for visitors who prefer dark. The shared auth field styles (.field-input /
+   .field-label, reused by the product page's Ask a question form) have .dark
+   variants, so pin them to their light look inside the storefront. The id makes
+   these win over `.dark .field-input`. */
+#storefront-root .field-input {
+  background: rgb(241 245 249);
+  color: rgb(30 41 59);
+}
+
+#storefront-root .field-input:focus {
+  background: #fff;
+  border-color: #4f6ea3;
+  box-shadow: 0 0 0 4px rgba(28, 59, 106, 0.1);
+}
+
+#storefront-root .field-label {
+  color: rgb(148 163 184);
+}
+
 /* Shimmer skeleton placeholders */
 @keyframes shimmer {
   0% { background-position: 200% 0; }
