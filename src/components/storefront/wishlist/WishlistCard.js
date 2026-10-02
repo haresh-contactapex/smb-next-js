@@ -27,6 +27,13 @@ export default function WishlistCard({ item, product, loading }) {
   const { addItem } = useCart();
   const { currency } = useGeneralSettings();
 
+  // Removing is only done after the shopper agrees, so a stray tap can't drop an item.
+  // `name` is the product's title, or a generic phrase for a product that is no longer sold.
+  function confirmRemove(name) {
+    if (!window.confirm(`Remove ${name} from your wishlist?`)) return;
+    remove(item.productId, item.variantId);
+  }
+
   if (!product && loading) return <WishlistCardSkeleton />;
 
   if (!product) {
@@ -35,7 +42,7 @@ export default function WishlistCard({ item, product, loading }) {
         <div className="flex aspect-square items-center justify-center rounded-md bg-[#FAFAFA] p-6 text-center text-[13px] text-gray-400">
           This product is no longer available.
         </div>
-        <button type="button" onClick={() => remove(item.productId, item.variantId)} className={REMOVE_BUTTON}>
+        <button type="button" onClick={() => confirmRemove("this item")} className={REMOVE_BUTTON}>
           <StoreIcon name="trash" className="h-4 w-4" />
           Remove from wishlist
         </button>
@@ -156,7 +163,7 @@ export default function WishlistCard({ item, product, loading }) {
         >
           {available ? "Add To Cart" : "Out of Stock"}
         </button>
-        <button type="button" onClick={() => remove(item.productId, item.variantId)} aria-label={`Remove ${product.title} from wishlist`} className={REMOVE_BUTTON}>
+        <button type="button" onClick={() => confirmRemove(`"${product.title}"`)} aria-label={`Remove ${product.title} from wishlist`} className={REMOVE_BUTTON}>
           <StoreIcon name="trash" className="h-4 w-4" />
           Remove from wishlist
         </button>
