@@ -45,6 +45,13 @@ export function defaultVariant(product) {
   return ordered.find((variant) => variant.available) || ordered[0] || null;
 }
 
+// Asks the shopper before something comes off the wishlist, so a stray tap can't
+// drop it. The browser's confirm box, like the app's other removals. `name` is
+// the product's title in quotes, or a generic phrase when there is no title to show.
+export function confirmWishlistRemoval(name) {
+  return window.confirm(`Remove ${name} from your wishlist?`);
+}
+
 export function readStoredWishlist() {
   try {
     return sanitizeWishlist(JSON.parse(window.localStorage.getItem(WISHLIST_STORAGE_KEY) || "[]"));
