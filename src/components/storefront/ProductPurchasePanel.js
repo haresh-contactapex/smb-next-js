@@ -242,8 +242,8 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
           productId={product.id}
           variantId={variant?.id ?? null}
           title={product.title}
-          className="w-[48px] h-[53px] flex-shrink-0 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-red-500 hover:border-red-500 transition-colors disabled:pointer-events-none"
-          activeClassName="!text-red-500 !border-red-500"
+          className="w-[48px] h-[53px] flex-shrink-0 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-[#ef9822] hover:border-[#ef9822] transition-colors disabled:pointer-events-none"
+          activeClassName="!text-[#ef9822] !border-[#ef9822]"
         />
         <button
           type="button"
