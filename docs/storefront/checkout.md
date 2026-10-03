@@ -264,7 +264,12 @@ the team isn't alerted a second time. The `payments` table still records every p
 - **Stock** isn't decremented when an order is paid (the server only refuses lines that
   are out of stock when the order is placed, so two buyers can still race for the last unit).
 - **Coupon usage** (`usage_count`, one per customer) isn't recorded.
-- **Emails**: no order confirmation is sent (*Settings → Orders* "confirmation email").
+- **Other order emails.** Only the order confirmation exists (see [Order confirmation
+  email](#order-confirmation-email)). There is no shipped / status-change / refund email,
+  no email to the store about a new order (staff get the in-app notification), and
+  *Settings → Orders* "Require order confirmation email before fulfillment" is stored but not
+  read. Stripe also emails its own receipt in live mode if receipts are on in the Stripe
+  Dashboard, which would arrive in addition to ours.
 - **Refunds** and `charge.refunded` events aren't handled.
 - **Settings → Customers → Allow guest checkout** is a separate, still unsaved toggle:
   only the one on *Settings → Checkout* is read by the storefront. The other checkout
@@ -289,6 +294,27 @@ Choosing it (when switched on in *Settings → Payment*) shows a note and a work
 3. The browser goes to `/checkout/complete?cod=<order id>`. `resolveCodResult()` loads the
    order only if it has a `cod` payment; the random order UUID is the proof the visitor placed
    it (the counterpart of the card flow's client secret). The page then empties the cart.
+
+## Order confirmation email
+
+`sendOrderConfirmation()` in `checkoutOrders.js` emails the customer once per order, built by
+`buildOrderConfirmationEmail()` (`src/lib/orderEmail.js`, the same design as the account
+welcome email) and sent with `sendOrderConfirmationEmail()` (`src/lib/email.js`).
+
+- **When:** a cash-on-delivery order, right after it is saved; a card order, when it moves into
+  Paid (`syncPaymentIntent()`, which is atomic, so the webhook and the return page can't both
+  send it). Not for an order that was cancelled before the money arrived.
+- **From:** the sender name and email saved in *Settings → Email* (the same `sendEmail()` every
+  email uses; the `SMTP_*` env vars are only a fallback). The footer's "write to" address is that
+  sender email, falling back to *Settings → General → Store Email*.
+- **Switch:** *Settings → Email → Send order confirmation emails*. Off, or SMTP not configured,
+  means nothing is sent (logged, never an error for the customer).
+- **Content:** order number, date, payment (cash on delivery or "Visa ending 4242" / "Card"),
+  items with totals, shipping and billing address (merged into one block when equal), what
+  happens next, and a "View your order" button to `/account/orders/<number>` for signed-in
+  customers only (guests have no account). Product photos are included only when the store's
+  address is public (`SITE_URL` in `.env.local`, else the request's host; never localhost).
+- A failure is logged ("Order confirmation email failed") and never fails the order or payment.
 
 ## Not built yet
 

@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { getEmailTransportSettings } from "./emailSettings";
+import { buildOrderConfirmationEmail } from "./orderEmail";
 
 // SMTP details come from Settings -> Email (the email_settings table) once
 // they have been saved there; until then the SMTP_* env vars in .env.local
@@ -257,4 +258,12 @@ export async function sendProductQuestionConfirmationEmail({ to, storeName, ques
   `;
 
   return sendEmail({ to, subject, html, text, replyTo: replyTo || undefined });
+}
+
+// Sent to the customer once an order is placed (cash on delivery) or paid (card). Goes out
+// from the sender name and address saved in Settings -> Email, like every other email.
+// `data` is described in buildOrderConfirmationEmail (orderEmail.js).
+export async function sendOrderConfirmationEmail({ to, ...data }) {
+  const { subject, html, text } = buildOrderConfirmationEmail(data);
+  return sendEmail({ to, subject, html, text });
 }

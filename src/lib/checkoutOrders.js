@@ -9,6 +9,11 @@ import { loadMoneyFormat } from "./moneyFormat";
 import { getOrderConfirmation } from "./orders";
 import { CheckoutError, countryCode, priceCheckout } from "./checkoutPricing";
 import { cancelPaymentIntent, createPaymentIntent, loadStripeConfig, retrievePaymentIntent } from "./stripe";
+import { isEmailConfigured, sendOrderConfirmationEmail } from "./email";
+import { getEmailSettings } from "./emailSettings";
+import { getGeneralSettings } from "./generalSettings";
+import { getShippingSettings } from "./shippingSettings";
+import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 
 // Placing an order and recording what Stripe says about its payment.
 //
@@ -103,6 +108,81 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
   throw new Error("Could not generate a unique order number.");
 }
 
+const addressLines = (address) =>
+  address
+    ? [address.fullName, address.line1, address.line2, [address.city, [address.state, address.zip].filter(Boolean).join(" ")].filter(Boolean).join(", "), address.country].filter(Boolean)
+    : [];
+
+// Emails the customer their order confirmation (Settings -> Email -> order confirmation
+// emails). Called once per order: when a cash-on-delivery order is placed, and when a card
+// order moves into Paid. Best-effort and awaited (a serverless function can be frozen the
+// moment the response goes out): a problem is logged here and never fails the order or
+// the payment sync. `paymentLabel` is how the customer paid ("Visa ending 4242").
+async function sendOrderConfirmation(orderId, { cod = false, paymentLabel }) {
+  try {
+    // A store that hasn't migrated email_settings yet still sends (through the SMTP_* env fallback).
+    const emailSettings = await getEmailSettings().catch(() => null);
+    if (emailSettings && !emailSettings.sendOrderConfirmationEmails) return;
+    if (!(await isEmailConfigured())) {
+      console.error(`Order confirmation email not sent for order ${orderId}: SMTP is not configured in Settings -> Email.`);
+      return;
+    }
+
+    const [order] = await sql`
+      SELECT o.order_number, o.currency, c.is_guest
+      FROM orders o LEFT JOIN customers c ON c.id = o.customer_id
+      WHERE o.id = ${orderId}
+    `;
+    const details = await getOrderConfirmation(orderId);
+    if (!order || !details) return;
+    if (!details.customer.email) {
+      console.error(`Order confirmation email not sent for order ${order.order_number}: no customer email on file.`);
+      return;
+    }
+
+    const [general, shipping, moneyFormat, origin] = await Promise.all([
+      getGeneralSettings(),
+      getShippingSettings().catch(() => null),
+      loadMoneyFormat(),
+      getSiteOrigin(),
+    ]);
+    const money = (amount) => formatCurrency(amount, order.currency, moneyFormat);
+    const { amounts } = details;
+    const total = money(amounts.total);
+    // A photo is only worth including when the customer's mail client can reach it.
+    const imageUrl = (image) => (!image ? null : /^https?:\/\//.test(image) ? image : image.startsWith("/") && isPublicOrigin(origin) ? `${origin}${image}` : null);
+
+    await sendOrderConfirmationEmail({
+      to: details.customer.email,
+      storeName: general.storeName,
+      // The address customers can write to is the sender address saved in Settings -> Email.
+      supportEmail: emailSettings?.senderEmail || general.storeEmail || "",
+      shopUrl: origin,
+      firstName: String(details.customer.name || "").trim().split(/\s+/)[0] || "there",
+      orderNumber: order.order_number,
+      placedAt: new Date(details.placedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+      paymentLabel,
+      cod,
+      total,
+      items: details.items.map((item) => ({ title: item.title, quantity: item.quantity, lineTotal: money(item.lineTotal), imageUrl: imageUrl(item.image) })),
+      amounts: {
+        subtotal: money(amounts.subtotal ?? amounts.total),
+        discount: amounts.discount > 0 ? money(amounts.discount) : "",
+        couponCode: amounts.couponCode,
+        shipping: amounts.shipping === null ? "" : amounts.shipping > 0 ? money(amounts.shipping) : "Free",
+        tax: amounts.tax > 0 ? money(amounts.tax) : "",
+      },
+      shippingAddress: addressLines(details.shippingAddress),
+      billingAddress: addressLines(details.billingAddress),
+      // A guest has no account to view the order in.
+      viewUrl: origin && !order.is_guest ? `${origin}/account/orders/${encodeURIComponent(order.order_number)}` : null,
+      processingDays: Number(shipping?.processingTimeDays) || 0,
+    });
+  } catch (error) {
+    console.error("Order confirmation email failed", error.message);
+  }
+}
+
 // The checkout page already asks for an account when guest checkout is off; this is the
 // real gate, since the API is public (Settings -> Checkout -> Allow guest checkout).
 async function assertMayCheckout(customer) {
@@ -155,6 +235,7 @@ export async function placeCodOrder(input, customer) {
     description: `${priced.contact.firstName} ${priced.contact.lastName} placed an order for ${formatCurrency(priced.total, priced.currency, moneyFormat)} to pay on delivery.`,
     severity: "info",
   });
+  await sendOrderConfirmation(orderId, { cod: true, paymentLabel: "Cash on delivery" });
   return { orderNumber, orderId };
 }
 
@@ -281,6 +362,11 @@ export async function syncPaymentIntent(intent) {
         severity: cancelled ? "warning" : "success",
         metadata: { to: { paymentStatus: "Paid" } },
       });
+    }
+    // Only the call that moved the order into Paid gets here, so the customer is emailed once
+    // (and not for an order that was cancelled before the money arrived).
+    if (justPaid && order.status !== "Cancelled") {
+      await sendOrderConfirmation(order.id, { cod: false, paymentLabel: describePaymentMethod(intent.payment_method) || "Card" });
     }
     return { found: true, paid: true };
   }
