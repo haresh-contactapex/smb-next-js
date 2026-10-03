@@ -1,5 +1,6 @@
 import { sql } from "./db";
 import { formatCurrency } from "./currency";
+import { loadMoneyFormat } from "./moneyFormat";
 
 const STATUS_COLORS = { Pending: "warning", Processing: "info", Completed: "success", Cancelled: "error" };
 const PAYMENT_COLORS = { Paid: "success", Unpaid: "warning", Refunded: "info", Failed: "error" };
@@ -20,7 +21,7 @@ function formatOrderDate(value) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function mapOrder(row, index) {
+function mapOrder(row, index, moneyFormat) {
   return {
     id: `#${row.order_number}`,
     orderId: row.id,
@@ -31,7 +32,7 @@ function mapOrder(row, index) {
     date: formatOrderDate(row.placed_at),
     placedAt: new Date(row.placed_at).toISOString(),
     products: `${row.item_count} item${row.item_count === 1 ? "" : "s"}`,
-    amount: formatCurrency(row.total_amount, row.currency),
+    amount: formatCurrency(row.total_amount, row.currency, moneyFormat),
     totalAmount: Number(row.total_amount),
     payment: row.payment_status,
     paymentColor: PAYMENT_COLORS[row.payment_status] || "info",
@@ -41,18 +42,18 @@ function mapOrder(row, index) {
 }
 
 export async function listOrders() {
-  const rows = await sql`SELECT * FROM orders ORDER BY placed_at DESC`;
-  return rows.map(mapOrder);
+  const [rows, moneyFormat] = await Promise.all([sql`SELECT * FROM orders ORDER BY placed_at DESC`, loadMoneyFormat()]);
+  return rows.map((row, index) => mapOrder(row, index, moneyFormat));
 }
 
 export async function listRecentOrders(limit = 5) {
-  const rows = await sql`SELECT * FROM orders ORDER BY placed_at DESC LIMIT ${limit}`;
-  return rows.map(mapOrder);
+  const [rows, moneyFormat] = await Promise.all([sql`SELECT * FROM orders ORDER BY placed_at DESC LIMIT ${limit}`, loadMoneyFormat()]);
+  return rows.map((row, index) => mapOrder(row, index, moneyFormat));
 }
 
 export async function getOrderById(id) {
   const [row] = await sql`SELECT * FROM orders WHERE id = ${id}`;
-  return row ? mapOrder(row) : null;
+  return row ? mapOrder(row, 0, await loadMoneyFormat()) : null;
 }
 
 // Edit Order only changes status/payment_status today — the other columns
@@ -74,7 +75,7 @@ export async function updateOrderStatus(id, { status, paymentStatus }) {
     WHERE id = ${id}
     RETURNING *
   `;
-  return row ? mapOrder(row) : null;
+  return row ? mapOrder(row, 0, await loadMoneyFormat()) : null;
 }
 
 // Lightweight lookup for the header's order search dropdown — order number
@@ -88,7 +89,8 @@ export async function searchOrders(query, limit = 8) {
     ORDER BY placed_at DESC
     LIMIT ${limit}
   `;
-  return rows.map(mapOrder);
+  const moneyFormat = await loadMoneyFormat();
+  return rows.map((row, index) => mapOrder(row, index, moneyFormat));
 }
 
 export async function getOrderStatusCounts() {

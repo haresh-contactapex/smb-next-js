@@ -73,7 +73,11 @@ export async function loadCheckoutSettings() {
 // above this throws when it can't be read: an order must never be priced without them.
 export async function loadCheckoutPricingSettings() {
   const settings = await getCurrencyTaxSettings();
-  return { currency: settings.currency || "USD", tax: toTax(settings) };
+  return {
+    currency: settings.currency || "USD",
+    moneyFormat: { position: settings.currencyPosition, numberFormat: settings.numberFormat },
+    tax: toTax(settings),
+  };
 }
 
 // The signed-in customer's own details and address book, to prefill the checkout

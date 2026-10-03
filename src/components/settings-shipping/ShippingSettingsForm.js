@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import SelectField from "@/components/settings-shared/SelectField";
@@ -23,6 +25,8 @@ import {
 const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function ShippingSettingsForm() {
+  const { currency } = useGeneralSettings();
+  const symbol = getCurrencySymbol(currency);
   const [settings, setSettings] = useState(DEFAULT_SHIPPING_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -140,7 +144,7 @@ export default function ShippingSettingsForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextField
                 id="f-flat-rate-fee"
-                label="Flat Rate Shipping Fee"
+                label={`Flat Rate Shipping Fee (${symbol})`}
                 type="number"
                 value={settings.flatRateFee}
                 onChange={(value) => setField("flatRateFee", value)}
@@ -152,7 +156,7 @@ export default function ShippingSettingsForm() {
               />
               <TextField
                 id="f-free-shipping-threshold"
-                label="Free Shipping Threshold"
+                label={`Free Shipping Threshold (${symbol})`}
                 type="number"
                 value={settings.freeShippingThreshold}
                 onChange={(value) => setField("freeShippingThreshold", value)}

@@ -2,7 +2,6 @@
 
 import { useCart } from "./CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 
 function Row({ label, children, strong = false }) {
   return (
@@ -17,9 +16,9 @@ function Row({ label, children, strong = false }) {
 // Shared by the drawer and the cart page.
 export default function CartTotals() {
   const { coupon, totals } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const { effect, selectedRate } = totals;
-  const money = (amount) => formatCurrency(amount, currency);
+  const money = formatMoney;
 
   return (
     <>

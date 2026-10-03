@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
 import Icon from "@/components/admin-panel/Icon";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -18,26 +19,14 @@ function chartColors() {
   };
 }
 
-function compact(value, currency) {
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency || "USD",
-      notation: "compact",
-      maximumFractionDigits: 1,
-    }).format(value);
-  } catch {
-    return String(value);
-  }
-}
-
 const TILES = [
   { key: "sales", label: "Sales", icon: "shopping-bag" },
   { key: "income", label: "Income", icon: "dollar-sign" },
   { key: "pending", label: "Pending", icon: "clock" },
 ];
 
-export default function EarningStatistic({ data, currency }) {
+export default function EarningStatistic({ data }) {
+  const { formatCompactMoney: compact } = useGeneralSettings();
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
   const [yearIndex, setYearIndex] = useState(0);
@@ -76,7 +65,7 @@ export default function EarningStatistic({ data, currency }) {
             borderWidth: 1,
             padding: 10,
             cornerRadius: 10,
-            callbacks: { label: (item) => ` Income: ${compact(item.raw, currency)}` },
+            callbacks: { label: (item) => ` Income: ${compact(item.raw)}` },
           },
         },
         scales: {
@@ -85,7 +74,7 @@ export default function EarningStatistic({ data, currency }) {
             beginAtZero: true,
             border: { display: false },
             grid: { color: c.grid, borderDash: [4, 4] },
-            ticks: { color: c.text, font: { size: 11 }, callback: (v) => compact(v, currency) },
+            ticks: { color: c.text, font: { size: 11 }, callback: (v) => compact(v) },
           },
         },
       },
@@ -137,7 +126,7 @@ export default function EarningStatistic({ data, currency }) {
             <div>
               <p className="text-[11px] text-slate-400">{tile.label}</p>
               <p className="text-[14px] font-bold text-slate-800 dark:text-white">
-                {compact(selected.totals[tile.key], currency)}
+                {compact(selected.totals[tile.key])}
               </p>
             </div>
           </div>

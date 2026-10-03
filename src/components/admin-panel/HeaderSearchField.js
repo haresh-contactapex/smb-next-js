@@ -5,7 +5,6 @@ import Link from "next/link";
 import Icon from "./Icon";
 import { AVATAR_COLOR_CLASSES, BADGE_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 
 const DEBOUNCE_MS = 300;
 const MAX_RESULTS = 5;
@@ -16,7 +15,7 @@ const MAX_RESULTS = 5;
  * dismissable results dropdown backed by `field.endpoint?q=`.
  */
 export default function HeaderSearchField({ field }) {
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [status, setStatus] = useState("idle"); // idle | loading | done | error
@@ -132,7 +131,7 @@ export default function HeaderSearchField({ field }) {
                       </span>
                       {product.sku && <span className="block text-[11px] text-slate-400">SKU: {product.sku}</span>}
                       <span className="block text-[13px] font-bold text-slate-700 dark:text-slate-200">
-                        {formatCurrency(product.price, currency)}
+                        {formatMoney(product.price)}
                       </span>
                     </span>
                   </Link>

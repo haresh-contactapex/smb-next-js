@@ -3,6 +3,7 @@ import LoadFailed from "@/components/account/LoadFailed";
 import OrderDetailView from "@/components/account/OrderDetailView";
 import { requireCustomerPage } from "@/lib/auth/customerPage";
 import { getCustomerOrder } from "@/lib/customerOrders";
+import { loadMoneyFormat } from "@/lib/moneyFormat";
 
 export const metadata = { title: "Order details" };
 export const dynamic = "force-dynamic";
@@ -23,5 +24,5 @@ export default async function OrderDetailPage({ params }) {
   }
   if (!order) notFound();
 
-  return <OrderDetailView order={order} />;
+  return <OrderDetailView order={order} moneyFormat={await loadMoneyFormat()} />;
 }

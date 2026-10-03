@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextField from "@/components/settings-shared/TextField";
@@ -18,6 +20,8 @@ const DEFAULT_SETTINGS = {
 };
 
 export default function CheckoutSettingsForm() {
+  const { currency } = useGeneralSettings();
+  const symbol = getCurrencySymbol(currency);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [toast, setToast] = useState({ message: "", visible: false });
   const toastTimerRef = useRef(null);
@@ -65,7 +69,7 @@ export default function CheckoutSettingsForm() {
             />
             <TextField
               id="f-min-order-amount"
-              label="Minimum Order Amount"
+              label={`Minimum Order Amount (${symbol})`}
               type="number"
               value={settings.minimumOrderAmount}
               onChange={(value) => setField("minimumOrderAmount", value)}

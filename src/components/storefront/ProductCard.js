@@ -5,7 +5,7 @@ import StoreIcon from "./icons";
 import WishlistHeart from "./wishlist/WishlistHeart";
 import { useCart } from "./cart/CartProvider";
 import useImageLoaded from "./useImageLoaded";
-import { formatCurrency } from "@/lib/currency";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 // Round white button in the image's bottom-right corner. Hidden until the card is
 // hovered or something inside it has keyboard focus; touch screens have no hover,
@@ -26,7 +26,8 @@ const LAYER = "absolute inset-0 flex items-center justify-center p-6 sm:p-8 tran
 // straight away (opening the cart drawer), while one with variants (color, size)
 // links to its page so the shopper can choose. A product without `hasVariants`
 // (an older recently-viewed entry) can't be told apart, so it also links.
-export default function ProductCard({ product, currency, delay = 0 }) {
+export default function ProductCard({ product, delay = 0 }) {
+  const { formatMoney } = useGeneralSettings();
   const { loaded, imageProps } = useImageLoaded();
   const { addItem } = useCart();
   const addsDirectly = product.hasVariants === false;
@@ -87,7 +88,7 @@ export default function ProductCard({ product, currency, delay = 0 }) {
         )}
       </div>
       <div className="text-left">
-        <div className="font-semibold text-[#333333] mb-1">{formatCurrency(product.price, currency)}</div>
+        <div className="font-semibold text-[#333333] mb-1">{formatMoney(product.price)}</div>
         <h3 className="leading-tight text-sm font-[600]">
           <Link
             href={`/products/${product.handle}`}

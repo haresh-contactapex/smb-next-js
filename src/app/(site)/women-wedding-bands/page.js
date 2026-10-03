@@ -1,6 +1,5 @@
 import ProductListing from "@/components/storefront/ProductListing";
 import { STOREFRONT_PAGE_SIZE, listStorefrontProductsPage } from "@/lib/products";
-import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 
 // Reads live catalog data, so never prerender it at build time.
 export const dynamic = "force-dynamic";
@@ -21,16 +20,8 @@ async function loadProducts() {
   }
 }
 
-async function loadCurrency() {
-  try {
-    return (await getCurrencyTaxSettings())?.currency || "USD";
-  } catch {
-    return "USD";
-  }
-}
-
 export default async function WomenWeddingBandsPage() {
-  const [{ products, total, failed }, currency] = await Promise.all([loadProducts(), loadCurrency()]);
+  const { products, total, failed } = await loadProducts();
 
   return (
     <>
@@ -67,7 +58,7 @@ export default async function WomenWeddingBandsPage() {
             </p>
           </div>
 
-          <ProductListing initialProducts={products} initialTotal={total} pageSize={STOREFRONT_PAGE_SIZE} currency={currency} failed={failed} />
+          <ProductListing initialProducts={products} initialTotal={total} pageSize={STOREFRONT_PAGE_SIZE} failed={failed} />
         </div>
       </div>
     </>

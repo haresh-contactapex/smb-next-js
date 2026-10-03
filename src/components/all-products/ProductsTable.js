@@ -3,7 +3,6 @@ import Icon from "@/components/admin-panel/Icon";
 import ProductThumbnail from "./ProductThumbnail";
 import { getStockInfo, STOCK_TEXT_CLASSES, STATUS_BADGE_CLASSES } from "./productHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
@@ -25,7 +24,7 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
 }
 
 export default function ProductsTable({ products, onDelete, deletingId, sort, onSortChange }) {
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
 
   if (products.length === 0) {
     return (
@@ -68,11 +67,11 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
                 <td className="py-3 px-1 text-slate-500 dark:text-slate-400">{product.category}</td>
                 <td className="py-3 px-1">
                   <span className="font-semibold text-slate-700 dark:text-slate-200">
-                    {formatCurrency(product.price, currency)}
+                    {formatMoney(product.price)}
                   </span>
                   {product.compareAtPrice && (
                     <span className="block text-[11px] text-slate-400 line-through">
-                      {formatCurrency(product.compareAtPrice, currency)}
+                      {formatMoney(product.compareAtPrice)}
                     </span>
                   )}
                 </td>

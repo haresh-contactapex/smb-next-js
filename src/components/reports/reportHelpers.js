@@ -20,12 +20,12 @@ export function buildInventoryStats(inventory) {
   ];
 }
 
-export function buildPaymentSummaryStats(paymentSummary) {
+export function buildPaymentSummaryStats(paymentSummary, moneyFormat) {
   return [
     {
       icon: "dollar-sign",
       iconColor: "success",
-      value: formatCurrency(paymentSummary.totalReceived, paymentSummary.currency),
+      value: formatCurrency(paymentSummary.totalReceived, paymentSummary.currency, moneyFormat),
       label: "Total Payments Received",
     },
     { icon: "clock", iconColor: "warning", value: paymentSummary.pending, label: "Pending Payments" },

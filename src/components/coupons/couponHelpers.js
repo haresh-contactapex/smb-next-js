@@ -1,11 +1,10 @@
-import { formatCurrency } from "@/lib/currency";
 import { STATUS_LABELS, STATUS_BADGE_CLASSES } from "@/lib/couponStatus";
 
 export { STATUS_LABELS, STATUS_BADGE_CLASSES };
 
-export function formatCouponValue(coupon, currency) {
+export function formatCouponValue(coupon, formatMoney) {
   if (coupon.type === "percentage") return `${coupon.value}% off`;
-  if (coupon.type === "fixed") return `${formatCurrency(coupon.value, currency)} off`;
+  if (coupon.type === "fixed") return `${formatMoney(coupon.value)} off`;
   return "Free shipping";
 }
 

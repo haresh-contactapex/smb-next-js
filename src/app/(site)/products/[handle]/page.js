@@ -7,7 +7,6 @@ import ProductTabs from "@/components/storefront/ProductTabs";
 import RecentlyViewed from "@/components/storefront/RecentlyViewed";
 import { getStorefrontProductByHandle } from "@/lib/products";
 import { getPublicReviewsForProduct } from "@/lib/reviews";
-import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 import { getStoreSettings } from "@/lib/storeSettings";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
@@ -25,14 +24,6 @@ const loadProduct = cache(async (handle) => {
     return { product: null, failed: true };
   }
 });
-
-async function loadCurrency() {
-  try {
-    return (await getCurrencyTaxSettings())?.currency || "USD";
-  } catch {
-    return "USD";
-  }
-}
 
 // Reviews and support email are extras: if their tables are missing or empty
 // the product page should still render.
@@ -79,8 +70,7 @@ export default async function ProductPage({ params }) {
   }
   if (!product) notFound();
 
-  const [currency, reviews, supportEmail] = await Promise.all([
-    loadCurrency(),
+  const [reviews, supportEmail] = await Promise.all([
     loadReviews(product.id),
     loadSupportEmail(),
   ]);
@@ -140,13 +130,13 @@ export default async function ProductPage({ params }) {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16 fade-in-up delay-100">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
           <ProductGallery key={`gallery-${id}`} images={product.images} title={title} />
-          <ProductPurchasePanel key={id} product={purchaseProduct} currency={currency} reviews={reviews} supportEmail={supportEmail} />
+          <ProductPurchasePanel key={id} product={purchaseProduct} reviews={reviews} supportEmail={supportEmail} />
         </div>
 
         <ProductTabs key={id} descriptionHtml={sanitizeHtml(product.description)} reviews={reviews} />
       </div>
 
-      <RecentlyViewed key={id} current={recentlyViewedEntry} currency={currency} />
+      <RecentlyViewed key={id} current={recentlyViewedEntry} />
     </div>
   );
 }

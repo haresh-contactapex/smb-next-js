@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Chart } from "chart.js/auto";
-import { formatCurrency, getCurrencySymbol } from "@/lib/currency";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 
 function chartColors() {
   const dark = document.documentElement.classList.contains("dark");
@@ -15,7 +16,8 @@ function chartColors() {
   };
 }
 
-export default function SalesChart({ data: salesChartData, currency }) {
+export default function SalesChart({ data: salesChartData }) {
+  const { currency, formatMoney } = useGeneralSettings();
   const symbol = getCurrencySymbol(currency);
   const canvasRef = useRef(null);
   const chartRef = useRef(null);
@@ -69,7 +71,7 @@ export default function SalesChart({ data: salesChartData, currency }) {
             padding: 10,
             cornerRadius: 10,
             callbacks: {
-              label: (item) => ` Sales: ${symbol}` + item.raw.toLocaleString(),
+              label: (item) => ` Sales: ${formatMoney(item.raw)}`,
               afterLabel: (item) => ` Orders: ${d.orders[item.dataIndex]}`,
             },
           },
@@ -107,7 +109,7 @@ export default function SalesChart({ data: salesChartData, currency }) {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-1">
         <div>
           <h3 className="text-base font-bold text-slate-800 dark:text-white">Sales Overview</h3>
-          <p className="text-2xl font-bold text-slate-800 dark:text-white mt-2">{formatCurrency(periodTotal, currency)}</p>
+          <p className="text-2xl font-bold text-slate-800 dark:text-white mt-2">{formatMoney(periodTotal)}</p>
           <p className="text-[12px] text-slate-400 mt-0.5">Paid sales over the selected period</p>
         </div>
         <div className="flex items-center gap-3">

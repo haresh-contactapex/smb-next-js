@@ -44,8 +44,8 @@ export default async function DashboardPage({ searchParams }) {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {data.salesChartData && <SalesChart data={data.salesChartData} currency={currency} />}
-        {data.earningStats && <EarningStatistic data={data.earningStats} currency={currency} />}
+        {data.salesChartData && <SalesChart data={data.salesChartData} />}
+        {data.earningStats && <EarningStatistic data={data.earningStats} />}
       </div>
 
       <RecentOrdersTable orders={data.recentOrders} viewAllHref="/admin/orders" />

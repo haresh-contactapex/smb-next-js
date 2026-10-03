@@ -1,7 +1,6 @@
 "use client";
 
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import StripePaymentForm from "./StripePaymentForm";
 import { CHECKOUT_BUTTON } from "./checkoutStyles";
 
@@ -15,7 +14,7 @@ import { CHECKOUT_BUTTON } from "./checkoutStyles";
 // card form is only loaded once the customer gets here; `buildOrder()` is the request
 // the server prices and saves.
 export default function PaymentStep({ methods, selected, onSelect, orderTotal, active, buildOrder }) {
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
 
   if (methods.length === 0) {
     return (
@@ -59,7 +58,7 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal, a
                 <span>
                   <span className="block text-[16px] font-semibold text-[#222222]">{method.label}</span>
                   <span className="mt-0.5 block text-[14px] text-[#777777]">
-                    {method.unavailable || (belowMinimum ? `Available on orders of ${formatCurrency(method.minOrder, currency)} or more.` : method.detail)}
+                    {method.unavailable || (belowMinimum ? `Available on orders of ${formatMoney(method.minOrder)} or more.` : method.detail)}
                   </span>
                 </span>
               </label>

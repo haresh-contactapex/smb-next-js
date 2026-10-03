@@ -7,7 +7,6 @@ import { useCart } from "./CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { isMetalOption } from "../metals";
 import useImageLoaded from "../useImageLoaded";
-import { formatCurrency } from "@/lib/currency";
 import { lineLimit, optionChoices } from "./cartHelpers";
 
 const STEP_BUTTON =
@@ -20,7 +19,7 @@ const STEP_BUTTON =
 // shown but can't be changed.
 export default function CartPageLine({ item, product, loading = false, onVariantChange }) {
   const { removeItem, setQuantity } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const { loaded: imageLoaded, imageProps } = useImageLoaded();
 
   const variant = product?.variants.find((candidate) => candidate.id === item.variantId) || null;
@@ -84,11 +83,11 @@ export default function CartPageLine({ item, product, loading = false, onVariant
             </h2>
             <p className="mt-1.5 text-[15px] text-[#555555] sm:text-[17px]">
               {item.compareAtPrice > item.price && (
-                <s className="mr-2 text-gray-400" aria-label={`Was ${formatCurrency(item.compareAtPrice, currency)}`}>
-                  {formatCurrency(item.compareAtPrice, currency)}
+                <s className="mr-2 text-gray-400" aria-label={`Was ${formatMoney(item.compareAtPrice)}`}>
+                  {formatMoney(item.compareAtPrice)}
                 </s>
               )}
-              <span>{formatCurrency(item.price, currency)}</span>
+              <span>{formatMoney(item.price)}</span>
             </p>
           </div>
           <button

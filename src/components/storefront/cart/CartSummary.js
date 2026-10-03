@@ -5,7 +5,6 @@ import CartOptions from "./CartOptions";
 import CartCheckoutButton from "./CartCheckoutButton";
 import { useCart } from "./CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { round2 } from "./cartHelpers";
 
 function Row({ label, children }) {
@@ -22,9 +21,9 @@ function Row({ label, children }) {
 // `pricesIncludeTax` comes from Settings -> Currency & Tax; null when unknown.
 export default function CartSummary({ pricesIncludeTax = null }) {
   const { items, coupon, totals } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const [activeOption, setActiveOption] = useState(null);
-  const money = (amount) => formatCurrency(amount, currency);
+  const money = formatMoney;
   const { effect, selectedRate } = totals;
 
   return (

@@ -2,7 +2,6 @@ import SearchResults from "@/components/storefront/search/SearchResults";
 import { RESULTS_PAGE_SIZE, SEARCH_MAX_LENGTH, cleanSearchText } from "@/components/storefront/search/searchHelpers";
 import StoreIcon from "@/components/storefront/icons";
 import { searchStorefrontProducts } from "@/lib/products";
-import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
 
 // Reads live catalog data, so never prerender it at build time.
 export const dynamic = "force-dynamic";
@@ -28,17 +27,9 @@ async function loadResults(query) {
   }
 }
 
-async function loadCurrency() {
-  try {
-    return (await getCurrencyTaxSettings())?.currency || "USD";
-  } catch {
-    return "USD";
-  }
-}
-
 export default async function SearchPage({ searchParams }) {
   const query = readQuery((await searchParams).q);
-  const [results, currency] = await Promise.all([query ? loadResults(query) : null, loadCurrency()]);
+  const results = query ? await loadResults(query) : null;
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-4 pt-10 sm:px-8 sm:pt-14">
@@ -79,7 +70,6 @@ export default async function SearchPage({ searchParams }) {
             query={query}
             initialProducts={results.products}
             initialTotal={results.total}
-            currency={currency}
             failed={results.failed}
           />
         ) : (

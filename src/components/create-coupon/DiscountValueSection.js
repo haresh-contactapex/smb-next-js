@@ -1,10 +1,11 @@
 "use client";
 
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { getCurrencySymbol } from "@/lib/currency";
+import { moneyInputWrap } from "@/lib/currency";
 
 export default function DiscountValueSection({ type, value, valueError, onValueChange }) {
-  const { currency } = useGeneralSettings();
+  const { currency, currencyPosition } = useGeneralSettings();
+  const moneyWrap = moneyInputWrap(currency, currencyPosition);
 
   if (type === "free_shipping") {
     return (
@@ -39,8 +40,8 @@ export default function DiscountValueSection({ type, value, valueError, onValueC
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">%</span>
           </div>
         ) : (
-          <div className="prefix-wrap">
-            <span className="prefix-sign">{getCurrencySymbol(currency)}</span>
+          <div className={moneyWrap.className} style={moneyWrap.style}>
+            <span className="prefix-sign">{moneyWrap.symbol}</span>
             <input
               id="f-value"
               type="text"

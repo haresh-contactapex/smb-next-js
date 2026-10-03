@@ -93,7 +93,7 @@ function parseAddress(raw, section, countries) {
 // (gone, out of stock, fewer in stock than wanted) or whose price differs from the one
 // they saw makes the whole request fail with "cart_changed" and the current truth for
 // every line, so the cart can bring itself up to date before the customer decides again.
-async function priceLines(items, currency) {
+async function priceLines(items, currency, moneyFormat) {
   const products = await listCheckoutProducts([...new Set(items.map((item) => item.productId))]);
 
   const lines = [];
@@ -119,7 +119,7 @@ async function priceLines(items, currency) {
     if (!available) problems.push(`${product.title} is out of stock.`);
     else if (maxQuantity !== null && item.quantity > maxQuantity) problems.push(`Only ${maxQuantity} of ${product.title} ${maxQuantity === 1 ? "is" : "are"} in stock.`);
     else if (Math.abs(price - item.shownPrice) > PRICE_TOLERANCE) {
-      problems.push(`The price of ${product.title} changed from ${formatCurrency(item.shownPrice, currency)} to ${formatCurrency(price, currency)}.`);
+      problems.push(`The price of ${product.title} changed from ${formatCurrency(item.shownPrice, currency, moneyFormat)} to ${formatCurrency(price, currency, moneyFormat)}.`);
     }
 
     const options = variant ? Object.values(variant.options || {}).filter(Boolean) : [];
@@ -151,8 +151,8 @@ export async function priceCheckout(input) {
   const billing = parseAddress(input?.billing, "billing", countries);
   const shipping = input?.sameAsBilling ? billing : parseAddress(input?.shipping, "shipping", countries);
 
-  const { currency, tax } = await loadCheckoutPricingSettings();
-  const lines = await priceLines(items, currency);
+  const { currency, moneyFormat, tax } = await loadCheckoutPricingSettings();
+  const lines = await priceLines(items, currency, moneyFormat);
 
   // The code is checked against the store's coupons again. A code that has expired or run
   // out since it was applied fails the order rather than silently changing the total.
@@ -188,7 +188,7 @@ export async function priceCheckout(input) {
   const expected = Number(input?.expectedTotal);
   if (!Number.isFinite(expected) || Math.abs(expected - priced.total) > PRICE_TOLERANCE) {
     throw new CheckoutError(
-      `Your order total is now ${formatCurrency(priced.total, currency)}. We've refreshed the page, so please review it and try again.`,
+      `Your order total is now ${formatCurrency(priced.total, currency, moneyFormat)}. We've refreshed the page, so please review it and try again.`,
       409,
       { reason: "total_changed", details: { total: priced.total } }
     );

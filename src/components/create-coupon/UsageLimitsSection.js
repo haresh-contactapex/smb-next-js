@@ -1,7 +1,7 @@
 "use client";
 
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { getCurrencySymbol } from "@/lib/currency";
+import { moneyInputWrap } from "@/lib/currency";
 
 export default function UsageLimitsSection({
   minPurchase,
@@ -10,7 +10,8 @@ export default function UsageLimitsSection({
   onePerCustomer,
   onFieldChange,
 }) {
-  const { currency } = useGeneralSettings();
+  const { currency, currencyPosition } = useGeneralSettings();
+  const moneyWrap = moneyInputWrap(currency, currencyPosition);
 
   return (
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
@@ -20,8 +21,8 @@ export default function UsageLimitsSection({
         <label className="field-label" htmlFor="f-min-purchase">
           Minimum purchase amount
         </label>
-        <div className="prefix-wrap">
-          <span className="prefix-sign">{getCurrencySymbol(currency)}</span>
+        <div className={moneyWrap.className} style={moneyWrap.style}>
+          <span className="prefix-sign">{moneyWrap.symbol}</span>
           <input
             id="f-min-purchase"
             type="text"

@@ -1,5 +1,6 @@
 import { sql } from "./db";
 import { formatCurrency } from "./currency";
+import { loadMoneyFormat } from "./moneyFormat";
 import { listRecentOrders } from "./orders";
 import { getInventoryReport } from "./reports";
 import { getProductsSettings } from "./productsSettings";
@@ -26,7 +27,7 @@ const fmtInt = (n) => Number(n || 0).toLocaleString("en-US");
 
 // Counts orders placed in the selected window and compares each against the
 // equally long window immediately before it.
-async function getOrderStats(days, currency) {
+async function getOrderStats(days, currency, moneyFormat) {
   const [row] = await sql`
     WITH bounds AS (
       SELECT now() - make_interval(days => ${days}) AS cur_start,
@@ -63,7 +64,7 @@ async function getOrderStats(days, currency) {
       card("x-circle", "error", "Cancelled", "cancelled"),
     ],
     totalSales: {
-      value: formatCurrency(row.sales, currency),
+      value: formatCurrency(row.sales, currency, moneyFormat),
       label: "Total Sales",
       ...trend(Number(row.sales), Number(row.sales_prev)),
     },
@@ -164,7 +165,7 @@ async function getEarningStats() {
 // There's no order line-items table yet (orders is the "table-only" variant),
 // so units sold / revenue per product can't be computed honestly. Show stock
 // health instead, lowest stock first.
-async function getProductStock(currency, limit = 5) {
+async function getProductStock(currency, moneyFormat, limit = 5) {
   const { lowStockThreshold } = await getProductsSettings();
   const threshold = Number(lowStockThreshold) || 0;
   const rows = await sql`
@@ -184,7 +185,7 @@ async function getProductStock(currency, limit = 5) {
     return {
       name: r.title,
       category: r.category_name || "Uncategorized",
-      price: formatCurrency(r.price, currency),
+      price: formatCurrency(r.price, currency, moneyFormat),
       stock: `${r.inventory} unit${r.inventory === 1 ? "" : "s"}`,
       stockLevel: level,
       status: level === "out" ? "Out of Stock" : level === "low" ? "Low Stock" : active ? "Active" : "Draft",
@@ -233,16 +234,17 @@ async function getTopCustomers(limit = 6) {
   }));
 }
 
-export async function getDashboardData({ rangeKey, currency = "INR" } = {}) {
+export async function getDashboardData({ rangeKey, currency = "USD" } = {}) {
   const range = resolveRange(rangeKey);
+  const moneyFormat = await loadMoneyFormat();
   const [orderBlock, productStats, couponStats, salesChartData, recentOrders, productStock, topCustomers, earningStats] =
     await Promise.all([
-      safe(() => getOrderStats(range.days, currency), null),
+      safe(() => getOrderStats(range.days, currency, moneyFormat), null),
       safe(getProductStats, null),
       safe(getCouponStats, null),
       safe(getSalesChartData, null),
-      safe(() => listRecentOrders(5).then((orders) => orders.map((o) => ({ ...o, amount: formatCurrency(o.totalAmount, currency) }))), []),
-      safe(() => getProductStock(currency, 5), []),
+      safe(() => listRecentOrders(5).then((orders) => orders.map((o) => ({ ...o, amount: formatCurrency(o.totalAmount, currency, moneyFormat) }))), []),
+      safe(() => getProductStock(currency, moneyFormat, 5), []),
       safe(getTopCustomers, []),
       safe(getEarningStats, null),
     ]);

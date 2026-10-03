@@ -3,6 +3,7 @@ import { sql, sqlTransaction } from "./db";
 import { getOrdersSettings } from "./ordersSettings";
 import { logAdminActivity } from "./notifications";
 import { formatCurrency, toMinorUnits } from "./currency";
+import { loadMoneyFormat } from "./moneyFormat";
 import { CheckoutError, countryCode, priceCheckout } from "./checkoutPricing";
 import { cancelPaymentIntent, createPaymentIntent, loadStripeConfig, retrievePaymentIntent } from "./stripe";
 
@@ -186,14 +187,15 @@ export async function syncPaymentIntent(intent) {
 
     if (justPaid) {
       const cancelled = order.status === "Cancelled";
+      const moneyFormat = await loadMoneyFormat();
       await logAdminActivity({
         action: "order.paid",
         entityType: "order",
         entityId: order.id,
         title: `Order #${order.order_number} paid`,
         description: cancelled
-          ? `${order.customer_name} paid ${formatCurrency(order.total_amount, order.currency)} by card, but the order had already been cancelled. It needs a refund.`
-          : `${order.customer_name} paid ${formatCurrency(order.total_amount, order.currency)} by card.`,
+          ? `${order.customer_name} paid ${formatCurrency(order.total_amount, order.currency, moneyFormat)} by card, but the order had already been cancelled. It needs a refund.`
+          : `${order.customer_name} paid ${formatCurrency(order.total_amount, order.currency, moneyFormat)} by card.`,
         severity: cancelled ? "warning" : "success",
         metadata: { to: { paymentStatus: "Paid" } },
       });

@@ -3,7 +3,6 @@
 import { useId, useRef, useState } from "react";
 import { useCart } from "../cart/CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { CHECKOUT_FIELD, CHECKOUT_FIELD_ERROR } from "./checkoutStyles";
 
 // The summary's promo code field. It applies the same discount codes as the
@@ -11,7 +10,7 @@ import { CHECKOUT_FIELD, CHECKOUT_FIELD_ERROR } from "./checkoutStyles";
 // entered on either page shows on the other.
 export default function CheckoutPromo() {
   const { coupon, couponNotice, totals, applyCoupon, removeCoupon } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [applying, setApplying] = useState(false);
@@ -41,7 +40,7 @@ export default function CheckoutPromo() {
 
   const status =
     coupon && effect.shortfall > 0
-      ? `Spend ${formatCurrency(effect.shortfall, currency)} more to use ${coupon.code}.`
+      ? `Spend ${formatMoney(effect.shortfall)} more to use ${coupon.code}.`
       : coupon && effect.noEligibleItems
         ? `${coupon.code} doesn't apply to the items in your cart.`
         : couponNotice;

@@ -5,7 +5,6 @@ import StoreIcon from "../icons";
 import { useCart } from "./CartProvider";
 import useImageLoaded from "../useImageLoaded";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { lineLimit, round2 } from "./cartHelpers";
 
 const STEP_BUTTON =
@@ -15,7 +14,7 @@ const STEP_BUTTON =
 // quantity stepper and remove button.
 export default function CartLine({ item }) {
   const { closeCart, removeItem, setQuantity } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const { loaded: imageLoaded, imageProps } = useImageLoaded();
 
   const optionText = Object.entries(item.options)
@@ -64,10 +63,10 @@ export default function CartLine({ item }) {
         {optionText && <p className="mt-0.5 text-[12px] text-gray-400">{optionText}</p>}
 
         <p className="mt-1 text-[13px] text-[#555555]">
-          {formatCurrency(item.price, currency)}
+          {formatMoney(item.price)}
           {item.compareAtPrice > item.price && (
-            <s className="ml-1.5 text-gray-400" aria-label={`Was ${formatCurrency(item.compareAtPrice, currency)}`}>
-              {formatCurrency(item.compareAtPrice, currency)}
+            <s className="ml-1.5 text-gray-400" aria-label={`Was ${formatMoney(item.compareAtPrice)}`}>
+              {formatMoney(item.compareAtPrice)}
             </s>
           )}
         </p>
@@ -96,7 +95,7 @@ export default function CartLine({ item }) {
               <StoreIcon name="plus" className="w-3.5 h-3.5" />
             </button>
           </div>
-          <span className="text-[14px] font-semibold text-[#333333]">{formatCurrency(round2(item.price * item.quantity), currency)}</span>
+          <span className="text-[14px] font-semibold text-[#333333]">{formatMoney(round2(item.price * item.quantity))}</span>
         </div>
 
         {stockLimited && <p className="mt-1 text-[11px] text-gray-400">Only {item.maxQuantity} available</p>}

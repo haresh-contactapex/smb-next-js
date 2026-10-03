@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextField from "@/components/settings-shared/TextField";
@@ -23,6 +25,8 @@ import {
 const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function PaymentSettingsForm() {
+  const { currency } = useGeneralSettings();
+  const symbol = getCurrencySymbol(currency);
   const [settings, setSettings] = useState(DEFAULT_PAYMENT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -244,7 +248,7 @@ export default function PaymentSettingsForm() {
               />
               <TextField
                 id="f-cod-min-order"
-                label="Minimum Order for COD"
+                label={`Minimum Order for COD (${symbol})`}
                 type="number"
                 value={settings.codMinOrder}
                 onChange={(value) => setField("codMinOrder", value)}

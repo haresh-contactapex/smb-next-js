@@ -5,6 +5,8 @@ import ProductCard from "./ProductCard";
 import { ProductCardSkeleton } from "./ProductListingSkeleton";
 import { METALS } from "./metals";
 import { requestJson } from "./cart/cartApi";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { moneyInputWrap } from "@/lib/currency";
 
 const BAND_SIZES = ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10"];
 
@@ -30,7 +32,15 @@ function listingUrl({ offset, limit, min, max }) {
 // and the price filter fetch from /api/storefront/products, so the browser only
 // ever holds the products the shopper has asked to see. Metal and band size are
 // captured in state ready for when products carry that data.
-export default function ProductListing({ initialProducts, initialTotal, pageSize, currency = "USD", failed = false }) {
+export default function ProductListing({ initialProducts, initialTotal, pageSize, failed = false }) {
+  const { currency, currencyPosition } = useGeneralSettings();
+  // The symbol sits inside the price fields, before or after the digits per Settings -> Currency & Tax.
+  const price = moneyInputWrap(currency, currencyPosition);
+  const symbolAfter = currencyPosition === "after";
+  const symbolClass = `absolute ${symbolAfter ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 text-sm`;
+  const priceInputStyle = symbolAfter
+    ? { paddingLeft: "0.5rem", paddingRight: price.style["--sign-pad"] }
+    : { paddingLeft: price.style["--sign-pad"] };
   const [metals, setMetals] = useState([]);
   const [size, setSize] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -147,8 +157,9 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
           <h3 className="text-sm font-semibold text-[#333333] mb-5">Price</h3>
           <div className="flex items-center justify-center sm:justify-start space-x-3 w-full">
             <div className="relative w-full max-w-[120px]">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm">$</span>
+              <span className={symbolClass}>{price.symbol}</span>
               <input
+                style={priceInputStyle}
                 type="number"
                 min="0"
                 inputMode="numeric"
@@ -161,8 +172,9 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
             </div>
             <span className="text-sm text-gray-400">to</span>
             <div className="relative w-full max-w-[120px]">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm">$</span>
+              <span className={symbolClass}>{price.symbol}</span>
               <input
+                style={priceInputStyle}
                 type="number"
                 min="0"
                 inputMode="numeric"
@@ -221,7 +233,6 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
               <ProductCard
                 key={product.id}
                 product={product}
-                currency={currency}
                 delay={(index % 4) * 100 + (index < initialCount ? 300 : 0)}
               />
             ))}

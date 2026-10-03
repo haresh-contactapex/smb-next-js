@@ -8,7 +8,6 @@ import {
   TYPE_ICONS,
 } from "./couponHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
@@ -30,7 +29,7 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
 }
 
 export default function CouponsTable({ coupons, onDelete, deletingId, sort, onSortChange }) {
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
 
   if (coupons.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No coupons match your filters.</div>;
@@ -68,9 +67,9 @@ export default function CouponsTable({ coupons, onDelete, deletingId, sort, onSo
                   </span>
                 </div>
               </td>
-              <td className="py-3 px-1 text-slate-600 dark:text-slate-300">{formatCouponValue(coupon, currency)}</td>
+              <td className="py-3 px-1 text-slate-600 dark:text-slate-300">{formatCouponValue(coupon, formatMoney)}</td>
               <td className="py-3 px-1 text-slate-500 dark:text-slate-400">
-                {coupon.minPurchase ? formatCurrency(coupon.minPurchase, currency) : "—"}
+                {coupon.minPurchase ? formatMoney(coupon.minPurchase) : "—"}
               </td>
               <td className="py-3 px-1 text-slate-500 dark:text-slate-400">
                 {coupon.usageCount}

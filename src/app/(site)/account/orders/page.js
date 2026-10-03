@@ -3,6 +3,7 @@ import LoadFailed from "@/components/account/LoadFailed";
 import OrdersList from "@/components/account/OrdersList";
 import { loadOrNull } from "@/lib/accountError";
 import { requireCustomerPage } from "@/lib/auth/customerPage";
+import { loadMoneyFormat } from "@/lib/moneyFormat";
 import { ORDER_STATUSES, getCustomerOrderCounts, listCustomerOrders } from "@/lib/customerOrders";
 
 export const metadata = { title: "Orders" };
@@ -17,9 +18,10 @@ export default async function OrdersPage({ searchParams }) {
   const page = Number.parseInt(first(params?.page), 10) || 1;
 
   const customer = await requireCustomerPage("/account/orders");
-  const [data, counts] = await Promise.all([
+  const [data, counts, moneyFormat] = await Promise.all([
     loadOrNull("orders", () => listCustomerOrders(customer.id, { status, q, page })),
     loadOrNull("order counts", () => getCustomerOrderCounts(customer.id)),
+    loadMoneyFormat(),
   ]);
 
   if (!data) {
@@ -31,5 +33,5 @@ export default async function OrdersPage({ searchParams }) {
     );
   }
 
-  return <OrdersList data={data} counts={counts || undefined} status={status} q={q} />;
+  return <OrdersList data={data} counts={counts || undefined} status={status} q={q} moneyFormat={moneyFormat} />;
 }

@@ -41,9 +41,9 @@ function AddressPanel({ title, address }) {
 // One order in full: progress, items, totals, the addresses it used and its payments.
 // `order` is getCustomerOrder()'s result. The line items, addresses and payments
 // come from tables a store may not have yet, so each part tolerates being empty.
-export default function OrderDetailView({ order }) {
+export default function OrderDetailView({ order, moneyFormat }) {
   const hasItems = order.items.length > 0;
-  const money = (amount) => formatCurrency(amount, order.currency);
+  const money = (amount) => formatCurrency(amount, order.currency, moneyFormat);
   const stillOpen = order.status === "Pending" || order.status === "Processing";
 
   return (

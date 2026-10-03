@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextField from "@/components/settings-shared/TextField";
@@ -18,6 +20,8 @@ const DEFAULT_SETTINGS = {
 };
 
 export default function DiscountsCouponsSettingsForm() {
+  const { currency } = useGeneralSettings();
+  const symbol = getCurrencySymbol(currency);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [toast, setToast] = useState({ message: "", visible: false });
   const toastTimerRef = useRef(null);
@@ -89,7 +93,7 @@ export default function DiscountsCouponsSettingsForm() {
             />
             <TextField
               id="f-min-order-coupon"
-              label="Minimum Order Amount for Coupon Use"
+              label={`Minimum Order Amount for Coupon Use (${symbol})`}
               type="number"
               value={settings.minOrderAmountForCoupon}
               onChange={(value) => setField("minOrderAmountForCoupon", value)}

@@ -1,5 +1,6 @@
 import { getReportsData } from "./reports";
 import { formatCurrency } from "./currency";
+import { loadMoneyFormat } from "./moneyFormat";
 
 function toCsvField(value) {
   const str = String(value ?? "");
@@ -11,7 +12,7 @@ function rowToCsvLine(section, metric, value) {
 }
 
 export async function exportReportsToCsv() {
-  const { orderSummary, inventory, paymentSummary } = await getReportsData();
+  const [{ orderSummary, inventory, paymentSummary }, moneyFormat] = await Promise.all([getReportsData(), loadMoneyFormat()]);
 
   const lines = ["Section,Metric,Value"];
 
@@ -30,7 +31,7 @@ export async function exportReportsToCsv() {
     rowToCsvLine(
       "Payment Summary",
       "Total Payments Received",
-      formatCurrency(paymentSummary.totalReceived, paymentSummary.currency)
+      formatCurrency(paymentSummary.totalReceived, paymentSummary.currency, moneyFormat)
     )
   );
   lines.push(rowToCsvLine("Payment Summary", "Pending Payments", paymentSummary.pending));

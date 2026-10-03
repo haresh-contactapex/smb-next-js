@@ -7,7 +7,6 @@ import { useCart } from "../cart/CartProvider";
 import { CHECKOUT_BUTTON } from "./checkoutStyles";
 import { CHECKOUT_STORAGE_KEY } from "./checkoutHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 
 // What each outcome says. `placed` outcomes mean the order exists and money is taken or
 // on its way, so the cart is emptied; the others leave it alone so the customer can retry.
@@ -48,7 +47,7 @@ const OUTCOMES = {
 // typed into the checkout, so a reload or the Back button can't buy the same things twice.
 export default function CheckoutResult({ result }) {
   const { clearCart, hydrated } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const outcome = OUTCOMES[result.state] || OUTCOMES.unknown;
 
   useEffect(() => {
@@ -78,7 +77,7 @@ export default function CheckoutResult({ result }) {
           </div>
           <div className="mt-3 flex items-center justify-between gap-4">
             <dt className="text-[#777777]">Total</dt>
-            <dd className="font-semibold text-[#222222]">{formatCurrency(result.total, result.currency || currency)}</dd>
+            <dd className="font-semibold text-[#222222]">{formatMoney(result.total, result.currency || undefined)}</dd>
           </div>
         </dl>
       )}

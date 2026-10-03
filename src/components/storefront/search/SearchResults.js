@@ -14,7 +14,7 @@ const BUTTON =
 // The matches for one search: the first page arrives from the server and
 // "Load more" fetches the rest from /api/storefront/search. The page keys this
 // on the search text, so a new search starts from its own first page.
-export default function SearchResults({ query, initialProducts, initialTotal, currency = "USD", failed = false }) {
+export default function SearchResults({ query, initialProducts, initialTotal, failed = false }) {
   const [products, setProducts] = useState(initialProducts);
   const [total, setTotal] = useState(initialTotal);
   const [loading, setLoading] = useState(false);
@@ -79,7 +79,7 @@ export default function SearchResults({ query, initialProducts, initialTotal, cu
 
       <div className={GRID}>
         {products.map((product, index) => (
-          <ProductCard key={product.id} product={product} currency={currency} delay={(index % 4) * 100 + (index < initialCount ? 200 : 0)} />
+          <ProductCard key={product.id} product={product} delay={(index % 4) * 100 + (index < initialCount ? 200 : 0)} />
         ))}
         {loading && Array.from({ length: Math.min(RESULTS_PAGE_SIZE, total - products.length) }, (_, i) => <ProductCardSkeleton key={`more-${i}`} />)}
       </div>

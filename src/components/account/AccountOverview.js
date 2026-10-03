@@ -48,7 +48,7 @@ function Unavailable({ what }) {
 
 // The account landing page: a greeting, how much is in each section, the latest
 // orders, the default address and card, and a nudge for anything not set up yet.
-export default function AccountOverview({ customer, counts, recentOrders, wishlistCount, addresses, paymentMethods }) {
+export default function AccountOverview({ customer, counts, recentOrders, wishlistCount, addresses, paymentMethods, moneyFormat }) {
   const inProgress = counts ? counts.Pending + counts.Processing : null;
   const defaultShipping = addresses?.find((address) => address.isDefaultShipping) || null;
   const defaultCard = paymentMethods?.find((card) => card.isDefault) || null;
@@ -143,7 +143,7 @@ export default function AccountOverview({ customer, counts, recentOrders, wishli
                       {formatDate(order.placedAt)} · {pluralize(order.itemCount, "item")}
                     </span>
                   </span>
-                  <span className="flex-shrink-0 text-[15px] font-semibold text-[#333333]">{formatCurrency(order.total, order.currency)}</span>
+                  <span className="flex-shrink-0 text-[15px] font-semibold text-[#333333]">{formatCurrency(order.total, order.currency, moneyFormat)}</span>
                 </Link>
               </li>
             ))}

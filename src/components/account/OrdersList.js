@@ -19,7 +19,7 @@ const FILTERS = [
 // per order and previous/next paging. All of it is plain links and a GET form,
 // so filtering is a normal navigation and works before the page's JavaScript loads.
 // `data` is listCustomerOrders()'s result, `counts` getCustomerOrderCounts()'s.
-export default function OrdersList({ data, counts, status, q }) {
+export default function OrdersList({ data, counts, status, q, moneyFormat }) {
   const { orders, total, page, pageCount, pageSize } = data;
   const activeFilter = status || "all";
   const filtered = activeFilter !== "all" || Boolean(q);
@@ -112,7 +112,7 @@ export default function OrdersList({ data, counts, status, q }) {
               </div>
 
               <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
-                <p className="text-[17px] font-semibold text-[#333333]">{formatCurrency(order.total, order.currency)}</p>
+                <p className="text-[17px] font-semibold text-[#333333]">{formatCurrency(order.total, order.currency, moneyFormat)}</p>
                 <Link
                   href={`/account/orders/${encodeURIComponent(order.orderNumber)}`}
                   aria-label={`View details of order ${order.orderNumber}`}

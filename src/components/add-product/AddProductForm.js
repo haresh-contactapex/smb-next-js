@@ -30,7 +30,6 @@ import JsonPayloadCard from "./JsonPayloadCard";
 import JsonModal from "./JsonModal";
 import Toast from "./Toast";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { getCurrencySymbol } from "@/lib/currency";
 
 const ENTER_SUBMIT_INPUT_TYPES = ["text", "search", "email", "tel", "url", "number", "password"];
 // Keep in sync with AUTO_DISMISS_MS in ./Toast.js (drives the success toast's progress-bar animation).
@@ -84,8 +83,7 @@ function classifyMediaFile(file) {
 export default function AddProductForm({ productId }) {
   const isEdit = Boolean(productId);
   const router = useRouter();
-  const { currency, skuPrefix, defaultProductStatus, defaultWeightUnit } = useGeneralSettings();
-  const currencySymbol = getCurrencySymbol(currency);
+  const { skuPrefix, defaultProductStatus, defaultWeightUnit, formatMoney } = useGeneralSettings();
   // New products start pre-filled with the store's configured SKU prefix,
   // default status and default weight unit (Settings -> Products); editing
   // an existing product loads its real values instead, once the fetch below
@@ -391,7 +389,7 @@ export default function AddProductForm({ productId }) {
         onFail: () => {
           priceInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
           priceInputRef.current?.focus();
-          showToast(`Enter a price greater than ${currencySymbol}0 before saving`, "error");
+          showToast(`Enter a price greater than ${formatMoney(0)} before saving`, "error");
         },
       },
       {

@@ -76,7 +76,7 @@ export async function getPaymentSummaryReport() {
     pending: row.pending,
     failed: row.failed,
     refunded: row.refunded,
-    currency: row.currency || "INR",
+    currency: row.currency || "USD",
   };
 }
 

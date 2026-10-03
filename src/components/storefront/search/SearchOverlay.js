@@ -8,7 +8,6 @@ import useImageLoaded from "../useImageLoaded";
 import { requestJson } from "../cart/cartApi";
 import { useSearch } from "./SearchProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import {
   SEARCH_DEBOUNCE_MS,
   SEARCH_MAX_LENGTH,
@@ -21,7 +20,8 @@ import {
 
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-function SuggestionRow({ product, currency, onNavigate }) {
+function SuggestionRow({ product, onNavigate }) {
+  const { formatMoney } = useGeneralSettings();
   const { loaded, imageProps } = useImageLoaded();
   const onSale = product.compareAtPrice > product.price;
 
@@ -47,10 +47,10 @@ function SuggestionRow({ product, currency, onNavigate }) {
         <span className="min-w-0">
           <span className="block text-sm font-[600] leading-tight text-[#333333]">{product.title}</span>
           <span className="mt-1 block text-sm">
-            <span className="font-semibold text-[#333333]">{formatCurrency(product.price, currency)}</span>
+            <span className="font-semibold text-[#333333]">{formatMoney(product.price)}</span>
             {onSale && (
-              <s className="ml-1.5 text-gray-400" aria-label={`Was ${formatCurrency(product.compareAtPrice, currency)}`}>
-                {formatCurrency(product.compareAtPrice, currency)}
+              <s className="ml-1.5 text-gray-400" aria-label={`Was ${formatMoney(product.compareAtPrice)}`}>
+                {formatMoney(product.compareAtPrice)}
               </s>
             )}
           </span>
@@ -82,7 +82,6 @@ function SuggestionSkeleton() {
 // replaces any still in flight.
 export default function SearchOverlay() {
   const { isOpen, closeSearch } = useSearch();
-  const { currency } = useGeneralSettings();
   const router = useRouter();
 
   const [text, setText] = useState("");
@@ -244,7 +243,7 @@ export default function SearchOverlay() {
         <h2 className="mb-2 border-b border-gray-100 pb-2 text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">Products</h2>
         <ul className="grid gap-x-6 gap-y-1 sm:grid-cols-2 lg:grid-cols-3">
           {result.products.map((product) => (
-            <SuggestionRow key={product.id} product={product} currency={currency} onNavigate={closeSearch} />
+            <SuggestionRow key={product.id} product={product} onNavigate={closeSearch} />
           ))}
         </ul>
         <Link

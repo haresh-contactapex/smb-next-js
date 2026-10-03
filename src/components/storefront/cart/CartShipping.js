@@ -3,14 +3,13 @@
 import { useId, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { CART_FIELD, CART_LABEL, CART_PRIMARY_BUTTON } from "./cartStyles";
 
 // "Estimate shipping": pick a destination, see the store's shipping options
 // priced for this cart, and choose one to include in the estimated total.
 export default function CartShipping() {
   const { countries, shipping, totals, estimateShipping, clearShipping, selectShippingRate } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const [country, setCountry] = useState(shipping?.country || "");
   const [zip, setZip] = useState(shipping?.zip || "");
   const [errors, setErrors] = useState({});
@@ -150,7 +149,7 @@ export default function CartShipping() {
                   <span className="block font-medium text-[#333333]">{rate.label}</span>
                   <span className="block text-[12px] text-gray-400">{rate.detail}</span>
                 </span>
-                <span className="font-semibold text-[#333333]">{rate.price === 0 ? "Free" : formatCurrency(rate.price, currency)}</span>
+                <span className="font-semibold text-[#333333]">{rate.price === 0 ? "Free" : formatMoney(rate.price)}</span>
               </label>
             ))}
           </div>

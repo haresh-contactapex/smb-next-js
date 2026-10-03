@@ -9,7 +9,7 @@ import { useCart } from "./cart/CartProvider";
 import { findVariant } from "./cart/cartHelpers";
 import WishlistHeart from "./wishlist/WishlistHeart";
 import AskQuestionModal from "./ask-question/AskQuestionModal";
-import { formatCurrency } from "@/lib/currency";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#ef9822] transition-colors";
 
@@ -35,7 +35,8 @@ function defaultSelection(product) {
   return Object.fromEntries(product.options.map((option) => [option.name, first?.options[option.name] ?? option.values[0]]));
 }
 
-export default function ProductPurchasePanel({ product, currency, reviews, supportEmail = "" }) {
+export default function ProductPurchasePanel({ product, reviews, supportEmail = "" }) {
+  const { formatMoney } = useGeneralSettings();
   const baseId = useId();
   const router = useRouter();
   const { addItem, ensureItem, closeCart } = useCart();
@@ -119,10 +120,10 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
       </h1>
 
       <div className="text-[22px] font-medium text-[#555555] mb-3" aria-live="polite">
-        <span>{formatCurrency(price, currency)}</span>
+        <span>{formatMoney(price)}</span>
         {compareAtPrice > price && (
-          <s className="ml-2 text-base font-normal text-gray-400" aria-label={`Was ${formatCurrency(compareAtPrice, currency)}`}>
-            {formatCurrency(compareAtPrice, currency)}
+          <s className="ml-2 text-base font-normal text-gray-400" aria-label={`Was ${formatMoney(compareAtPrice)}`}>
+            {formatMoney(compareAtPrice)}
           </s>
         )}
       </div>
@@ -287,7 +288,7 @@ export default function ProductPurchasePanel({ product, currency, reviews, suppo
       {askOpen && (
         <AskQuestionModal
           product={{ title: product.title, handle: product.handle, image: product.image }}
-          priceLabel={formatCurrency(price, currency)}
+          priceLabel={formatMoney(price)}
           supportEmail={supportEmail}
           onClose={() => setAskOpen(false)}
         />

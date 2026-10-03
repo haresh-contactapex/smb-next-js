@@ -2,7 +2,6 @@
 
 import ProductCard from "../ProductCard";
 import { useCart } from "./CartProvider";
-import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 const SHOWN_LIMIT = 4;
 
@@ -11,7 +10,6 @@ const SHOWN_LIMIT = 4;
 // browser), so it passes a few more than are shown and the cart filters here.
 export default function CartRecommended({ products }) {
   const { items } = useCart();
-  const { currency } = useGeneralSettings();
 
   const inCart = new Set(items.map((item) => item.productId));
   const shown = products.filter((product) => !inCart.has(product.id)).slice(0, SHOWN_LIMIT);
@@ -28,7 +26,7 @@ export default function CartRecommended({ products }) {
       </h2>
       <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
         {shown.map((product, index) => (
-          <ProductCard key={product.id} product={product} currency={currency} delay={index * 100} />
+          <ProductCard key={product.id} product={product} delay={index * 100} />
         ))}
       </div>
     </section>

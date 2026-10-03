@@ -11,7 +11,6 @@ import { WishlistCardSkeleton } from "./WishlistSkeleton";
 import { useWishlist } from "./WishlistProvider";
 import { confirmWishlistRemoval, defaultVariant } from "./wishlistHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 
 const LOW_STOCK_AT = 5;
 
@@ -25,7 +24,7 @@ const REMOVE_BUTTON =
 export default function WishlistCard({ item, product, loading }) {
   const { remove, changeVariant } = useWishlist();
   const { addItem } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
 
   // Removing is only done after the shopper agrees. `name` is the product's title in quotes,
   // or a generic phrase for a product that is no longer sold.
@@ -112,10 +111,10 @@ export default function WishlistCard({ item, product, loading }) {
       </h2>
 
       <p className="mt-1.5 font-semibold text-[#333333]">
-        <span>{formatCurrency(price, currency)}</span>
+        <span>{formatMoney(price)}</span>
         {onSale && (
-          <s className="ml-2 text-sm font-normal text-gray-400" aria-label={`Was ${formatCurrency(compareAtPrice, currency)}`}>
-            {formatCurrency(compareAtPrice, currency)}
+          <s className="ml-2 text-sm font-normal text-gray-400" aria-label={`Was ${formatMoney(compareAtPrice)}`}>
+            {formatMoney(compareAtPrice)}
           </s>
         )}
       </p>

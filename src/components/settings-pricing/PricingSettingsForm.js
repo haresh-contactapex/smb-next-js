@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import SelectField from "@/components/settings-shared/SelectField";
@@ -19,6 +21,7 @@ import {
 } from "./helpers";
 
 export default function PricingSettingsForm() {
+  const { currency, formatMoney } = useGeneralSettings();
   // Bulk repricing rewrites every product, so it needs both permissions
   // (mirrors /api/settings/pricing/apply).
   const can = useCan();
@@ -122,7 +125,7 @@ export default function PricingSettingsForm() {
 
     const directionWord = settings.adjustmentDirection === "decrease" ? "decrease" : "increase";
     const amountWord =
-      settings.adjustmentType === "fixed" ? `$${settings.adjustmentValue}` : `${settings.adjustmentValue}%`;
+      settings.adjustmentType === "fixed" ? formatMoney(Number(settings.adjustmentValue)) : `${settings.adjustmentValue}%`;
     if (
       !window.confirm(
         `This will ${directionWord} the price and compare-at price of every product, and every variant's price, by ${amountWord}. This cannot be undone. Continue?`
@@ -166,7 +169,7 @@ export default function PricingSettingsForm() {
           <SectionCard title="Price Adjustment">
             <TextField
               id="f-adjustment-value"
-              label="Adjustment Value"
+              label={`Adjustment Value (${settings.adjustmentType === "fixed" ? getCurrencySymbol(currency) : "%"})`}
               type="number"
               value={settings.adjustmentValue}
               onChange={(value) => setField("adjustmentValue", value)}

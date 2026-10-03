@@ -10,6 +10,7 @@ import {
   buildInventoryChart,
   buildPaymentStatusChart,
 } from "@/components/reports/reportHelpers";
+import { loadMoneyFormat } from "@/lib/moneyFormat";
 import { getReportsData } from "@/lib/reports";
 
 export const metadata = {
@@ -19,7 +20,7 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ReportsPage() {
-  const { orderSummary, inventory, paymentSummary } = await getReportsData();
+  const [{ orderSummary, inventory, paymentSummary }, moneyFormat] = await Promise.all([getReportsData(), loadMoneyFormat()]);
 
   const orderStatusChart = buildOrderStatusChart(orderSummary);
   const inventoryChart = buildInventoryChart(inventory);
@@ -52,7 +53,7 @@ export default async function ReportsPage() {
       </ReportSection>
 
       <ReportSection title="Payment Reports">
-        <ReportStatGrid title="Payment Summary" stats={buildPaymentSummaryStats(paymentSummary)} />
+        <ReportStatGrid title="Payment Summary" stats={buildPaymentSummaryStats(paymentSummary, moneyFormat)} />
         <ReportDoughnutChart
           title="Orders by Payment Status"
           subtitle="Share of all orders by payment outcome"

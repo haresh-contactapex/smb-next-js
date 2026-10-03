@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 import { WEIGHT_UNITS } from "@/data/addProductData";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { getCurrencySymbol } from "@/lib/currency";
 import { slugify, sanitizeDecimal, sanitizeInteger, isMissingUpload } from "./helpers";
 
 function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue, onReorderValues }) {
@@ -161,6 +163,7 @@ export default function VariantsSection({
   onVariantImageChange,
   onVariantImageRemove,
 }) {
+  const symbol = getCurrencySymbol(useGeneralSettings().currency);
   const [bulkPrice, setBulkPrice] = useState("");
   const [bulkQty, setBulkQty] = useState("");
 
@@ -273,7 +276,7 @@ export default function VariantsSection({
                   type="text"
                   value={bulkPrice}
                   onChange={(e) => setBulkPrice(sanitizeDecimal(e.target.value))}
-                  placeholder="Price"
+                  placeholder={`Price (${symbol})`}
                   aria-label="Bulk price"
                   className="w-20 h-8 px-2 rounded-lg bg-slate-100 dark:bg-darksurface2 border border-transparent focus:border-primary-400 dark:focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-primary-500/10 system-field text-slate-800 dark:text-white"
                 />
@@ -300,8 +303,8 @@ export default function VariantsSection({
                   <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
                     <th className="py-2 px-1 font-semibold w-12">Image</th>
                     <th className="py-2 px-1 font-semibold">Variant</th>
-                    <th className="py-2 px-1 font-semibold w-24">Price</th>
-                    <th className="py-2 px-1 font-semibold w-28">Compare-at</th>
+                    <th className="py-2 px-1 font-semibold w-24">{`Price (${symbol})`}</th>
+                    <th className="py-2 px-1 font-semibold w-28">{`Compare-at (${symbol})`}</th>
                     <th className="py-2 px-1 font-semibold w-28">SKU</th>
                     <th className="py-2 px-1 font-semibold w-20">Qty</th>
                     <th className="py-2 px-1 font-semibold w-16">Track</th>

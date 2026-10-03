@@ -6,7 +6,6 @@ import CheckoutPromo from "./CheckoutPromo";
 import useImageLoaded from "../useImageLoaded";
 import { useCart } from "../cart/CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { CHECKOUT_CARD } from "./checkoutStyles";
 import { lineDetails } from "./checkoutHelpers";
 import { round2 } from "../cart/cartHelpers";
@@ -43,8 +42,6 @@ function TaxInfo({ children }) {
   );
 }
 
-const money = (amount, currency) => formatCurrency(amount, currency);
-
 // A line's thumbnail: shimmer until the photo arrives, as on the product pages.
 function LineImage({ src }) {
   const { loaded, imageProps } = useImageLoaded();
@@ -70,10 +67,11 @@ function LineImage({ src }) {
 // The reassurance block at the foot of the summary. The wording mirrors the
 // announcement bar; the free-shipping threshold is the store's real one once
 // the destination is known.
-function Assurances({ shipping, currency }) {
+function Assurances({ shipping }) {
+  const { formatMoney } = useGeneralSettings();
   const threshold = shipping?.freeShippingThreshold > 0 ? shipping.freeShippingThreshold : 0;
   const items = [
-    { icon: "truck", title: "Free Shipping", text: threshold ? `On orders over ${money(threshold, currency)}` : "Free shipping to the US" },
+    { icon: "truck", title: "Free Shipping", text: threshold ? `On orders over ${formatMoney(threshold)}` : "Free shipping to the US" },
     { icon: "undo", title: "Easy Returns", text: "30-day return policy" },
     { icon: "shieldCheck", title: "Secure Checkout", text: "Your information is protected" },
   ];
@@ -97,7 +95,7 @@ function Assurances({ shipping, currency }) {
 // total with tax); the lines, discount and shipping come straight from the cart.
 export default function OrderSummary({ checkout, tax }) {
   const { items, count, coupon, shipping, totals } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const { selectedRate } = totals;
 
   return (
@@ -127,7 +125,7 @@ export default function OrderSummary({ checkout, tax }) {
               )}
               <p className="mt-1.5 text-[14px] text-[#777777]">Qty: {item.quantity}</p>
             </div>
-            <p className="flex-shrink-0 text-[16px] font-semibold text-[#222222]">{money(round2(item.price * item.quantity), currency)}</p>
+            <p className="flex-shrink-0 text-[16px] font-semibold text-[#222222]">{formatMoney(round2(item.price * item.quantity))}</p>
           </li>
         ))}
       </ul>
@@ -136,10 +134,10 @@ export default function OrderSummary({ checkout, tax }) {
       <CheckoutPromo />
 
       <dl className="mt-6 space-y-4">
-        <Row label={`Subtotal (${count} ${count === 1 ? "item" : "items"})`}>{money(totals.subtotal, currency)}</Row>
+        <Row label={`Subtotal (${count} ${count === 1 ? "item" : "items"})`}>{formatMoney(totals.subtotal)}</Row>
         {totals.discount > 0 && (
           <Row label={`Discount (${coupon.code})`}>
-            <span className="text-success">−{money(totals.discount, currency)}</span>
+            <span className="text-success">−{formatMoney(totals.discount)}</span>
           </Row>
         )}
         <Row label="Shipping">
@@ -147,7 +145,7 @@ export default function OrderSummary({ checkout, tax }) {
             selectedRate.price === 0 ? (
               <span className="uppercase">Free</span>
             ) : (
-              money(selectedRate.price, currency)
+              formatMoney(selectedRate.price)
             )
           ) : (
             <span className="text-[14px] font-normal text-[#9A9A9A]">Added at billing</span>
@@ -167,18 +165,18 @@ export default function OrderSummary({ checkout, tax }) {
             </>
           }
         >
-          {checkout.taxIncluded ? "Included" : checkout.tax === null ? "—" : money(checkout.tax, currency)}
+          {checkout.taxIncluded ? "Included" : checkout.tax === null ? "—" : formatMoney(checkout.tax)}
         </Row>
       </dl>
 
       <div className="mt-6 flex items-baseline justify-between gap-4 border-t border-[#EEEEEE] pt-6">
         <span className="text-[22px] font-bold text-[#111111] sm:text-[24px]">Total</span>
         <span className="text-[24px] font-bold text-[#111111] sm:text-[26px]" aria-live="polite">
-          {money(checkout.total, currency)}
+          {formatMoney(checkout.total)}
         </span>
       </div>
 
-      <Assurances shipping={shipping} currency={currency} />
+      <Assurances shipping={shipping} />
     </aside>
   );
 }

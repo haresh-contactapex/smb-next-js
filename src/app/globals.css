@@ -161,9 +161,17 @@ textarea {
   font-size: 0.875rem;
   pointer-events: none;
 }
+.prefix-wrap.symbol-after .prefix-sign {
+  left: auto;
+  right: 0.875rem;
+}
 @layer components {
   .prefix-wrap .field-input {
-    padding-left: 1.5rem;
+    padding-left: var(--sign-pad, 1.5rem);
+  }
+  .prefix-wrap.symbol-after .field-input {
+    padding-left: 0.875rem;
+    padding-right: var(--sign-pad, 1.5rem);
   }
 }
 

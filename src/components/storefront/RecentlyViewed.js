@@ -19,7 +19,7 @@ function readStored() {
 // Products this browser has opened, most recent first. The list lives only in
 // localStorage; the current product is recorded after being excluded from view,
 // and the section stays hidden until there is something else to show.
-export default function RecentlyViewed({ current, currency }) {
+export default function RecentlyViewed({ current }) {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export default function RecentlyViewed({ current, currency }) {
       </h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
         {items.map((item, index) => (
-          <ProductCard key={item.id} product={item} currency={currency} delay={index * 100} />
+          <ProductCard key={item.id} product={item} delay={index * 100} />
         ))}
       </div>
     </section>

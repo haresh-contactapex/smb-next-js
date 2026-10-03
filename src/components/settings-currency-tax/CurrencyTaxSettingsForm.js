@@ -8,6 +8,7 @@ import SelectField from "@/components/settings-shared/SelectField";
 import TextField from "@/components/settings-shared/TextField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
+import { formatCurrency } from "@/lib/currency";
 import Toast from "@/components/add-product/Toast";
 import {
   CURRENCY_POSITIONS,
@@ -37,6 +38,12 @@ export default function CurrencyTaxSettingsForm() {
     defaultTaxRate: defaultTaxRateInputRef,
     taxRegistrationNumber: taxRegistrationNumberInputRef,
   };
+
+  // Live examples in the selected currency and number format.
+  const positionOptions = CURRENCY_POSITIONS.map((option) => ({
+    ...option,
+    label: `${option.value === "before" ? "Before" : "After"} amount (${formatCurrency(100, settings.currency, { position: option.value, numberFormat: settings.numberFormat })})`,
+  }));
 
   function focusField(field) {
     fieldRefs[field]?.current?.focus();
@@ -140,7 +147,7 @@ export default function CurrencyTaxSettingsForm() {
                 id="f-currency-position"
                 label="Currency Position"
                 value={settings.currencyPosition}
-                options={CURRENCY_POSITIONS}
+                options={positionOptions}
                 onChange={(value) => setField("currencyPosition", value)}
               />
             </div>

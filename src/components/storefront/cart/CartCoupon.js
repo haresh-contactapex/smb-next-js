@@ -3,12 +3,11 @@
 import { useId, useRef, useState } from "react";
 import { useCart } from "./CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { formatCurrency } from "@/lib/currency";
 import { CART_FIELD, CART_LABEL, CART_PRIMARY_BUTTON } from "./cartStyles";
 
-function describeCoupon(coupon, currency) {
+function describeCoupon(coupon, formatMoney) {
   if (coupon.type === "percentage") return `${coupon.value}% off`;
-  if (coupon.type === "fixed") return `${formatCurrency(coupon.value, currency)} off`;
+  if (coupon.type === "fixed") return `${formatMoney(coupon.value)} off`;
   return "Free shipping";
 }
 
@@ -16,7 +15,7 @@ function describeCoupon(coupon, currency) {
 // it to the cart. Only one code is active at a time; applying another replaces it.
 export default function CartCoupon() {
   const { coupon, couponNotice, totals, applyCoupon, removeCoupon } = useCart();
-  const { currency } = useGeneralSettings();
+  const { formatMoney } = useGeneralSettings();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [applying, setApplying] = useState(false);
@@ -51,7 +50,7 @@ export default function CartCoupon() {
         <div className="mb-3 flex items-center justify-between gap-3 rounded border border-[#ef9822]/40 bg-[#FFF8EE] px-3 py-2 text-[13px]">
           <p>
             <span className="font-semibold text-[#333333]">{coupon.code}</span>
-            <span className="text-[#555555]"> · {describeCoupon(coupon, currency)}</span>
+            <span className="text-[#555555]"> · {describeCoupon(coupon, formatMoney)}</span>
           </p>
           <button
             type="button"
@@ -66,7 +65,7 @@ export default function CartCoupon() {
 
       <p role="status" className="text-[12px] text-[#555555] empty:hidden mb-3">
         {coupon && effect.shortfall > 0
-          ? `Spend ${formatCurrency(effect.shortfall, currency)} more to use ${coupon.code}.`
+          ? `Spend ${formatMoney(effect.shortfall)} more to use ${coupon.code}.`
           : coupon && effect.noEligibleItems
             ? `${coupon.code} doesn't apply to the items in your cart.`
             : couponNotice}
