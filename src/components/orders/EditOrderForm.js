@@ -8,6 +8,7 @@ import { AVATAR_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { STATUS_OPTIONS, PAYMENT_OPTIONS } from "./orderHelpers";
 import { OrderItemsCard, OrderSummaryCard, PaymentsCard, CustomerCard, AddressCard } from "./OrderDetailsSections";
 import EditOrderSkeleton from "./EditOrderSkeleton";
+import { downloadOrderInvoice } from "./downloadInvoice";
 import Toast from "@/components/add-product/Toast";
 
 const TOAST_AUTO_DISMISS_MS = 10000;
@@ -80,20 +81,7 @@ export default function EditOrderForm({ orderId }) {
   async function handleDownloadInvoice() {
     setDownloading(true);
     try {
-      const res = await fetch(`/api/orders/${orderId}/invoice`);
-      if (!res.ok) {
-        const json = await res.json().catch(() => null);
-        throw new Error(json?.error || "The invoice couldn't be created. Try again.");
-      }
-      const filename = /filename="([^"]+)"/.exec(res.headers.get("Content-Disposition") || "")?.[1] || `invoice-${order.orderNumber}.pdf`;
-      const url = URL.createObjectURL(await res.blob());
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      await downloadOrderInvoice(orderId, order.orderNumber);
       showToast("Invoice downloaded");
     } catch (error) {
       showToast(error.message, "error");

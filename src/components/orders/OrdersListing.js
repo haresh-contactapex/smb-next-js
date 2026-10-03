@@ -1,10 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import OrdersFilters from "./OrdersFilters";
 import OrdersTable from "./OrdersTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
+import { downloadOrderInvoice } from "./downloadInvoice";
+import Toast from "@/components/add-product/Toast";
+
+const TOAST_AUTO_DISMISS_MS = 10000;
 
 function orderNumberValue(orderNumber) {
   const match = String(orderNumber || "").match(/(\d+)\s*$/);
@@ -19,6 +23,32 @@ export default function OrdersListing({ orders, fixedStatus }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [sort, setSort] = useState({ key: "date", direction: "desc" });
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const toastTimerRef = useRef(null);
+
+  function showToast(message, variant = "success") {
+    setToast({ message, visible: true, variant });
+    clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
+  }
+
+  function dismissToast() {
+    clearTimeout(toastTimerRef.current);
+    setToast((t) => ({ ...t, visible: false }));
+  }
+
+  async function handleDownloadInvoice(order) {
+    setDownloadingId(order.orderId);
+    try {
+      await downloadOrderInvoice(order.orderId, order.orderNumber);
+      showToast(`Invoice for ${order.id} downloaded`);
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setDownloadingId(null);
+    }
+  }
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -94,7 +124,13 @@ export default function OrdersListing({ orders, fixedStatus }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
-        <OrdersTable orders={pageItems} sort={sort} onSortChange={handleSortChange} />
+        <OrdersTable
+          orders={pageItems}
+          sort={sort}
+          onSortChange={handleSortChange}
+          onDownloadInvoice={handleDownloadInvoice}
+          downloadingId={downloadingId}
+        />
         <Pagination
           page={currentPage}
           pageCount={pageCount}
@@ -104,6 +140,8 @@ export default function OrdersListing({ orders, fixedStatus }) {
           onPageSizeChange={handlePageSizeChange}
         />
       </section>
+
+      <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );
 }

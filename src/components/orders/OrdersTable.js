@@ -20,7 +20,7 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
   );
 }
 
-export default function OrdersTable({ orders, sort, onSortChange }) {
+export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvoice, downloadingId }) {
   if (orders.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No orders match your filters.</div>;
   }
@@ -83,6 +83,19 @@ export default function OrdersTable({ orders, sort, onSortChange }) {
                   >
                     <Icon name="edit-2" className="w-4 h-4" />
                   </Link>
+                  <button
+                    type="button"
+                    title="Download invoice"
+                    aria-label={`Download invoice for ${order.id}`}
+                    disabled={downloadingId != null}
+                    onClick={() => onDownloadInvoice(order)}
+                    className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-50 disabled:hover:bg-transparent"
+                  >
+                    <Icon
+                      name={downloadingId === order.orderId ? "refresh-cw" : "download"}
+                      className={`w-4 h-4 ${downloadingId === order.orderId ? "animate-spin motion-reduce:animate-none" : ""}`}
+                    />
+                  </button>
                 </div>
               </td>
             </tr>
