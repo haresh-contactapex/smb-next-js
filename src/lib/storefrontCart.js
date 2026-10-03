@@ -4,6 +4,7 @@ import { getShippingSettings } from "./shippingSettings";
 import { listStorefrontProductVariants } from "./products";
 import { LOCATIONS } from "@/data/locationData";
 import { validateTypedLocation } from "./validateAddress";
+import { validateUsLocation } from "./usAddress";
 
 // Server side of the storefront cart drawer. The cart itself lives in the
 // visitor's browser; these helpers only answer the two questions it can't:
@@ -126,6 +127,9 @@ export async function lookupShippingRules(rawCountry, rawZip, rawState, rawCity)
   if (rawState !== undefined || rawCity !== undefined) {
     const location = validateTypedLocation({ country: countryName, state: rawState, city: rawCity, postalCode: zip });
     if (!location.valid) throw new CartError(location.message, 400, location.field);
+    // A US address must also exist: the ZIP must be real and belong to the state and city.
+    const usLocation = validateUsLocation({ country: countryName, state: location.state, city: location.city, postalCode: zip });
+    if (!usLocation.valid) throw new CartError(usLocation.message, 400, usLocation.field);
   } else if (country.postalFormat) {
     if (!country.postalFormat.test(zip)) throw new CartError(`Enter ${country.postalHint} for ${countryName}.`, 400, "zip");
   }

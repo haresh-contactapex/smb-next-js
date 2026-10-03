@@ -97,11 +97,32 @@ export function validateTypedLocation({ country, state, city, postalCode }) {
 
   const cityName = findName(countryData.states[stateName], city);
   if (!cityName) {
-    return {
-      valid: false,
-      field: "city",
-      message: `We couldn't match "${String(city || "").trim()}" to a city in ${stateName}. Check the spelling, or that the city is in this state.`,
-    };
+    // The city list is a curated subset, not a full gazetteer, so a city we
+    // don't know (e.g. Beverly Hills, CA) can't be told apart from a real one.
+    // Accept what was typed, tidied, and only check the postal code's format;
+    // there is no prefix data to cross-check it against.
+    const typedCity = String(city || "").trim().replace(/\s+/g, " ");
+    if (!typedCity) {
+      return { valid: false, field: "city", message: "Enter your city." };
+    }
+    if (countryData.postalFormat) {
+      const zip = String(postalCode || "").trim();
+      if (!zip || !countryData.postalFormat.test(zip)) {
+        return { valid: false, field: "zip", message: `Enter ${countryData.postalHint} for ${country}.` };
+      }
+    }
+    return { valid: true, state: stateName, city: typedCity };
+  }
+
+  // The prefix data for the few US cities listed is too coarse to judge a ZIP (Los
+  // Angeles alone spans 900xx-918xx), and this runs in the browser, which doesn't
+  // carry the ZIP database. The server checks US ZIP, city and state in usAddress.js.
+  if (country === "United States") {
+    const zip = String(postalCode || "").trim();
+    if (!countryData.postalFormat.test(zip)) {
+      return { valid: false, field: "zip", message: `Enter ${countryData.postalHint} for ${country}.` };
+    }
+    return { valid: true, state: stateName, city: cityName };
   }
 
   const location = validateLocationHierarchy({ country, state: stateName, city: cityName, postalCode });

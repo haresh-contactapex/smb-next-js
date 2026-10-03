@@ -2,6 +2,7 @@ import { listCheckoutProducts } from "./products";
 import { CartError, listShippingCountries, lookupCartCoupon, lookupShippingRules } from "./storefrontCart";
 import { loadCheckoutPricingSettings } from "./storefrontCheckout";
 import { formatCurrency } from "./currency";
+import { validateUsLocation } from "./usAddress";
 // Pure cart arithmetic (coupons, shipping rates, totals) and the checkout's form
 // validation. Both are shared with the browser on purpose: the server must reach the
 // same totals the customer was shown, and prices and discounts are never taken from
@@ -86,7 +87,12 @@ function parseAddress(raw, section, countries) {
   if (field) {
     throw new CheckoutError(`Check your ${section} address: ${errors[field]}`, 400, { reason: "invalid_address", details: { section, field } });
   }
-  return { ...address, state: place.state, city: place.city };
+  // A US address must also exist: the ZIP must be real and belong to the state and city.
+  const usLocation = validateUsLocation({ country: address.country, state: place.state, city: place.city, postalCode: address.zip });
+  if (!usLocation.valid) {
+    throw new CheckoutError(`Check your ${section} address: ${usLocation.message}`, 400, { reason: "invalid_address", details: { section, field: usLocation.field } });
+  }
+  return { ...address, state: place.state, city: usLocation.city || place.city };
 }
 
 // Prices every line from the database. Anything the customer can't buy as asked

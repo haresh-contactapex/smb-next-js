@@ -95,9 +95,23 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 - **The location must agree with itself.** Country → state → city → postal code
   are checked with `validateTypedLocation()` (`src/lib/validateAddress.js`), the
   typed-input version of the `validateLocationHierarchy()` check the account
-  address forms use: a state not in the country, a city not in the state, a
-  postal code in the wrong format for the country, or one whose prefix belongs
-  to a different city is rejected, with the message on the field at fault.
+  address forms use: a state not in the country, a postal code in the wrong
+  format for the country, or one whose prefix belongs to a different city is
+  rejected, with the message on the field at fault. The city list in
+  `locationData.js` is only a curated subset, so a city it doesn't list is
+  accepted as typed with just the postal code's format checked.
+  **United States only:** all 50 states + DC are accepted, and the server also
+  checks the address against the full ZIP database (`validateUsLocation()` in
+  `src/lib/usAddress.js`, backed by the `zipcodes` npm package, ~44k ZIPs; server
+  code only, never import it into a client component). The ZIP must exist, belong
+  to the typed state, and the city must be the ZIP's city or another real city in
+  that state within 25 miles of it ("Los Angeles" for a North Hollywood ZIP is
+  fine; a typo or a city from elsewhere is not). It runs when the address step is
+  saved (`/api/cart/shipping`, for the billing address too when it differs from
+  shipping), when the order is placed (`parseAddress()` in `checkoutPricing.js`)
+  and when a saved address is stored (`customerAddresses.js`). Other countries get
+  no extra check. The ZIP data is a 2024 snapshot: refresh it with
+  `npm update zipcodes` (a brand-new ZIP would be rejected until then).
   Editing the country, state or city clears the stale messages for the fields
   that depend on it (`ADDRESS_DEPENDENTS`).
 - **Validation follows the checkbox.** Checked: the shipping address *is* the

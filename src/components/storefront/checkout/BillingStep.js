@@ -6,6 +6,7 @@ import StoreIcon from "../icons";
 import CheckoutAddressFields from "./CheckoutAddressFields";
 import SavedAddressPicker from "./SavedAddressPicker";
 import { useCart } from "../cart/CartProvider";
+import { postJson } from "../cart/cartApi";
 import { CHECKOUT_BUTTON } from "./checkoutStyles";
 import { ADDRESS_DEPENDENTS, focusFirstInvalid, validateAddress } from "./checkoutHelpers";
 
@@ -90,6 +91,29 @@ export default function BillingStep({
     savingRef.current = true;
     setSaving(true);
     setFormError("");
+
+    // A separate billing address gets the same server check as the shipping one (it never reaches
+    // the estimate below), so a US address that doesn't exist is flagged here, not when paying.
+    if (!sameAsBilling) {
+      const billingCheck = await postJson("/api/cart/shipping", {
+        country: billing.country,
+        state: billingResult.place.state,
+        city: billingResult.place.city,
+        zip: billing.zip.trim(),
+      });
+      if (!billingCheck.ok) {
+        savingRef.current = false;
+        setSaving(false);
+        if (billingCheck.status === 400) {
+          setErrors({ ...NO_ERRORS, billing: { [ADDRESS_FIELDS.includes(billingCheck.field) ? billingCheck.field : "zip"]: billingCheck.error } });
+          focusFirstInvalid(formRef.current);
+        } else {
+          setFormError(billingCheck.error);
+        }
+        return;
+      }
+    }
+
     const result = await estimateShipping({
       country: destination.country,
       state: shippingResult.place.state,

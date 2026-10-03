@@ -2,6 +2,7 @@ import { sql, sqlTransaction } from "./db";
 import { AccountError, cleanText, isUuid } from "./accountError";
 import { LOCATIONS } from "@/data/locationData";
 import { validateTypedLocation } from "./validateAddress";
+import { validateUsLocation } from "./usAddress";
 import { formatUsPhone, isValidUsPhone } from "./phone";
 import { MAX_ADDRESSES } from "./accountLimits";
 
@@ -62,6 +63,9 @@ export function parseAddressInput(body) {
   // the state and city spelled the way the location data has them.
   const location = validateTypedLocation({ country, state: input.state, city: input.city, postalCode: zip });
   if (!location.valid) throw new AccountError(location.message, 400, location.field);
+  // A US address must also exist: the ZIP must be real and belong to the state and city.
+  const usLocation = validateUsLocation({ country, state: location.state, city: location.city, postalCode: zip });
+  if (!usLocation.valid) throw new AccountError(usLocation.message, 400, usLocation.field);
 
   return {
     label,
@@ -70,7 +74,7 @@ export function parseAddressInput(body) {
     phone,
     line1,
     line2,
-    city: location.city,
+    city: usLocation.city || location.city,
     state: location.state,
     zip,
     country,
