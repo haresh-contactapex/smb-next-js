@@ -12,11 +12,10 @@ import { BTN_DANGER, BTN_DARK, BTN_OUTLINE } from "./accountStyles";
 
 // The two things a customer can do with an order: put its items back in the
 // cart ("Order again") and cancel it while it is Pending or Processing (a card payment
-// is refunded to the card: `refundAmount` is what, 0 when nothing was paid; `manualRefund`
-// is a paid order the store refunds by hand).
+// is refunded to the card: `refundAmount` is what, 0 when nothing was paid).
 // Both are decided by the server (canCancel / hasItems come from it and the API
 // re-checks), so a stale page can't do what it shouldn't.
-export default function OrderActions({ orderNumber, canCancel, refundAmount = 0, manualRefund = false, currency, hasItems }) {
+export default function OrderActions({ orderNumber, canCancel, refundAmount = 0, currency, hasItems }) {
   const router = useRouter();
   const { formatMoney } = useGeneralSettings();
   const { addItem, setQuantity } = useCart();
@@ -65,9 +64,7 @@ export default function OrderActions({ orderNumber, canCancel, refundAmount = 0,
     const question =
       refundAmount > 0
         ? `Cancel order #${orderNumber}? Your payment of ${formatMoney(refundAmount, currency || undefined)} will be refunded to your original payment method. This can't be undone.`
-        : manualRefund
-          ? `Cancel order #${orderNumber}? You've already paid for it, so we'll be in touch about your refund. This can't be undone.`
-          : `Cancel order #${orderNumber}? This can't be undone.`;
+        : `Cancel order #${orderNumber}? This can't be undone.`;
     if (!window.confirm(question)) return;
     busyRef.current = true;
     setBusy("cancel");
@@ -80,14 +77,7 @@ export default function OrderActions({ orderNumber, canCancel, refundAmount = 0,
       router.refresh(); // the order may have moved on since this page was loaded
       return;
     }
-    notify(
-      refundAmount > 0
-        ? "Your order was cancelled and your payment has been refunded"
-        : manualRefund
-          ? "Your order was cancelled. We'll be in touch about your refund"
-          : "Your order was cancelled",
-      "success"
-    );
+    notify(refundAmount > 0 ? "Your order was cancelled and your payment has been refunded" : "Your order was cancelled", "success");
     router.refresh();
   }
 
