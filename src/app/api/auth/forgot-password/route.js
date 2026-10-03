@@ -7,8 +7,9 @@ import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidEmail } from "@/components/auth/helpers";
 import { isEmailConfigured, sendPasswordResetEmail } from "@/lib/email";
 
-// Always responds with success (whether or not the email matches an account)
-// so this endpoint can't be used to enumerate registered customers.
+// Tells the requester when no customer account matches the email, so they
+// aren't told a reset link was sent when nothing was. This does reveal which
+// emails are registered; the reCAPTCHA check above limits automated probing.
 export async function POST(request) {
   try {
     const maintenance = await checkMaintenanceMode();
@@ -32,26 +33,35 @@ export async function POST(request) {
     }
 
     const customer = await findCustomerByEmail(email);
-    if (customer) {
-      const { rawToken, tokenHash, expiresAt } = createResetToken();
-      await insertCustomerResetToken({
-        customerId: customer.id,
-        tokenHash,
-        requestedEmail: email,
-        expiresAt,
-      });
+    if (!customer) {
+      return NextResponse.json(
+        { success: false, error: "No account was found with that email address." },
+        { status: 404 }
+      );
+    }
 
-      const resetLink = `${new URL(request.url).origin}/reset-password?token=${rawToken}`;
+    const { rawToken, tokenHash, expiresAt } = createResetToken();
+    await insertCustomerResetToken({
+      customerId: customer.id,
+      tokenHash,
+      requestedEmail: email,
+      expiresAt,
+    });
 
-      if (await isEmailConfigured()) {
-        const sent = await sendPasswordResetEmail({ to: email, resetLink });
-        if (!sent) {
-          console.error(`[forgot-password] failed to send reset email to ${email}`);
-        }
-      } else {
-        // No SMTP configured — log the link so the flow stays testable locally.
-        console.log(`[forgot-password] reset link for ${email}: ${resetLink}`);
+    const resetLink = `${new URL(request.url).origin}/reset-password?token=${rawToken}`;
+
+    if (await isEmailConfigured()) {
+      const sent = await sendPasswordResetEmail({ to: email, resetLink });
+      if (!sent) {
+        console.error(`[forgot-password] failed to send reset email to ${email}`);
+        return NextResponse.json(
+          { success: false, error: "We couldn't send the reset email. Please try again later." },
+          { status: 502 }
+        );
       }
+    } else {
+      // No SMTP configured — log the link so the flow stays testable locally.
+      console.log(`[forgot-password] reset link for ${email}: ${resetLink}`);
     }
 
     return NextResponse.json({ success: true });
