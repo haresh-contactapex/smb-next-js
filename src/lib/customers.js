@@ -30,13 +30,13 @@ export async function getCustomerById(id) {
   return toPublicCustomer(row);
 }
 
-export async function createCustomer({ firstName, lastName, email, passwordHash, acceptsMarketing, agreedToTerms }) {
+export async function createCustomer({ firstName, lastName, email, phone, passwordHash, acceptsMarketing, agreedToTerms }) {
   const termsAcceptedAt = agreedToTerms ? new Date() : null;
   const [created] = await sql`
     INSERT INTO customers (
-      first_name, last_name, email, password_hash, accepts_marketing, terms_accepted_at
+      first_name, last_name, email, phone, password_hash, accepts_marketing, terms_accepted_at
     ) VALUES (
-      ${firstName.trim()}, ${lastName.trim()}, ${email.trim().toLowerCase()}, ${passwordHash},
+      ${firstName.trim()}, ${lastName.trim()}, ${email.trim().toLowerCase()}, ${phone || null}, ${passwordHash},
       ${acceptsMarketing ?? false}, ${termsAcceptedAt}
     )
     RETURNING *

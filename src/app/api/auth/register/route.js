@@ -5,6 +5,7 @@ import { createCustomerSession } from "@/lib/auth/customerSession";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidEmail, isValidPassword } from "@/components/auth/helpers";
+import { formatUsPhone, isValidUsPhone } from "@/lib/phone";
 import { isEmailConfigured, sendCustomerWelcomeEmail, sendNewCustomerAdminNotification } from "@/lib/email";
 import { getGeneralSettings } from "@/lib/generalSettings";
 
@@ -27,6 +28,16 @@ export async function POST(request) {
         { status: 400 }
       );
     }
+    // Phone is optional; when given it must be a full 10-digit US number.
+    const phoneDigits = String(payload.phone ?? "").replace(/\D/g, "");
+    if (!isValidUsPhone(phoneDigits)) {
+      return NextResponse.json(
+        { success: false, error: "Enter a 10-digit phone number, or leave it blank." },
+        { status: 400 }
+      );
+    }
+    const phone = phoneDigits ? formatUsPhone(phoneDigits) : null;
+
     if (!payload.agreeTerms) {
       return NextResponse.json(
         { success: false, error: "You must accept the terms to continue." },
@@ -55,6 +66,7 @@ export async function POST(request) {
       firstName,
       lastName,
       email,
+      phone,
       passwordHash,
       acceptsMarketing: false,
       agreedToTerms: true,

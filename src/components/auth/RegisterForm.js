@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { mergeGuestWishlist } from "@/components/storefront/wishlist/wishlistApi";
+import { formatUsPhone, isValidUsPhone } from "@/lib/phone";
 import { DEFAULT_REGISTER, isValidEmail, isValidPassword } from "./helpers";
 import PasswordField from "./PasswordField";
 import AuthLayout from "./AuthLayout";
@@ -45,6 +46,7 @@ export default function RegisterForm() {
     const nextErrors = {
       firstName: form.firstName.trim().length === 0,
       email: !isValidEmail(form.email),
+      phone: !isValidUsPhone(form.phone),
       password: !isValidPassword(form.password),
       confirmPassword: form.confirmPassword !== form.password,
       agreeTerms: !form.agreeTerms,
@@ -69,6 +71,7 @@ export default function RegisterForm() {
           firstName: form.firstName,
           lastName: form.lastName,
           email: form.email,
+          phone: form.phone,
           password: form.password,
           agreeTerms: form.agreeTerms,
           recaptchaToken,
@@ -168,6 +171,33 @@ export default function RegisterForm() {
             />
           </div>
           {errors.email && <p className="text-xs text-error mt-1">Enter a valid email address.</p>}
+        </div>
+
+        <div>
+          <label className="field-label" htmlFor="reg-phone">
+            Phone <span className="normal-case font-medium tracking-normal">(optional)</span>
+          </label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400">
+              <Icon name="phone" className="w-4 h-4" />
+            </span>
+            <input
+              id="reg-phone"
+              type="tel"
+              value={form.phone}
+              onChange={(e) => setField("phone", formatUsPhone(e.target.value))}
+              placeholder="(555) 000-0000"
+              aria-label="Phone (optional)"
+              autoComplete="tel"
+              inputMode="tel"
+              className={`field-input pl-10${
+                errors.phone
+                  ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
+                  : ""
+              }`}
+            />
+          </div>
+          {errors.phone && <p className="text-xs text-error mt-1">Enter a 10-digit phone number, or leave it blank.</p>}
         </div>
 
         <PasswordField

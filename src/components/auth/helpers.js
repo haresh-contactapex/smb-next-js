@@ -8,6 +8,7 @@ export const DEFAULT_REGISTER = {
   firstName: "",
   lastName: "",
   email: "",
+  phone: "",
   password: "",
   confirmPassword: "",
   agreeTerms: false,
