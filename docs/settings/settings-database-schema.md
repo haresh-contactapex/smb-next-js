@@ -268,7 +268,10 @@ form the "From" address, and `email_footer_text` is appended to every email
 | `sender_name`                          | `VARCHAR(150)` | NULL                             |       |
 | `sender_email`                         | `VARCHAR(255)` | NULL                             |       |
 | `send_order_confirmation_emails`       | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
-| `send_shipping_notification_emails`    | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
+| `send_shipping_notification_emails`    | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | Controls the Completed order email ("Send completed order emails") |
+| `send_processing_order_emails`         | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | Processing order email (`npm run db:migrate:email-order-status` adds it to an existing table) |
+| `send_cancelled_order_emails`          | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | Cancelled order email |
+| `send_failed_order_emails`             | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | Failed order (payment) email |
 | `send_marketing_emails`                | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
 | `email_footer_text`                    | `TEXT`         | NULL                             |       |
 | `updated_at`                           | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`        |       |

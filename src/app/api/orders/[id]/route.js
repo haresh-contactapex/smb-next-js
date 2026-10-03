@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getOrderById, getOrderDetails, updateOrderStatus } from "@/lib/orders";
 import { logAdminActivity } from "@/lib/notifications";
+import { sendOrderStatusEmail } from "@/lib/orderEmails";
+
+// The status changes the customer is emailed about (Settings -> Email -> shipping notification emails).
+const STATUS_EMAILS = { Processing: "processing", Completed: "completed", Cancelled: "cancelled" };
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission("orders.view");
@@ -39,6 +43,9 @@ export async function PATCH(request, { params }) {
         severity: order.status === "Cancelled" ? "warning" : "info",
         metadata: { from: { status: before?.status }, to: { status: order.status } },
       });
+    }
+    if (before?.status !== order.status && STATUS_EMAILS[order.status]) {
+      await sendOrderStatusEmail(params.id, STATUS_EMAILS[order.status]);
     }
     return NextResponse.json({ success: true, data: order });
   } catch (error) {

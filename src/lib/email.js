@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import { getEmailTransportSettings } from "./emailSettings";
 import { readFile } from "fs/promises";
 import path from "path";
-import { buildOrderConfirmationEmail } from "./orderEmail";
+import { buildNewOrderAlertEmail, buildOrderConfirmationEmail, buildOrderStatusEmail } from "./orderEmail";
 import { isPublicOrigin } from "./siteUrl";
 
 const LOGO_CID = "shopmyband-logo";
@@ -265,16 +265,13 @@ export async function sendProductQuestionConfirmationEmail({ to, storeName, ques
   return sendEmail({ to, subject, html, text, replyTo: replyTo || undefined });
 }
 
-// Sent to the customer once an order is placed (cash on delivery) or paid (card). Goes out
-// from the sender name and address saved in Settings -> Email, like every other email.
-// `data` is described in buildOrderConfirmationEmail (orderEmail.js).
-export async function sendOrderConfirmationEmail({ to, ...data }) {
-  // The logo travels inside the email (an inline attachment the HTML points at with cid:), so it
-  // shows wherever the email is opened, including a store that isn't public yet. If the file
-  // can't be read here (some hosts don't ship /public with server code) the public address of
-  // the same file is used when there is one, else the email shows the wordmark as text.
+// The logo travels inside order emails (an inline attachment the HTML points at with cid:), so it
+// shows wherever the email is opened, including a store that isn't public yet. If the file can't
+// be read here (some hosts don't ship /public with server code) the public address of the same
+// file is used when there is one, else the email shows the wordmark as text.
+async function loadEmailLogo(shopUrl) {
+  let logoSrc = isPublicOrigin(shopUrl) ? `${shopUrl}/storefront/logo.png` : null;
   let attachments;
-  let logoSrc = isPublicOrigin(data.shopUrl) ? `${data.shopUrl}/storefront/logo.png` : null;
   try {
     const content = await readFile(path.join(process.cwd(), "public", "storefront", "logo.png"));
     attachments = [{ filename: "logo.png", content, cid: LOGO_CID, contentType: "image/png", contentDisposition: "inline" }];
@@ -282,7 +279,28 @@ export async function sendOrderConfirmationEmail({ to, ...data }) {
   } catch {
     // keep the URL (or nothing)
   }
+  return { logoSrc, attachments };
+}
 
-  const { subject, html, text } = buildOrderConfirmationEmail({ ...data, logoSrc });
-  return sendEmail({ to, subject, html, text, attachments });
+// The order emails (see orderEmail.js for what each carries). All of them go out from the sender
+// name and address saved in Settings -> Email, like every other email.
+async function sendOrderEmail(to, build, data, subjectPrefix = "") {
+  const { logoSrc, attachments } = await loadEmailLogo(data.shopUrl);
+  const { subject, html, text } = build({ ...data, logoSrc });
+  return sendEmail({ to, subject: `${subjectPrefix}${subject}`, html, text, attachments });
+}
+
+// To the customer once an order is placed (cash on delivery) or paid (card).
+export async function sendOrderConfirmationEmail({ to, subjectPrefix, ...data }) {
+  return sendOrderEmail(to, buildOrderConfirmationEmail, data, subjectPrefix);
+}
+
+// To the customer when their order is Processing, Completed or Cancelled, or its payment failed.
+export async function sendOrderStatusEmail(kind, { to, subjectPrefix, ...data }) {
+  return sendOrderEmail(to, (details) => buildOrderStatusEmail(kind, details), data, subjectPrefix);
+}
+
+// To the store when a new order arrives.
+export async function sendNewOrderAlertEmail({ to, subjectPrefix, ...data }) {
+  return sendOrderEmail(to, buildNewOrderAlertEmail, data, subjectPrefix);
 }

@@ -264,12 +264,11 @@ the team isn't alerted a second time. The `payments` table still records every p
 - **Stock** isn't decremented when an order is paid (the server only refuses lines that
   are out of stock when the order is placed, so two buyers can still race for the last unit).
 - **Coupon usage** (`usage_count`, one per customer) isn't recorded.
-- **Other order emails.** Only the order confirmation exists (see [Order confirmation
-  email](#order-confirmation-email)). There is no shipped / status-change / refund email,
-  no email to the store about a new order (staff get the in-app notification), and
-  *Settings → Orders* "Require order confirmation email before fulfillment" is stored but not
-  read. Stripe also emails its own receipt in live mode if receipts are on in the Stripe
-  Dashboard, which would arrive in addition to ours.
+- **Refund email.** Not built: refunds from Stripe (`charge.refunded`) aren't handled, and
+  setting an order to Refunded in admin sends nothing. *Settings → Orders* "Require order
+  confirmation email before fulfillment" is stored but not read. Stripe also emails its own
+  receipt in live mode if receipts are on in the Stripe Dashboard, which would arrive in
+  addition to ours.
 - **Refunds** and `charge.refunded` events aren't handled.
 - **Settings → Customers → Allow guest checkout** is a separate, still unsaved toggle:
   only the one on *Settings → Checkout* is read by the storefront. The other checkout
@@ -295,7 +294,25 @@ Choosing it (when switched on in *Settings → Payment*) shows a note and a work
    order only if it has a `cod` payment; the random order UUID is the proof the visitor placed
    it (the counterpart of the card flow's client secret). The page then empties the cart.
 
-## Order confirmation email
+## Order emails
+
+Six emails, all in one design (`src/lib/orderEmail.js`, sent by `src/lib/email.js`, triggered by
+`src/lib/orderEmails.js`). Each is best-effort: a problem is logged and never fails the order, the
+payment sync or the status change. All go out from the sender name and email in *Settings → Email*.
+
+| Email | To | When | Switch |
+| --- | --- | --- | --- |
+| Order confirmation | customer | COD order saved; card order moves into Paid | *Settings → Email → order confirmation emails* |
+| New order | store | same moments | *Settings → Notifications → new order email alert*; sent to its recipient, else the *General* store email |
+| Processing order | customer | staff set the status to Processing on Edit Order (`PATCH /api/orders/[id]`) | *Settings → Email → processing order emails* |
+| Completed order | customer | staff set the status to Completed | *Settings → Email → completed order emails* (stored in the older `send_shipping_notification_emails` column) |
+| Cancelled order | customer | staff set the status to Cancelled | *Settings → Email → cancelled order emails* |
+| Failed order | customer | a card payment is declined (order goes Unpaid → Failed), once | *Settings → Email → failed order emails* |
+
+A cancelled email says "we'll be in touch about your refund" if the order was already paid, else
+"you haven't been charged". "Failed" carries a Try again button to `/checkout`.
+
+### Order confirmation email
 
 `sendOrderConfirmation()` in `checkoutOrders.js` emails the customer once per order, built by
 `buildOrderConfirmationEmail()` (`src/lib/orderEmail.js`, the same design as the account

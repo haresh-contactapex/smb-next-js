@@ -11,6 +11,10 @@ function toPublicSettings(row) {
     senderEmail: row.sender_email || "",
     sendOrderConfirmationEmails: row.send_order_confirmation_emails,
     sendShippingNotificationEmails: row.send_shipping_notification_emails,
+    // Added by db:migrate:email-order-status; an environment that hasn't run it keeps them on.
+    sendProcessingOrderEmails: row.send_processing_order_emails ?? true,
+    sendCancelledOrderEmails: row.send_cancelled_order_emails ?? true,
+    sendFailedOrderEmails: row.send_failed_order_emails ?? true,
     sendMarketingEmails: row.send_marketing_emails,
     emailFooterText: row.email_footer_text || "",
   };
@@ -38,6 +42,9 @@ export async function updateEmailSettings(settings) {
       sender_email = ${settings.senderEmail},
       send_order_confirmation_emails = ${settings.sendOrderConfirmationEmails},
       send_shipping_notification_emails = ${settings.sendShippingNotificationEmails},
+      send_processing_order_emails = ${settings.sendProcessingOrderEmails},
+      send_cancelled_order_emails = ${settings.sendCancelledOrderEmails},
+      send_failed_order_emails = ${settings.sendFailedOrderEmails},
       send_marketing_emails = ${settings.sendMarketingEmails},
       email_footer_text = ${settings.emailFooterText || null},
       updated_at = now()

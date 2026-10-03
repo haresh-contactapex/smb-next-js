@@ -1,15 +1,24 @@
-// The order confirmation email: same look as the account welcome email (logo, orange
-// rule, navy heading, orange button, grey "didn't place this" note, navy footer), built
-// with tables and inline styles so mail clients render it. Everything that came from a
-// customer or the catalog is escaped. Prices arrive already formatted in the store's
-// currency. Returns { subject, html, text }.
+// The order emails, all in the account welcome email's design (logo, orange rule, navy heading,
+// orange button, grey note with an orange edge, navy footer), built with tables and inline
+// styles so mail clients render them. They share one layout (render()) and differ in their
+// copy. Everything that came from a customer or the catalog is escaped. Prices arrive already
+// formatted in the store's currency. Every builder returns { subject, html, text }.
+//
+//   buildOrderConfirmationEmail(data)      customer: the order was placed / paid
+//   buildOrderStatusEmail(kind, data)      customer: processing | completed | cancelled | failed
+//   buildNewOrderAlertEmail(data)          store: a new order arrived
+//
+// Shared `data`: { storeName, supportEmail, shopUrl, logoSrc, orderNumber, placedAt, total,
+//   items: [{ title, quantity, lineTotal, imageUrl }], amounts: { subtotal, discount, couponCode,
+//   shipping, tax }, shippingAddress: string[], billingAddress: string[], viewUrl }.
+// Customer emails add { firstName, paymentLabel, cod, processingDays, paid }; the store alert adds
+// { customer: { name, email, phone }, paymentLabel, cod, adminUrl }.
 
 const NAVY = "#1F3A6B";
 const ORANGE = "#EF9822";
 // Google Sans, as on the storefront. Mail clients that load web fonts (Apple Mail, iOS Mail)
 // show it through the stylesheet link below; Gmail and Outlook ignore web fonts and fall back to Arial.
 const FONT = "'Google Sans','Google Sans Text',Arial,Helvetica,sans-serif";
-const HEADING_FONT = FONT;
 const FONT_CSS = "https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&display=swap";
 
 function escapeHtml(value) {
@@ -22,8 +31,9 @@ function escapeHtml(value) {
 }
 
 const lines = (list) => list.filter(Boolean).map(escapeHtml).join("<br>");
+const itemCount = (items) => items.reduce((sum, item) => sum + item.quantity, 0);
 
-function factCell(label, value, width) {
+function factCell([label, value], width) {
   return `<td style="padding:12px 14px;width:${width}%;vertical-align:top;"><div style="font-size:11px;color:#8A7A55;margin-bottom:3px;">${escapeHtml(label)}</div><div style="font-size:14px;font-weight:bold;color:${NAVY};">${escapeHtml(value)}</div></td>`;
 }
 
@@ -38,62 +48,65 @@ function itemRow(item) {
   </tr>`;
 }
 
-function totalRow(label, value, { top = 4 } = {}) {
+function totalRow(label, value, top = 4) {
   return `<tr><td style="padding:${top}px 0 4px;color:#666666;">${escapeHtml(label)}</td><td style="padding:${top}px 0 4px;text-align:right;color:#333333;">${escapeHtml(value)}</td></tr>`;
 }
 
-function step(lead, text) {
-  return `<p style="margin:0 0 9px;font-size:13px;line-height:1.55;"><b style="color:#222222;">${escapeHtml(lead)}</b> <span style="color:#555555;">${escapeHtml(text)}</span></p>`;
-}
+const step = ([lead, text]) =>
+  `<p style="margin:0 0 9px;font-size:13px;line-height:1.55;"><b style="color:#222222;">${escapeHtml(lead)}</b> <span style="color:#555555;">${escapeHtml(text)}</span></p>`;
 
-// data: { storeName, supportEmail, shopUrl, logoSrc, firstName, orderNumber, placedAt, paymentLabel, cod,
-//         total, items: [{ title, quantity, lineTotal, imageUrl }], amounts: { subtotal, discount,
-//         couponCode, shipping, tax }, shippingAddress: string[], billingAddress: string[],
-//         viewUrl, processingDays }
-export function buildOrderConfirmationEmail(data) {
-  const { storeName, supportEmail, shopUrl, firstName, orderNumber, placedAt, paymentLabel, cod, total, items, amounts } = data;
-  const sameAddress = data.billingAddress.join("|") === data.shippingAddress.join("|");
+const heading = (text) => `<div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 8px;">${escapeHtml(text)}</div>`;
 
-  const intro = cod
-    ? "We've received your order. You'll pay in cash when it's delivered, so there's nothing more to do now. We'll email you again when it ships."
-    : "We've received your order and your payment went through. We're getting it ready now, and we'll email you again when it ships.";
-
-  const nextSteps = [
-    step("We prepare it.", data.processingDays > 0 ? `Your order is packed within ${data.processingDays} business day${data.processingDays === 1 ? "" : "s"}.` : "We start packing your order right away."),
-    step("We ship it.", "You'll get another email as soon as it's on its way."),
-    cod
-      ? step("Pay on delivery.", `Please have ${total} ready in cash when your order arrives.`)
-      : step("Track it.", data.viewUrl ? "See where your order is, from packed to delivered, in your account." : "Keep this email as your receipt."),
-  ].join("");
-
+function itemsSection(data) {
+  const { items, amounts, total } = data;
+  const count = itemCount(items);
   const totals = [
-    totalRow(`Subtotal (${items.reduce((sum, item) => sum + item.quantity, 0)} item${items.reduce((sum, item) => sum + item.quantity, 0) === 1 ? "" : "s"})`, amounts.subtotal, { top: 10 }),
+    totalRow(`Subtotal (${count} item${count === 1 ? "" : "s"})`, amounts.subtotal, 10),
     amounts.discount ? totalRow(amounts.couponCode ? `Discount (${amounts.couponCode})` : "Discount", `-${amounts.discount}`) : "",
     amounts.shipping ? totalRow("Shipping", amounts.shipping) : "",
     amounts.tax ? totalRow("Tax", amounts.tax) : "",
   ].join("");
+  return `<tr><td style="padding:26px 32px 0;">
+    <div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 12px;">Your items</div>
+    <table role="presentation" width="100%" style="border-collapse:collapse;">${items.map(itemRow).join("")}</table>
+    <table role="presentation" width="100%" style="border-collapse:collapse;border-top:1px solid #eeeeee;font-size:13px;">
+      ${totals}
+      <tr><td style="padding:12px 0 14px;font-size:16px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">Total</td><td style="padding:12px 0 14px;text-align:right;font-size:18px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">${escapeHtml(total)}</td></tr>
+    </table>
+  </td></tr>`;
+}
 
-  const addressBlock = (title, list) =>
-    `<td style="vertical-align:top;padding-right:12px;"><div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 8px;">${escapeHtml(title)}</div><p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(list)}</p></td>`;
-  const addresses = sameAddress
-    ? `<div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 8px;">Shipping and billing address</div><p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(data.shippingAddress)}</p><p style="margin:8px 0 0;font-size:12px;color:#888888;">Your shipping and billing addresses are the same.</p>`
-    : `<table role="presentation" width="100%" style="border-collapse:collapse;"><tr>${addressBlock("Shipping address", data.shippingAddress)}${addressBlock("Billing address", data.billingAddress)}</tr></table>`;
+const sameAddress = (data) => data.billingAddress.join("|") === data.shippingAddress.join("|");
 
-  const button = data.viewUrl
-    ? `<a href="${escapeHtml(data.viewUrl)}" style="display:inline-block;background:${ORANGE};color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:6px;">View your order</a>`
+function addressesSection(data) {
+  const block = (title, list) =>
+    `<td style="vertical-align:top;padding-right:12px;">${heading(title)}<p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(list)}</p></td>`;
+  const body = sameAddress(data)
+    ? `${heading("Shipping and billing address")}<p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(data.shippingAddress)}</p><p style="margin:8px 0 0;font-size:12px;color:#888888;">The shipping and billing addresses are the same.</p>`
+    : `<table role="presentation" width="100%" style="border-collapse:collapse;"><tr>${block("Shipping address", data.shippingAddress)}${block("Billing address", data.billingAddress)}</tr></table>`;
+  return `<tr><td style="padding:8px 32px 0;">${body}</td></tr>`;
+}
+
+// spec: { subject, heading, intro, facts: [[label, value]], button: { label, url } | null,
+//   detailsHtml, showItems, showAddresses, stepsTitle, steps: [[lead, text]], note: { lead, html } }
+function render(data, spec) {
+  const { storeName, supportEmail, shopUrl } = data;
+
+  const logo = data.logoSrc
+    ? `<img src="${escapeHtml(data.logoSrc)}" width="220" alt="${escapeHtml(storeName)}" style="display:block;width:220px;max-width:100%;height:auto;border:0;">`
+    : `<span style="font-size:27px;color:#D9A02E;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span>`;
+
+  const width = Math.floor(100 / spec.facts.length);
+  const button = spec.button?.url
+    ? `<a href="${escapeHtml(spec.button.url)}" style="display:inline-block;background:${ORANGE};color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:6px;">${escapeHtml(spec.button.label)}</a>`
     : "";
-
+  const contact = supportEmail ? `<a href="mailto:${escapeHtml(supportEmail)}" style="color:#222222;font-weight:bold;">contact us</a>` : "contact us";
   const footerLinks = [
     supportEmail ? `Questions? Reply to this email or write to <a href="mailto:${escapeHtml(supportEmail)}" style="color:#F5C46B;font-weight:bold;">${escapeHtml(supportEmail)}</a>` : "Questions? Just reply to this email.",
     shopUrl ? `<a href="${escapeHtml(shopUrl)}" style="color:#F5C46B;font-weight:bold;">Visit the shop</a>` : "",
   ]
     .filter(Boolean)
     .join("<br>");
-
-  // The logo image (a cid: attachment or a public URL); without one the wordmark is set in text.
-  const logo = data.logoSrc
-    ? `<img src="${escapeHtml(data.logoSrc)}" width="220" alt="${escapeHtml(storeName)}" style="display:block;width:220px;max-width:100%;height:auto;border:0;">`
-    : `<span style="font-size:27px;color:#D9A02E;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span>`;
 
   const html = `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${FONT_CSS}"></head>
@@ -102,54 +115,53 @@ export function buildOrderConfirmationEmail(data) {
 <table role="presentation" width="600" style="border-collapse:collapse;width:100%;max-width:600px;background:#ffffff;border:1px solid #e6e6e6;font-family:${FONT};color:#333333;">
   <tr><td style="padding:26px 32px 20px;border-bottom:4px solid ${ORANGE};">${logo}</td></tr>
   <tr><td style="padding:30px 32px 6px;">
-    <h1 style="margin:0 0 12px;font-size:30px;line-height:1.15;color:${NAVY};font-weight:bold;font-family:${HEADING_FONT};">Thanks for your order, ${escapeHtml(firstName)}.</h1>
-    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444444;">${escapeHtml(intro)}</p>
-    <table role="presentation" width="100%" style="border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;margin:0 0 22px;"><tr>
-      ${factCell("Order number", `#${orderNumber}`, 34)}${factCell("Date placed", placedAt, 33)}${factCell("Payment", paymentLabel, 33)}
-    </tr></table>
+    <h1 style="margin:0 0 12px;font-size:30px;line-height:1.15;color:${NAVY};font-weight:bold;font-family:${FONT};">${escapeHtml(spec.heading)}</h1>
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444444;">${escapeHtml(spec.intro)}</p>
+    <table role="presentation" width="100%" style="border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;margin:0 0 22px;"><tr>${spec.facts.map((fact) => factCell(fact, width)).join("")}</tr></table>
+    ${spec.detailsHtml || ""}
     ${button}
   </td></tr>
-  <tr><td style="padding:26px 32px 0;">
-    <div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 12px;">Your items</div>
-    <table role="presentation" width="100%" style="border-collapse:collapse;">${items.map(itemRow).join("")}</table>
-    <table role="presentation" width="100%" style="border-collapse:collapse;border-top:1px solid #eeeeee;font-size:13px;">
-      ${totals}
-      <tr><td style="padding:12px 0 14px;font-size:16px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">Total</td><td style="padding:12px 0 14px;text-align:right;font-size:18px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">${escapeHtml(total)}</td></tr>
-    </table>
-  </td></tr>
-  <tr><td style="padding:8px 32px 0;">${addresses}</td></tr>
-  <tr><td style="padding:26px 32px 0;"><div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 10px;">What happens next</div>${nextSteps}</td></tr>
-  <tr><td style="padding:17px 32px 30px;"><div style="padding:13px 16px;background:#F3F4F6;border-left:4px solid ${ORANGE};font-size:13px;color:#444444;line-height:1.5;"><b style="color:#222222;">Didn't place this order?</b> Please ${supportEmail ? `<a href="mailto:${escapeHtml(supportEmail)}" style="color:#222222;font-weight:bold;">contact us</a>` : "contact us"} and we'll sort it out.</div></td></tr>
+  ${spec.showItems ? itemsSection(data) : ""}
+  ${spec.showAddresses ? addressesSection(data) : ""}
+  ${spec.steps?.length ? `<tr><td style="padding:26px 32px 0;"><div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 10px;">${escapeHtml(spec.stepsTitle || "What happens next")}</div>${spec.steps.map(step).join("")}</td></tr>` : ""}
+  <tr><td style="padding:17px 32px 30px;"><div style="padding:13px 16px;background:#F3F4F6;border-left:4px solid ${ORANGE};font-size:13px;color:#444444;line-height:1.5;"><b style="color:#222222;">${escapeHtml(spec.note.lead)}</b> ${spec.note.html.replace("{contact}", contact)}</div></td></tr>
   <tr><td style="background:#243A66;padding:20px 32px;font-size:12px;line-height:1.6;color:#DCE3F0;"><div style="font-weight:bold;color:#ffffff;margin-bottom:3px;">${escapeHtml(storeName)}</div>${footerLinks}</td></tr>
 </table>
 </td></tr></table>
 </body></html>`;
 
   const text = [
-    `Thanks for your order, ${firstName}.`,
+    spec.heading,
     "",
-    intro,
+    spec.intro,
     "",
-    `Order number: #${orderNumber}`,
-    `Date placed: ${placedAt}`,
-    `Payment: ${paymentLabel}`,
-    data.viewUrl ? `View your order: ${data.viewUrl}` : "",
+    ...spec.facts.map(([label, value]) => `${label}: ${value}`),
+    spec.detailsText || "",
+    spec.button?.url ? `${spec.button.label}: ${spec.button.url}` : "",
     "",
-    "Your items",
-    ...items.map((item) => `- ${item.title} x ${item.quantity}: ${item.lineTotal}`),
-    "",
-    `Subtotal: ${amounts.subtotal}`,
-    amounts.discount ? `Discount${amounts.couponCode ? ` (${amounts.couponCode})` : ""}: -${amounts.discount}` : "",
-    amounts.shipping ? `Shipping: ${amounts.shipping}` : "",
-    amounts.tax ? `Tax: ${amounts.tax}` : "",
-    `Total: ${total}`,
-    "",
-    sameAddress ? "Shipping and billing address:" : "Shipping address:",
-    ...data.shippingAddress.filter(Boolean),
-    ...(sameAddress ? [] : ["", "Billing address:", ...data.billingAddress.filter(Boolean)]),
-    "",
-    cod ? `Please have ${total} ready in cash when your order arrives.` : "",
-    "Didn't place this order? Please contact us and we'll sort it out.",
+    ...(spec.showItems
+      ? [
+          "Your items",
+          ...data.items.map((item) => `- ${item.title} x ${item.quantity}: ${item.lineTotal}`),
+          "",
+          `Subtotal: ${data.amounts.subtotal}`,
+          data.amounts.discount ? `Discount${data.amounts.couponCode ? ` (${data.amounts.couponCode})` : ""}: -${data.amounts.discount}` : "",
+          data.amounts.shipping ? `Shipping: ${data.amounts.shipping}` : "",
+          data.amounts.tax ? `Tax: ${data.amounts.tax}` : "",
+          `Total: ${data.total}`,
+          "",
+        ]
+      : []),
+    ...(spec.showAddresses
+      ? [
+          sameAddress(data) ? "Shipping and billing address:" : "Shipping address:",
+          ...data.shippingAddress.filter(Boolean),
+          ...(sameAddress(data) ? [] : ["", "Billing address:", ...data.billingAddress.filter(Boolean)]),
+          "",
+        ]
+      : []),
+    ...(spec.steps?.length ? [spec.stepsTitle || "What happens next", ...spec.steps.map(([lead, body]) => `- ${lead} ${body}`), ""] : []),
+    `${spec.note.lead} ${spec.note.html.replace("{contact}", "contact us").replace(/<[^>]+>/g, "")}`,
     "",
     storeName,
     supportEmail ? `Questions? Reply to this email or write to ${supportEmail}` : "",
@@ -158,5 +170,128 @@ export function buildOrderConfirmationEmail(data) {
     .filter((line, index, all) => line !== "" || all[index - 1] !== "")
     .join("\n");
 
-  return { subject: `Your ${storeName} order #${orderNumber} is confirmed`, html, text };
+  return { subject: spec.subject, html, text };
+}
+
+const prepareSteps = (data) =>
+  data.processingDays > 0 ? `Your order is packed within ${data.processingDays} business day${data.processingDays === 1 ? "" : "s"}.` : "We start packing your order right away.";
+
+const NOT_YOURS = { lead: "Didn't place this order?", html: "Please {contact} and we'll sort it out." };
+
+export function buildOrderConfirmationEmail(data) {
+  const { storeName, firstName, orderNumber, placedAt, paymentLabel, cod, total } = data;
+  return render(data, {
+    subject: `Your ${storeName} order #${orderNumber} is confirmed`,
+    heading: `Thanks for your order, ${firstName}.`,
+    intro: cod
+      ? "We've received your order. You'll pay in cash when it's delivered, so there's nothing more to do now. We'll email you again when it ships."
+      : "We've received your order and your payment went through. We're getting it ready now, and we'll email you again when it ships.",
+    facts: [["Order number", `#${orderNumber}`], ["Date placed", placedAt], ["Payment", paymentLabel]],
+    button: { label: "View your order", url: data.viewUrl },
+    showItems: true,
+    showAddresses: true,
+    steps: [
+      ["We prepare it.", prepareSteps(data)],
+      ["We ship it.", "You'll get another email as soon as it's on its way."],
+      cod
+        ? ["Pay on delivery.", `Please have ${total} ready in cash when your order arrives.`]
+        : ["Track it.", data.viewUrl ? "See where your order is, from packed to delivered, in your account." : "Keep this email as your receipt."],
+    ],
+    note: NOT_YOURS,
+  });
+}
+
+// kind: "processing" | "completed" | "cancelled" | "failed". `data.paid` says whether a cancelled
+// order had already been paid for.
+export function buildOrderStatusEmail(kind, data) {
+  const { storeName, firstName, orderNumber, placedAt, shopUrl } = data;
+  const facts = (status) => [["Order number", `#${orderNumber}`], ["Date placed", placedAt], status];
+  const specs = {
+    processing: {
+      subject: `Your ${storeName} order #${orderNumber} is being processed`,
+      heading: `We're preparing your order, ${firstName}.`,
+      intro: "Your order is now being processed. We'll email you again when it's complete.",
+      facts: facts(["Status", "Processing"]),
+      button: { label: "View your order", url: data.viewUrl },
+      showItems: true,
+      showAddresses: true,
+      steps: [
+        ["We prepare it.", prepareSteps(data)],
+        ["We let you know.", "You'll get another email when your order is complete."],
+      ],
+      note: NOT_YOURS,
+    },
+    completed: {
+      subject: `Your ${storeName} order #${orderNumber} is complete`,
+      heading: `Your order is complete, ${firstName}.`,
+      intro: `Your order has been completed and is on its way to you. Thank you for shopping with ${storeName}.`,
+      facts: facts(["Status", "Completed"]),
+      button: { label: "View your order", url: data.viewUrl },
+      showItems: true,
+      showAddresses: true,
+      steps: [
+        ["Track it.", data.viewUrl ? "See your order and its details any time in your account." : "Keep this email as your record."],
+        ["Need a hand?", "Reply to this email and we'll help."],
+      ],
+      stepsTitle: "Good to know",
+      note: { lead: "Something not right?", html: "Please {contact} and we'll sort it out." },
+    },
+    cancelled: {
+      subject: `Your ${storeName} order #${orderNumber} was cancelled`,
+      heading: `Your order was cancelled, ${firstName}.`,
+      intro: data.paid
+        ? `Order #${orderNumber} has been cancelled. Since you've already paid for it, we'll be in touch about your refund.`
+        : `Order #${orderNumber} has been cancelled. You haven't been charged for it.`,
+      facts: facts(["Status", "Cancelled"]),
+      button: { label: "Visit the shop", url: shopUrl },
+      showItems: true,
+      showAddresses: false,
+      steps: null,
+      note: { lead: "Didn't ask for this?", html: "Please {contact} and we'll look into it." },
+    },
+    failed: {
+      subject: `Your payment for ${storeName} order #${orderNumber} didn't go through`,
+      heading: `Your payment didn't go through, ${firstName}.`,
+      intro: `We couldn't take payment for order #${orderNumber}, so it hasn't been placed. You haven't been charged.`,
+      facts: facts(["Payment", "Not completed"]),
+      button: { label: "Try again", url: shopUrl ? `${shopUrl}/checkout` : null },
+      showItems: true,
+      showAddresses: false,
+      stepsTitle: "What you can do",
+      steps: [
+        ["Check your card details.", "Make sure the number, expiry date and security code are right."],
+        ["Or try another way to pay.", "Use a different card, or pick another payment method at checkout."],
+      ],
+      note: { lead: "Need help?", html: "Reply to this email or {contact} and we'll look into it." },
+    },
+  };
+  if (!specs[kind]) throw new Error(`Unknown order email: ${kind}`);
+  return render(data, specs[kind]);
+}
+
+export function buildNewOrderAlertEmail(data) {
+  const { orderNumber, placedAt, paymentLabel, cod, total, customer } = data;
+  const row = (label, value) =>
+    `<tr><td style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`;
+  const detailsHtml = `<table role="presentation" style="border-collapse:collapse;font-size:13px;margin:0 0 22px;">
+    ${row("Customer", escapeHtml(customer.name))}
+    ${row("Email", `<a href="mailto:${escapeHtml(customer.email)}" style="color:#222222;">${escapeHtml(customer.email)}</a>`)}
+    ${customer.phone ? row("Phone", escapeHtml(customer.phone)) : ""}
+  </table>`;
+  return render(data, {
+    subject: `New order #${orderNumber} from ${customer.name}: ${total}`,
+    heading: `New order from ${customer.name}.`,
+    intro: cod
+      ? "A customer placed a cash on delivery order. Payment is due when it's delivered."
+      : "A customer paid for a new order by card. It's ready for you to process.",
+    facts: [["Order number", `#${orderNumber}`], ["Date placed", placedAt], ["Payment", paymentLabel], ["Total", total]],
+    detailsHtml,
+    detailsText: `Customer: ${customer.name}\nEmail: ${customer.email}${customer.phone ? `\nPhone: ${customer.phone}` : ""}`,
+    button: { label: "View order", url: data.adminUrl },
+    showItems: true,
+    showAddresses: true,
+    stepsTitle: "Next step",
+    steps: [["Review and process it.", "Open the order and mark it Processing when you start on it. The customer is emailed at each stage."]],
+    note: { lead: "Automatic alert.", html: "You're getting this because new order email alerts are on in Settings, Notifications." },
+  });
 }

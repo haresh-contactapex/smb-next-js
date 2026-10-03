@@ -13,11 +13,15 @@ CREATE TABLE IF NOT EXISTS email_settings (
     sender_email                       VARCHAR(255),
     send_order_confirmation_emails     BOOLEAN     NOT NULL DEFAULT true,
     send_shipping_notification_emails  BOOLEAN     NOT NULL DEFAULT true,
+    send_processing_order_emails       BOOLEAN     NOT NULL DEFAULT true,
+    send_cancelled_order_emails        BOOLEAN     NOT NULL DEFAULT true,
+    send_failed_order_emails           BOOLEAN     NOT NULL DEFAULT true,
     send_marketing_emails              BOOLEAN     NOT NULL DEFAULT false,
     email_footer_text                  TEXT,
     updated_at                         TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE email_settings IS 'Backs the Settings -> Email page. Singleton row (id = 1).';
+COMMENT ON COLUMN email_settings.send_shipping_notification_emails IS 'Controls the Completed order email (shown as "Send completed order emails"). The other order status emails have their own columns.';
 COMMENT ON COLUMN email_settings.smtp_port IS 'SMTP server port, 1-65535 (typically 25, 465 or 587).';
 COMMENT ON COLUMN email_settings.smtp_password IS 'Write-only from the admin UI: the API never returns it, and a blank value on save keeps the stored password. Should be stored encrypted, not plaintext.';
 

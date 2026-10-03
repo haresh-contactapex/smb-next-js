@@ -243,10 +243,31 @@ export default function EmailSettingsForm() {
               disabled={loading}
             />
             <ToggleField
-              label="Send shipping notification emails"
-              description="Notify customers by email when their order ships."
+              label="Send processing order emails"
+              description="Notify customers by email when their order moves to Processing."
+              checked={settings.sendProcessingOrderEmails}
+              onChange={(value) => setField("sendProcessingOrderEmails", value)}
+              disabled={loading}
+            />
+            <ToggleField
+              label="Send completed order emails"
+              description="Notify customers by email when their order is Completed and on its way."
               checked={settings.sendShippingNotificationEmails}
               onChange={(value) => setField("sendShippingNotificationEmails", value)}
+              disabled={loading}
+            />
+            <ToggleField
+              label="Send cancelled order emails"
+              description="Notify customers by email when their order is Cancelled."
+              checked={settings.sendCancelledOrderEmails}
+              onChange={(value) => setField("sendCancelledOrderEmails", value)}
+              disabled={loading}
+            />
+            <ToggleField
+              label="Send failed order emails"
+              description="Notify customers by email when their card payment doesn't go through."
+              checked={settings.sendFailedOrderEmails}
+              onChange={(value) => setField("sendFailedOrderEmails", value)}
               disabled={loading}
             />
             <ToggleField
