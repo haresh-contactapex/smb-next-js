@@ -6,8 +6,11 @@
 
 const NAVY = "#1F3A6B";
 const ORANGE = "#EF9822";
-const FONT = "Arial,Helvetica,sans-serif";
-const HEADING_FONT = "'Franklin Gothic Medium','Arial Narrow',Arial,sans-serif";
+// Google Sans, as on the storefront. Mail clients that load web fonts (Apple Mail, iOS Mail)
+// show it through the stylesheet link below; Gmail and Outlook ignore web fonts and fall back to Arial.
+const FONT = "'Google Sans','Google Sans Text',Arial,Helvetica,sans-serif";
+const HEADING_FONT = FONT;
+const FONT_CSS = "https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&display=swap";
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -43,7 +46,7 @@ function step(lead, text) {
   return `<p style="margin:0 0 9px;font-size:13px;line-height:1.55;"><b style="color:#222222;">${escapeHtml(lead)}</b> <span style="color:#555555;">${escapeHtml(text)}</span></p>`;
 }
 
-// data: { storeName, supportEmail, shopUrl, firstName, orderNumber, placedAt, paymentLabel, cod,
+// data: { storeName, supportEmail, shopUrl, logoSrc, firstName, orderNumber, placedAt, paymentLabel, cod,
 //         total, items: [{ title, quantity, lineTotal, imageUrl }], amounts: { subtotal, discount,
 //         couponCode, shipping, tax }, shippingAddress: string[], billingAddress: string[],
 //         viewUrl, processingDays }
@@ -87,11 +90,17 @@ export function buildOrderConfirmationEmail(data) {
     .filter(Boolean)
     .join("<br>");
 
+  // The logo image (a cid: attachment or a public URL); without one the wordmark is set in text.
+  const logo = data.logoSrc
+    ? `<img src="${escapeHtml(data.logoSrc)}" width="220" alt="${escapeHtml(storeName)}" style="display:block;width:220px;max-width:100%;height:auto;border:0;">`
+    : `<span style="font-size:27px;color:#D9A02E;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span>`;
+
   const html = `<!doctype html>
-<html><body style="margin:0;padding:0;background:#f3f3f3;">
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${FONT_CSS}"></head>
+<body style="margin:0;padding:0;background:#f3f3f3;font-family:${FONT};">
 <table role="presentation" width="100%" style="border-collapse:collapse;background:#f3f3f3;"><tr><td align="center" style="padding:20px 10px;">
 <table role="presentation" width="600" style="border-collapse:collapse;width:100%;max-width:600px;background:#ffffff;border:1px solid #e6e6e6;font-family:${FONT};color:#333333;">
-  <tr><td style="padding:26px 32px 20px;border-bottom:4px solid ${ORANGE};"><span style="font-size:27px;color:#D9A02E;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span></td></tr>
+  <tr><td style="padding:26px 32px 20px;border-bottom:4px solid ${ORANGE};">${logo}</td></tr>
   <tr><td style="padding:30px 32px 6px;">
     <h1 style="margin:0 0 12px;font-size:30px;line-height:1.15;color:${NAVY};font-weight:bold;font-family:${HEADING_FONT};">Thanks for your order, ${escapeHtml(firstName)}.</h1>
     <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444444;">${escapeHtml(intro)}</p>

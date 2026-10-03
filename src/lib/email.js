@@ -1,6 +1,11 @@
 import nodemailer from "nodemailer";
 import { getEmailTransportSettings } from "./emailSettings";
+import { readFile } from "fs/promises";
+import path from "path";
 import { buildOrderConfirmationEmail } from "./orderEmail";
+import { isPublicOrigin } from "./siteUrl";
+
+const LOGO_CID = "shopmyband-logo";
 
 // SMTP details come from Settings -> Email (the email_settings table) once
 // they have been saved there; until then the SMTP_* env vars in .env.local
@@ -111,7 +116,7 @@ function withFooter({ html, text }, footerText) {
 // (e.g. forgot-password) don't have to branch their response on email
 // delivery and risk leaking account-existence info through status codes.
 // `replyTo` is optional: an address, or { name, address }.
-export async function sendEmail({ to, subject, html, text, replyTo }) {
+export async function sendEmail({ to, subject, html, text, replyTo, attachments }) {
   const config = await readSmtpConfig();
   if (!isCompleteConfig(config)) {
     console.error("sendEmail: SMTP is not configured in Settings -> Email or SMTP_* env vars — email not sent.");
@@ -120,7 +125,7 @@ export async function sendEmail({ to, subject, html, text, replyTo }) {
 
   try {
     const body = withFooter({ html, text }, config.footerText);
-    await getTransporter(config).sendMail({ from: config.from, to, subject, replyTo, ...body });
+    await getTransporter(config).sendMail({ from: config.from, to, subject, replyTo, attachments, ...body });
     return true;
   } catch (error) {
     console.error("sendEmail: failed to send", error);
@@ -264,6 +269,20 @@ export async function sendProductQuestionConfirmationEmail({ to, storeName, ques
 // from the sender name and address saved in Settings -> Email, like every other email.
 // `data` is described in buildOrderConfirmationEmail (orderEmail.js).
 export async function sendOrderConfirmationEmail({ to, ...data }) {
-  const { subject, html, text } = buildOrderConfirmationEmail(data);
-  return sendEmail({ to, subject, html, text });
+  // The logo travels inside the email (an inline attachment the HTML points at with cid:), so it
+  // shows wherever the email is opened, including a store that isn't public yet. If the file
+  // can't be read here (some hosts don't ship /public with server code) the public address of
+  // the same file is used when there is one, else the email shows the wordmark as text.
+  let attachments;
+  let logoSrc = isPublicOrigin(data.shopUrl) ? `${data.shopUrl}/storefront/logo.png` : null;
+  try {
+    const content = await readFile(path.join(process.cwd(), "public", "storefront", "logo.png"));
+    attachments = [{ filename: "logo.png", content, cid: LOGO_CID, contentType: "image/png", contentDisposition: "inline" }];
+    logoSrc = `cid:${LOGO_CID}`;
+  } catch {
+    // keep the URL (or nothing)
+  }
+
+  const { subject, html, text } = buildOrderConfirmationEmail({ ...data, logoSrc });
+  return sendEmail({ to, subject, html, text, attachments });
 }

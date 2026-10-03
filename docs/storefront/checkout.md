@@ -314,6 +314,11 @@ welcome email) and sent with `sendOrderConfirmationEmail()` (`src/lib/email.js`)
   happens next, and a "View your order" button to `/account/orders/<number>` for signed-in
   customers only (guests have no account). Product photos are included only when the store's
   address is public (`SITE_URL` in `.env.local`, else the request's host; never localhost).
+- **Logo and font:** the header is the storefront logo (`public/storefront/logo.png`), attached
+  to the email as an inline `cid:` image so it shows even before the store is public; if the file
+  can't be read it falls back to the public URL, then to a text wordmark. The font is Google
+  Sans through a stylesheet link: Apple Mail and iOS Mail show it, Gmail and Outlook ignore web
+  fonts and show Arial.
 - A failure is logged ("Order confirmation email failed") and never fails the order or payment.
 
 ## Not built yet
