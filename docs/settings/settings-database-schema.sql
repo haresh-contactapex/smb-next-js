@@ -281,6 +281,7 @@ CREATE TABLE email_settings (
     sender_name                        VARCHAR(150),
     sender_email                       VARCHAR(255),
     send_order_confirmation_emails     BOOLEAN     NOT NULL DEFAULT true,
+    send_new_order_emails              BOOLEAN     NOT NULL DEFAULT true,
     send_shipping_notification_emails  BOOLEAN     NOT NULL DEFAULT true,
     send_processing_order_emails       BOOLEAN     NOT NULL DEFAULT true,
     send_cancelled_order_emails        BOOLEAN     NOT NULL DEFAULT true,
@@ -297,7 +298,6 @@ COMMENT ON COLUMN email_settings.smtp_password IS 'Write-only from the admin UI:
 -- ----------------------------------------------------------------------------
 CREATE TABLE notifications_settings (
     id                           SMALLINT PRIMARY KEY CHECK (id = 1),
-    new_order_email_alert        BOOLEAN     NOT NULL DEFAULT true,
     low_stock_alert              BOOLEAN     NOT NULL DEFAULT true,
     new_customer_signup_alert    BOOLEAN     NOT NULL DEFAULT false,
     notification_recipient_email VARCHAR(255) NOT NULL DEFAULT 'admin@shopmyband.com',

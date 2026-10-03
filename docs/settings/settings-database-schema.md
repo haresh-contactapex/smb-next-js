@@ -268,6 +268,7 @@ form the "From" address, and `email_footer_text` is appended to every email
 | `sender_name`                          | `VARCHAR(150)` | NULL                             |       |
 | `sender_email`                         | `VARCHAR(255)` | NULL                             |       |
 | `send_order_confirmation_emails`       | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
+| `send_new_order_emails`                | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | New order email to the store (the General store email); `npm run db:migrate:email-order-status` adds it to an existing table |
 | `send_shipping_notification_emails`    | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | Controls the Completed order email ("Send completed order emails") |
 | `send_processing_order_emails`         | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | Processing order email (`npm run db:migrate:email-order-status` adds it to an existing table) |
 | `send_cancelled_order_emails`          | `BOOLEAN`      | NOT NULL, DEFAULT `true`         | Cancelled order email |
@@ -283,7 +284,6 @@ Backs the Settings → Notifications page.
 | Column                        | Type           | Constraints                | Notes |
 | -------------------------------- | -------------- | ------------------------------- | ----- |
 | `id`                              | `SMALLINT`     | PK, CHECK (`id = 1`)             |       |
-| `new_order_email_alert`          | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
 | `low_stock_alert`                | `BOOLEAN`      | NOT NULL, DEFAULT `true`         |       |
 | `new_customer_signup_alert`      | `BOOLEAN`      | NOT NULL, DEFAULT `false`        |       |
 | `notification_recipient_email`   | `VARCHAR(255)` | NOT NULL, DEFAULT `'admin@shopmyband.com'` | Where the alerts above are sent |

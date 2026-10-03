@@ -292,6 +292,6 @@ export function buildNewOrderAlertEmail(data) {
     showAddresses: true,
     stepsTitle: "Next step",
     steps: [["Review and process it.", "Open the order and mark it Processing when you start on it. The customer is emailed at each stage."]],
-    note: { lead: "Automatic alert.", html: "You're getting this because new order email alerts are on in Settings, Notifications." },
+    note: { lead: "Automatic alert.", html: "You're getting this because new order emails are on in Settings, Email." },
   });
 }

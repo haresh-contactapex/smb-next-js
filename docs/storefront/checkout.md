@@ -299,11 +299,13 @@ Choosing it (when switched on in *Settings → Payment*) shows a note and a work
 Six emails, all in one design (`src/lib/orderEmail.js`, sent by `src/lib/email.js`, triggered by
 `src/lib/orderEmails.js`). Each is best-effort: a problem is logged and never fails the order, the
 payment sync or the status change. All go out from the sender name and email in *Settings → Email*.
+Building and sending one takes several seconds, so it runs after the response has gone out (Next's
+`after()` in `orderEmails.js`): the customer's confirmation page and the admin's Save don't wait for it.
 
 | Email | To | When | Switch |
 | --- | --- | --- | --- |
 | Order confirmation | customer | COD order saved; card order moves into Paid | *Settings → Email → order confirmation emails* |
-| New order | store | same moments | *Settings → Notifications → new order email alert*; sent to its recipient, else the *General* store email |
+| New order | store | same moments | *Settings → Email → new order emails*; sent to the *Settings → General* Store Email |
 | Processing order | customer | staff set the status to Processing on Edit Order (`PATCH /api/orders/[id]`) | *Settings → Email → processing order emails* |
 | Completed order | customer | staff set the status to Completed | *Settings → Email → completed order emails* (stored in the older `send_shipping_notification_emails` column) |
 | Cancelled order | customer | staff set the status to Cancelled | *Settings → Email → cancelled order emails* |

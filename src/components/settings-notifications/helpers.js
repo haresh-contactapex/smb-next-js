@@ -4,7 +4,6 @@ export const MIN_TOAST_TIMEOUT_SECONDS = 1;
 export const MAX_TOAST_TIMEOUT_SECONDS = 30;
 
 export const DEFAULT_NOTIFICATIONS_SETTINGS = {
-  newOrderEmailAlert: true,
   lowStockAlert: true,
   newCustomerSignupAlert: false,
   notificationRecipientEmail: "",
@@ -22,7 +21,6 @@ export function isValidToastTimeoutSeconds(value) {
 export function toFormSettings(data) {
   if (!data) return DEFAULT_NOTIFICATIONS_SETTINGS;
   return {
-    newOrderEmailAlert: Boolean(data.newOrderEmailAlert),
     lowStockAlert: Boolean(data.lowStockAlert),
     newCustomerSignupAlert: Boolean(data.newCustomerSignupAlert),
     notificationRecipientEmail: data.notificationRecipientEmail || "",
@@ -34,7 +32,6 @@ export function toFormSettings(data) {
 
 export function toSavePayload(settings) {
   return {
-    newOrderEmailAlert: settings.newOrderEmailAlert,
     lowStockAlert: settings.lowStockAlert,
     newCustomerSignupAlert: settings.newCustomerSignupAlert,
     notificationRecipientEmail: settings.notificationRecipientEmail,

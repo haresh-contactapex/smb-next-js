@@ -243,6 +243,13 @@ export default function EmailSettingsForm() {
               disabled={loading}
             />
             <ToggleField
+              label="Send new order emails to the store"
+              description="Email the store (the Store Email in Settings, General) whenever a new order is placed or paid."
+              checked={settings.sendNewOrderEmails}
+              onChange={(value) => setField("sendNewOrderEmails", value)}
+              disabled={loading}
+            />
+            <ToggleField
               label="Send processing order emails"
               description="Notify customers by email when their order moves to Processing."
               checked={settings.sendProcessingOrderEmails}

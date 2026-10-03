@@ -5,8 +5,8 @@ import { getOrderConfirmation } from "./orders";
 import { getGeneralSettings } from "./generalSettings";
 import { getShippingSettings } from "./shippingSettings";
 import { getEmailSettings } from "./emailSettings";
-import { getNotificationsSettings } from "./notificationsSettings";
 import { isEmailConfigured, sendNewOrderAlertEmail, sendOrderConfirmationEmail, sendOrderStatusEmail as sendStatusEmail } from "./email";
+import { after } from "next/server";
 import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 
 // When each order email goes out, and what fills it from the order. The templates are in
@@ -21,7 +21,22 @@ import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 //                           or its card payment failed
 //                           a separate switch for each, in Settings -> Email
 //   sendNewOrderAlert       the store, when a new order arrives
-//                           Settings -> Notifications -> new order email alert, to its recipient
+//                           Settings -> Email -> new order emails, to the General store email
+
+// Building and sending an email takes several seconds (a dozen database reads, then SMTP), so it
+// runs after the response has gone out (Next's after()): the customer's confirmation page and the
+// admin's Save don't wait for it, and a serverless host keeps the function alive until it finishes.
+// The store's address is read from the request first, because request headers can't be read once
+// the response is done. Outside a request (a script) there is no after(), so it just runs inline.
+async function later(deliver) {
+  const origin = await getSiteOrigin();
+  try {
+    after(() => deliver(origin));
+    return;
+  } catch {
+    await deliver(origin);
+  }
+}
 
 const addressLines = (address) =>
   address
@@ -32,7 +47,7 @@ const addressLines = (address) =>
 const orNull = (read) => read().catch(() => null);
 
 // Everything the templates share, or null (with a log line) when the order can't be emailed about.
-async function loadOrderEmail(orderId, { needsCustomerEmail = true } = {}) {
+async function loadOrderEmail(orderId, origin, { needsCustomerEmail = true } = {}) {
   const [order] = await sql`
     SELECT o.order_number, o.currency, o.status, o.payment_status, c.is_guest
     FROM orders o LEFT JOIN customers c ON c.id = o.customer_id
@@ -45,12 +60,7 @@ async function loadOrderEmail(orderId, { needsCustomerEmail = true } = {}) {
     return null;
   }
 
-  const [general, shipping, moneyFormat, origin] = await Promise.all([
-    getGeneralSettings(),
-    orNull(getShippingSettings),
-    loadMoneyFormat(),
-    getSiteOrigin(),
-  ]);
+  const [general, shipping, moneyFormat] = await Promise.all([getGeneralSettings(), orNull(getShippingSettings), loadMoneyFormat()]);
   const money = (amount) => formatCurrency(amount, order.currency, moneyFormat);
   const { amounts } = details;
   // A photo is only worth including when the customer's mail client can reach it.
@@ -60,7 +70,6 @@ async function loadOrderEmail(orderId, { needsCustomerEmail = true } = {}) {
     order,
     details,
     general,
-    origin,
     data: {
       storeName: general.storeName,
       shopUrl: origin,
@@ -84,10 +93,10 @@ async function loadOrderEmail(orderId, { needsCustomerEmail = true } = {}) {
 
 // The email to the customer: their name, a link to the order in their account (a guest has no
 // account), and the address people can write to, which is the sender address in Settings -> Email.
-async function customerEmail(orderId, emailSettings) {
-  const loaded = await loadOrderEmail(orderId);
+async function customerEmail(orderId, origin, emailSettings) {
+  const loaded = await loadOrderEmail(orderId, origin);
   if (!loaded) return null;
-  const { order, details, general, origin, data } = loaded;
+  const { order, details, general, data } = loaded;
   return {
     order,
     to: details.customer.email,
@@ -107,12 +116,16 @@ async function ready(label, orderId) {
 }
 
 // `paymentLabel` is how the customer paid ("Visa ending 4242", "Cash on delivery").
-export async function sendOrderConfirmation(orderId, { cod = false, paymentLabel }) {
+export function sendOrderConfirmation(orderId, { cod = false, paymentLabel }) {
+  return later((origin) => deliverOrderConfirmation(orderId, origin, { cod, paymentLabel }));
+}
+
+async function deliverOrderConfirmation(orderId, origin, { cod, paymentLabel }) {
   try {
     const emailSettings = await orNull(getEmailSettings);
     if (emailSettings && !emailSettings.sendOrderConfirmationEmails) return;
     if (!(await ready("Order confirmation email", orderId))) return;
-    const email = await customerEmail(orderId, emailSettings);
+    const email = await customerEmail(orderId, origin, emailSettings);
     if (email) await sendOrderConfirmationEmail({ to: email.to, ...email.data, paymentLabel, cod });
   } catch (error) {
     console.error("Order confirmation email failed", error.message);
@@ -129,34 +142,41 @@ const STATUS_EMAIL_SWITCH = {
 };
 
 // kind: "processing" | "completed" | "cancelled" | "failed"
-export async function sendOrderStatusEmail(orderId, kind) {
+export function sendOrderStatusEmail(orderId, kind) {
+  return later((origin) => deliverOrderStatusEmail(orderId, origin, kind));
+}
+
+async function deliverOrderStatusEmail(orderId, origin, kind) {
   try {
     const emailSettings = await orNull(getEmailSettings);
     if (emailSettings && !emailSettings[STATUS_EMAIL_SWITCH[kind]]) return;
     if (!(await ready(`Order ${kind} email`, orderId))) return;
-    const email = await customerEmail(orderId, emailSettings);
+    const email = await customerEmail(orderId, origin, emailSettings);
     if (email) await sendStatusEmail(kind, { to: email.to, ...email.data, paid: email.order.payment_status === "Paid" });
   } catch (error) {
     console.error(`Order ${kind} email failed`, error.message);
   }
 }
 
-export async function sendNewOrderAlert(orderId, { cod = false, paymentLabel }) {
+export function sendNewOrderAlert(orderId, { cod = false, paymentLabel }) {
+  return later((origin) => deliverNewOrderAlert(orderId, origin, { cod, paymentLabel }));
+}
+
+async function deliverNewOrderAlert(orderId, origin, { cod, paymentLabel }) {
   try {
-    const notifications = await orNull(getNotificationsSettings);
-    if (notifications && !notifications.newOrderEmailAlert) return;
+    const emailSettings = await orNull(getEmailSettings);
+    if (emailSettings && !emailSettings.sendNewOrderEmails) return;
     if (!(await ready("New order alert", orderId))) return;
 
-    const loaded = await loadOrderEmail(orderId, { needsCustomerEmail: false });
+    const loaded = await loadOrderEmail(orderId, origin, { needsCustomerEmail: false });
     if (!loaded) return;
-    const { details, general, origin, data } = loaded;
-    const to = notifications?.notificationRecipientEmail || general.storeEmail;
+    const { details, general, data } = loaded;
+    const to = general.storeEmail;
     if (!to) {
-      console.error(`New order alert not sent for order ${data.orderNumber}: set a recipient in Settings -> Notifications or a store email in Settings -> General.`);
+      console.error(`New order alert not sent for order ${data.orderNumber}: set the Store Email in Settings -> General.`);
       return;
     }
 
-    const emailSettings = await orNull(getEmailSettings);
     await sendNewOrderAlertEmail({
       to,
       ...data,

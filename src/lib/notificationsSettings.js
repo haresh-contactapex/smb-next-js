@@ -2,7 +2,6 @@ import { sql } from "./db";
 
 function toPublicSettings(row) {
   return {
-    newOrderEmailAlert: row.new_order_email_alert,
     lowStockAlert: row.low_stock_alert,
     newCustomerSignupAlert: row.new_customer_signup_alert,
     notificationRecipientEmail: row.notification_recipient_email || "",
@@ -20,7 +19,6 @@ export async function getNotificationsSettings() {
 export async function updateNotificationsSettings(settings) {
   const [row] = await sql`
     UPDATE notifications_settings SET
-      new_order_email_alert = ${settings.newOrderEmailAlert},
       low_stock_alert = ${settings.lowStockAlert},
       new_customer_signup_alert = ${settings.newCustomerSignupAlert},
       notification_recipient_email = ${settings.notificationRecipientEmail},

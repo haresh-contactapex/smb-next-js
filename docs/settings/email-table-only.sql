@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS email_settings (
     sender_name                        VARCHAR(150),
     sender_email                       VARCHAR(255),
     send_order_confirmation_emails     BOOLEAN     NOT NULL DEFAULT true,
+    send_new_order_emails              BOOLEAN     NOT NULL DEFAULT true,
     send_shipping_notification_emails  BOOLEAN     NOT NULL DEFAULT true,
     send_processing_order_emails       BOOLEAN     NOT NULL DEFAULT true,
     send_cancelled_order_emails        BOOLEAN     NOT NULL DEFAULT true,

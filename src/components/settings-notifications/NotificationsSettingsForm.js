@@ -125,13 +125,6 @@ export default function NotificationsSettingsForm() {
         <div className="lg:col-span-2 space-y-6">
           <SectionCard title="Admin Alerts">
             <ToggleField
-              label="New order email alert"
-              description="Email admins whenever a new order is placed."
-              checked={settings.newOrderEmailAlert}
-              onChange={(value) => setField("newOrderEmailAlert", value)}
-              disabled={loading}
-            />
-            <ToggleField
               label="Low stock alert"
               description="Email admins when a product's inventory falls below its threshold."
               checked={settings.lowStockAlert}

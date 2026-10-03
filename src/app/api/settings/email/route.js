@@ -35,6 +35,7 @@ export async function PUT(request) {
       senderEmail: String(payload.senderEmail || "").trim(),
       sendOrderConfirmationEmails: Boolean(payload.sendOrderConfirmationEmails),
       sendShippingNotificationEmails: Boolean(payload.sendShippingNotificationEmails),
+      sendNewOrderEmails: Boolean(payload.sendNewOrderEmails),
       sendProcessingOrderEmails: Boolean(payload.sendProcessingOrderEmails),
       sendCancelledOrderEmails: Boolean(payload.sendCancelledOrderEmails),
       sendFailedOrderEmails: Boolean(payload.sendFailedOrderEmails),

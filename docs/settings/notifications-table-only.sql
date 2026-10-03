@@ -5,7 +5,6 @@
 
 CREATE TABLE IF NOT EXISTS notifications_settings (
     id                           SMALLINT PRIMARY KEY CHECK (id = 1),
-    new_order_email_alert        BOOLEAN     NOT NULL DEFAULT true,
     low_stock_alert              BOOLEAN     NOT NULL DEFAULT true,
     new_customer_signup_alert    BOOLEAN     NOT NULL DEFAULT false,
     notification_recipient_email VARCHAR(255) NOT NULL DEFAULT 'admin@shopmyband.com',

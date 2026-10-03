@@ -30,7 +30,6 @@ export async function PUT(request) {
     const payload = await request.json();
 
     const settings = {
-      newOrderEmailAlert: Boolean(payload.newOrderEmailAlert),
       lowStockAlert: Boolean(payload.lowStockAlert),
       newCustomerSignupAlert: Boolean(payload.newCustomerSignupAlert),
       notificationRecipientEmail: String(payload.notificationRecipientEmail || "").trim(),
