@@ -6,18 +6,16 @@ import StoreIcon from "../storefront/icons";
 import { requestJson } from "../storefront/cart/cartApi";
 import { useCart } from "../storefront/cart/CartProvider";
 import { lineKey } from "../storefront/cart/cartHelpers";
-import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { NoticeRegion, useNotice } from "./Notice";
 import { BTN_DANGER, BTN_DARK, BTN_OUTLINE } from "./accountStyles";
 
 // The two things a customer can do with an order: put its items back in the
-// cart ("Order again") and cancel it while it is Pending or Processing (a card payment
-// is refunded to the card: `refundAmount` is what, 0 when nothing was paid).
+// cart ("Order again") and cancel it while it is Pending or Processing. Nothing is refunded
+// automatically: for a paid order (`awaitingRefund`) the store is emailed and refunds it by hand.
 // Both are decided by the server (canCancel / hasItems come from it and the API
 // re-checks), so a stale page can't do what it shouldn't.
-export default function OrderActions({ orderNumber, canCancel, refundAmount = 0, currency, hasItems }) {
+export default function OrderActions({ orderNumber, canCancel, awaitingRefund = false, hasItems }) {
   const router = useRouter();
-  const { formatMoney } = useGeneralSettings();
   const { addItem, setQuantity } = useCart();
   const [notice, notify] = useNotice();
   const [skipped, setSkipped] = useState([]);
@@ -61,10 +59,9 @@ export default function OrderActions({ orderNumber, canCancel, refundAmount = 0,
 
   async function cancel() {
     if (busyRef.current) return;
-    const question =
-      refundAmount > 0
-        ? `Cancel order #${orderNumber}? Your payment of ${formatMoney(refundAmount, currency || undefined)} will be refunded to your original payment method. This can't be undone.`
-        : `Cancel order #${orderNumber}? This can't be undone.`;
+    const question = awaitingRefund
+      ? `Cancel order #${orderNumber}? You've already paid for it, so we'll refund your payment and be in touch to confirm. This can't be undone.`
+      : `Cancel order #${orderNumber}? This can't be undone.`;
     if (!window.confirm(question)) return;
     busyRef.current = true;
     setBusy("cancel");
@@ -77,7 +74,7 @@ export default function OrderActions({ orderNumber, canCancel, refundAmount = 0,
       router.refresh(); // the order may have moved on since this page was loaded
       return;
     }
-    notify(refundAmount > 0 ? "Your order was cancelled and your payment has been refunded" : "Your order was cancelled", "success");
+    notify(awaitingRefund ? "Your order was cancelled. We'll be in touch about your refund" : "Your order was cancelled", "success");
     router.refresh();
   }
 

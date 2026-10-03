@@ -19,7 +19,7 @@ export default function OrderTimeline({ order }) {
             {order.paymentStatus === "Refunded"
               ? "Your payment has been refunded to your original payment method. It can take 5 to 10 business days to appear on your statement."
               : order.paymentStatus === "Paid"
-                ? "If you were charged, the store will be in touch about your refund."
+                ? "You paid for this order, so the store will refund your payment to your original payment method and be in touch to confirm."
                 : "You haven't been charged for this order."}
           </p>
         </div>

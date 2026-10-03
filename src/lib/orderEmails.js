@@ -5,7 +5,7 @@ import { getOrderConfirmation } from "./orders";
 import { getGeneralSettings } from "./generalSettings";
 import { getShippingSettings } from "./shippingSettings";
 import { getEmailSettings } from "./emailSettings";
-import { isEmailConfigured, sendNewOrderAlertEmail, sendOrderConfirmationEmail, sendOrderStatusEmail as sendStatusEmail } from "./email";
+import { isEmailConfigured, sendNewOrderAlertEmail, sendOrderConfirmationEmail, sendOrderStatusEmail as sendStatusEmail, sendRefundRequestAlertEmail } from "./email";
 import { after } from "next/server";
 import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 
@@ -22,6 +22,8 @@ import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 //                           a separate switch for each, in Settings -> Email
 //   sendNewOrderAlert       the store, when a new order arrives
 //                           Settings -> Email -> new order emails, to the General store email
+//   sendRefundRequestAlert  the store, when a customer cancels a paid order: it refunds it by hand
+//                           (always sent, it is something to act on), to the General store email
 
 // Building and sending an email takes several seconds (a dozen database reads, then SMTP), so it
 // runs after the response has gone out (Next's after()): the customer's confirmation page and the
@@ -188,5 +190,44 @@ async function deliverNewOrderAlert(orderId, origin, { cod, paymentLabel }) {
     });
   } catch (error) {
     console.error("New order alert failed", error.message);
+  }
+}
+
+const PROVIDER_LABELS = { stripe: "Card (Stripe)", paypal: "PayPal", razorpay: "Razorpay", cod: "Cash on delivery" };
+
+export function sendRefundRequestAlert(orderId) {
+  return later((origin) => deliverRefundRequestAlert(orderId, origin));
+}
+
+async function deliverRefundRequestAlert(orderId, origin) {
+  try {
+    if (!(await ready("Refund request alert", orderId))) return;
+    const loaded = await loadOrderEmail(orderId, origin, { needsCustomerEmail: false });
+    if (!loaded) return;
+    const { details, general, data } = loaded;
+    const to = general.storeEmail;
+    if (!to) {
+      console.error(`Refund request alert not sent for order ${data.orderNumber}: set the Store Email in Settings -> General.`);
+      return;
+    }
+
+    // The payment that was taken, so the store can find it in the gateway.
+    const [payment] = await sql`
+      SELECT provider, provider_reference FROM payments
+      WHERE order_id = ${orderId} AND status = 'succeeded' ORDER BY created_at DESC LIMIT 1
+    `.catch(() => []);
+    const emailSettings = await orNull(getEmailSettings);
+
+    await sendRefundRequestAlertEmail({
+      to,
+      ...data,
+      supportEmail: emailSettings?.senderEmail || general.storeEmail || "",
+      paymentLabel: payment ? PROVIDER_LABELS[payment.provider] || payment.provider : "Paid (no payment record)",
+      paymentReference: payment?.provider_reference || "",
+      customer: { name: details.customer.name, email: details.customer.email, phone: details.customer.phone },
+      adminUrl: origin ? `${origin}/admin/edit-order/${orderId}` : null,
+    });
+  } catch (error) {
+    console.error("Refund request alert failed", error.message);
   }
 }

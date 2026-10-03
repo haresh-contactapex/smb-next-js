@@ -7,12 +7,14 @@
 //   buildOrderConfirmationEmail(data)      customer: the order was placed / paid
 //   buildOrderStatusEmail(kind, data)      customer: processing | completed | cancelled | failed
 //   buildNewOrderAlertEmail(data)          store: a new order arrived
+//   buildRefundRequestAlertEmail(data)     store: a customer cancelled a paid order, refund it by hand
 //
 // Shared `data`: { storeName, supportEmail, shopUrl, logoSrc, orderNumber, placedAt, total,
 //   items: [{ title, quantity, lineTotal, imageUrl }], amounts: { subtotal, discount, couponCode,
 //   shipping, tax }, shippingAddress: string[], billingAddress: string[], viewUrl }.
 // Customer emails add { firstName, paymentLabel, cod, processingDays, paid }; the store alert adds
-// { customer: { name, email, phone }, paymentLabel, cod, adminUrl }.
+// { customer: { name, email, phone }, paymentLabel, cod, adminUrl }; the refund alert adds
+// paymentReference (the gateway's payment id, to find the payment there).
 
 const NAVY = "#1F3A6B";
 const ORANGE = "#EF9822";
@@ -202,7 +204,8 @@ export function buildOrderConfirmationEmail(data) {
 }
 
 // kind: "processing" | "completed" | "cancelled" | "failed". For a cancelled order `data.paid` says it had
-// been paid for (the store will arrange the refund) and `data.refunded` that it has already been refunded.
+// been paid for (the store refunds it by hand, see buildRefundRequestAlertEmail) and `data.refunded` that it
+// has already been refunded.
 export function buildOrderStatusEmail(kind, data) {
   const { storeName, firstName, orderNumber, placedAt, shopUrl } = data;
   const facts = (status) => [["Order number", `#${orderNumber}`], ["Date placed", placedAt], status];
@@ -242,7 +245,7 @@ export function buildOrderStatusEmail(kind, data) {
       intro: data.refunded
         ? `Order #${orderNumber} has been cancelled and your payment of ${data.total} has been refunded to your original payment method. It can take 5 to 10 business days to appear on your statement.`
         : data.paid
-          ? `Order #${orderNumber} has been cancelled. Since you've already paid for it, we'll be in touch about your refund.`
+          ? `Order #${orderNumber} has been cancelled. Since you've already paid for it, we'll refund your payment of ${data.total} to your original payment method and be in touch to confirm.`
           : `Order #${orderNumber} has been cancelled. You haven't been charged for it.`,
       facts: facts(["Status", "Cancelled"]),
       button: { label: "Visit the shop", url: shopUrl },
@@ -295,5 +298,36 @@ export function buildNewOrderAlertEmail(data) {
     stepsTitle: "Next step",
     steps: [["Review and process it.", "Open the order and mark it Processing when you start on it. The customer is emailed at each stage."]],
     note: { lead: "Automatic alert.", html: "You're getting this because new order emails are on in Settings, Email." },
+  });
+}
+
+// To the store when a customer cancels an order they had paid for. Nothing is refunded by the site:
+// the store refunds it through the payment gateway, then marks the order Refunded in the admin.
+export function buildRefundRequestAlertEmail(data) {
+  const { orderNumber, placedAt, paymentLabel, paymentReference, total, customer } = data;
+  const row = (label, value) =>
+    `<tr><td style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`;
+  const detailsHtml = `<table role="presentation" style="border-collapse:collapse;font-size:13px;margin:0 0 22px;">
+    ${row("Customer", escapeHtml(customer.name))}
+    ${row("Email", `<a href="mailto:${escapeHtml(customer.email)}" style="color:#222222;">${escapeHtml(customer.email)}</a>`)}
+    ${customer.phone ? row("Phone", escapeHtml(customer.phone)) : ""}
+    ${paymentReference ? row("Payment ID", escapeHtml(paymentReference)) : ""}
+  </table>`;
+  return render(data, {
+    subject: `Refund needed: order #${orderNumber} cancelled by ${customer.name} (${total})`,
+    heading: `Refund needed for order #${orderNumber}.`,
+    intro: `${customer.name} cancelled a paid order from their account. The site has not refunded anything: please refund ${total} through the payment gateway.`,
+    facts: [["Order number", `#${orderNumber}`], ["Date placed", placedAt], ["Paid with", paymentLabel], ["Refund", total]],
+    detailsHtml,
+    detailsText: `Customer: ${customer.name}\nEmail: ${customer.email}${customer.phone ? `\nPhone: ${customer.phone}` : ""}${paymentReference ? `\nPayment ID: ${paymentReference}` : ""}`,
+    button: { label: "View order", url: data.adminUrl },
+    showItems: true,
+    showAddresses: false,
+    stepsTitle: "Next steps",
+    steps: [
+      ["Refund the payment.", "Do it in the payment gateway (for a card payment, the Stripe dashboard), for the full amount."],
+      ["Mark it Refunded.", "Open the order and set its payment status to Refunded so your reports are right."],
+    ],
+    note: { lead: "Automatic alert.", html: "You're getting this because a customer cancelled a paid order. The customer has been told you'll refund their payment." },
   });
 }

@@ -57,19 +57,21 @@ fails shows its own notice instead of failing the page.
   line whose product is gone, whose color/size no longer exists, or that is out of
   stock is skipped with a reason shown to the customer.
 - **Cancel:** an order that is `Pending` or `Processing` and is unpaid (cash on delivery, or a
-  card payment that never went through) or **paid by card**. A completed, already cancelled or
-  refunded order, or one paid some other way, gets a "contact us" message. `cancelCustomerOrder()`
-  takes the cancellation first with one conditional `UPDATE` (no read-then-write race, so the
-  refund is only ever asked for once), then:
-  - a **paid card order** is refunded in full to the card through Stripe (`createRefund()`), and the
-    order becomes `Cancelled` / `Refunded` (payment row `refunded`). If Stripe refuses, the order is
-    put back exactly as it was and the customer is told nothing was cancelled. The cancel button's
-    confirm text names the amount;
+  card payment that never went through) or **paid**. A completed, already cancelled or refunded
+  order gets a "contact us" message. `cancelCustomerOrder()` takes the cancellation with one
+  conditional `UPDATE` (no read-then-write race, so it, and the store's refund email, only happen
+  once), then:
+  - a **paid order** is cancelled but **not refunded by the site**: it stays `Paid`, and the store is
+    emailed ("Refund needed", `sendRefundRequestAlert()`, to the *Settings → General* Store Email,
+    always sent when SMTP is set up) with the customer, amount and the gateway's payment id. Staff
+    refund it by hand in the payment gateway (e.g. the Stripe Dashboard), then set the order's
+    payment status to **Refunded** on Edit Order. The confirm text, the cancelled email and the order
+    page tell the customer the store will refund their payment and be in touch;
   - an **unpaid card order** also closes its open Stripe payment, so it can't be paid afterwards.
-  The store is told through the admin bell (`order.cancelled`, severity warning, mentioning the
-  refund) and the customer gets the "cancelled" order email (refund wording when refunded;
-  *Settings → Email → cancelled order emails*). Cancelling from the admin (`PATCH /api/orders/[id]`)
-  does **not** refund; only the customer's own cancellation does.
+  The store is also told through the admin bell (`order.cancelled`, severity warning, saying a refund
+  is needed when the order was paid) and the customer gets the "cancelled" order email
+  (*Settings → Email → cancelled order emails*). Cancelling from the admin
+  (`PATCH /api/orders/[id]`) sends no refund alert.
 - Totals: the `orders` table stores one total. When line items add up to less, the
   difference is shown as one "Shipping, tax & discounts" row; nothing is invented.
 - **Optional tables:** line items, order addresses and payments live in the full

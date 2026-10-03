@@ -136,18 +136,6 @@ export function cancelPaymentIntent(secretKey, id) {
   return stripeRequest(secretKey, "POST", `/payment_intents/${encodeURIComponent(id)}/cancel`, {});
 }
 
-// Refunds the whole of a payment (no amount means everything that is left) to the card it came
-// from. Stripe refuses a second refund of the same charge with code `charge_already_refunded`.
-export function createRefund(secretKey, { paymentIntentId, orderId, idempotencyKey }) {
-  return stripeRequest(
-    secretKey,
-    "POST",
-    "/refunds",
-    { payment_intent: paymentIntentId, reason: "requested_by_customer", metadata: { order_id: orderId } },
-    { idempotencyKey }
-  );
-}
-
 // Checks a webhook's Stripe-Signature header: `t=<unix time>,v1=<hex hmac>` where the
 // HMAC-SHA256 is over "<t>.<raw body>" with the endpoint's signing secret. A timestamp
 // outside the tolerance is rejected so an old capture can't be replayed.

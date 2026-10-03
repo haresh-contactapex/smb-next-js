@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import { getEmailTransportSettings } from "./emailSettings";
 import { readFile } from "fs/promises";
 import path from "path";
-import { buildNewOrderAlertEmail, buildOrderConfirmationEmail, buildOrderStatusEmail } from "./orderEmail";
+import { buildNewOrderAlertEmail, buildOrderConfirmationEmail, buildOrderStatusEmail, buildRefundRequestAlertEmail } from "./orderEmail";
 import { isPublicOrigin } from "./siteUrl";
 
 const LOGO_CID = "shopmyband-logo";
@@ -303,4 +303,9 @@ export async function sendOrderStatusEmail(kind, { to, subjectPrefix, ...data })
 // To the store when a new order arrives.
 export async function sendNewOrderAlertEmail({ to, subjectPrefix, ...data }) {
   return sendOrderEmail(to, buildNewOrderAlertEmail, data, subjectPrefix);
+}
+
+// To the store when a customer cancels a paid order, so it can refund it by hand.
+export async function sendRefundRequestAlertEmail({ to, subjectPrefix, ...data }) {
+  return sendOrderEmail(to, buildRefundRequestAlertEmail, data, subjectPrefix);
 }
