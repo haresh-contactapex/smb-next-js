@@ -1,6 +1,7 @@
 import { randomUUID, timingSafeEqual } from "crypto";
 import { sql, sqlTransaction } from "./db";
 import { getOrdersSettings } from "./ordersSettings";
+import { isGuestCheckoutAllowed } from "./checkoutSettings";
 import { logAdminActivity } from "./notifications";
 import { formatCurrency, toMinorUnits } from "./currency";
 import { loadMoneyFormat } from "./moneyFormat";
@@ -105,6 +106,12 @@ async function insertOrder({ orderId, priced, customer, intentId }) {
 // order. Returns what the browser needs to confirm the payment. `customer` is the
 // signed-in customer, or null for a guest checkout.
 export async function startCardPayment(input, customer) {
+  // The checkout page already asks for an account when guest checkout is off; this is the
+  // real gate, since the API is public (Settings -> Checkout -> Allow guest checkout).
+  if (!customer && !(await isGuestCheckoutAllowed())) {
+    throw new CheckoutError("Please sign in or create an account to place your order.", 403, { reason: "sign_in_required" });
+  }
+
   const stripe = await loadStripeConfig();
   if (!stripe.configured) {
     console.error(`Card checkout refused: ${stripe.problem}`);

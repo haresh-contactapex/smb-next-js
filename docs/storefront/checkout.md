@@ -60,13 +60,24 @@ There is no checkout table. The cart still lives in the visitor's browser (see
   3. **Payment** – the methods switched on in *Settings → Payment* (card,
      PayPal, Razorpay, cash on delivery). Cash on delivery is disabled below its
      minimum order amount.
+- **Guest checkout follows Settings → Checkout → Allow guest checkout**
+  (`checkout_settings.allow_guest_checkout`, `src/lib/checkoutSettings.js`;
+  `npm run db:migrate:checkout`). On (the default, and what a store without the
+  table gets): guests see the "Checking out as a guest" panel above and can place an
+  order without an account. Off: `page.js` shows `CheckoutSignInRequired` (Sign in /
+  Create an account, both returning to `/checkout`) instead of the form to anyone not
+  signed in, and `startCardPayment()` refuses a guest order with a 403
+  `sign_in_required` (the API is public, so the page alone isn't the gate); the card
+  form then refreshes the page into the sign-in screen. Signed-in customers are never
+  affected.
 - **Signed-in customers get their account filled in.** `page.js` reads the customer
   session and their address book (`loadCheckoutAccount()`); a guest, or a customer
   whose session or address book can't be read, simply gets the guest checkout.
   - *Contact* opens with the account's name, email and phone (the phone in US
-    format, as the account stores it). A guest sees "Already have an account? Sign
-    in" instead, which returns here (`/login?next=/checkout`) with the cart and
-    anything typed kept.
+    format, as the account stores it). A guest sees a "Checking out as a guest"
+    panel instead, with **Sign in** (`/login?next=/checkout`) and **create an
+    account** (`/register?next=/checkout`) links that return here with the cart
+    and anything typed kept.
   - *Billing* opens with the customer's **default billing** address as the billing
     address and their **default shipping** address as the shipping address;
     **Same as billing address** is on exactly when those are the same saved
@@ -254,8 +265,10 @@ the team isn't alerted a second time. The `payments` table still records every p
 - **Coupon usage** (`usage_count`, one per customer) isn't recorded.
 - **Emails**: no order confirmation is sent (*Settings → Orders* "confirmation email").
 - **Refunds** and `charge.refunded` events aren't handled.
-- **Guest checkout** can't be switched off: the "Allow guest checkout" settings forms
-  aren't backed by a table yet.
+- **Settings → Customers → Allow guest checkout** is a separate, still unsaved toggle:
+  only the one on *Settings → Checkout* is read by the storefront. The other checkout
+  settings (phone/terms required, minimum order, abandoned-cart emails) are saved but not
+  acted on yet.
 - The marketing checkbox is still not stored on the guest customer.
 
 ## Not built yet

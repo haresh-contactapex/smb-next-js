@@ -97,7 +97,7 @@ export default function LoginForm({ next = "/account" }) {
       footer={
         <>
           New to Shop My Band?{" "}
-          <Link href="/register" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
+          <Link href={next === "/account" ? "/register" : `/register?next=${encodeURIComponent(next)}`} className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
             Create an account
           </Link>
         </>

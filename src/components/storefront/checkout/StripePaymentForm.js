@@ -116,7 +116,8 @@ export default function StripePaymentForm({ stripe: config, active, total, build
   function explain(result) {
     if (result.reason === "cart_changed" && result.details?.lines) syncLines(result.details.lines);
     if (result.reason === "coupon_invalid") removeCoupon();
-    if (result.reason === "total_changed") router.refresh();
+    // sign_in_required: guest checkout was switched off while the page was open, so re-render into the sign-in screen.
+    if (result.reason === "total_changed" || result.reason === "sign_in_required") router.refresh();
     setMessage(result.error);
   }
 

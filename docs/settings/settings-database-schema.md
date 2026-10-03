@@ -211,7 +211,11 @@ Backs the Settings → Inventory page.
 
 ### `checkout_settings`
 
-Backs the Settings → Checkout page.
+Backs the Settings → Checkout page (`npm run db:migrate:checkout`, which runs
+`checkout-table-only.sql`), read/written by `src/lib/checkoutSettings.js` through
+`/api/settings/checkout`. `allow_guest_checkout` is enforced on the storefront
+checkout page and on Place Order (see `docs/storefront/checkout.md`); the other
+columns are stored but not yet acted on.
 
 | Column                       | Type            | Constraints                | Notes |
 | ------------------------------ | --------------- | ------------------------------- | ----- |

@@ -35,13 +35,23 @@ export default function ContactStep({ contact, showSignIn = false, onChange, onC
   return (
     <form ref={formRef} onSubmit={submit} noValidate>
       {showSignIn && (
-        <p className="mb-6 rounded-lg bg-[#FAFAFA] px-4 py-3 text-[14px] text-[#555555]">
-          Already have an account?{" "}
-          <Link href="/login?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#EF9822]">
-            Sign in
-          </Link>{" "}
-          to fill in your details and use your saved addresses.
-        </p>
+        <div className="mb-6 rounded-lg bg-[#FAFAFA] px-4 py-3.5 text-[14px] text-[#555555]">
+          <p className="flex items-center gap-2 font-semibold text-[#222222]">
+            <StoreIcon name="user" className="h-5 w-5 text-[#EF9822]" />
+            Checking out as a guest
+          </p>
+          <p className="mt-1">
+            No account needed. Already have one?{" "}
+            <Link href="/login?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#EF9822]">
+              Sign in
+            </Link>{" "}
+            to fill in your details and use your saved addresses, or{" "}
+            <Link href="/register?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#EF9822]">
+              create an account
+            </Link>
+            .
+          </p>
+        </div>
       )}
       <div className="grid gap-5 sm:grid-cols-2">
         <CheckoutField

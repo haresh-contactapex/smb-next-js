@@ -1,5 +1,6 @@
 import { getCurrencyTaxSettings } from "./currencyTaxSettings";
 import { getPaymentSettings } from "./paymentSettings";
+import { isGuestCheckoutAllowed } from "./checkoutSettings";
 import { loadStripeConfig, toStripePublicConfig } from "./stripe";
 import { getCurrentCustomer } from "./auth/customerSession";
 import { listCustomerAddresses } from "./customerAddresses";
@@ -61,12 +62,14 @@ function toPaymentMethods(settings, stripe) {
 }
 
 export async function loadCheckoutSettings() {
-  const [tax, payment, stripe] = await Promise.all([
+  const [tax, payment, stripe, guestCheckout] = await Promise.all([
     readOrNull("tax", getCurrencyTaxSettings),
     readOrNull("payment", getPaymentSettings),
     readOrNull("stripe", loadStripeConfig),
+    readOrNull("guest checkout", isGuestCheckoutAllowed),
   ]);
-  return { tax: toTax(tax), paymentMethods: toPaymentMethods(payment, stripe) };
+  // Settings -> Checkout -> Allow guest checkout; guests stay welcome when it can't be read.
+  return { tax: toTax(tax), paymentMethods: toPaymentMethods(payment, stripe), allowGuestCheckout: guestCheckout !== false };
 }
 
 // The currency and tax rules an order is priced with. Unlike the page's own extras

@@ -13,7 +13,9 @@ import AuthLayout from "./AuthLayout";
 import Toast from "./Toast";
 import Recaptcha from "./Recaptcha";
 
-export default function RegisterForm() {
+// `next` is where to go once the account exists: the page the visitor was trying to
+// reach (already checked by the register page) or their account.
+export default function RegisterForm({ next = "/account" }) {
   const router = useRouter();
   const { enableRecaptcha } = useGeneralSettings();
   const [form, setForm] = useState(DEFAULT_REGISTER);
@@ -84,7 +86,7 @@ export default function RegisterForm() {
       // Items saved as a guest move into the new account's wishlist.
       await mergeGuestWishlist();
       showToast("Account created — welcome!");
-      router.replace("/account");
+      router.replace(next);
       router.refresh(); // server components re-read the session cookie
     } catch (error) {
       showToast(error.message, "error");
@@ -102,7 +104,7 @@ export default function RegisterForm() {
       footer={
         <>
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
+          <Link href={next === "/account" ? "/login" : `/login?next=${encodeURIComponent(next)}`} className="font-semibold text-primary-600 dark:text-accent-400 hover:underline">
             Sign in
           </Link>
         </>

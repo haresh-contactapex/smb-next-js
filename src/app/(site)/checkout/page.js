@@ -1,6 +1,7 @@
 import CheckoutHeader from "@/components/storefront/checkout/CheckoutHeader";
 import CheckoutFooter from "@/components/storefront/checkout/CheckoutFooter";
 import CheckoutPage from "@/components/storefront/checkout/CheckoutPage";
+import CheckoutSignInRequired from "@/components/storefront/checkout/CheckoutSignInRequired";
 import { loadCheckoutAccount, loadCheckoutSettings } from "@/lib/storefrontCheckout";
 
 export const metadata = { title: "Checkout | shopmyband.com" };
@@ -14,10 +15,13 @@ export const dynamic = "force-dynamic";
 export default async function CheckoutRoute() {
   const [settings, account] = await Promise.all([loadCheckoutSettings(), loadCheckoutAccount()]);
 
+  // Allow guest checkout is off (Settings -> Checkout): only a signed-in customer gets the form.
+  const signInRequired = !account && !settings.allowGuestCheckout;
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <CheckoutHeader />
-      <CheckoutPage settings={settings} account={account} />
+      {signInRequired ? <CheckoutSignInRequired /> : <CheckoutPage settings={settings} account={account} />}
       <CheckoutFooter />
     </div>
   );
