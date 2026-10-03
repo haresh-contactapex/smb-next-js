@@ -264,8 +264,11 @@ the team isn't alerted a second time. The `payments` table still records every p
 - **Stock** isn't decremented when an order is paid (the server only refuses lines that
   are out of stock when the order is placed, so two buyers can still race for the last unit).
 - **Coupon usage** (`usage_count`, one per customer) isn't recorded.
-- **Refund email.** Not built: refunds from Stripe (`charge.refunded`) aren't handled, and
-  setting an order to Refunded in admin sends nothing. *Settings → Orders* "Require order
+- **Refund email.** There is no separate one: when a customer cancels a paid order from their
+  account it is refunded through Stripe and the "cancelled" email says so (see
+  [customer-account.md](../account/customer-account.md)). Refunds made in the Stripe Dashboard
+  (`charge.refunded`) aren't handled, and setting an order to Refunded or Cancelled in admin neither
+  refunds nor sends a refund email. *Settings → Orders* "Require order
   confirmation email before fulfillment" is stored but not read. Stripe also emails its own
   receipt in live mode if receipts are on in the Stripe Dashboard, which would arrive in
   addition to ours.
@@ -311,8 +314,9 @@ Building and sending one takes several seconds, so it runs after the response ha
 | Cancelled order | customer | staff set the status to Cancelled | *Settings → Email → cancelled order emails* |
 | Failed order | customer | a card payment is declined (order goes Unpaid → Failed), once | *Settings → Email → failed order emails* |
 
-A cancelled email says "we'll be in touch about your refund" if the order was already paid, else
-"you haven't been charged". "Failed" carries a Try again button to `/checkout`.
+A cancelled email says "your payment has been refunded to your original payment method" when the
+customer cancelled a paid order, "we'll be in touch about your refund" if staff cancelled a paid
+one, else "you haven't been charged". "Failed" carries a Try again button to `/checkout`.
 
 ### Order confirmation email
 

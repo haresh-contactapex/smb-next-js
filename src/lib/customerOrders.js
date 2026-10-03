@@ -1,6 +1,10 @@
 import { sql } from "./db";
 import { AccountError, isUuid, optionalQuery } from "./accountError";
 import { logAdminActivity } from "./notifications";
+import { formatCurrency } from "./currency";
+import { loadMoneyFormat } from "./moneyFormat";
+import { cancelPaymentIntent, createRefund, loadStripeConfig } from "./stripe";
+import { sendOrderStatusEmail } from "./orderEmails";
 import { getWishlistProducts } from "./wishlist";
 
 // Server side of the account's order history (/account/orders). The customer
@@ -15,11 +19,12 @@ import { getWishlistProducts } from "./wishlist";
 export const ORDER_STATUSES = ["Pending", "Processing", "Completed", "Cancelled"];
 export const ORDERS_PAGE_SIZE = 10;
 
-// An order the customer can still cancel themselves: nothing has been paid yet
-// and the store hasn't started on it. Anything else needs the store (a refund,
-// or an order already being made), so it is sent to support instead.
+// An order the customer can still cancel themselves: it hasn't been completed or cancelled, and it
+// is either unpaid (cash on delivery, or a card payment that never went through) or paid by card,
+// which is refunded automatically. getCustomerOrder() narrows "paid" to orders that really have a
+// card payment to refund; anything else (completed, or paid some other way) is sent to support.
 export function canCustomerCancel(order) {
-  return order.status === "Pending" && (order.paymentStatus === "Unpaid" || order.paymentStatus === "Failed");
+  return (order.status === "Pending" || order.status === "Processing") && ["Unpaid", "Failed", "Paid"].includes(order.paymentStatus);
 }
 
 function toOrderSummary(row) {
@@ -181,8 +186,14 @@ export async function getCustomerOrder(customerId, orderNumber) {
   const itemsSubtotal = items.reduce((sum, line) => sum + line.lineTotal, 0);
   const summary = toOrderSummary(row);
 
+  // A paid order is cancellable only when a succeeded card payment is there to refund.
+  const refundable = row.payment_status === "Paid" ? paymentRows.find((payment) => payment.provider === "stripe" && payment.status === "succeeded" && payment.provider_reference) : null;
+
   return {
     ...summary,
+    canCancel: summary.canCancel && (row.payment_status !== "Paid" || Boolean(refundable)),
+    // What cancelling would refund to the customer's card, 0 when nothing is to be refunded.
+    refundAmount: refundable ? Number(refundable.amount) || 0 : 0,
     customerName: row.customer_name,
     updatedAt: new Date(row.updated_at).toISOString(),
     items,
@@ -196,37 +207,123 @@ export async function getCustomerOrder(customerId, orderNumber) {
   };
 }
 
-// Cancels one of the customer's own orders if it is still cancellable, and tells
-// the store's staff through the admin notification bell. Returns the order.
+// Cancels one of the customer's own orders if it is still cancellable (Pending or Processing, and
+// unpaid or paid by card), tells the store's staff through the admin notification bell and emails
+// the customer. A card order that was paid is refunded in full, to the card, through Stripe.
+// Returns the order.
+//
+// The cancellation is taken first, in one UPDATE that only matches while the order is still as it
+// was read, so two clicks (or a staff change at the same moment) can't both go through and the
+// refund is only ever asked for once. If the refund then fails the order is put back as it was,
+// so a customer is never left cancelled-but-unrefunded without being told.
 export async function cancelCustomerOrder(customer, orderNumber) {
   const number = String(orderNumber || "").trim().replace(/^#/, "");
-  const [cancelled] = await sql`
-    UPDATE orders SET status = 'Cancelled', cancelled_at = now(), updated_at = now()
-    WHERE customer_id = ${customer.id} AND order_number = ${number}
-      AND status = 'Pending' AND payment_status IN ('Unpaid', 'Failed')
-    RETURNING *
-  `;
-
-  if (!cancelled) {
-    const [existing] = await sql`SELECT status FROM orders WHERE customer_id = ${customer.id} AND order_number = ${number}`;
-    if (!existing) throw new AccountError("We couldn't find that order.", 404);
-    if (existing.status === "Cancelled") throw new AccountError("This order has already been cancelled.", 409);
-    throw new AccountError(
-      "This order can no longer be cancelled online because it has already been paid for or is being prepared. Please contact us and we'll help.",
-      409
-    );
+  const [order] = await sql`SELECT * FROM orders WHERE customer_id = ${customer.id} AND order_number = ${number}`;
+  if (!order) throw new AccountError("We couldn't find that order.", 404);
+  if (order.status === "Cancelled") throw new AccountError("This order has already been cancelled.", 409);
+  if (!canCustomerCancel({ status: order.status, paymentStatus: order.payment_status })) {
+    throw new AccountError("This order can no longer be cancelled online because it has already been completed or refunded. Please contact us and we'll help.", 409);
   }
 
+  const [claimed] = await sql`
+    UPDATE orders SET status = 'Cancelled', cancelled_at = now(), updated_at = now()
+    WHERE id = ${order.id} AND status = ${order.status} AND payment_status = ${order.payment_status}
+    RETURNING *
+  `;
+  if (!claimed) throw new AccountError("This order has just changed. Please refresh the page and try again.", 409);
+
+  const wasPaid = order.payment_status === "Paid";
+  let refundedReference = null;
+  try {
+    refundedReference = wasPaid ? await refundCardPayment(order, claimed) : await closeOpenCardPayment(order);
+  } catch (error) {
+    // Put the order back exactly as it was.
+    await sql`UPDATE orders SET status = ${order.status}, cancelled_at = NULL, updated_at = now() WHERE id = ${order.id} AND status = 'Cancelled'`.catch((revertError) =>
+      console.error(`Order ${order.order_number} could not be put back after a failed cancellation`, revertError.message)
+    );
+    throw error;
+  }
+
+  // The money is back with the customer: record it. A failure here is logged, not thrown, because
+  // the refund can't be undone and the customer must be told the order is cancelled and refunded.
+  let final = claimed;
+  if (wasPaid) {
+    try {
+      [final] = await sql`UPDATE orders SET payment_status = 'Refunded', updated_at = now() WHERE id = ${order.id} RETURNING *`;
+      await sql`UPDATE payments SET status = 'refunded' WHERE order_id = ${order.id} AND provider = 'stripe' AND provider_reference = ${refundedReference}`;
+    } catch (error) {
+      console.error(`Order ${order.order_number} was refunded but could not be marked Refunded. Fix it in the admin.`, error.message);
+    }
+  }
+
+  const refundText = wasPaid ? ` and was refunded ${formatCurrency(order.total_amount, order.currency, await loadMoneyFormat())} to their card` : "";
   await logAdminActivity({
     action: "order.cancelled",
     entityType: "order",
-    entityId: cancelled.id,
-    title: `Order #${cancelled.order_number} cancelled by the customer`,
-    description: `${customer.firstName} ${customer.lastName} cancelled this order from their account.`,
+    entityId: order.id,
+    title: `Order #${order.order_number} cancelled by the customer`,
+    description: `${customer.firstName} ${customer.lastName} cancelled this order from their account${refundText}.`,
     severity: "warning",
-    metadata: { from: { status: "Pending" }, to: { status: "Cancelled" } },
+    metadata: { from: { status: order.status }, to: { status: "Cancelled", ...(wasPaid ? { paymentStatus: "Refunded" } : {}) } },
   });
-  return toOrderSummary(cancelled);
+  await sendOrderStatusEmail(order.id, "cancelled");
+  return toOrderSummary(final);
+}
+
+// Refunds the whole card payment of a paid order to the customer's card. Throws an AccountError
+// (and nothing has been refunded) when that can't be done. Returns the payment's reference.
+async function refundCardPayment(order, claimed) {
+  const [payment] = await sql`
+    SELECT provider_reference FROM payments
+    WHERE order_id = ${order.id} AND provider = 'stripe' AND status = 'succeeded' AND provider_reference IS NOT NULL
+    ORDER BY created_at DESC LIMIT 1
+  `;
+  if (!payment) {
+    throw new AccountError("This order was paid in a way we can't refund online. Please contact us and we'll help.", 409);
+  }
+
+  // The keys are enough to refund a payment already taken, even if Stripe has been switched off since.
+  const stripe = await loadStripeConfig();
+  if (!stripe.hasKeys) {
+    console.error(`Refund for order ${order.order_number} refused: ${stripe.problem}`);
+    throw new AccountError("We can't refund your payment right now, so your order has not been cancelled. Please contact us and we'll help.", 503);
+  }
+
+  try {
+    // A fresh key per cancellation attempt: Stripe would otherwise replay the first attempt's failure.
+    await createRefund(stripe.secretKey, {
+      paymentIntentId: payment.provider_reference,
+      orderId: order.id,
+      idempotencyKey: `refund-${order.id}-${new Date(claimed.cancelled_at).getTime()}`,
+    });
+  } catch (error) {
+    // Already refunded (an earlier attempt got through, or staff refunded it): the money is back, carry on.
+    if (error?.code !== "charge_already_refunded") {
+      console.error(`Stripe could not refund order ${order.order_number}`, error.code || "", error.message);
+      throw new AccountError("We couldn't refund your payment right now, so your order has not been cancelled. Please try again in a moment, or contact us.", 502);
+    }
+  }
+  return payment.provider_reference;
+}
+
+// An unpaid card order still has an open Stripe payment; closing it stops it being paid after the
+// order is cancelled. Best effort: if Stripe can't be reached the order is cancelled anyway (a late
+// payment is caught and flagged for a refund by the payment sync).
+async function closeOpenCardPayment(order) {
+  try {
+    const [payment] = await sql`
+      SELECT provider_reference FROM payments
+      WHERE order_id = ${order.id} AND provider = 'stripe' AND status = 'pending' AND provider_reference IS NOT NULL
+      ORDER BY created_at DESC LIMIT 1
+    `;
+    if (!payment) return null;
+    const stripe = await loadStripeConfig();
+    if (stripe.hasKeys) await cancelPaymentIntent(stripe.secretKey, payment.provider_reference);
+    await sql`UPDATE payments SET status = 'failed' WHERE order_id = ${order.id} AND provider = 'stripe' AND provider_reference = ${payment.provider_reference} AND status = 'pending'`;
+  } catch (error) {
+    console.error(`The open card payment of order ${order.order_number} could not be closed`, error.message);
+  }
+  return null;
 }
 
 // What "Order again" puts in the cart: each line of the order priced and checked

@@ -152,7 +152,7 @@ async function deliverOrderStatusEmail(orderId, origin, kind) {
     if (emailSettings && !emailSettings[STATUS_EMAIL_SWITCH[kind]]) return;
     if (!(await ready(`Order ${kind} email`, orderId))) return;
     const email = await customerEmail(orderId, origin, emailSettings);
-    if (email) await sendStatusEmail(kind, { to: email.to, ...email.data, paid: email.order.payment_status === "Paid" });
+    if (email) await sendStatusEmail(kind, { to: email.to, ...email.data, paid: email.order.payment_status === "Paid", refunded: email.order.payment_status === "Refunded" });
   } catch (error) {
     console.error(`Order ${kind} email failed`, error.message);
   }

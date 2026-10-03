@@ -17,7 +17,7 @@ export default function OrderTimeline({ order }) {
           <p className="text-[15px] font-semibold text-[#333333]">Order cancelled{order.cancelledAt ? ` on ${formatDate(order.cancelledAt)}` : ""}</p>
           <p className="mt-0.5 text-[13.5px] text-gray-500">
             {order.paymentStatus === "Refunded"
-              ? "Your payment has been refunded."
+              ? "Your payment has been refunded to your original payment method. It can take 5 to 10 business days to appear on your statement."
               : order.paymentStatus === "Paid"
                 ? "If you were charged, the store will be in touch about your refund."
                 : "You haven't been charged for this order."}

@@ -59,10 +59,10 @@ export default function OrderDetailView({ order, moneyFormat }) {
       </AccountPageHeader>
 
       <div className="mb-6">
-        <OrderActions orderNumber={order.orderNumber} canCancel={order.canCancel} hasItems={hasItems} />
+        <OrderActions orderNumber={order.orderNumber} canCancel={order.canCancel} refundAmount={order.refundAmount} currency={order.currency} hasItems={hasItems} />
         {stillOpen && !order.canCancel && (
           <p className="mt-3 text-[13.5px] text-gray-500">
-            Need to change or cancel this order? It&apos;s already been paid for or is being prepared, so please contact us and quote order{" "}
+            Need to change this order, or it can&apos;t be cancelled online? Please contact us and quote order{" "}
             <span className="font-semibold text-[#333333]">#{order.orderNumber}</span>.
           </p>
         )}

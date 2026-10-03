@@ -201,8 +201,8 @@ export function buildOrderConfirmationEmail(data) {
   });
 }
 
-// kind: "processing" | "completed" | "cancelled" | "failed". `data.paid` says whether a cancelled
-// order had already been paid for.
+// kind: "processing" | "completed" | "cancelled" | "failed". For a cancelled order `data.paid` says it had
+// been paid for (the store will arrange the refund) and `data.refunded` that it has already been refunded.
 export function buildOrderStatusEmail(kind, data) {
   const { storeName, firstName, orderNumber, placedAt, shopUrl } = data;
   const facts = (status) => [["Order number", `#${orderNumber}`], ["Date placed", placedAt], status];
@@ -239,9 +239,11 @@ export function buildOrderStatusEmail(kind, data) {
     cancelled: {
       subject: `Your ${storeName} order #${orderNumber} was cancelled`,
       heading: `Your order was cancelled, ${firstName}.`,
-      intro: data.paid
-        ? `Order #${orderNumber} has been cancelled. Since you've already paid for it, we'll be in touch about your refund.`
-        : `Order #${orderNumber} has been cancelled. You haven't been charged for it.`,
+      intro: data.refunded
+        ? `Order #${orderNumber} has been cancelled and your payment of ${data.total} has been refunded to your original payment method. It can take 5 to 10 business days to appear on your statement.`
+        : data.paid
+          ? `Order #${orderNumber} has been cancelled. Since you've already paid for it, we'll be in touch about your refund.`
+          : `Order #${orderNumber} has been cancelled. You haven't been charged for it.`,
       facts: facts(["Status", "Cancelled"]),
       button: { label: "Visit the shop", url: shopUrl },
       showItems: true,
