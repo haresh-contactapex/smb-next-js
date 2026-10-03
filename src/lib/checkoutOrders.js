@@ -223,8 +223,9 @@ export async function resolveCheckoutResult({ paymentIntentId, clientSecret }) {
   const unknown = { state: "unknown", orderNumber: null, total: 0, currency: null };
   if (!/^pi_[A-Za-z0-9_]+$/.test(String(paymentIntentId || "")) || !clientSecret) return unknown;
 
+  // The keys are enough to settle a payment already made, even if Stripe has been switched off since.
   const stripe = await loadStripeConfig();
-  if (!stripe.configured) return unknown;
+  if (!stripe.hasKeys) return unknown;
 
   let intent;
   try {

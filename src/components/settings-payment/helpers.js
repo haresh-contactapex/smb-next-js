@@ -1,3 +1,5 @@
+import { stripeKeyErrors } from "@/lib/stripeKeys";
+
 export const PAYPAL_ENVIRONMENTS = [
   { value: "sandbox", label: "Sandbox (testing)" },
   { value: "live", label: "Live" },
@@ -6,16 +8,26 @@ export const PAYPAL_ENVIRONMENTS = [
 // The online gateways. The store can have at most one of them switched on at a
 // time (Cash on Delivery is separate and may be on with or without one), and
 // each keeps its own credentials. A field with `options` is a select; a field
-// with `secret` is masked.
+// with `secret` is masked, and `hint` is the line of help under a field (a string, or a
+// function of the site's origin).
 export const PAYMENT_GATEWAYS = [
   {
     id: "stripe",
     label: "Stripe",
     enabledKey: "stripeEnabled",
-    help: "Find your API keys in the Stripe Dashboard under Developers → API keys.",
+    help: "Find your API keys in the Stripe Dashboard under Developers → API keys. Use test keys (pk_test_ / sk_test_) while you are trying checkout out.",
     fields: [
       { key: "stripePublishableKey", id: "f-stripe-publishable-key", label: "Publishable key", placeholder: "pk_live_..." },
       { key: "stripeSecretKey", id: "f-stripe-secret-key", label: "Secret key", placeholder: "sk_live_...", secret: true },
+      {
+        key: "stripeWebhookSecret",
+        id: "f-stripe-webhook-secret",
+        label: "Webhook signing secret",
+        placeholder: "whsec_...",
+        secret: true,
+        hint: (origin) =>
+          `Stripe Dashboard → Developers → Webhooks → Add endpoint: URL ${origin || ""}/api/stripe/webhook, events payment_intent.succeeded and payment_intent.payment_failed. Paste that endpoint's signing secret here. Without it, an order paid in a closed tab stays unpaid.`,
+      },
     ],
   },
   {
@@ -54,6 +66,7 @@ export const DEFAULT_PAYMENT_SETTINGS = {
   codEnabled: true,
   stripePublishableKey: "",
   stripeSecretKey: "",
+  stripeWebhookSecret: "",
   paypalClientId: "",
   paypalClientSecret: "",
   paypalEnvironment: "sandbox",
@@ -113,7 +126,15 @@ export function setGatewaySelected(settings, gatewayId, selected) {
 }
 
 // Order the "focus the first bad field" behavior follows.
-export const PAYMENT_FIELD_ORDER = ["gateways", "paypalEnvironment", "transactionFee", "codMinOrder"];
+export const PAYMENT_FIELD_ORDER = [
+  "gateways",
+  "stripePublishableKey",
+  "stripeSecretKey",
+  "stripeWebhookSecret",
+  "paypalEnvironment",
+  "transactionFee",
+  "codMinOrder",
+];
 
 export function validatePaymentSettingsForm(settings) {
   const errors = {};
@@ -125,6 +146,9 @@ export function validatePaymentSettingsForm(settings) {
   } else if (gateways.length === 0 && !settings.codEnabled) {
     errors.gateways = "Select at least one payment method: Stripe, PayPal, Razorpay or Cash on Delivery.";
   }
+
+  // Stripe's keys are only judged while Stripe is the selected gateway (they are kept, unchecked, when it isn't).
+  if (settings.stripeEnabled) Object.assign(errors, stripeKeyErrors(settings));
 
   if (!PAYPAL_ENVIRONMENTS.some((environment) => environment.value === settings.paypalEnvironment)) {
     errors.paypalEnvironment = "Choose Sandbox or Live for PayPal.";

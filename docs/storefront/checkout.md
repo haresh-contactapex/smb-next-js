@@ -148,25 +148,35 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 ## Card payments (Stripe)
 
 Choosing **Credit or debit card** in the payment step shows Stripe's Payment Element
-and **Place Order**. Everything below is the card flow; the keys are the ones saved in
-*Settings → Payment* (no new environment variable except the webhook secret).
+and **Place Order**. Everything below is the card flow. **Every Stripe credential is saved in
+*Settings → Payment*** (the publishable key, the secret key and the webhook signing secret);
+none of them is read from `.env.local` or any other environment variable.
 
 ### Set-up
 
 1. In *Settings → Payment* switch Stripe on and save its **publishable** and **secret**
-   keys. They must be from the same mode (both `test` or both `live`). Until they are,
-   the card method shows "Card payments aren't available right now" and can't be picked
-   (the reason is logged on the server). Only the publishable key ever reaches the browser.
+   keys. They must be from the same mode (both `test` or both `live`); the page checks the
+   format and the mode when you save and says which key is wrong. If they are still missing
+   or mismatched at checkout, the card method shows "Card payments aren't available right
+   now" and can't be picked (the reason is logged on the server). Only the publishable key
+   ever reaches the browser.
 2. Run the order tables migration once: `npm run db:migrate:order-details`
    (`docs/orders/order-details-tables-only.sql`, see the [orders schema](../orders/orders-database-schema.md)).
    Without it Place Order fails after Stripe has created the payment, which is then cancelled;
    in development the response says which table is missing.
-3. Add a Stripe webhook for `payment_intent.succeeded` and `payment_intent.payment_failed`
-   pointing at `https://<your domain>/api/stripe/webhook`, and put its signing secret
-   (`whsec_...`) in `STRIPE_WEBHOOK_SECRET` (see `.env.example`). Locally,
-   `stripe listen --forward-to localhost:3000/api/stripe/webhook` prints a secret to use.
+3. Add a Stripe webhook (Dashboard → Developers → Webhooks) for `payment_intent.succeeded`
+   and `payment_intent.payment_failed` pointing at `https://<your domain>/api/stripe/webhook`
+   (the form shows the URL for the site you are on), and paste its signing secret (`whsec_...`)
+   into **Webhook signing secret** under Stripe in *Settings → Payment*. Locally,
+   `stripe listen --forward-to localhost:3000/api/stripe/webhook` prints a secret to use there.
    The webhook is what marks an order Paid when a customer pays but closes the tab before
-   the confirmation page loads; without the secret it answers 503 and Stripe retries.
+   the confirmation page loads. Until the secret is saved it answers 503 and Stripe retries.
+   The saved column comes from `npm run db:migrate:stripe-webhook`
+   (`docs/settings/payment-stripe-webhook-secret-only.sql`); a database created from the
+   current `payment-table-only.sql` already has it.
+
+Switching Stripe off stops new card payments, but the confirmation page and the webhook keep
+working while the keys are saved, so a payment that was already under way can still settle.
 
 With **test** keys the payment step shows a banner and takes Stripe's test cards (4242 4242
 4242 4242, any future date and CVC). With *auto capture* switched off in *Settings → Payment*

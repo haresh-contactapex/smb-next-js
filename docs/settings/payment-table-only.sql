@@ -6,6 +6,8 @@
 -- For a database whose payment_settings table was created before per-gateway
 -- credentials existed (it still has the shared public_key / secret_key
 -- columns), run payment-gateway-credentials-only.sql instead of this file.
+-- For one created before the Stripe webhook secret existed, run
+-- payment-stripe-webhook-secret-only.sql.
 
 CREATE TABLE IF NOT EXISTS payment_settings (
     id                     SMALLINT PRIMARY KEY CHECK (id = 1),
@@ -15,6 +17,7 @@ CREATE TABLE IF NOT EXISTS payment_settings (
     cod_enabled            BOOLEAN       NOT NULL DEFAULT true,
     stripe_publishable_key VARCHAR(255),
     stripe_secret_key      VARCHAR(255),
+    stripe_webhook_secret  VARCHAR(255),
     paypal_client_id       VARCHAR(255),
     paypal_client_secret   VARCHAR(255),
     paypal_environment     VARCHAR(10)   NOT NULL DEFAULT 'sandbox' CHECK (paypal_environment IN ('sandbox', 'live')),
@@ -29,6 +32,7 @@ COMMENT ON TABLE payment_settings IS 'Backs the Settings -> Payment page. Single
 COMMENT ON COLUMN payment_settings.cod_enabled IS 'Cash on delivery. May be on alone or alongside the one active online gateway.';
 COMMENT ON COLUMN payment_settings.stripe_publishable_key IS 'Stripe publishable key. Kept when Stripe is switched off.';
 COMMENT ON COLUMN payment_settings.stripe_secret_key IS 'Stripe secret key. Stored as plain text, like the integrations_settings secrets today; encrypt at rest before going live.';
+COMMENT ON COLUMN payment_settings.stripe_webhook_secret IS 'Signing secret (whsec_...) of the Stripe webhook that points at /api/stripe/webhook; it verifies that webhook events really come from Stripe. Kept when Stripe is switched off. Stored as plain text; encrypt at rest before going live.';
 COMMENT ON COLUMN payment_settings.paypal_client_id IS 'PayPal REST app client ID. Kept when PayPal is switched off.';
 COMMENT ON COLUMN payment_settings.paypal_client_secret IS 'PayPal REST app client secret. Stored as plain text; encrypt at rest before going live.';
 COMMENT ON COLUMN payment_settings.paypal_environment IS 'Which PayPal environment the client ID and secret belong to: sandbox or live.';

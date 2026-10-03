@@ -1,10 +1,13 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { getPaymentSettings } from "./paymentSettings";
 import { toMinorUnits } from "./currency";
+import { PUBLISHABLE_KEY, SECRET_KEY, WEBHOOK_SECRET } from "./stripeKeys";
 
 // Server-only Stripe client. It talks to Stripe's REST API with fetch, so no SDK
-// is needed. The keys come from Settings -> Payment; the secret key must never
-// reach the browser, so only getStripePublicConfig() is safe to hand to a page.
+// is needed. Every credential (publishable key, secret key, webhook signing secret)
+// comes from Settings -> Payment, never from the environment. The secret key and the
+// signing secret must never reach the browser, so only toStripePublicConfig() is safe
+// to hand to a page.
 
 const API_BASE = "https://api.stripe.com/v1";
 
@@ -17,42 +20,52 @@ export class StripeError extends Error {
   }
 }
 
-const PUBLISHABLE_KEY = /^pk_(test|live)_[A-Za-z0-9]+$/;
-// A restricted key (rk_) works for PaymentIntents too, so it is accepted alongside sk_.
-const SECRET_KEY = /^(?:sk|rk)_(test|live)_[A-Za-z0-9]+$/;
-
-// Why Stripe can't take payments right now, or null when it can.
-function configProblem(settings, publishable, secret) {
-  if (!settings.stripeEnabled) return "Stripe is switched off in Settings -> Payment.";
+// Why the saved keys can't be used, or null when they can (they are present, in the
+// expected format, and from the same mode).
+function keyProblem(publishable, secret) {
   if (!publishable || !secret) return "The Stripe publishable and secret keys are not both saved in Settings -> Payment.";
   if (!publishable[1] || !secret[1]) return "A Stripe key in Settings -> Payment is not in the expected format.";
   if (publishable[1] !== secret[1]) return "The Stripe publishable and secret keys are from different modes (test and live).";
   return null;
 }
 
-// The saved Stripe settings, validated. `secretKey` is only filled when Stripe
-// is usable. SERVER ONLY: never pass this object to a client component.
+// The saved Stripe settings, validated. SERVER ONLY: never pass this object to a client component.
+//   hasKeys     the publishable and secret keys are usable. That is all it takes to settle a payment
+//               that is already under way (the confirmation page, the webhook), even if an admin has
+//               since switched Stripe off.
+//   configured  hasKeys and Stripe is switched on: the only state in which a new payment may start.
+//   webhookSecret  the saved signing secret, or "" when it is missing or isn't a whsec_ value.
+// The key fields are blank unless hasKeys.
 export async function loadStripeConfig() {
   const settings = await getPaymentSettings();
   const publishable = PUBLISHABLE_KEY.exec(settings.stripePublishableKey.trim());
   const secret = SECRET_KEY.exec(settings.stripeSecretKey.trim());
-  const problem = configProblem(settings, publishable, secret);
+  const keysProblem = keyProblem(publishable, secret);
+  const hasKeys = keysProblem === null;
+  const webhook = settings.stripeWebhookSecret.trim();
 
   return {
-    configured: problem === null,
-    problem,
+    hasKeys,
+    configured: hasKeys && settings.stripeEnabled,
     enabled: settings.stripeEnabled,
-    mode: problem === null ? publishable[1] : null,
-    publishableKey: problem === null ? settings.stripePublishableKey.trim() : "",
-    secretKey: problem === null ? settings.stripeSecretKey.trim() : "",
+    problem: !settings.stripeEnabled ? "Stripe is switched off in Settings -> Payment." : keysProblem,
+    mode: hasKeys ? publishable[1] : null,
+    publishableKey: hasKeys ? settings.stripePublishableKey.trim() : "",
+    secretKey: hasKeys ? settings.stripeSecretKey.trim() : "",
+    webhookSecret: WEBHOOK_SECRET.test(webhook) ? webhook : "",
     // Settings -> Payment "auto capture": off means authorize now and capture later from the Stripe dashboard.
     captureAutomatically: settings.autoCapture,
   };
 }
 
-// What the checkout page may know: whether card payments work and the publishable key.
+// What the checkout page may know: whether card payments can be taken now, the mode and
+// the publishable key. Nothing secret.
 export function toStripePublicConfig(config) {
-  return { configured: config.configured, mode: config.mode, publishableKey: config.publishableKey };
+  return {
+    configured: config.configured,
+    mode: config.mode,
+    publishableKey: config.configured ? config.publishableKey : "",
+  };
 }
 
 // Stripe takes form-encoded bodies with bracketed keys: metadata[order_id]=...

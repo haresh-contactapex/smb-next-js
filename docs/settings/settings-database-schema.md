@@ -116,6 +116,7 @@ re-entered. Credentials are optional: enabling a gateway does not require them.
 | `cod_enabled`            | `BOOLEAN`       | NOT NULL, DEFAULT `true`                           | Cash on delivery |
 | `stripe_publishable_key` | `VARCHAR(255)`  | NULL                                               | Stripe publishable key |
 | `stripe_secret_key`      | `VARCHAR(255)`  | NULL                                               | Stripe secret key; see Design notes |
+| `stripe_webhook_secret`  | `VARCHAR(255)`  | NULL                                               | Signing secret (`whsec_...`) of the Stripe webhook that points at `/api/stripe/webhook`; see Design notes |
 | `paypal_client_id`       | `VARCHAR(255)`  | NULL                                               | PayPal REST app client ID |
 | `paypal_client_secret`   | `VARCHAR(255)`  | NULL                                               | PayPal REST app client secret; see Design notes |
 | `paypal_environment`     | `VARCHAR(10)`   | NOT NULL, DEFAULT `'sandbox'`, CHECK IN (`sandbox`, `live`) | Environment the PayPal credentials belong to |
@@ -481,7 +482,7 @@ editable settings — see Design notes.
   `customers_settings` and `checkout_settings` — same reasoning: two
   independent forms in the current app, kept as two independent columns
   rather than silently merged.
-- `stripe_secret_key`, `paypal_client_secret` and `razorpay_key_secret` on
+- `stripe_secret_key`, `stripe_webhook_secret`, `paypal_client_secret` and `razorpay_key_secret` on
   `payment_settings`, and `smtp_password` on `email_settings`, are
   payment/mail-provider credentials and must be stored encrypted at rest
   (e.g. via `pgcrypto` or an application-level KMS), never in plaintext, even

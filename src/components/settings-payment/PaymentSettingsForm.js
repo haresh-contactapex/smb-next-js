@@ -28,15 +28,23 @@ export default function PaymentSettingsForm() {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  // For the webhook URL shown under the Stripe signing secret: only known in the browser.
+  const [origin, setOrigin] = useState("");
 
   const toastTimerRef = useRef(null);
   const gatewaysGroupRef = useRef(null);
+  const stripePublishableKeyInputRef = useRef(null);
+  const stripeSecretKeyInputRef = useRef(null);
+  const stripeWebhookSecretInputRef = useRef(null);
   const paypalEnvironmentInputRef = useRef(null);
   const transactionFeeInputRef = useRef(null);
   const codMinOrderInputRef = useRef(null);
 
   const fieldRefs = {
     gateways: gatewaysGroupRef,
+    stripePublishableKey: stripePublishableKeyInputRef,
+    stripeSecretKey: stripeSecretKeyInputRef,
+    stripeWebhookSecret: stripeWebhookSecretInputRef,
     paypalEnvironment: paypalEnvironmentInputRef,
     transactionFee: transactionFeeInputRef,
     codMinOrder: codMinOrderInputRef,
@@ -74,6 +82,7 @@ export default function PaymentSettingsForm() {
   }
 
   useEffect(() => {
+    setOrigin(window.location.origin);
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -207,6 +216,9 @@ export default function PaymentSettingsForm() {
                     value={settings[field.key]}
                     onChange={(value) => setField(field.key, value)}
                     placeholder={field.placeholder}
+                    hint={typeof field.hint === "function" ? field.hint(origin) : field.hint}
+                    error={errors[field.key]}
+                    inputRef={fieldRefs[field.key]}
                     autoComplete={field.secret ? "new-password" : "off"}
                     onEnter={handleSave}
                     disabled={loading}

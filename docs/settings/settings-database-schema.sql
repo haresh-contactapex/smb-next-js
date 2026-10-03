@@ -97,6 +97,7 @@ CREATE TABLE payment_settings (
     cod_enabled            BOOLEAN       NOT NULL DEFAULT true,
     stripe_publishable_key VARCHAR(255),
     stripe_secret_key      VARCHAR(255),
+    stripe_webhook_secret  VARCHAR(255),
     paypal_client_id       VARCHAR(255),
     paypal_client_secret   VARCHAR(255),
     paypal_environment     VARCHAR(10)   NOT NULL DEFAULT 'sandbox' CHECK (paypal_environment IN ('sandbox', 'live')),
@@ -111,6 +112,7 @@ COMMENT ON TABLE payment_settings IS 'Backs the Settings -> Payment page. Single
 COMMENT ON COLUMN payment_settings.cod_enabled IS 'Cash on delivery. May be on alone or alongside the one active online gateway.';
 COMMENT ON COLUMN payment_settings.stripe_publishable_key IS 'Stripe publishable key. Kept when Stripe is switched off.';
 COMMENT ON COLUMN payment_settings.stripe_secret_key IS 'Stripe secret key. Store encrypted at rest, never in plaintext.';
+COMMENT ON COLUMN payment_settings.stripe_webhook_secret IS 'Signing secret (whsec_...) of the Stripe webhook that points at /api/stripe/webhook. Store encrypted at rest, never in plaintext.';
 COMMENT ON COLUMN payment_settings.paypal_client_id IS 'PayPal REST app client ID. Kept when PayPal is switched off.';
 COMMENT ON COLUMN payment_settings.paypal_client_secret IS 'PayPal REST app client secret. Store encrypted at rest, never in plaintext.';
 COMMENT ON COLUMN payment_settings.paypal_environment IS 'Which PayPal environment the client ID and secret belong to: sandbox or live.';
