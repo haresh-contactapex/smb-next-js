@@ -4,11 +4,15 @@ import { useEffect, useRef, useState } from "react";
 import PageToolbar from "@/components/settings-shared/PageToolbar";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextField from "@/components/settings-shared/TextField";
+import SelectField from "@/components/settings-shared/SelectField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
 import Toast from "@/components/add-product/Toast";
 import {
   DEFAULT_PAYMENT_SETTINGS,
+  PAYMENT_GATEWAYS,
+  selectedGateways,
+  setGatewaySelected,
   toFormSettings,
   toSavePayload,
   validatePaymentSettingsForm,
@@ -26,13 +30,19 @@ export default function PaymentSettingsForm() {
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
   const toastTimerRef = useRef(null);
+  const gatewaysGroupRef = useRef(null);
+  const paypalEnvironmentInputRef = useRef(null);
   const transactionFeeInputRef = useRef(null);
   const codMinOrderInputRef = useRef(null);
 
   const fieldRefs = {
+    gateways: gatewaysGroupRef,
+    paypalEnvironment: paypalEnvironmentInputRef,
     transactionFee: transactionFeeInputRef,
     codMinOrder: codMinOrderInputRef,
   };
+
+  const activeGateways = selectedGateways(settings);
 
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });
@@ -51,8 +61,11 @@ export default function PaymentSettingsForm() {
       const res = await fetch("/api/settings/payment");
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Failed to load payment settings");
-      setSettings(toFormSettings(json.data));
-      setErrors({});
+      const loaded = toFormSettings(json.data);
+      setSettings(loaded);
+      // A saved selection that breaks the gateway rules (stored before they
+      // existed) is flagged straight away rather than on the first failed save.
+      setErrors({ gateways: validatePaymentSettingsForm(loaded).errors.gateways });
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -68,6 +81,20 @@ export default function PaymentSettingsForm() {
   function setField(field, value) {
     setSettings((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
+  }
+
+  function clearGatewaysError() {
+    setErrors((prev) => (prev.gateways ? { ...prev, gateways: undefined } : prev));
+  }
+
+  function handleGatewayToggle(gatewayId, selected) {
+    setSettings((prev) => setGatewaySelected(prev, gatewayId, selected));
+    clearGatewaysError();
+  }
+
+  function handleCodToggle(selected) {
+    setField("codEnabled", selected);
+    clearGatewaysError();
   }
 
   async function handleSave() {
@@ -117,44 +144,79 @@ export default function PaymentSettingsForm() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <SectionCard title="Payment Gateways">
-            <ToggleField
-              label="Stripe"
-              checked={settings.stripeEnabled}
-              onChange={(value) => setField("stripeEnabled", value)}
-            />
-            <ToggleField
-              label="PayPal"
-              checked={settings.paypalEnabled}
-              onChange={(value) => setField("paypalEnabled", value)}
-            />
-            <ToggleField
-              label="Razorpay"
-              checked={settings.razorpayEnabled}
-              onChange={(value) => setField("razorpayEnabled", value)}
-            />
-            <ToggleField
-              label="Cash on Delivery (COD)"
-              checked={settings.codEnabled}
-              onChange={(value) => setField("codEnabled", value)}
-            />
+            <p id="payment-gateways-hint" className="text-xs text-slate-400 -mt-2">
+              Choose one online gateway: Stripe, PayPal or Razorpay. Cash on Delivery can be selected on its own or
+              alongside it. At least one payment method is required.
+            </p>
+            <div
+              ref={gatewaysGroupRef}
+              tabIndex={-1}
+              role="group"
+              aria-label="Payment gateways"
+              aria-describedby={`payment-gateways-hint${errors.gateways ? " payment-gateways-error" : ""}`}
+              className="outline-none"
+            >
+              {PAYMENT_GATEWAYS.map((gateway) => (
+                <ToggleField
+                  key={gateway.id}
+                  label={gateway.label}
+                  checked={settings[gateway.enabledKey]}
+                  onChange={(selected) => handleGatewayToggle(gateway.id, selected)}
+                  disabled={loading}
+                />
+              ))}
+              <div className="mt-1.5 pt-1.5 border-t border-slate-100 dark:border-white/5">
+                <ToggleField
+                  label="Cash on Delivery (COD)"
+                  checked={settings.codEnabled}
+                  onChange={handleCodToggle}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+            {errors.gateways && (
+              <p id="payment-gateways-error" role="alert" className="text-xs text-error">
+                {errors.gateways}
+              </p>
+            )}
           </SectionCard>
 
-          <SectionCard title="Gateway Configuration">
-            <TextField
-              id="f-public-key"
-              label="Publishable / Public Key"
-              value={settings.publicKey}
-              onChange={(value) => setField("publicKey", value)}
-              disabled={loading}
-            />
-            <TextField
-              id="f-secret-key"
-              label="Secret Key"
-              type="password"
-              value={settings.secretKey}
-              onChange={(value) => setField("secretKey", value)}
-              disabled={loading}
-            />
+          {activeGateways.map((gateway) => (
+            <SectionCard key={gateway.id} title={`${gateway.label} Details`}>
+              <p className="text-xs text-slate-400 -mt-2">{gateway.help}</p>
+              {gateway.fields.map((field) =>
+                field.options ? (
+                  <SelectField
+                    key={field.key}
+                    id={field.id}
+                    label={field.label}
+                    value={settings[field.key]}
+                    options={field.options}
+                    onChange={(value) => setField(field.key, value)}
+                    error={errors[field.key]}
+                    inputRef={fieldRefs[field.key]}
+                    onEnter={handleSave}
+                    disabled={loading}
+                  />
+                ) : (
+                  <TextField
+                    key={field.key}
+                    id={field.id}
+                    label={field.label}
+                    type={field.secret ? "password" : "text"}
+                    value={settings[field.key]}
+                    onChange={(value) => setField(field.key, value)}
+                    placeholder={field.placeholder}
+                    autoComplete={field.secret ? "new-password" : "off"}
+                    onEnter={handleSave}
+                    disabled={loading}
+                  />
+                ),
+              )}
+            </SectionCard>
+          ))}
+
+          <SectionCard title="Payment Options">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextField
                 id="f-transaction-fee"
@@ -195,9 +257,10 @@ export default function PaymentSettingsForm() {
             icon="credit-card"
             title="About Payment Gateways"
             points={[
+              "Only one online gateway can be on at a time. Cash on Delivery can be on with it or by itself, and at least one payment method must stay on.",
+              "Each gateway keeps its own keys. They are kept when you switch to another gateway, so you do not need to re-enter them if you switch back.",
               "Gateway keys are saved to the database in plain text for now. Encrypt them at rest before taking real payments.",
-              "The dashboard marks Payment as connected once Cash on Delivery is on, or a gateway is on with both keys entered.",
-              "Disabling a gateway hides it from customers at checkout immediately.",
+              "Disabling a payment method hides it from customers at checkout immediately.",
             ]}
           />
         </div>

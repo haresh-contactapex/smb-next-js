@@ -3,7 +3,7 @@ import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getPaymentSettings, updatePaymentSettings } from "@/lib/paymentSettings";
-import { validatePaymentSettingsForm } from "@/components/settings-payment/helpers";
+import { GATEWAY_CREDENTIAL_KEYS, validatePaymentSettingsForm } from "@/components/settings-payment/helpers";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("payment", "view"));
@@ -29,8 +29,10 @@ export async function PUT(request) {
       paypalEnabled: Boolean(payload.paypalEnabled),
       razorpayEnabled: Boolean(payload.razorpayEnabled),
       codEnabled: Boolean(payload.codEnabled),
-      publicKey: String(payload.publicKey || "").trim().slice(0, 255),
-      secretKey: String(payload.secretKey || "").trim().slice(0, 255),
+      ...Object.fromEntries(
+        GATEWAY_CREDENTIAL_KEYS.map((key) => [key, String(payload[key] || "").trim().slice(0, 255)]),
+      ),
+      paypalEnvironment: String(payload.paypalEnvironment ?? "").trim(),
       transactionFee: String(payload.transactionFee ?? "").trim(),
       codMinOrder: String(payload.codMinOrder ?? "").trim(),
       autoCapture: Boolean(payload.autoCapture),

@@ -99,19 +99,37 @@ Backs the Settings → Currency & Tax page.
 
 Backs the Settings → Payment page.
 
-| Column              | Type            | Constraints                | Notes |
-| --------------------- | --------------- | ------------------------------- | ----- |
-| `id`                  | `SMALLINT`      | PK, CHECK (`id = 1`)             |       |
-| `stripe_enabled`      | `BOOLEAN`       | NOT NULL, DEFAULT `true`         |       |
-| `paypal_enabled`      | `BOOLEAN`       | NOT NULL, DEFAULT `false`        |       |
-| `razorpay_enabled`    | `BOOLEAN`       | NOT NULL, DEFAULT `false`        |       |
-| `cod_enabled`         | `BOOLEAN`       | NOT NULL, DEFAULT `true`         | Cash on delivery                     |
-| `public_key`          | `VARCHAR(255)`  | NULL                             | Gateway publishable key               |
-| `secret_key`          | `VARCHAR(255)`  | NULL                             | Gateway secret key; see Design notes  |
-| `transaction_fee`     | `DECIMAL(5,2)`  | NOT NULL, DEFAULT `2.9`          | Percent per transaction               |
-| `cod_min_order`       | `DECIMAL(12,2)` | NOT NULL, DEFAULT `0`            | Minimum order amount to allow COD     |
-| `auto_capture`        | `BOOLEAN`       | NOT NULL, DEFAULT `true`         | Capture payment immediately vs. authorize-only |
-| `updated_at`          | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`        |                                       |
+Payment methods follow two rules, enforced by the API (`PUT /api/settings/payment`)
+and the form rather than by database constraints: at most one of `stripe_enabled`
+/ `paypal_enabled` / `razorpay_enabled` is `true` (one online gateway at a time),
+and at least one of those or `cod_enabled` is `true`. Cash on delivery can be on
+alone or alongside the active gateway. Each gateway keeps its own credentials,
+which are retained when the gateway is switched off so they need not be
+re-entered. Credentials are optional: enabling a gateway does not require them.
+
+| Column                   | Type            | Constraints                                        | Notes |
+| ------------------------ | --------------- | -------------------------------------------------- | ----- |
+| `id`                     | `SMALLINT`      | PK, CHECK (`id = 1`)                               |       |
+| `stripe_enabled`         | `BOOLEAN`       | NOT NULL, DEFAULT `true`                           |       |
+| `paypal_enabled`         | `BOOLEAN`       | NOT NULL, DEFAULT `false`                          |       |
+| `razorpay_enabled`       | `BOOLEAN`       | NOT NULL, DEFAULT `false`                          |       |
+| `cod_enabled`            | `BOOLEAN`       | NOT NULL, DEFAULT `true`                           | Cash on delivery |
+| `stripe_publishable_key` | `VARCHAR(255)`  | NULL                                               | Stripe publishable key |
+| `stripe_secret_key`      | `VARCHAR(255)`  | NULL                                               | Stripe secret key; see Design notes |
+| `paypal_client_id`       | `VARCHAR(255)`  | NULL                                               | PayPal REST app client ID |
+| `paypal_client_secret`   | `VARCHAR(255)`  | NULL                                               | PayPal REST app client secret; see Design notes |
+| `paypal_environment`     | `VARCHAR(10)`   | NOT NULL, DEFAULT `'sandbox'`, CHECK IN (`sandbox`, `live`) | Environment the PayPal credentials belong to |
+| `razorpay_key_id`        | `VARCHAR(255)`  | NULL                                               | Razorpay key ID |
+| `razorpay_key_secret`    | `VARCHAR(255)`  | NULL                                               | Razorpay key secret; see Design notes |
+| `transaction_fee`        | `DECIMAL(5,2)`  | NOT NULL, DEFAULT `2.9`                            | Percent per transaction |
+| `cod_min_order`          | `DECIMAL(12,2)` | NOT NULL, DEFAULT `0`                              | Minimum order amount to allow COD |
+| `auto_capture`           | `BOOLEAN`       | NOT NULL, DEFAULT `true`                           | Capture payment immediately vs. authorize-only |
+| `updated_at`             | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                          |       |
+
+A database created before per-gateway credentials existed has shared
+`public_key` / `secret_key` columns instead; `npm run db:migrate:payment-gateways`
+(`payment-gateway-credentials-only.sql`) moves them onto the matching gateway and
+drops them.
 
 ### `shipping_settings`
 
@@ -463,8 +481,9 @@ editable settings — see Design notes.
   `customers_settings` and `checkout_settings` — same reasoning: two
   independent forms in the current app, kept as two independent columns
   rather than silently merged.
-- `secret_key` on `payment_settings` and `smtp_password` on `email_settings`
-  are payment/mail-provider credentials and must be stored encrypted at rest
+- `stripe_secret_key`, `paypal_client_secret` and `razorpay_key_secret` on
+  `payment_settings`, and `smtp_password` on `email_settings`, are
+  payment/mail-provider credentials and must be stored encrypted at rest
   (e.g. via `pgcrypto` or an application-level KMS), never in plaintext, even
   though the UI's plain `TextField`/password input doesn't reflect that today.
 - `ip_allowlist` is stored as one newline-delimited `TEXT` blob to mirror the
@@ -479,13 +498,13 @@ editable settings — see Design notes.
   permission set; see that table for how permission modules follow the
   sidebar configuration.
 - `mailchimp_api_key` / `google_recaptcha_site_key` / `google_recaptcha_secret_key`
-  / gateway `public_key` / `secret_key` are exactly the fields the
+  / the per-gateway keys on `payment_settings` are exactly the fields the
   Integrations and Payment forms collect today; a production system would
   likely route these through a secrets manager rather than a plain settings
   table, but that's out of scope for a schema that mirrors the current UI.
   `google_recaptcha_secret_key` in particular is a server-side verification
-  credential (like `secret_key` on `payment_settings`) and must be stored
-  encrypted at rest, never in plaintext.
+  credential (like `stripe_secret_key` on `payment_settings`) and must be
+  stored encrypted at rest, never in plaintext.
 - The System & Maintenance page's "System Info" (App Version, Environment,
   Last Backup) and its Back Up Now / Clear Cache buttons are not modeled as
   columns — they're read-only operational/reporting data (version info,

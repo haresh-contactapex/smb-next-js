@@ -10,6 +10,7 @@ export default function TextField({
   disabled = false,
   inputRef,
   onEnter,
+  autoComplete,
 }) {
   function handleKeyDown(e) {
     if (e.key !== "Enter") return;
@@ -31,6 +32,7 @@ export default function TextField({
         onKeyDown={onEnter ? handleKeyDown : undefined}
         placeholder={placeholder}
         aria-label={label}
+        autoComplete={autoComplete}
         disabled={disabled}
         className={`field-input${
           error
