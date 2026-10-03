@@ -24,7 +24,7 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 | Own header / footer | `CheckoutHeader.js`, `CheckoutFooter.js` |
 | Shimmer loading skeleton | `CheckoutSkeleton.js`, `src/app/(site)/checkout/loading.js` |
 | Stripe card form and Place Order | `StripePaymentForm.js`, `stripeClient.js` |
-| Order confirmation page (`/checkout/complete`) | `src/app/(site)/checkout/complete/page.js`, `CheckoutResult.js`, `OrderConfirmationDetails.js` (the full order); the totals row and line thumbnail it shares with the sidebar are in `OrderSummaryParts.js` |
+| Order confirmation page (`/checkout/complete`) | `src/app/(site)/checkout/complete/page.js`, `CheckoutResult.js`, `OrderConfirmationDetails.js` (the full order, with an icon on each fact and contact line; when the billing and shipping addresses say the same thing it shows one "Shipping & billing address" card with a note instead of two); the totals row and line thumbnail it shares with the sidebar are in `OrderSummaryParts.js` |
 | Stripe REST client, key handling, webhook signature check | `src/lib/stripe.js` |
 | Prices and validates an order from the database | `src/lib/checkoutPricing.js` |
 | Saves the order, syncs payment results | `src/lib/checkoutOrders.js` |
