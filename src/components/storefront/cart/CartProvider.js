@@ -231,6 +231,33 @@ export default function CartProvider({ countries = [], children }) {
     setCart((current) => (current.shipping ? { ...current, shipping: { ...current.shipping, selectedRateId: rateId } } : current));
   }, []);
 
+  // Empties everything once an order has been placed, so it can't be bought twice.
+  const clearCart = useCallback(() => {
+    setCouponNotice("");
+    setCart(EMPTY_CART);
+  }, []);
+
+  // Brings the lines in line with what the checkout's server found when it priced them:
+  // each is { key, found, available, price, maxQuantity }. A line that is gone or out of
+  // stock is dropped, the price and stock limit are replaced by the current ones, and a
+  // quantity above what is left is lowered.
+  const syncLines = useCallback((lines) => {
+    setCart((current) => {
+      const items = [];
+      for (const item of current.items) {
+        const latest = lines.find((line) => line.key === item.key);
+        if (!latest) {
+          items.push(item);
+          continue;
+        }
+        if (!latest.found || !latest.available) continue;
+        const next = { ...item, price: Number(latest.price), maxQuantity: latest.maxQuantity ?? null };
+        items.push({ ...next, quantity: clampQuantity(item.quantity, next) });
+      }
+      return items.length > 0 ? { ...current, items } : EMPTY_CART;
+    });
+  }, []);
+
   const count = cartCount(cart.items);
   const totals = useMemo(() => cartTotals(cart), [cart]);
 
@@ -259,10 +286,12 @@ export default function CartProvider({ countries = [], children }) {
       estimateShipping,
       clearShipping,
       selectShippingRate,
+      clearCart,
+      syncLines,
     }),
     [
       cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, ensureItem, setQuantity, changeVariant, removeItem,
-      setNote, applyCoupon, removeCoupon, estimateShipping, clearShipping, selectShippingRate,
+      setNote, applyCoupon, removeCoupon, estimateShipping, clearShipping, selectShippingRate, clearCart, syncLines,
     ]
   );
 

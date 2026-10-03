@@ -2,8 +2,10 @@
 
 The public checkout page at `/checkout`, reached from **Checkout** in the cart
 drawer and **Proceed to checkout** on the cart page. It collects contact and
-address details and shows the order summary. **It does not place orders yet** —
-see [Not built yet](#not-built-yet).
+address details, shows the order summary and takes **card payments through
+Stripe** ([Card payments](#card-payments-stripe)). The other payment methods
+(PayPal, Razorpay, cash on delivery) can't take an order yet; see
+[Not built yet](#not-built-yet).
 
 There is no checkout table. The cart still lives in the visitor's browser (see
 [cart-drawer.md](cart-drawer.md)); the page reads it through `useCart()`.
@@ -21,6 +23,12 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 | Order summary, promo code | `OrderSummary.js`, `CheckoutPromo.js` |
 | Own header / footer | `CheckoutHeader.js`, `CheckoutFooter.js` |
 | Shimmer loading skeleton | `CheckoutSkeleton.js`, `src/app/(site)/checkout/loading.js` |
+| Stripe card form and Place Order | `StripePaymentForm.js`, `stripeClient.js` |
+| Order confirmation page (`/checkout/complete`) | `src/app/(site)/checkout/complete/page.js`, `CheckoutResult.js` |
+| Stripe REST client, key handling, webhook signature check | `src/lib/stripe.js` |
+| Prices and validates an order from the database | `src/lib/checkoutPricing.js` |
+| Saves the order, syncs payment results | `src/lib/checkoutOrders.js` |
+| Place Order endpoint, Stripe webhook | `src/app/api/checkout/payment/route.js`, `src/app/api/stripe/webhook/route.js` |
 | Validation, phone countries, tax total | `checkoutHelpers.js` |
 | One address block, used for billing and for shipping | `CheckoutAddressFields.js` |
 | "Saved addresses" picker above an address block | `SavedAddressPicker.js` (matching and starting values: `startingCheckout()`, `addressMatches()` in `checkoutHelpers.js`) |
@@ -137,15 +145,86 @@ There is no checkout table. The cart still lives in the visitor's browser (see
     (`useImageLoaded`); a photo that fails to load stops shimmering.
 - An empty cart shows "Your cart is empty" with a link back to the shop.
 
+## Card payments (Stripe)
+
+Choosing **Credit or debit card** in the payment step shows Stripe's Payment Element
+and **Place Order**. Everything below is the card flow; the keys are the ones saved in
+*Settings → Payment* (no new environment variable except the webhook secret).
+
+### Set-up
+
+1. In *Settings → Payment* switch Stripe on and save its **publishable** and **secret**
+   keys. They must be from the same mode (both `test` or both `live`). Until they are,
+   the card method shows "Card payments aren't available right now" and can't be picked
+   (the reason is logged on the server). Only the publishable key ever reaches the browser.
+2. Run the order tables migration once: `npm run db:migrate:order-details`
+   (`docs/orders/order-details-tables-only.sql`, see the [orders schema](../orders/orders-database-schema.md)).
+   Without it Place Order fails after Stripe has created the payment, which is then cancelled;
+   in development the response says which table is missing.
+3. Add a Stripe webhook for `payment_intent.succeeded` and `payment_intent.payment_failed`
+   pointing at `https://<your domain>/api/stripe/webhook`, and put its signing secret
+   (`whsec_...`) in `STRIPE_WEBHOOK_SECRET` (see `.env.example`). Locally,
+   `stripe listen --forward-to localhost:3000/api/stripe/webhook` prints a secret to use.
+   The webhook is what marks an order Paid when a customer pays but closes the tab before
+   the confirmation page loads; without the secret it answers 503 and Stripe retries.
+
+With **test** keys the payment step shows a banner and takes Stripe's test cards (4242 4242
+4242 4242, any future date and CVC). With *auto capture* switched off in *Settings → Payment*
+the payment is only authorized; capture it from the Stripe dashboard and the webhook marks
+the order Paid.
+
+### What happens when the customer presses Place Order
+
+1. The Payment Element validates what was typed (Stripe.js loads from `js.stripe.com` only
+   once the customer reaches this step).
+2. `POST /api/checkout/payment` receives **what to buy and for whom** (product and variant
+   ids, quantities, the two addresses, the contact, a coupon *code*, the shipping rate id)
+   and **the total the customer was shown**. It never trusts a price, discount or total:
+   `checkoutPricing.js` reads each line's price and stock from the database, checks the
+   coupon and shipping rules, validates both addresses with `validateTypedLocation()`, adds
+   tax from *Settings → Currency & Tax*, and compares its total with the one shown.
+3. If anything differs it answers `409` with a `reason` and the checkout reacts:
+   `cart_changed` (price or stock) updates the cart's lines from `details.lines` and asks the
+   customer to look again, `coupon_invalid` removes the code, `total_changed` refreshes the page.
+   Nothing is charged and nothing is saved.
+4. Otherwise it creates a Stripe PaymentIntent for exactly the server's total, then saves the
+   order (`Pending` / `Unpaid`, or the default status from *Settings → Orders*) with its two
+   addresses, line items, the price breakdown and a pending `payments` row holding the
+   intent id, all in one transaction. A guest gets a guest `customers` row; a signed-in
+   customer's order is attached to their account. If saving fails, the intent is cancelled.
+5. The browser confirms the intent with the card details (handling 3-D Secure) and goes to
+   `/checkout/complete`.
+6. That page asks **Stripe**, not the URL, how the payment went (the URL's client secret must
+   match), brings the order up to date, shows the result and, for a placed order, empties the cart.
+
+A declined card keeps the same order and intent, so correcting the card and retrying doesn't
+create a second order; changing the cart or addresses creates a new one, and the abandoned
+one stays `Pending` / `Unpaid` until it is cancelled (*Settings → Orders* auto-cancel).
+The endpoint is rate limited per client address (12 requests in 10 minutes, in memory).
+
+### Paid, failed and the webhook
+
+`syncPaymentIntent()` (`checkoutOrders.js`) is the only place an order becomes Paid. It runs
+from the webhook and from the confirmation page, is idempotent, and only marks Paid when
+Stripe reports the order's full amount in its currency. A failed attempt sets `Failed`; a
+later successful retry sets `Paid`. A payment that arrives for an already-cancelled order
+is marked Paid and raises a warning in the admin notifications, since it needs a refund.
+
+### Not handled yet
+
+- **Stock** isn't decremented when an order is paid (the server only refuses lines that
+  are out of stock when the order is placed, so two buyers can still race for the last unit).
+- **Coupon usage** (`usage_count`, one per customer) isn't recorded.
+- **Emails**: no order confirmation is sent (*Settings → Orders* "confirmation email").
+- **Refunds** and `charge.refunded` events aren't handled.
+- **Guest checkout** can't be switched off: the "Allow guest checkout" settings forms
+  aren't backed by a table yet.
+- The marketing checkbox is still not stored on the guest customer.
+
 ## Not built yet
 
-- **Placing an order.** The payment step ends in a disabled **Place Order**
-  button. Nothing is saved or sent: no order row, no payment, no email. When it
-  is built, re-price the cart from the database and re-check the coupon, stock
-  and tax server-side rather than trusting the browser's cart (see "Not enforced
-  yet" in [cart-drawer.md](cart-drawer.md)), and validate **both** addresses
-  again with `validateTypedLocation()`: only the shipping one reaches the server
-  today.
+- **Other payment methods.** PayPal, Razorpay and cash on delivery are listed when switched
+  on, but choosing one leaves **Place Order** disabled: only card payments take an order.
 - **Marketing consent.** The "keep me updated on order status and special
   offers" checkbox is pre-checked, as in the design, and its value is not stored
   anywhere. Before it is persisted, split transactional updates from marketing

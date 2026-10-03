@@ -1,5 +1,6 @@
 import { getCurrencyTaxSettings } from "./currencyTaxSettings";
 import { getPaymentSettings } from "./paymentSettings";
+import { loadStripeConfig, toStripePublicConfig } from "./stripe";
 import { getCurrentCustomer } from "./auth/customerSession";
 import { listCustomerAddresses } from "./customerAddresses";
 
@@ -30,10 +31,22 @@ function toTax(settings) {
 
 // The payment methods the store has switched on in Settings -> Payment.
 // `minOrder` is only set for cash on delivery, which has a minimum order amount.
-function toPaymentMethods(settings) {
+// The card method carries the Stripe publishable key and mode (never the secret key),
+// or `unavailable` when Stripe is switched on but its keys are missing or don't match.
+function toPaymentMethods(settings, stripe) {
   if (!settings) return [];
   const methods = [];
-  if (settings.stripeEnabled) methods.push({ id: "card", label: "Credit or debit card", detail: "Pay with a credit or debit card." });
+  if (settings.stripeEnabled) {
+    const ready = Boolean(stripe?.configured);
+    if (!ready) console.warn(`Checkout: card payments are unavailable. ${stripe?.problem || "Stripe settings could not be read."}`);
+    methods.push({
+      id: "card",
+      label: "Credit or debit card",
+      detail: "Pay with a credit or debit card.",
+      stripe: ready ? toStripePublicConfig(stripe) : null,
+      unavailable: ready ? null : "Card payments aren't available right now.",
+    });
+  }
   if (settings.paypalEnabled) methods.push({ id: "paypal", label: "PayPal", detail: "Pay with your PayPal account." });
   if (settings.razorpayEnabled) methods.push({ id: "razorpay", label: "Razorpay", detail: "Pay online with Razorpay." });
   if (settings.codEnabled) {
@@ -48,11 +61,19 @@ function toPaymentMethods(settings) {
 }
 
 export async function loadCheckoutSettings() {
-  const [tax, payment] = await Promise.all([
+  const [tax, payment, stripe] = await Promise.all([
     readOrNull("tax", getCurrencyTaxSettings),
     readOrNull("payment", getPaymentSettings),
+    readOrNull("stripe", loadStripeConfig),
   ]);
-  return { tax: toTax(tax), paymentMethods: toPaymentMethods(payment) };
+  return { tax: toTax(tax), paymentMethods: toPaymentMethods(payment, stripe) };
+}
+
+// The currency and tax rules an order is priced with. Unlike the page's own extras
+// above this throws when it can't be read: an order must never be priced without them.
+export async function loadCheckoutPricingSettings() {
+  const settings = await getCurrencyTaxSettings();
+  return { currency: settings.currency || "USD", tax: toTax(settings) };
 }
 
 // The signed-in customer's own details and address book, to prefill the checkout

@@ -1,0 +1,253 @@
+import { randomUUID, timingSafeEqual } from "crypto";
+import { sql, sqlTransaction } from "./db";
+import { getOrdersSettings } from "./ordersSettings";
+import { logAdminActivity } from "./notifications";
+import { formatCurrency, toMinorUnits } from "./currency";
+import { CheckoutError, countryCode, priceCheckout } from "./checkoutPricing";
+import { cancelPaymentIntent, createPaymentIntent, loadStripeConfig, retrievePaymentIntent } from "./stripe";
+
+// Placing an order and recording what Stripe says about its payment.
+//
+// A card order is written in one go when the customer presses Place Order: the
+// server prices the cart itself (checkoutPricing.js), asks Stripe for a
+// PaymentIntent for exactly that total, then saves the order as Pending / Unpaid
+// with its addresses, line items and a pending `payments` row holding the intent id.
+// The order only becomes Paid when Stripe confirms the money, through the signed
+// webhook or the return page; the browser saying "it worked" is never enough.
+
+const MAX_ORDER_NUMBER_ATTEMPTS = 3;
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isOrderNumberCollision(error) {
+  return error?.code === "23505" && /order_number/.test(`${error.constraint || ""} ${error.message || ""}`);
+}
+
+// Neon reports a missing table as 42P01; the detail tables come from the order-details migration.
+function isMissingTable(error) {
+  return error?.code === "42P01";
+}
+
+// The next order number: the store's prefix and the next free number after the
+// highest one used so far (never below the configured starting number).
+async function insertOrder({ orderId, priced, customer, intentId }) {
+  const settings = await getOrdersSettings();
+  const prefix = settings.orderNumberPrefix || "";
+  const startingNumber = Number(settings.startingOrderNumber) || 10000;
+  const status = settings.defaultOrderStatus || "Pending";
+
+  const { contact, billing, shipping, lines } = priced;
+  const fullName = `${contact.firstName} ${contact.lastName}`;
+  const phone = contact.phoneE164;
+  const billingId = randomUUID();
+  const shippingId = randomUUID();
+  const guestId = customer ? null : randomUUID();
+  const itemCount = lines.reduce((total, line) => total + line.quantity, 0);
+
+  for (let attempt = 1; attempt <= MAX_ORDER_NUMBER_ATTEMPTS; attempt += 1) {
+    try {
+      let orderIndex = 0;
+      const results = await sqlTransaction((tx) => {
+        const statements = [];
+        if (guestId) {
+          statements.push(tx`
+            INSERT INTO customers (id, first_name, last_name, email, phone, is_guest)
+            VALUES (${guestId}, ${contact.firstName}, ${contact.lastName}, ${contact.email}, ${phone}, true)
+          `);
+        }
+        for (const [id, type, address] of [[billingId, "BILLING", billing], [shippingId, "SHIPPING", shipping]]) {
+          statements.push(tx`
+            INSERT INTO order_addresses (id, type, full_name, address_line1, address_line2, city, state, postal_code, country, phone)
+            VALUES (${id}, ${type}, ${fullName}, ${address.line1}, ${address.line2 || null}, ${address.city}, ${address.state},
+                    ${address.zip || null}, ${address.country}, ${phone})
+          `);
+        }
+
+        orderIndex = statements.length;
+        statements.push(tx`
+          INSERT INTO orders (
+            id, order_number, customer_id, customer_name, billing_address_id, shipping_address_id, item_count,
+            total_amount, currency, status, payment_status, subtotal_amount, discount_amount, shipping_amount, tax_amount, coupon_code
+          )
+          VALUES (
+            ${orderId},
+            (SELECT ${prefix}::text || GREATEST(${startingNumber}::bigint, COALESCE(MAX(NULLIF(regexp_replace(order_number, '[^0-9]', '', 'g'), '')::bigint), 0) + 1)::text FROM orders),
+            ${customer?.id || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
+            ${priced.total}, ${priced.currency}, ${status}, 'Unpaid', ${priced.subtotal}, ${priced.discount}, ${priced.shippingAmount}, ${priced.tax}, ${priced.couponCode}
+          )
+          RETURNING order_number
+        `);
+        for (const line of lines) {
+          statements.push(tx`
+            INSERT INTO order_line_items (order_id, product_id, variant_id, title, sku, unit_price, quantity, line_total)
+            VALUES (${orderId}, ${line.productId}, ${line.variantId}, ${line.title.slice(0, 255)}, ${line.sku || null}, ${line.unitPrice}, ${line.quantity}, ${line.lineTotal})
+          `);
+        }
+        statements.push(tx`
+          INSERT INTO payments (order_id, provider, status, amount, provider_reference)
+          VALUES (${orderId}, 'stripe', 'pending', ${priced.total}, ${intentId})
+        `);
+        return statements;
+      });
+      return results[orderIndex][0].order_number;
+    } catch (error) {
+      // Two checkouts picked the same number at once: nothing was written, so try again.
+      if (isOrderNumberCollision(error) && attempt < MAX_ORDER_NUMBER_ATTEMPTS) continue;
+      if (isMissingTable(error)) console.error("Order tables are missing. Run `npm run db:migrate:order-details`.", error.message);
+      throw error;
+    }
+  }
+  throw new Error("Could not generate a unique order number.");
+}
+
+// Prices the cart, asks Stripe for a PaymentIntent for that total and saves the
+// order. Returns what the browser needs to confirm the payment. `customer` is the
+// signed-in customer, or null for a guest checkout.
+export async function startCardPayment(input, customer) {
+  const stripe = await loadStripeConfig();
+  if (!stripe.configured) {
+    console.error(`Card checkout refused: ${stripe.problem}`);
+    throw new CheckoutError("Card payments aren't available right now.", 503, { reason: "gateway_unavailable" });
+  }
+
+  const priced = await priceCheckout(input);
+  const orderId = randomUUID();
+
+  const shippingCountry = countryCode(priced.shipping.country);
+  let intent;
+  try {
+    intent = await createPaymentIntent(stripe.secretKey, {
+      orderId,
+      amount: priced.total,
+      currency: priced.currency,
+      receiptEmail: priced.contact.email,
+      description: "shopmyband.com order",
+      captureAutomatically: stripe.captureAutomatically,
+      shipping: shippingCountry
+        ? {
+            name: `${priced.contact.firstName} ${priced.contact.lastName}`,
+            address: {
+              line1: priced.shipping.line1,
+              line2: priced.shipping.line2,
+              city: priced.shipping.city,
+              state: priced.shipping.state,
+              postal_code: priced.shipping.zip,
+              country: shippingCountry,
+            },
+          }
+        : undefined,
+    });
+  } catch (error) {
+    console.error("Stripe could not create a PaymentIntent", error.code || error.type || "", error.message);
+    throw new CheckoutError("We couldn't start your payment. Please try again in a moment.", 502, { reason: "gateway_error" });
+  }
+
+  try {
+    const orderNumber = await insertOrder({ orderId, priced, customer, intentId: intent.id });
+    return { orderNumber, clientSecret: intent.client_secret, amount: priced.total, currency: priced.currency };
+  } catch (error) {
+    console.error("The order could not be saved", error.code || "", error.message);
+    // Nothing was charged; don't leave an intent hanging for an order that doesn't exist.
+    await cancelPaymentIntent(stripe.secretKey, intent.id).catch(() => {});
+    // In development the database's own message comes back too, so a missing migration is obvious.
+    const details = process.env.NODE_ENV === "development" ? { cause: error.message } : null;
+    throw new CheckoutError("We couldn't save your order. You have not been charged. Please try again.", 500, { reason: "order_failed", details });
+  }
+}
+
+// Brings an order in line with what Stripe says about its PaymentIntent. Safe to call
+// any number of times, from the webhook and the return page alike: the order is only
+// flipped to Paid once, and only when Stripe reports the full amount in the order's
+// currency. Returns { found, paid }.
+export async function syncPaymentIntent(intent) {
+  const orderId = intent?.metadata?.order_id;
+  if (!intent?.id || !UUID_PATTERN.test(String(orderId || ""))) return { found: false, paid: false };
+
+  const [order] = await sql`
+    SELECT o.id, o.order_number, o.status, o.payment_status, o.total_amount, o.currency, o.customer_name
+    FROM orders o
+    JOIN payments p ON p.order_id = o.id AND p.provider = 'stripe' AND p.provider_reference = ${intent.id}
+    WHERE o.id = ${orderId}
+  `;
+  if (!order) return { found: false, paid: false };
+
+  if (intent.status === "succeeded") {
+    const expected = toMinorUnits(order.total_amount, order.currency);
+    if (intent.amount_received !== expected || String(intent.currency).toLowerCase() !== String(order.currency).toLowerCase()) {
+      console.error(`Stripe payment ${intent.id} does not match order ${order.order_number}: got ${intent.amount_received} ${intent.currency}, expected ${expected} ${order.currency}.`);
+      return { found: true, paid: false };
+    }
+
+    const [justPaid] = await sql`
+      UPDATE orders SET payment_status = 'Paid', updated_at = now()
+      WHERE id = ${order.id} AND payment_status <> 'Paid'
+      RETURNING id
+    `;
+    await sql`UPDATE payments SET status = 'succeeded' WHERE order_id = ${order.id} AND provider_reference = ${intent.id} AND status <> 'succeeded'`;
+
+    if (justPaid) {
+      const cancelled = order.status === "Cancelled";
+      await logAdminActivity({
+        action: "order.paid",
+        entityType: "order",
+        entityId: order.id,
+        title: `Order #${order.order_number} paid`,
+        description: cancelled
+          ? `${order.customer_name} paid ${formatCurrency(order.total_amount, order.currency)} by card, but the order had already been cancelled. It needs a refund.`
+          : `${order.customer_name} paid ${formatCurrency(order.total_amount, order.currency)} by card.`,
+        severity: cancelled ? "warning" : "success",
+        metadata: { to: { paymentStatus: "Paid" } },
+      });
+    }
+    return { found: true, paid: true };
+  }
+
+  if (intent.status === "requires_payment_method" && intent.last_payment_error) {
+    await sql`UPDATE orders SET payment_status = 'Failed', updated_at = now() WHERE id = ${order.id} AND payment_status = 'Unpaid'`;
+    await sql`UPDATE payments SET status = 'failed' WHERE order_id = ${order.id} AND provider_reference = ${intent.id} AND status = 'pending'`;
+  }
+  return { found: true, paid: false };
+}
+
+const sameSecret = (given, actual) => {
+  const a = Buffer.from(String(given || ""));
+  const b = Buffer.from(String(actual || ""));
+  return a.length === b.length && a.length > 0 && timingSafeEqual(a, b);
+};
+
+// What the order-confirmation page shows. It is reached with the PaymentIntent's id
+// and client secret (Stripe appends both to the return URL), and the secret has to
+// match: that is what proves this visitor made the payment. Never trusts the URL for
+// the outcome; asks Stripe, and syncs the order while it is at it.
+// state: paid | authorized | processing | action | failed | unknown
+export async function resolveCheckoutResult({ paymentIntentId, clientSecret }) {
+  const unknown = { state: "unknown", orderNumber: null, total: 0, currency: null };
+  if (!/^pi_[A-Za-z0-9_]+$/.test(String(paymentIntentId || "")) || !clientSecret) return unknown;
+
+  const stripe = await loadStripeConfig();
+  if (!stripe.configured) return unknown;
+
+  let intent;
+  try {
+    intent = await retrievePaymentIntent(stripe.secretKey, paymentIntentId);
+  } catch (error) {
+    console.error("Could not read the PaymentIntent for the confirmation page", error.code || "", error.message);
+    return unknown;
+  }
+  if (!sameSecret(clientSecret, intent.client_secret)) return unknown;
+
+  await syncPaymentIntent(intent);
+
+  const orderId = intent.metadata?.order_id;
+  const [order] = UUID_PATTERN.test(String(orderId || ""))
+    ? await sql`SELECT order_number, total_amount, currency FROM orders WHERE id = ${orderId}`
+    : [];
+  if (!order) return unknown;
+
+  const states = { succeeded: "paid", requires_capture: "authorized", processing: "processing", requires_action: "action", requires_confirmation: "action" };
+  return {
+    state: states[intent.status] || "failed",
+    orderNumber: order.order_number,
+    total: Number(order.total_amount) || 0,
+    currency: order.currency,
+  };
+}

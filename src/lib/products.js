@@ -887,3 +887,34 @@ export async function listStorefrontProductVariants(productIds) {
     };
   });
 }
+
+// What the checkout needs to price a cart from the database instead of trusting
+// the browser: for each ACTIVE product its title, SKU, price and stock, plus its
+// variants (with their own price and stock, in the same shape the product page
+// uses). `stock` is the units on hand for a product without variants, or null when
+// stock isn't tracked. Missing, draft and archived products are simply left out.
+export async function listCheckoutProducts(productIds) {
+  if (productIds.length === 0) return [];
+
+  const [products, withVariants] = await Promise.all([
+    sql`
+      SELECT id, title, handle, sku, price, track_quantity, inventory_quantity
+      FROM products
+      WHERE id = ANY(${productIds}::uuid[]) AND status = 'ACTIVE'
+    `,
+    listStorefrontProductVariants(productIds),
+  ]);
+
+  return products.map((product) => {
+    const tracked = product.track_quantity && product.inventory_quantity !== null;
+    return {
+      id: product.id,
+      title: product.title,
+      handle: product.handle,
+      sku: product.sku || "",
+      price: Number(product.price) || 0,
+      stock: tracked ? Math.max(0, Number(product.inventory_quantity) || 0) : null,
+      variants: withVariants.find((candidate) => candidate.id === product.id)?.variants || [],
+    };
+  });
+}

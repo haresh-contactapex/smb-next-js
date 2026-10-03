@@ -211,7 +211,14 @@ Indexes: `INDEX (order_id)`.
   errors, consistent with the other schemas in this repo.
 - `'Failed'` was added to `orders.payment_status` for the Reports feature's
   "Failed Payments" stat (`docs/reports/reports-overview.md`), mirroring the
-  `'failed'` value the full `payments.status` enum already had. Nothing
-  currently sets it (no order-creation/payment flow exists yet), so the stat
-  reads 0 until a real payment-failure path is built — the column is ready
-  for that rather than the report faking the number.
+  `'failed'` value the full `payments.status` enum already had. The Stripe
+  card checkout sets it when a payment attempt fails
+  (`syncPaymentIntent()` in `src/lib/checkoutOrders.js`), so the stat now
+  counts real failures.
+- The storefront checkout writes `order_addresses`, `order_line_items` and
+  `payments` through `docs/orders/order-details-tables-only.sql` (a subset of
+  this schema: no `payments.payment_method_id`). That file also adds the
+  breakdown columns `subtotal_amount`, `discount_amount`, `shipping_amount`,
+  `tax_amount` and `coupon_code` to `orders`, so the single `total_amount` can
+  be explained. `item_count` is the total quantity across the line items. See
+  [storefront/checkout.md](../storefront/checkout.md#card-payments-stripe).

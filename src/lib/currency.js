@@ -22,3 +22,15 @@ export function getCurrencySymbol(currencyCode = "USD") {
     return "$";
   }
 }
+
+// The amount in the currency's smallest unit (cents for most, whole yen, thousandths
+// of a dinar), which is what payment gateways take.
+export function toMinorUnits(amount, currencyCode = "USD") {
+  let digits = 2;
+  try {
+    digits = new Intl.NumberFormat("en-US", { style: "currency", currency: currencyCode }).resolvedOptions().maximumFractionDigits;
+  } catch {
+    // Unknown code: assume two decimal places.
+  }
+  return Math.round(Number(amount) * 10 ** digits);
+}

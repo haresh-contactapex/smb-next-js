@@ -58,7 +58,7 @@ function readSaved() {
 // guest. It only supplies starting values (see startingCheckout) and the Billing
 // step's address pickers; everything is still validated as if it had been typed.
 export default function CheckoutPage({ settings, account = null }) {
-  const { items, hydrated, totals, shipping: cartShipping, countries } = useCart();
+  const { items, hydrated, totals, coupon, shipping: cartShipping, countries } = useCart();
   const [contact, setContact] = useState(EMPTY_CONTACT);
   const [billingAddress, setBillingAddress] = useState(EMPTY_ADDRESS);
   const [shippingAddress, setShippingAddress] = useState(EMPTY_ADDRESS);
@@ -131,10 +131,29 @@ export default function CheckoutPage({ settings, account = null }) {
 
   const checkout = useMemo(() => checkoutTotals(totals, settings.tax), [totals, settings.tax]);
 
+  // A method can be picked unless it is below its minimum order or can't take payments at all (card without Stripe keys).
   const methods = settings.paymentMethods;
-  const firstAvailable = methods.find((method) => !(method.minOrder > 0 && checkout.total < method.minOrder));
-  const chosen = methods.find((method) => method.id === paymentMethod && !(method.minOrder > 0 && checkout.total < method.minOrder));
-  const selectedMethod = chosen || firstAvailable || null;
+  const canPick = (method) => !(method.minOrder > 0 && checkout.total < method.minOrder) && !method.unavailable;
+  const selectedMethod = methods.find((method) => method.id === paymentMethod && canPick(method)) || methods.find(canPick) || null;
+
+  // What Place Order sends: only what the customer chose, never a price or a discount
+  // amount. The server prices the cart itself and checks `expectedTotal` against its own.
+  const buildOrder = () => ({
+    items: items.map(({ productId, variantId, quantity, price }) => ({ productId, variantId, quantity, price })),
+    couponCode: coupon?.code || null,
+    shippingRateId: cartShipping?.selectedRateId || "standard",
+    expectedTotal: checkout.total,
+    contact: {
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      email: contact.email,
+      phoneCountry: contact.phoneCountry,
+      phone: contact.phone,
+    },
+    sameAsBilling,
+    billing: billingAddress,
+    shipping: sameAsBilling ? billingAddress : shippingAddress,
+  });
 
   // The cart is read from localStorage after mount; show the skeleton rather than flash "empty" before then.
   if (!hydrated) return <CheckoutSkeleton />;
@@ -229,7 +248,14 @@ export default function CheckoutPage({ settings, account = null }) {
               locked={isLocked("payment")}
               onOpen={() => open("payment")}
             >
-              <PaymentStep methods={methods} selected={selectedMethod?.id || ""} onSelect={setPaymentMethod} orderTotal={checkout.total} />
+              <PaymentStep
+                methods={methods}
+                selected={selectedMethod?.id || ""}
+                onSelect={setPaymentMethod}
+                orderTotal={checkout.total}
+                active={step === "payment"}
+                buildOrder={buildOrder}
+              />
             </CheckoutSection>
           </div>
         </div>

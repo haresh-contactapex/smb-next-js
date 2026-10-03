@@ -2,13 +2,19 @@
 
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { formatCurrency } from "@/lib/currency";
+import StripePaymentForm from "./StripePaymentForm";
 import { CHECKOUT_BUTTON } from "./checkoutStyles";
 
 // Step 3: pick one of the payment methods the store has enabled in Settings ->
 // Payment. Cash on delivery has a minimum order, so it is offered but disabled
-// below it. Taking the payment and creating the order isn't built yet, which is
-// why the final button stays disabled.
-export default function PaymentStep({ methods, selected, onSelect, orderTotal }) {
+// below it, and the card is disabled when Stripe's keys aren't set up.
+//
+// Paying by card is live: choosing it shows Stripe's card form and Place Order
+// (StripePaymentForm). The other methods can't take an order yet, so for them the
+// final button stays disabled. `active` is whether this step is the open one, so the
+// card form is only loaded once the customer gets here; `buildOrder()` is the request
+// the server prices and saves.
+export default function PaymentStep({ methods, selected, onSelect, orderTotal, active, buildOrder }) {
   const { currency } = useGeneralSettings();
 
   if (methods.length === 0) {
@@ -19,6 +25,8 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal })
     );
   }
 
+  const chosen = methods.find((method) => method.id === selected);
+
   return (
     <div>
       <fieldset>
@@ -26,12 +34,13 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal })
         <div className="space-y-3">
           {methods.map((method) => {
             const belowMinimum = method.minOrder > 0 && orderTotal < method.minOrder;
+            const disabled = belowMinimum || Boolean(method.unavailable);
             const checked = selected === method.id;
             return (
               <label
                 key={method.id}
                 className={`flex items-start gap-4 rounded-lg border p-4 transition-colors ${
-                  belowMinimum
+                  disabled
                     ? "cursor-not-allowed border-[#EEEEEE] opacity-60"
                     : checked
                       ? "cursor-pointer border-[#EF9822] bg-[#FCF9F3]"
@@ -43,14 +52,14 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal })
                   name="checkout-payment-method"
                   value={method.id}
                   checked={checked}
-                  disabled={belowMinimum}
+                  disabled={disabled}
                   onChange={() => onSelect(method.id)}
                   className="mt-1 h-[18px] w-[18px] flex-shrink-0 accent-[#EF9822]"
                 />
                 <span>
                   <span className="block text-[16px] font-semibold text-[#222222]">{method.label}</span>
                   <span className="mt-0.5 block text-[14px] text-[#777777]">
-                    {belowMinimum ? `Available on orders of ${formatCurrency(method.minOrder, currency)} or more.` : method.detail}
+                    {method.unavailable || (belowMinimum ? `Available on orders of ${formatCurrency(method.minOrder, currency)} or more.` : method.detail)}
                   </span>
                 </span>
               </label>
@@ -59,10 +68,16 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal })
         </div>
       </fieldset>
 
-      <button type="button" disabled className={`${CHECKOUT_BUTTON} mt-7`}>
-        Place Order
-      </button>
-      <p className="mt-3 text-center text-[13px] text-[#9A9A9A]">Placing orders isn&apos;t available yet.</p>
+      {chosen?.id === "card" && chosen.stripe ? (
+        <StripePaymentForm stripe={chosen.stripe} active={active} total={orderTotal} buildOrder={buildOrder} />
+      ) : (
+        <>
+          <button type="button" disabled className={`${CHECKOUT_BUTTON} mt-7`}>
+            Place Order
+          </button>
+          <p className="mt-3 text-center text-[13px] text-[#9A9A9A]">Orders can&apos;t be placed with this payment method yet.</p>
+        </>
+      )}
     </div>
   );
 }
