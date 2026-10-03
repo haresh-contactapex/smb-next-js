@@ -19,12 +19,15 @@ export function SkeletonCard({ className = "", children }) {
 }
 
 // Wrapper every page skeleton uses: announces the loading state to screen
-// readers while the bars themselves stay hidden from them.
+// readers while the bars themselves stay hidden from them. The label comes
+// last: as the first child of a `space-y-*` wrapper it would give the first
+// real block a top margin, pushing the whole skeleton down from where the
+// loaded page starts.
 export function SkeletonPage({ label = "Loading…", className = "space-y-6", children }) {
   return (
     <div role="status" aria-busy="true" aria-live="polite" className={className}>
-      <span className="sr-only">{label}</span>
       {children}
+      <span className="sr-only">{label}</span>
     </div>
   );
 }

@@ -47,6 +47,21 @@ export function formatCurrency(amount, currencyCode = "USD", format = DEFAULT_MO
   return assemble(currencyParts(finite(amount), currencyCode), format);
 }
 
+// The digits alone, grouped per the store's number format: "1,234.56". For
+// documents that cannot draw every currency symbol (the invoice PDF) and name the
+// currency by its code instead.
+export function formatAmount(amount, currencyCode = "USD", format = DEFAULT_MONEY_FORMAT) {
+  const separators = NUMBER_SEPARATORS[format?.numberFormat] || NUMBER_SEPARATORS["1,234.56"];
+  let digits = "";
+  for (const part of currencyParts(finite(amount), currencyCode)) {
+    if (part.type === "minusSign") digits += part.value;
+    else if (part.type === "group") digits += separators.group;
+    else if (part.type === "decimal") digits += separators.decimal;
+    else if (part.type === "integer" || part.type === "fraction") digits += part.value;
+  }
+  return digits;
+}
+
 // "$1.2K" / "1.2K$" / "1,2K€": for chart axes and tiles where space is tight.
 export function formatCompactCurrency(amount, currencyCode = "USD", format = DEFAULT_MONEY_FORMAT) {
   return assemble(currencyParts(finite(amount), currencyCode, { notation: "compact", maximumFractionDigits: 1 }), format);

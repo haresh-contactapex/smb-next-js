@@ -9,4 +9,4 @@ export function computeOrderStats(orders) {
 }
 
 export const STATUS_OPTIONS = ["Pending", "Processing", "Completed", "Cancelled"];
-export const PAYMENT_OPTIONS = ["Paid", "Unpaid", "Refunded"];
+export const PAYMENT_OPTIONS = ["Paid", "Unpaid", "Refunded", "Failed"];

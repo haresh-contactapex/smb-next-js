@@ -1,15 +1,19 @@
 import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
-import { getOrderById, updateOrderStatus } from "@/lib/orders";
+import { getOrderById, getOrderDetails, updateOrderStatus } from "@/lib/orders";
 import { logAdminActivity } from "@/lib/notifications";
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission("orders.view");
   if (!auth.ok) return permissionDeniedResponse(auth);
 
-  const order = await getOrderById(params.id);
-  if (!order) return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
-  return NextResponse.json({ success: true, data: order });
+  try {
+    const order = await getOrderDetails(params.id);
+    if (!order) return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
+    return NextResponse.json({ success: true, data: order });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
 }
 
 export async function PATCH(request, { params }) {

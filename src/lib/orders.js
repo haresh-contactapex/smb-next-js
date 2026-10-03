@@ -1,6 +1,7 @@
 import { sql } from "./db";
 import { formatCurrency } from "./currency";
 import { loadMoneyFormat } from "./moneyFormat";
+import { isUuid, optionalQuery } from "./accountError";
 
 const STATUS_COLORS = { Pending: "warning", Processing: "info", Completed: "success", Cancelled: "error" };
 const PAYMENT_COLORS = { Paid: "success", Unpaid: "warning", Refunded: "info", Failed: "error" };
@@ -54,6 +55,179 @@ export async function listRecentOrders(limit = 5) {
 export async function getOrderById(id) {
   const [row] = await sql`SELECT * FROM orders WHERE id = ${id}`;
   return row ? mapOrder(row, 0, await loadMoneyFormat()) : null;
+}
+
+const toAmount = (value) => (value === null || value === undefined ? null : Number(value));
+
+function toOrderAddress(row) {
+  if (!row) return null;
+  return {
+    fullName: row.full_name,
+    company: row.company || "",
+    line1: row.address_line1,
+    line2: row.address_line2 || "",
+    city: row.city,
+    state: row.state || "",
+    zip: row.postal_code || "",
+    country: row.country,
+    phone: row.phone || "",
+  };
+}
+
+// The order and everything hanging off it, as raw rows plus the price breakdown as
+// numbers. Shared by the Edit Order page (which formats it for display) and the
+// invoice (which formats it into a PDF). The detail tables are optional here — an
+// order placed before they existed, or seeded without them, still loads with
+// those sections empty.
+async function loadOrderDetailRows(id) {
+  if (!isUuid(id)) return null;
+  const [row] = await sql`SELECT * FROM orders WHERE id = ${id}`;
+  if (!row) return null;
+
+  const addressIds = [row.billing_address_id, row.shipping_address_id].filter(Boolean);
+  const [moneyFormat, customerRows, addressRows, lineRows, paymentRows] = await Promise.all([
+    loadMoneyFormat(),
+    row.customer_id
+      ? sql`SELECT email, phone, customer_group, is_guest, created_at FROM customers WHERE id = ${row.customer_id}`
+      : [],
+    addressIds.length ? optionalQuery(() => sql`SELECT * FROM order_addresses WHERE id = ANY(${addressIds}::uuid[])`, []) : [],
+    optionalQuery(
+      () => sql`
+        SELECT li.id, li.product_id, li.title, li.sku, li.unit_price, li.quantity, li.line_total,
+               (SELECT pm.url FROM product_media pm
+                 WHERE pm.product_id = li.product_id AND pm.type = 'image' AND pm.url NOT LIKE 'blob:%'
+                 ORDER BY pm.position LIMIT 1) AS image
+        FROM order_line_items li
+        WHERE li.order_id = ${row.id}
+        ORDER BY li.line_total DESC, li.title
+      `,
+      []
+    ),
+    optionalQuery(() => sql`SELECT * FROM payments WHERE order_id = ${row.id} ORDER BY created_at`, []),
+  ]);
+
+  const itemsSubtotal = lineRows.reduce((sum, line) => sum + (Number(line.line_total) || 0), 0);
+  const hasBreakdown = row.subtotal_amount !== null && row.subtotal_amount !== undefined;
+  const subtotal = toAmount(row.subtotal_amount) ?? (lineRows.length ? itemsSubtotal : null);
+  const discount = toAmount(row.discount_amount);
+  const shipping = toAmount(row.shipping_amount);
+  const tax = toAmount(row.tax_amount);
+  // The orders table keeps the tax amount but not the rate. With no shipping charge the
+  // taxable amount is just the discounted subtotal, so the rate can be worked back out.
+  const taxBase = (subtotal ?? 0) - (discount ?? 0);
+  const taxRate = tax !== null && !shipping && taxBase > 0 ? Math.round((tax / taxBase) * 10000) / 100 : null;
+
+  return {
+    row,
+    moneyFormat,
+    customer: customerRows[0],
+    addressRows,
+    lineRows,
+    paymentRows,
+    amounts: {
+      subtotal,
+      discount,
+      couponCode: row.coupon_code || null,
+      shipping,
+      tax,
+      taxRate,
+      // NULL tax on an order that has a price breakdown means the prices already included it.
+      taxMode: tax !== null ? "added" : hasBreakdown ? "included" : "unknown",
+      total: toAmount(row.total_amount),
+    },
+  };
+}
+
+// Everything the Edit Order page shows: the order itself plus its customer, the
+// frozen billing/shipping addresses, line items, price breakdown and payments.
+export async function getOrderDetails(id) {
+  const details = await loadOrderDetailRows(id);
+  if (!details) return null;
+  const { row, moneyFormat, customer, addressRows, lineRows, paymentRows, amounts } = details;
+
+  const money = (amount) => (amount === null ? null : formatCurrency(amount, row.currency, moneyFormat));
+  return {
+    ...mapOrder(row, 0, moneyFormat),
+    customerDetails: {
+      name: row.customer_name,
+      email: customer?.email || "",
+      phone: customer?.phone || "",
+      group: customer?.customer_group || "",
+      isGuest: Boolean(customer?.is_guest),
+      hasAccount: Boolean(customer),
+      since: customer ? formatOrderDate(customer.created_at) : "",
+    },
+    billingAddress: toOrderAddress(addressRows.find((address) => address.id === row.billing_address_id)),
+    shippingAddress: toOrderAddress(addressRows.find((address) => address.id === row.shipping_address_id)),
+    items: lineRows.map((line) => ({
+      id: line.id,
+      productId: line.product_id || null,
+      title: line.title,
+      sku: line.sku || "",
+      image: line.image || null,
+      quantity: Number(line.quantity) || 1,
+      unitPrice: money(toAmount(line.unit_price)),
+      lineTotal: money(toAmount(line.line_total)),
+    })),
+    pricing: {
+      subtotal: money(amounts.subtotal),
+      discount: amounts.discount ? money(amounts.discount) : null,
+      couponCode: amounts.couponCode,
+      shipping: money(amounts.shipping),
+      shippingFree: amounts.shipping === 0,
+      tax: money(amounts.tax),
+      taxRate: amounts.taxRate,
+      taxMode: amounts.taxMode,
+      total: money(amounts.total),
+    },
+    payments: paymentRows.map((payment) => ({
+      id: payment.id,
+      provider: payment.provider,
+      status: payment.status,
+      amount: money(toAmount(payment.amount)),
+      reference: payment.provider_reference || "",
+      date: formatOrderDate(payment.created_at),
+    })),
+  };
+}
+
+// What the invoice PDF is built from: the same details as getOrderDetails() but
+// with plain numbers, so the PDF can lay amounts out in its own columns, plus the
+// currency formatting that applies to them.
+export async function getOrderInvoice(id) {
+  const details = await loadOrderDetailRows(id);
+  if (!details) return null;
+  const { row, moneyFormat, customer, addressRows, lineRows, paymentRows, amounts } = details;
+
+  return {
+    orderNumber: row.order_number,
+    placedAt: new Date(row.placed_at).toISOString(),
+    status: row.status,
+    paymentStatus: row.payment_status,
+    currency: row.currency,
+    moneyFormat,
+    customer: {
+      name: row.customer_name,
+      email: customer?.email || "",
+      phone: customer?.phone || "",
+    },
+    billingAddress: toOrderAddress(addressRows.find((address) => address.id === row.billing_address_id)),
+    shippingAddress: toOrderAddress(addressRows.find((address) => address.id === row.shipping_address_id)),
+    items: lineRows.map((line) => ({
+      title: line.title,
+      sku: line.sku || "",
+      quantity: Number(line.quantity) || 1,
+      unitPrice: toAmount(line.unit_price) ?? 0,
+      lineTotal: toAmount(line.line_total) ?? 0,
+    })),
+    amounts,
+    payments: paymentRows.map((payment) => ({
+      provider: payment.provider,
+      status: payment.status,
+      amount: toAmount(payment.amount) ?? 0,
+      reference: payment.provider_reference || "",
+    })),
+  };
 }
 
 // Edit Order only changes status/payment_status today — the other columns
