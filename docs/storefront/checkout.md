@@ -219,6 +219,9 @@ from the webhook and from the confirmation page, is idempotent, and only marks P
 Stripe reports the order's full amount in its currency. A failed attempt sets `Failed`; a
 later successful retry sets `Paid`. A payment that arrives for an already-cancelled order
 is marked Paid and raises a warning in the admin notifications, since it needs a refund.
+The admin gets **one "order paid" notification per order**: if an order leaves Paid and a
+later sync moves it back (a staff edit while testing, say), the order is updated again but
+the team isn't alerted a second time. The `payments` table still records every payment.
 
 ### Not handled yet
 

@@ -155,6 +155,26 @@ export async function startCardPayment(input, customer) {
   }
 }
 
+// Whether the store has already been told this order was paid. The admin gets one "order
+// paid" notification per order, however many times the order moves into Paid: it can
+// leave Paid and come back (a staff edit while testing, a status reset) and a re-sync
+// then moves it again, which should not alert the team a second time. The payments
+// table still records every payment. If the lookup fails the answer is "no", so a
+// notifications hiccup can never get in the way of settling a payment.
+async function paidAlertAlreadySent(orderId) {
+  try {
+    const [row] = await sql`
+      SELECT 1 AS sent FROM admin_notifications
+      WHERE action = 'order.paid' AND entity_type = 'order' AND entity_id = ${String(orderId)}
+      LIMIT 1
+    `;
+    return Boolean(row);
+  } catch (error) {
+    console.error("Could not check for an earlier order.paid notification", error.message);
+    return false;
+  }
+}
+
 // Brings an order in line with what Stripe says about its PaymentIntent. Safe to call
 // any number of times, from the webhook and the return page alike: the order is only
 // flipped to Paid once, and only when Stripe reports the full amount in the order's
@@ -185,7 +205,9 @@ export async function syncPaymentIntent(intent) {
     `;
     await sql`UPDATE payments SET status = 'succeeded' WHERE order_id = ${order.id} AND provider_reference = ${intent.id} AND status <> 'succeeded'`;
 
-    if (justPaid) {
+    // Only the call that actually moved the order into Paid gets here (the update above is atomic),
+    // and it still stays quiet if the store was already told about this order.
+    if (justPaid && !(await paidAlertAlreadySent(order.id))) {
       const cancelled = order.status === "Cancelled";
       const moneyFormat = await loadMoneyFormat();
       await logAdminActivity({
