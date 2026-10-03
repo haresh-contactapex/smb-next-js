@@ -27,6 +27,11 @@ const OUTCOMES = {
     title: "Your payment is processing",
     body: "Your bank is still confirming the payment. Your order is saved and we'll update it as soon as it clears.",
   },
+  cod: {
+    placed: true,
+    title: "Thank you, your order is placed",
+    body: "You'll pay in cash when your order is delivered. We've started on it and will be in touch about delivery.",
+  },
   action: {
     placed: false,
     title: "Your payment needs one more step",

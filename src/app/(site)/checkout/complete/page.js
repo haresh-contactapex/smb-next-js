@@ -1,7 +1,7 @@
 import CheckoutHeader from "@/components/storefront/checkout/CheckoutHeader";
 import CheckoutFooter from "@/components/storefront/checkout/CheckoutFooter";
 import CheckoutResult from "@/components/storefront/checkout/CheckoutResult";
-import { resolveCheckoutResult } from "@/lib/checkoutOrders";
+import { resolveCheckoutResult, resolveCodResult } from "@/lib/checkoutOrders";
 
 export const metadata = { title: "Order confirmation | shopmyband.com" };
 
@@ -15,10 +15,14 @@ export const dynamic = "force-dynamic";
 export default async function CheckoutCompleteRoute({ searchParams }) {
   const params = await searchParams;
   const one = (value) => (Array.isArray(value) ? value[0] : value);
-  const result = await resolveCheckoutResult({
-    paymentIntentId: one(params.payment_intent),
-    clientSecret: one(params.payment_intent_client_secret),
-  });
+  // `cod` is a cash-on-delivery order's id; there is no gateway to ask about those.
+  const codOrderId = one(params.cod);
+  const result = codOrderId
+    ? await resolveCodResult(codOrderId)
+    : await resolveCheckoutResult({
+        paymentIntentId: one(params.payment_intent),
+        clientSecret: one(params.payment_intent_client_secret),
+      });
 
   return (
     <div className="flex min-h-screen flex-col bg-white">

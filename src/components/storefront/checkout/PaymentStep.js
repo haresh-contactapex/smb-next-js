@@ -2,6 +2,7 @@
 
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import StripePaymentForm from "./StripePaymentForm";
+import CodPlaceOrder from "./CodPlaceOrder";
 import { CHECKOUT_BUTTON } from "./checkoutStyles";
 
 // Step 3: pick one of the payment methods the store has enabled in Settings ->
@@ -9,8 +10,9 @@ import { CHECKOUT_BUTTON } from "./checkoutStyles";
 // below it, and the card is disabled when Stripe's keys aren't set up.
 //
 // Paying by card is live: choosing it shows Stripe's card form and Place Order
-// (StripePaymentForm). The other methods can't take an order yet, so for them the
-// final button stays disabled. `active` is whether this step is the open one, so the
+// (StripePaymentForm). Cash on delivery is live too (CodPlaceOrder: no gateway, the order is
+// saved unpaid). PayPal and Razorpay can't take an order yet, so for them the final button
+// stays disabled. `active` is whether this step is the open one, so the
 // card form is only loaded once the customer gets here; `buildOrder()` is the request
 // the server prices and saves.
 export default function PaymentStep({ methods, selected, onSelect, orderTotal, active, buildOrder }) {
@@ -69,6 +71,8 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal, a
 
       {chosen?.id === "card" && chosen.stripe ? (
         <StripePaymentForm stripe={chosen.stripe} active={active} total={orderTotal} buildOrder={buildOrder} />
+      ) : chosen?.id === "cod" ? (
+        <CodPlaceOrder buildOrder={buildOrder} />
       ) : (
         <>
           <button type="button" disabled className={`${CHECKOUT_BUTTON} mt-7`}>

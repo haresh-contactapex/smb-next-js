@@ -2,6 +2,7 @@ import { randomUUID, timingSafeEqual } from "crypto";
 import { sql, sqlTransaction } from "./db";
 import { getOrdersSettings } from "./ordersSettings";
 import { isGuestCheckoutAllowed } from "./checkoutSettings";
+import { getPaymentSettings } from "./paymentSettings";
 import { logAdminActivity } from "./notifications";
 import { formatCurrency, toMinorUnits } from "./currency";
 import { loadMoneyFormat } from "./moneyFormat";
@@ -32,7 +33,7 @@ function isMissingTable(error) {
 
 // The next order number: the store's prefix and the next free number after the
 // highest one used so far (never below the configured starting number).
-async function insertOrder({ orderId, priced, customer, intentId }) {
+async function insertOrder({ orderId, priced, customer, provider = "stripe", intentId = null }) {
   const settings = await getOrdersSettings();
   const prefix = settings.orderNumberPrefix || "";
   const startingNumber = Number(settings.startingOrderNumber) || 10000;
@@ -87,7 +88,7 @@ async function insertOrder({ orderId, priced, customer, intentId }) {
         }
         statements.push(tx`
           INSERT INTO payments (order_id, provider, status, amount, provider_reference)
-          VALUES (${orderId}, 'stripe', 'pending', ${priced.total}, ${intentId})
+          VALUES (${orderId}, ${provider}, 'pending', ${priced.total}, ${intentId})
         `);
         return statements;
       });
@@ -102,15 +103,66 @@ async function insertOrder({ orderId, priced, customer, intentId }) {
   throw new Error("Could not generate a unique order number.");
 }
 
+// The checkout page already asks for an account when guest checkout is off; this is the
+// real gate, since the API is public (Settings -> Checkout -> Allow guest checkout).
+async function assertMayCheckout(customer) {
+  if (!customer && !(await isGuestCheckoutAllowed())) {
+    throw new CheckoutError("Please sign in or create an account to place your order.", 403, { reason: "sign_in_required" });
+  }
+}
+
+// Places a cash-on-delivery order: nothing is paid online, so there is no gateway to ask.
+// The order is saved as Pending / Unpaid with a pending `cod` payment row; staff mark it
+// Paid once the cash is collected. Prices the cart itself, like a card order does, and
+// refuses when cash on delivery is switched off or the total is below its minimum.
+// Returns { orderNumber, orderId } (the id is what the confirmation page is opened with).
+export async function placeCodOrder(input, customer) {
+  await assertMayCheckout(customer);
+
+  const payment = await getPaymentSettings();
+  if (!payment.codEnabled) {
+    throw new CheckoutError("Cash on delivery isn't available right now.", 409, { reason: "method_unavailable" });
+  }
+
+  const priced = await priceCheckout(input);
+  const minimum = Number(payment.codMinOrder) || 0;
+  if (minimum > 0 && priced.total < minimum) {
+    const moneyFormat = await loadMoneyFormat();
+    throw new CheckoutError(
+      `Cash on delivery is available on orders of ${formatCurrency(minimum, priced.currency, moneyFormat)} or more.`,
+      400,
+      { reason: "method_unavailable" }
+    );
+  }
+
+  const orderId = randomUUID();
+  let orderNumber;
+  try {
+    orderNumber = await insertOrder({ orderId, priced, customer, provider: "cod" });
+  } catch (error) {
+    console.error("The cash on delivery order could not be saved", error.code || "", error.message);
+    const details = process.env.NODE_ENV === "development" ? { cause: error.message } : null;
+    throw new CheckoutError("We couldn't save your order. Please try again.", 500, { reason: "order_failed", details });
+  }
+
+  // Nothing else tells the store about this order (a card order is announced once it is paid).
+  const moneyFormat = await loadMoneyFormat();
+  await logAdminActivity({
+    action: "order.placed",
+    entityType: "order",
+    entityId: orderId,
+    title: `New cash on delivery order #${orderNumber}`,
+    description: `${priced.contact.firstName} ${priced.contact.lastName} placed an order for ${formatCurrency(priced.total, priced.currency, moneyFormat)} to pay on delivery.`,
+    severity: "info",
+  });
+  return { orderNumber, orderId };
+}
+
 // Prices the cart, asks Stripe for a PaymentIntent for that total and saves the
 // order. Returns what the browser needs to confirm the payment. `customer` is the
 // signed-in customer, or null for a guest checkout.
 export async function startCardPayment(input, customer) {
-  // The checkout page already asks for an account when guest checkout is off; this is the
-  // real gate, since the API is public (Settings -> Checkout -> Allow guest checkout).
-  if (!customer && !(await isGuestCheckoutAllowed())) {
-    throw new CheckoutError("Please sign in or create an account to place your order.", 403, { reason: "sign_in_required" });
-  }
+  await assertMayCheckout(customer);
 
   const stripe = await loadStripeConfig();
   if (!stripe.configured) {
@@ -270,6 +322,34 @@ function describePaymentMethod(method) {
 // confirmation page shows in full. The others (a declined card, an unfinished 3-D Secure
 // step) only name the order, since the customer is sent back to try again.
 const PLACED_STATES = new Set(["paid", "authorized", "processing"]);
+
+// The confirmation page of a cash-on-delivery order. It is opened with the order's id,
+// which only the browser that placed the order was given (a random UUID, so it works as
+// the proof that this visitor placed it, like the client secret does for a card order).
+// Only an order whose payment is cash on delivery qualifies. state: "cod" | "unknown".
+export async function resolveCodResult(orderId) {
+  const unknown = { state: "unknown", orderNumber: null, total: 0, currency: null, details: null };
+  if (!UUID_PATTERN.test(String(orderId || ""))) return unknown;
+
+  const [order] = await sql`
+    SELECT o.order_number, o.total_amount, o.currency
+    FROM orders o
+    JOIN payments p ON p.order_id = o.id AND p.provider = 'cod'
+    WHERE o.id = ${orderId}
+    LIMIT 1
+  `;
+  if (!order) return unknown;
+
+  let details = null;
+  try {
+    const confirmation = await getOrderConfirmation(orderId);
+    if (confirmation) details = { ...confirmation, paymentMethod: "Cash on delivery" };
+  } catch (error) {
+    console.error("Could not load the order details for the confirmation page", error.message);
+  }
+
+  return { state: "cod", orderNumber: order.order_number, total: Number(order.total_amount) || 0, currency: order.currency, details };
+}
 
 // What the order-confirmation page shows. It is reached with the PaymentIntent's id
 // and client secret (Stripe appends both to the return URL), and the secret has to

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
-import { startCardPayment } from "@/lib/checkoutOrders";
+import { placeCodOrder, startCardPayment } from "@/lib/checkoutOrders";
 import { CheckoutError } from "@/lib/checkoutPricing";
 import { createRateLimiter } from "@/lib/rateLimit";
 
@@ -30,7 +30,8 @@ export async function POST(request) {
 
   try {
     const customer = await getCurrentCustomer();
-    const data = await startCardPayment(body, customer);
+    // A cash-on-delivery order is the same request with `paymentMethod: "cod"`; anything else is a card order.
+    const data = body.paymentMethod === "cod" ? await placeCodOrder(body, customer) : await startCardPayment(body, customer);
     return NextResponse.json({ success: true, data });
   } catch (error) {
     if (error instanceof CheckoutError) {

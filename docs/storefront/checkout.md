@@ -3,8 +3,9 @@
 The public checkout page at `/checkout`, reached from **Checkout** in the cart
 drawer and **Proceed to checkout** on the cart page. It collects contact and
 address details, shows the order summary and takes **card payments through
-Stripe** ([Card payments](#card-payments-stripe)). The other payment methods
-(PayPal, Razorpay, cash on delivery) can't take an order yet; see
+Stripe** ([Card payments](#card-payments-stripe)) and **cash on delivery**
+([Cash on delivery](#cash-on-delivery)). The other payment methods
+(PayPal, Razorpay) can't take an order yet; see
 [Not built yet](#not-built-yet).
 
 There is no checkout table. The cart still lives in the visitor's browser (see
@@ -271,10 +272,28 @@ the team isn't alerted a second time. The `payments` table still records every p
   acted on yet.
 - The marketing checkbox is still not stored on the guest customer.
 
+## Cash on delivery
+
+Choosing it (when switched on in *Settings → Payment*) shows a note and a working
+**Place Order** (`CodPlaceOrder.js`); there is no gateway.
+
+1. The button posts the cart to `POST /api/checkout/payment` with `paymentMethod: "cod"`
+   (the same request as a card order, same rate limit). `placeCodOrder()` in
+   `checkoutOrders.js` applies the guest-checkout gate, refuses with `method_unavailable`
+   when cash on delivery is off or the priced total is below *Settings → Payment → COD minimum
+   order*, prices the cart itself, then saves the order with `insertOrder()`.
+2. The order is **Pending / Unpaid** with a pending `cod` row in `payments` (no
+   `provider_reference`). Staff mark it Paid in the admin once the cash is collected. The
+   store gets an `order.placed` notification ("New cash on delivery order #…"), since
+   nothing else announces it (a card order is announced when it is paid).
+3. The browser goes to `/checkout/complete?cod=<order id>`. `resolveCodResult()` loads the
+   order only if it has a `cod` payment; the random order UUID is the proof the visitor placed
+   it (the counterpart of the card flow's client secret). The page then empties the cart.
+
 ## Not built yet
 
-- **Other payment methods.** PayPal, Razorpay and cash on delivery are listed when switched
-  on, but choosing one leaves **Place Order** disabled: only card payments take an order.
+- **Other payment methods.** PayPal and Razorpay are listed when switched on, but choosing
+  one leaves **Place Order** disabled: only card and cash on delivery take an order.
 - **Marketing consent.** The "keep me updated on order status and special
   offers" checkbox is pre-checked, as in the design, and its value is not stored
   anywhere. Before it is persisted, split transactional updates from marketing
