@@ -24,7 +24,7 @@ There is no checkout table. The cart still lives in the visitor's browser (see
 | Own header / footer | `CheckoutHeader.js`, `CheckoutFooter.js` |
 | Shimmer loading skeleton | `CheckoutSkeleton.js`, `src/app/(site)/checkout/loading.js` |
 | Stripe card form and Place Order | `StripePaymentForm.js`, `stripeClient.js` |
-| Order confirmation page (`/checkout/complete`) | `src/app/(site)/checkout/complete/page.js`, `CheckoutResult.js` |
+| Order confirmation page (`/checkout/complete`) | `src/app/(site)/checkout/complete/page.js`, `CheckoutResult.js`, `OrderConfirmationDetails.js` (the full order); the totals row and line thumbnail it shares with the sidebar are in `OrderSummaryParts.js` |
 | Stripe REST client, key handling, webhook signature check | `src/lib/stripe.js` |
 | Prices and validates an order from the database | `src/lib/checkoutPricing.js` |
 | Saves the order, syncs payment results | `src/lib/checkoutOrders.js` |
@@ -206,6 +206,16 @@ the order Paid.
    `/checkout/complete`.
 6. That page asks **Stripe**, not the URL, how the payment went (the URL's client secret must
    match), brings the order up to date, shows the result and, for a placed order, empties the cart.
+   A placed order (paid, authorized or processing) is shown **in full**: order number, date,
+   total and payment method ("Visa ending 4242", read from the PaymentIntent's expanded payment
+   method), every item with its photo, SKU, quantity and price, the subtotal / discount /
+   shipping / tax breakdown, and the contact, shipping and billing details. The order comes
+   from `getOrderConfirmation()` (`src/lib/orders.js`), which shares its query with the Edit Order
+   page and the invoice but returns nothing internal (no payment references or ids). A declined
+   or unfinished payment, and an order saved without its detail rows, show only the order number
+   and total. The contact email falls back to the Stripe receipt email, and the phone to the
+   order's address, when the customer row no longer exists. Everything is behind the same client-secret
+   check as the result, so the bare `?order=` number reveals nothing.
 
 A declined card keeps the same order and intent, so correcting the card and retrying doesn't
 create a second order; changing the cart or addresses creates a new one, and the abandoned

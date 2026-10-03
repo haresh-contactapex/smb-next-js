@@ -4,6 +4,7 @@ import { getOrdersSettings } from "./ordersSettings";
 import { logAdminActivity } from "./notifications";
 import { formatCurrency, toMinorUnits } from "./currency";
 import { loadMoneyFormat } from "./moneyFormat";
+import { getOrderConfirmation } from "./orders";
 import { CheckoutError, countryCode, priceCheckout } from "./checkoutPricing";
 import { cancelPaymentIntent, createPaymentIntent, loadStripeConfig, retrievePaymentIntent } from "./stripe";
 
@@ -238,13 +239,40 @@ const sameSecret = (given, actual) => {
   return a.length === b.length && a.length > 0 && timingSafeEqual(a, b);
 };
 
+const CARD_BRANDS = {
+  visa: "Visa",
+  mastercard: "Mastercard",
+  amex: "American Express",
+  discover: "Discover",
+  diners: "Diners Club",
+  jcb: "JCB",
+  unionpay: "UnionPay",
+};
+
+// How the customer paid, in a few words, from the PaymentIntent's expanded payment
+// method: "Visa ending 4242" for a card (Apple Pay and Google Pay arrive as cards too),
+// otherwise the method's type ("Link", "Klarna"). Null when Stripe didn't say.
+function describePaymentMethod(method) {
+  if (!method || typeof method !== "object") return null;
+  if (method.card?.last4) return `${CARD_BRANDS[method.card.brand] || "Card"} ending ${method.card.last4}`;
+  const type = String(method.type || "").replace(/_/g, " ");
+  return type ? type.charAt(0).toUpperCase() + type.slice(1) : null;
+}
+
+// Outcomes where the order is placed and money is taken or on its way: the ones the
+// confirmation page shows in full. The others (a declined card, an unfinished 3-D Secure
+// step) only name the order, since the customer is sent back to try again.
+const PLACED_STATES = new Set(["paid", "authorized", "processing"]);
+
 // What the order-confirmation page shows. It is reached with the PaymentIntent's id
 // and client secret (Stripe appends both to the return URL), and the secret has to
 // match: that is what proves this visitor made the payment. Never trusts the URL for
-// the outcome; asks Stripe, and syncs the order while it is at it.
+// the outcome; asks Stripe, and syncs the order while it is at it. For a placed order
+// the result also carries `details`: its items, addresses, price breakdown and how it
+// was paid (null if they couldn't be loaded, so the page still has the number and total).
 // state: paid | authorized | processing | action | failed | unknown
 export async function resolveCheckoutResult({ paymentIntentId, clientSecret }) {
-  const unknown = { state: "unknown", orderNumber: null, total: 0, currency: null };
+  const unknown = { state: "unknown", orderNumber: null, total: 0, currency: null, details: null };
   if (!/^pi_[A-Za-z0-9_]+$/.test(String(paymentIntentId || "")) || !clientSecret) return unknown;
 
   // The keys are enough to settle a payment already made, even if Stripe has been switched off since.
@@ -253,7 +281,7 @@ export async function resolveCheckoutResult({ paymentIntentId, clientSecret }) {
 
   let intent;
   try {
-    intent = await retrievePaymentIntent(stripe.secretKey, paymentIntentId);
+    intent = await retrievePaymentIntent(stripe.secretKey, paymentIntentId, { expand: ["payment_method"] });
   } catch (error) {
     console.error("Could not read the PaymentIntent for the confirmation page", error.code || "", error.message);
     return unknown;
@@ -269,10 +297,30 @@ export async function resolveCheckoutResult({ paymentIntentId, clientSecret }) {
   if (!order) return unknown;
 
   const states = { succeeded: "paid", requires_capture: "authorized", processing: "processing", requires_action: "action", requires_confirmation: "action" };
+  const state = states[intent.status] || "failed";
+
+  let details = null;
+  if (PLACED_STATES.has(state)) {
+    try {
+      const confirmation = await getOrderConfirmation(orderId);
+      if (confirmation) {
+        details = {
+          ...confirmation,
+          // The email the customer typed at checkout went to Stripe as the receipt address.
+          customer: { ...confirmation.customer, email: confirmation.customer.email || intent.receipt_email || "" },
+          paymentMethod: describePaymentMethod(intent.payment_method),
+        };
+      }
+    } catch (error) {
+      console.error("Could not load the order details for the confirmation page", error.message);
+    }
+  }
+
   return {
-    state: states[intent.status] || "failed",
+    state,
     orderNumber: order.order_number,
     total: Number(order.total_amount) || 0,
     currency: order.currency,
+    details,
   };
 }

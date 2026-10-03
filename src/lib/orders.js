@@ -230,6 +230,42 @@ export async function getOrderInvoice(id) {
   };
 }
 
+// What the customer sees on the order-confirmation page right after paying: the same
+// details as the invoice, as plain numbers (the page formats them in the store's money
+// format) plus each line's photo. No payment references or internal ids leave the
+// server; the payment method comes from Stripe, not from here.
+export async function getOrderConfirmation(id) {
+  const details = await loadOrderDetailRows(id);
+  if (!details) return null;
+  const { row, customer, addressRows, lineRows, amounts } = details;
+  const billingAddress = toOrderAddress(addressRows.find((address) => address.id === row.billing_address_id));
+  const shippingAddress = toOrderAddress(addressRows.find((address) => address.id === row.shipping_address_id));
+
+  return {
+    placedAt: new Date(row.placed_at).toISOString(),
+    status: row.status,
+    paymentStatus: row.payment_status,
+    customer: {
+      name: row.customer_name,
+      // The customer row can be gone (a deleted guest); the checkout's phone is on its addresses too.
+      email: customer?.email || "",
+      phone: customer?.phone || billingAddress?.phone || shippingAddress?.phone || "",
+    },
+    billingAddress,
+    shippingAddress,
+    items: lineRows.map((line) => ({
+      id: line.id,
+      title: line.title,
+      sku: line.sku || "",
+      image: line.image || null,
+      quantity: Number(line.quantity) || 1,
+      unitPrice: toAmount(line.unit_price) ?? 0,
+      lineTotal: toAmount(line.line_total) ?? 0,
+    })),
+    amounts,
+  };
+}
+
 // Edit Order only changes status/payment_status today — the other columns
 // are snapshots taken at checkout, not something staff retroactively edit.
 export async function updateOrderStatus(id, { status, paymentStatus }) {

@@ -126,8 +126,10 @@ export async function createPaymentIntent(secretKey, { orderId, amount, currency
   );
 }
 
-export function retrievePaymentIntent(secretKey, id) {
-  return stripeRequest(secretKey, "GET", `/payment_intents/${encodeURIComponent(id)}`);
+// `expand` swaps the named id fields for their full objects (e.g. "payment_method").
+export function retrievePaymentIntent(secretKey, id, { expand = [] } = {}) {
+  const query = new URLSearchParams(expand.map((field) => ["expand[]", field])).toString();
+  return stripeRequest(secretKey, "GET", `/payment_intents/${encodeURIComponent(id)}${query ? `?${query}` : ""}`);
 }
 
 export function cancelPaymentIntent(secretKey, id) {

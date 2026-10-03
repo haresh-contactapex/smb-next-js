@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import StoreIcon from "../icons";
 import { useCart } from "../cart/CartProvider";
+import OrderConfirmationDetails from "./OrderConfirmationDetails";
 import { CHECKOUT_BUTTON } from "./checkoutStyles";
 import { CHECKOUT_STORAGE_KEY } from "./checkoutHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
@@ -43,8 +44,9 @@ const OUTCOMES = {
   },
 };
 
-// The order confirmation. On a placed order it empties the cart and clears what was
-// typed into the checkout, so a reload or the Back button can't buy the same things twice.
+// The order confirmation: the outcome, then (for a placed order) the full order. A placed
+// order also empties the cart and clears what was typed into the checkout, so a reload or
+// the Back button can't buy the same things twice.
 export default function CheckoutResult({ result }) {
   const { clearCart, hydrated } = useCart();
   const { formatMoney } = useGeneralSettings();
@@ -61,7 +63,7 @@ export default function CheckoutResult({ result }) {
   }, [outcome.placed, hydrated, clearCart]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[640px] flex-1 flex-col items-center px-4 py-16 text-center sm:py-24">
+    <div className="mx-auto flex w-full max-w-[1000px] flex-1 flex-col items-center px-4 py-16 text-center sm:py-24">
       <span className={`flex h-16 w-16 items-center justify-center rounded-full ${outcome.placed ? "bg-[#EF9822] text-white" : "bg-[#F3F3F3] text-[#777777]"}`}>
         <StoreIcon name={outcome.placed ? "check" : "info"} className="h-8 w-8 [stroke-width:2.5]" />
       </span>
@@ -69,17 +71,21 @@ export default function CheckoutResult({ result }) {
       <h1 className="mt-8 text-[26px] font-semibold text-[#222222] sm:text-[30px]">{outcome.title}</h1>
       <p className="mt-3 max-w-[520px] text-[16px] text-[#555555]">{outcome.body}</p>
 
-      {result.orderNumber && (
-        <dl className="mt-8 w-full max-w-[360px] rounded-2xl border border-[#EEEEEE] bg-[#FCF9F3] p-5 text-[15px]">
-          <div className="flex items-center justify-between gap-4">
-            <dt className="text-[#777777]">Order number</dt>
-            <dd className="font-semibold text-[#222222]">#{result.orderNumber}</dd>
-          </div>
-          <div className="mt-3 flex items-center justify-between gap-4">
-            <dt className="text-[#777777]">Total</dt>
-            <dd className="font-semibold text-[#222222]">{formatMoney(result.total, result.currency || undefined)}</dd>
-          </div>
-        </dl>
+      {result.details ? (
+        <OrderConfirmationDetails orderNumber={result.orderNumber} total={result.total} currency={result.currency} details={result.details} />
+      ) : (
+        result.orderNumber && (
+          <dl className="mt-8 w-full max-w-[360px] rounded-2xl border border-[#EEEEEE] bg-[#FCF9F3] p-5 text-[15px]">
+            <div className="flex items-center justify-between gap-4">
+              <dt className="text-[#777777]">Order number</dt>
+              <dd className="font-semibold text-[#222222]">#{result.orderNumber}</dd>
+            </div>
+            <div className="mt-3 flex items-center justify-between gap-4">
+              <dt className="text-[#777777]">Total</dt>
+              <dd className="font-semibold text-[#222222]">{formatMoney(result.total, result.currency || undefined)}</dd>
+            </div>
+          </dl>
+        )
       )}
 
       <div className="mt-10 flex w-full max-w-[360px] flex-col gap-3">
