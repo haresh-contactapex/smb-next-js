@@ -56,7 +56,7 @@ fails shows its own notice instead of failing the page.
   and returns `{ lines, skipped }`; the browser adds the lines to its own cart. A
   line whose product is gone, whose color/size no longer exists, or that is out of
   stock is skipped with a reason shown to the customer.
-- **Cancel:** an order that is `Pending` or `Processing` and is unpaid (cash on delivery, or a
+- **Cancel** (a button on both the orders list and the order page, `CancelOrderButton`): an order that is `Pending` or `Processing` and is unpaid (cash on delivery, or a
   card payment that never went through) or **paid**. A completed, already cancelled or refunded
   order gets a "contact us" message. `cancelCustomerOrder()` takes the cancellation with one
   conditional `UPDATE` (no read-then-write race, so it, and the store's refund email, only happen

@@ -1,13 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import StoreIcon from "../storefront/icons";
 import { requestJson } from "../storefront/cart/cartApi";
 import { useCart } from "../storefront/cart/CartProvider";
 import { lineKey } from "../storefront/cart/cartHelpers";
 import { NoticeRegion, useNotice } from "./Notice";
-import { BTN_DANGER, BTN_DARK, BTN_OUTLINE } from "./accountStyles";
+import CancelOrderButton from "./CancelOrderButton";
+import { BTN_DARK, BTN_OUTLINE } from "./accountStyles";
 
 // The two things a customer can do with an order: put its items back in the
 // cart ("Order again") and cancel it while it is Pending or Processing. Nothing is refunded
@@ -15,11 +15,10 @@ import { BTN_DANGER, BTN_DARK, BTN_OUTLINE } from "./accountStyles";
 // Both are decided by the server (canCancel / hasItems come from it and the API
 // re-checks), so a stale page can't do what it shouldn't.
 export default function OrderActions({ orderNumber, canCancel, awaitingRefund = false, hasItems }) {
-  const router = useRouter();
   const { addItem, setQuantity } = useCart();
   const [notice, notify] = useNotice();
   const [skipped, setSkipped] = useState([]);
-  const [busy, setBusy] = useState(null); // "reorder" | "cancel" | null
+  const [busy, setBusy] = useState(null); // "reorder" | null
   const busyRef = useRef(false);
   const path = `/api/account/orders/${encodeURIComponent(orderNumber)}`;
 
@@ -57,27 +56,6 @@ export default function OrderActions({ orderNumber, canCancel, awaitingRefund = 
     );
   }
 
-  async function cancel() {
-    if (busyRef.current) return;
-    const question = awaitingRefund
-      ? `Cancel order #${orderNumber}? You've already paid for it, so we'll refund your payment and be in touch to confirm. This can't be undone.`
-      : `Cancel order #${orderNumber}? This can't be undone.`;
-    if (!window.confirm(question)) return;
-    busyRef.current = true;
-    setBusy("cancel");
-    const result = await requestJson("POST", `${path}/cancel`);
-    busyRef.current = false;
-    setBusy(null);
-
-    if (!result.ok) {
-      notify(result.error, "error");
-      router.refresh(); // the order may have moved on since this page was loaded
-      return;
-    }
-    notify(awaitingRefund ? "Your order was cancelled. We'll be in touch about your refund" : "Your order was cancelled", "success");
-    router.refresh();
-  }
-
   return (
     <>
       <div className="flex flex-wrap items-center gap-3">
@@ -87,11 +65,7 @@ export default function OrderActions({ orderNumber, canCancel, awaitingRefund = 
             {busy === "reorder" ? "Adding…" : "Order again"}
           </button>
         )}
-        {canCancel && (
-          <button type="button" onClick={cancel} disabled={busy !== null} className={BTN_DANGER}>
-            {busy === "cancel" ? "Cancelling…" : "Cancel order"}
-          </button>
-        )}
+        {canCancel && <CancelOrderButton orderNumber={orderNumber} awaitingRefund={awaitingRefund} />}
       </div>
 
       {skipped.length > 0 && (

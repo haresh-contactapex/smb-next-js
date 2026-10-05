@@ -1,9 +1,10 @@
 import Link from "next/link";
 import StoreIcon from "../storefront/icons";
 import AccountPageHeader from "./AccountPageHeader";
+import CancelOrderButton from "./CancelOrderButton";
 import OrderThumbs from "./OrderThumbs";
 import { OrderStatusBadge, PaymentStatusBadge } from "./StatusBadge";
-import { BTN_DARK, BTN_OUTLINE, CARD, FIELD } from "./accountStyles";
+import { BTN_DANGER, BTN_DARK, BTN_OUTLINE, CARD, FIELD } from "./accountStyles";
 import { formatDate, ordersHref, pluralize } from "./accountHelpers";
 import { formatCurrency } from "@/lib/currency";
 
@@ -28,7 +29,7 @@ export default function OrdersList({ data, counts, status, q, moneyFormat }) {
     <>
       <AccountPageHeader title="Orders" description="Track, review and reorder everything you've bought." />
 
-      <div className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+      <div className="mb-5 flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
         <nav aria-label="Filter orders by status" className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <ul className="flex gap-2">
             {FILTERS.map((filter) => {
@@ -59,7 +60,7 @@ export default function OrdersList({ data, counts, status, q, moneyFormat }) {
           <label htmlFor="order-search" className="sr-only">
             Search by order number
           </label>
-          <div className="relative min-w-0 flex-1 xl:w-64 xl:flex-none">
+          <div className="relative min-w-0 flex-1 2xl:w-64 2xl:flex-none">
             <StoreIcon name="search" className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input id="order-search" name="q" type="search" defaultValue={q} placeholder="Search order number" maxLength={40} className={`${FIELD} !py-2.5 !pl-10 !text-[14px]`} />
           </div>
@@ -111,8 +112,9 @@ export default function OrdersList({ data, counts, status, q, moneyFormat }) {
                 </p>
               </div>
 
-              <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
-                <p className="text-[17px] font-semibold text-[#333333]">{formatCurrency(order.total, order.currency, moneyFormat)}</p>
+              <p className="text-[17px] font-semibold text-[#333333] sm:w-36 sm:flex-shrink-0 sm:text-center">{formatCurrency(order.total, order.currency, moneyFormat)}</p>
+
+              <div className="flex items-center justify-between gap-3 sm:w-36 sm:flex-shrink-0 sm:flex-col sm:items-end sm:justify-center sm:gap-2">
                 <Link
                   href={`/account/orders/${encodeURIComponent(order.orderNumber)}`}
                   aria-label={`View details of order ${order.orderNumber}`}
@@ -121,6 +123,13 @@ export default function OrdersList({ data, counts, status, q, moneyFormat }) {
                   View details
                   <StoreIcon name="arrowRight" className="h-4 w-4" />
                 </Link>
+                {order.canCancel && (
+                  <CancelOrderButton
+                    orderNumber={order.orderNumber}
+                    awaitingRefund={order.paymentStatus === "Paid"}
+                    className={`${BTN_DANGER} !px-3.5 !py-1.5 !text-[13px]`}
+                  />
+                )}
               </div>
             </li>
           ))}
