@@ -281,7 +281,7 @@ export default function SystemMaintenanceSettingsForm() {
                   aria-valuenow={backup.percent}
                   className="h-2 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden"
                 >
-                  <div className="h-full rounded-full bg-primary transition-[width] duration-200" style={{ width: `${backup.percent}%` }} />
+                  <div className="h-full rounded-full bg-primary-500 dark:bg-accent-500 transition-[width] duration-200" style={{ width: `${backup.percent}%` }} />
                 </div>
                 <div className="flex items-center justify-between mt-1.5">
                   <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
