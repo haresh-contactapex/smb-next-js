@@ -14,20 +14,29 @@ function getPageNumbers(page, pageCount) {
   return items;
 }
 
-export default function Pagination({ page, pageCount, totalCount, pageSize, onPageChange, onPageSizeChange }) {
+export function PaginationSummary({ page, totalCount, pageSize, className = "" }) {
   if (totalCount === 0) return null;
 
   const start = (page - 1) * pageSize + 1;
   const end = Math.min(page * pageSize, totalCount);
+
+  return (
+    <p className={`text-xs text-slate-400 ${className}`}>
+      Showing <span className="font-medium text-slate-600 dark:text-slate-300">{start}–{end}</span> of{" "}
+      <span className="font-medium text-slate-600 dark:text-slate-300">{totalCount}</span> products
+    </p>
+  );
+}
+
+export default function Pagination({ page, pageCount, totalCount, pageSize, onPageChange, onPageSizeChange }) {
+  if (totalCount === 0) return null;
+
   const pageNumbers = getPageNumbers(page, pageCount);
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 mt-4 border-t border-slate-100 dark:border-white/5">
       <div className="flex flex-wrap items-center gap-4">
-        <p className="text-xs text-slate-400">
-          Showing <span className="font-medium text-slate-600 dark:text-slate-300">{start}–{end}</span> of{" "}
-          <span className="font-medium text-slate-600 dark:text-slate-300">{totalCount}</span> products
-        </p>
+        <PaginationSummary page={page} totalCount={totalCount} pageSize={pageSize} />
         <label className="flex items-center gap-2 text-xs text-slate-400">
           Rows per page
           <span className="relative">

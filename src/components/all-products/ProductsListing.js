@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductsFilters from "./ProductsFilters";
 import ProductsTable from "./ProductsTable";
-import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
+import Pagination, { PaginationSummary, PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import Toast from "./Toast";
 
@@ -111,6 +111,7 @@ export default function ProductsListing({ products: initialProducts }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        <PaginationSummary page={currentPage} totalCount={sorted.length} pageSize={pageSize} className="mb-3" />
         <ProductsTable
           products={pageItems}
           onDelete={handleDelete}
