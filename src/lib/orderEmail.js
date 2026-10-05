@@ -42,7 +42,7 @@ const lines = (list) => list.filter(Boolean).map(escapeHtml).join("<br>");
 const itemCount = (items) => items.reduce((sum, item) => sum + item.quantity, 0);
 
 function factCell([label, value], width) {
-  return `<td style="padding:12px 14px;width:${width}%;vertical-align:top;"><div style="font-size:11px;color:#8A7A55;margin-bottom:3px;">${escapeHtml(label)}</div><div style="font-size:14px;font-weight:bold;color:${NAVY};">${escapeHtml(value)}</div></td>`;
+  return `<td width="${width}%" valign="top" style="padding:12px 14px;width:${width}%;vertical-align:top;"><div style="font-size:11px;color:#8A7A55;margin-bottom:3px;">${escapeHtml(label)}</div><div style="font-size:14px;font-weight:bold;color:${NAVY};">${escapeHtml(value)}</div></td>`;
 }
 
 function itemRow(item) {
@@ -51,7 +51,7 @@ function itemRow(item) {
     : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="60"><tr><td width="60" height="60" bgcolor="#F4F4F4" style="width:60px;height:60px;background:#F4F4F4;font-size:0;line-height:0;">&nbsp;</td></tr></table>`;
   return `<tr>
     <td style="padding:14px 0;width:72px;vertical-align:top;border-top:1px solid #eeeeee;">${picture}</td>
-    <td style="padding:14px 8px;vertical-align:top;border-top:1px solid #eeeeee;"><div style="font-size:14px;font-weight:bold;color:#222222;line-height:1.35;">${escapeHtml(item.title)}</div><div style="font-size:12px;color:#777777;margin-top:3px;">Qty ${escapeHtml(item.quantity)}</div></td>
+    <td style="padding:14px 8px;vertical-align:top;border-top:1px solid #eeeeee;"><div style="font-size:14px;font-weight:bold;color:#222222;line-height:19px;mso-line-height-rule:exactly;">${escapeHtml(item.title)}</div><div style="font-size:12px;color:#777777;margin-top:3px;">Qty ${escapeHtml(item.quantity)}</div></td>
     <td style="padding:14px 0;text-align:right;vertical-align:top;font-size:14px;font-weight:bold;color:#222222;white-space:nowrap;border-top:1px solid #eeeeee;">${escapeHtml(item.lineTotal)}</td>
   </tr>`;
 }
@@ -61,7 +61,7 @@ function totalRow(label, value, top = 4) {
 }
 
 const step = ([lead, text]) =>
-  `<p style="margin:0 0 9px;font-size:13px;line-height:1.55;"><b style="color:#222222;">${escapeHtml(lead)}</b> <span style="color:#555555;">${escapeHtml(text)}</span></p>`;
+  `<p style="margin:0 0 9px;font-size:13px;line-height:20px;mso-line-height-rule:exactly;"><b style="color:#222222;">${escapeHtml(lead)}</b> <span style="color:#555555;">${escapeHtml(text)}</span></p>`;
 
 const heading = (text) => `<div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 8px;">${escapeHtml(text)}</div>`;
 
@@ -76,8 +76,8 @@ function itemsSection(data) {
   ].join("");
   return `<tr><td style="padding:26px 32px 0;">
     <div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 12px;">Your items</div>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">${items.map(itemRow).join("")}</table>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;border-top:1px solid #eeeeee;font-size:13px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;">${items.map(itemRow).join("")}</table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;border-top:1px solid #eeeeee;font-size:13px;">
       ${totals}
       <tr><td style="padding:12px 0 14px;font-size:16px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">Total</td><td style="padding:12px 0 14px;text-align:right;font-size:18px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">${escapeHtml(total)}</td></tr>
     </table>
@@ -88,11 +88,21 @@ const sameAddress = (data) => data.billingAddress.join("|") === data.shippingAdd
 
 function addressesSection(data) {
   const block = (title, list) =>
-    `<td style="vertical-align:top;padding-right:12px;">${heading(title)}<p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(list)}</p></td>`;
+    `<td style="vertical-align:top;padding-right:12px;">${heading(title)}<p style="margin:0;font-size:13px;line-height:21px;mso-line-height-rule:exactly;color:#444444;">${lines(list)}</p></td>`;
   const body = sameAddress(data)
-    ? `${heading("Shipping and billing address")}<p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(data.shippingAddress)}</p><p style="margin:8px 0 0;font-size:12px;color:#888888;">The shipping and billing addresses are the same.</p>`
-    : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr>${block("Shipping address", data.shippingAddress)}${block("Billing address", data.billingAddress)}</tr></table>`;
+    ? `${heading("Shipping and billing address")}<p style="margin:0;font-size:13px;line-height:21px;mso-line-height-rule:exactly;color:#444444;">${lines(data.shippingAddress)}</p><p style="margin:8px 0 0;font-size:12px;color:#888888;">The shipping and billing addresses are the same.</p>`
+    : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;"><tr>${block("Shipping address", data.shippingAddress)}${block("Billing address", data.billingAddress)}</tr></table>`;
   return `<tr><td style="padding:8px 32px 0;">${body}</td></tr>`;
+}
+
+// An orange button that works everywhere. Outlook's renderer can't paint padding on a link, so it gets a
+// VML rounded rectangle (fully clickable, anchored); every other client gets a table cell with the link in it.
+function bulletproofButton(label, url) {
+  const href = escapeHtml(url);
+  const text = escapeHtml(label);
+  const width = Math.max(150, Math.round(label.length * 9 + 64));
+  return `<!--[if mso]><v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${href}" style="height:44px;v-text-anchor:middle;width:${width}px;" arcsize="14%" stroke="f" fillcolor="${ORANGE}"><w:anchorlock/><center style="color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;">${text}</center></v:roundrect><![endif]-->
+    <!--[if !mso]><!--><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${ORANGE}" align="center" style="background:${ORANGE};border-radius:6px;padding:12px 28px;"><a href="${href}" target="_blank" style="display:inline-block;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;"><span style="color:#ffffff;">${text}</span></a></td></tr></table><!--<![endif]-->`;
 }
 
 // spec: { subject, heading, intro, facts: [[label, value]], button: { label, url } | null,
@@ -101,13 +111,11 @@ function render(data, spec) {
   const { storeName, supportEmail, shopUrl } = data;
 
   const logo = data.logoSrc
-    ? `<img src="${escapeHtml(data.logoSrc)}" width="220" alt="${escapeHtml(storeName)}" style="display:block;width:220px;max-width:100%;height:auto;border:0;">`
+    ? `<img src="${escapeHtml(data.logoSrc)}" width="220" alt="${escapeHtml(storeName)}" style="display:block;width:220px;max-width:100%;height:auto;border:0;-ms-interpolation-mode:bicubic;">`
     : `<span style="font-size:27px;color:#D9A02E;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span>`;
 
   const width = Math.floor(100 / spec.facts.length);
-  const button = spec.button?.url
-    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${ORANGE}" align="center" style="background:${ORANGE};border-radius:6px;padding:12px 28px;mso-padding-alt:12px 28px;"><a href="${escapeHtml(spec.button.url)}" target="_blank" style="display:inline-block;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;"><span style="color:#ffffff;">${escapeHtml(spec.button.label)}</span></a></td></tr></table>`
-    : "";
+  const button = spec.button?.url ? bulletproofButton(spec.button.label, spec.button.url) : "";
   const contact = supportEmail ? `<a href="mailto:${escapeHtml(supportEmail)}" style="color:#222222;font-weight:bold;">contact us</a>` : "contact us";
   const footerLinks = [
     supportEmail ? `Questions? Reply to this email or write to <a href="mailto:${escapeHtml(supportEmail)}" style="color:#F5C46B;font-weight:bold;">${escapeHtml(supportEmail)}</a>` : "Questions? Just reply to this email.",
@@ -117,25 +125,26 @@ function render(data, spec) {
     .join("<br>");
 
   const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${escapeHtml(spec.subject)}</title>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${escapeHtml(spec.subject)}</title>
+<!--[if gte mso 9]><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml><![endif]-->
 <!--[if mso]><style type="text/css">body, table, td, p, a, h1, div, span, b { font-family: Arial, Helvetica, sans-serif !important; }</style><![endif]-->
 <link rel="stylesheet" href="${FONT_CSS}"></head>
 <body bgcolor="#f3f3f3" style="margin:0;padding:0;background:#f3f3f3;font-family:${FONT};">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#f3f3f3" style="border-collapse:collapse;background:#f3f3f3;"><tr><td align="center" style="padding:20px 10px;">
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" bgcolor="#ffffff" style="border-collapse:collapse;width:100%;max-width:600px;background:#ffffff;border:1px solid #e6e6e6;font-family:${FONT};color:#333333;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#f3f3f3" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;background:#f3f3f3;"><tr><td align="center" style="padding:20px 10px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" bgcolor="#ffffff" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;width:100%;max-width:600px;background:#ffffff;border:1px solid #e6e6e6;font-family:${FONT};color:#333333;">
   <tr><td style="padding:26px 32px 20px;border-bottom:4px solid ${ORANGE};">${logo}</td></tr>
   <tr><td style="padding:30px 32px 6px;">
-    <h1 style="margin:0 0 12px;font-size:30px;line-height:1.15;color:${NAVY};font-weight:bold;font-family:${FONT};">${escapeHtml(spec.heading)}</h1>
-    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444444;">${escapeHtml(spec.intro)}</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FBF7EF" style="border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;"><tr>${spec.facts.map((fact) => factCell(fact, width)).join("")}</tr></table></td></tr></table>
+    <h1 style="margin:0 0 12px;font-size:30px;line-height:36px;mso-line-height-rule:exactly;color:${NAVY};font-weight:bold;font-family:${FONT};">${escapeHtml(spec.heading)}</h1>
+    <p style="margin:0 0 20px;font-size:14px;line-height:22px;mso-line-height-rule:exactly;color:#444444;">${escapeHtml(spec.intro)}</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FBF7EF" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;"><tr>${spec.facts.map((fact) => factCell(fact, width)).join("")}</tr></table></td></tr></table>
     ${spec.detailsHtml ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;">${spec.detailsHtml}</td></tr></table>` : ""}
     ${button}
   </td></tr>
   ${spec.showItems ? itemsSection(data) : ""}
   ${spec.showAddresses ? addressesSection(data) : ""}
   ${spec.steps?.length ? `<tr><td style="padding:26px 32px 0;"><div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 10px;">${escapeHtml(spec.stepsTitle || "What happens next")}</div>${spec.steps.map(step).join("")}</td></tr>` : ""}
-  <tr><td style="padding:17px 32px 30px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td width="4" bgcolor="${ORANGE}" style="width:4px;background:${ORANGE};font-size:0;line-height:0;">&nbsp;</td><td bgcolor="#F3F4F6" style="background:#F3F4F6;padding:13px 16px;font-size:13px;color:#444444;line-height:1.5;"><b style="color:#222222;">${escapeHtml(spec.note.lead)}</b> ${spec.note.html.replace("{contact}", contact)}</td></tr></table></td></tr>
-  <tr><td bgcolor="#243A66" style="background:#243A66;padding:20px 32px;font-size:12px;line-height:1.6;color:#DCE3F0;"><div style="font-weight:bold;color:#ffffff;margin-bottom:3px;">${escapeHtml(storeName)}</div>${footerLinks}</td></tr>
+  <tr><td style="padding:17px 32px 30px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;"><tr><td width="4" bgcolor="${ORANGE}" style="width:4px;background:${ORANGE};font-size:0;line-height:0;">&nbsp;</td><td bgcolor="#F3F4F6" style="background:#F3F4F6;padding:13px 16px;font-size:13px;color:#444444;line-height:20px;mso-line-height-rule:exactly;"><b style="color:#222222;">${escapeHtml(spec.note.lead)}</b> ${spec.note.html.replace("{contact}", contact)}</td></tr></table></td></tr>
+  <tr><td bgcolor="#243A66" style="background:#243A66;padding:20px 32px;font-size:12px;line-height:19px;mso-line-height-rule:exactly;color:#DCE3F0;"><div style="font-weight:bold;color:#ffffff;margin-bottom:3px;">${escapeHtml(storeName)}</div>${footerLinks}</td></tr>
 </table>
 </td></tr></table>
 </body></html>`;
@@ -286,7 +295,7 @@ export function buildNewOrderAlertEmail(data) {
   const { orderNumber, placedAt, paymentLabel, cod, total, customer } = data;
   const row = (label, value) =>
     `<tr><td style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`;
-  const detailsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
+  const detailsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;font-size:13px;">
     ${row("Customer", escapeHtml(customer.name))}
     ${row("Email", `<a href="mailto:${escapeHtml(customer.email)}" style="color:#222222;">${escapeHtml(customer.email)}</a>`)}
     ${customer.phone ? row("Phone", escapeHtml(customer.phone)) : ""}
@@ -315,7 +324,7 @@ export function buildRefundRequestAlertEmail(data) {
   const { orderNumber, placedAt, paymentLabel, paymentReference, total, customer } = data;
   const row = (label, value) =>
     `<tr><td style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`;
-  const detailsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
+  const detailsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;font-size:13px;">
     ${row("Customer", escapeHtml(customer.name))}
     ${row("Email", `<a href="mailto:${escapeHtml(customer.email)}" style="color:#222222;">${escapeHtml(customer.email)}</a>`)}
     ${customer.phone ? row("Phone", escapeHtml(customer.phone)) : ""}
