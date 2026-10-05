@@ -306,6 +306,7 @@ export async function getProductById(id) {
     JOIN product_option_values ov ON ov.id = vov.option_value_id
     JOIN product_options o ON o.id = ov.option_id
     WHERE vov.variant_id IN (SELECT id FROM product_variants WHERE product_id = ${id})
+    ORDER BY o.position
   `;
 
   const media = await sql`
@@ -828,7 +829,7 @@ export async function getStorefrontProductByHandle(handle) {
     sql`
       SELECT
         v.id, v.sku, v.price, v.compare_at_price, v.inventory_quantity, v.inventory_management,
-        COALESCE(json_object_agg(o.name, ov.value) FILTER (WHERE o.name IS NOT NULL), '{}'::json) AS options
+        COALESCE(json_object_agg(o.name, ov.value ORDER BY o.position) FILTER (WHERE o.name IS NOT NULL), '{}'::json) AS options
       FROM product_variants v
       LEFT JOIN variant_option_values vov ON vov.variant_id = v.id
       LEFT JOIN product_option_values ov ON ov.id = vov.option_value_id
@@ -880,7 +881,7 @@ export async function listStorefrontProductVariants(productIds) {
     sql`
       SELECT
         v.id, v.product_id, v.sku, v.price, v.compare_at_price, v.inventory_quantity, v.inventory_management,
-        COALESCE(json_object_agg(o.name, ov.value) FILTER (WHERE o.name IS NOT NULL), '{}'::json) AS options
+        COALESCE(json_object_agg(o.name, ov.value ORDER BY o.position) FILTER (WHERE o.name IS NOT NULL), '{}'::json) AS options
       FROM product_variants v
       LEFT JOIN variant_option_values vov ON vov.variant_id = v.id
       LEFT JOIN product_option_values ov ON ov.id = vov.option_value_id

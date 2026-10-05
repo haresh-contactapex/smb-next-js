@@ -117,9 +117,16 @@ export function regenerateVariants(options, existingVariants, productSku) {
   const validOptions = options.filter((o) => o.name && o.values.length);
   const orderedNames = validOptions.map((o) => o.name);
 
+  // Stored variants arrive with their option keys in whatever order the database
+  // returned the rows ({ "Band Size": "5", Color: "..." } as often as the other
+  // way round), so they're matched by option name, never by key order. A variant
+  // is only reusable when it spans exactly the current options.
   const oldByKey = {};
   existingVariants.forEach((v) => {
-    oldByKey[variantKey(v.options, Object.keys(v.options))] = v;
+    const spansCurrentOptions =
+      Object.keys(v.options).length === orderedNames.length &&
+      orderedNames.every((name) => v.options[name] !== undefined);
+    if (spansCurrentOptions) oldByKey[variantKey(v.options, orderedNames)] = v;
   });
 
   let combos;
@@ -150,7 +157,8 @@ export function regenerateVariants(options, existingVariants, productSku) {
   const skus = buildVariantSkus(combos, orderedNames, productSku);
   return combos.map((combo, i) => {
     const existing = matched[i];
-    if (existing) return existing;
+    // Same values, but keyed in option order so the row label ("14K White Gold / 5") is stable.
+    if (existing) return { ...existing, options: combo };
     return {
       id: nextId(),
       options: combo,
