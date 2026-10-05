@@ -267,7 +267,8 @@ export function assembleProduct(product) {
       image: v.image ? { url: v.image.url, name: v.image.name || null } : null,
     })),
     seo: {
-      title: product.seo.title || product.title,
+      // products.seo_title is VARCHAR(70); a long product title would be rejected.
+      title: (product.seo.title || product.title).slice(0, 70),
       description: product.seo.description || stripHtml(product.body_html).slice(0, 160),
     },
     media: product.media.map((m) => ({ type: m.type, url: m.url, name: m.name })),

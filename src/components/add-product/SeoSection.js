@@ -22,6 +22,7 @@ export default function SeoSection({ seoTitle, seoDescription, previewTitle, pre
           <input
             id="f-seo-title"
             type="text"
+            maxLength={70}
             value={seoTitle}
             onChange={(e) => onFieldChange({ title: e.target.value })}
             className="field-input h-10"
