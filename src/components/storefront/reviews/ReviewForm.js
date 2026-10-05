@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import Recaptcha from "@/components/auth/Recaptcha";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import RatingInput from "./RatingInput";
 import { EMPTY_REVIEW, REVIEW_FIELDS, REVIEW_LIMITS, normalizeReview, validateReview } from "./helpers";
 
@@ -30,6 +32,9 @@ function Field({ id, label, hint, error, children }) {
 // approves it. `onSent` receives { firstName } once it has been accepted.
 export default function ReviewForm({ handle, onSent }) {
   const baseId = useId();
+  // True only when Settings -> Security's reCAPTCHA toggle AND Settings ->
+  // Integrations' Google reCAPTCHA toggle are both on (see app/layout.js).
+  const { enableRecaptcha } = useGeneralSettings();
   const fieldRefs = useRef({});
   const submitRef = useRef(null);
   const submittingRef = useRef(false);
@@ -39,6 +44,9 @@ export default function ReviewForm({ handle, onSent }) {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [sending, setSending] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  // Bumping the key remounts the widget: a token is good for one submission.
+  const [recaptchaKey, setRecaptchaKey] = useState(0);
 
   const fieldId = (name) => `${baseId}-${name}`;
 
@@ -59,19 +67,30 @@ export default function ReviewForm({ handle, onSent }) {
     if (errors[name]) setErrors((current) => ({ ...current, [name]: undefined }));
   }
 
+  function handleRecaptcha(token) {
+    setRecaptchaToken(token);
+    if (token) setErrors((current) => ({ ...current, recaptcha: undefined }));
+  }
+
+  // Hands the visitor a fresh widget (the spent token is discarded).
+  function resetRecaptcha() {
+    setRecaptchaToken("");
+    setRecaptchaKey((key) => key + 1);
+  }
+
   async function handleSubmit(event) {
     event.preventDefault();
     if (submittingRef.current) return;
 
     const cleaned = normalizeReview(values);
     const found = validateReview(cleaned);
+    if (enableRecaptcha && !recaptchaToken) found.recaptcha = "Please complete the reCAPTCHA verification.";
     setErrors(found);
     setFormError("");
     const firstInvalid = REVIEW_FIELDS.find((name) => found[name]);
-    if (firstInvalid) {
-      fieldRefs.current[firstInvalid]?.focus();
-      return;
-    }
+    if (firstInvalid) fieldRefs.current[firstInvalid]?.focus();
+    // Stop on any error, including an unsolved reCAPTCHA (it has no field to focus).
+    if (Object.values(found).some(Boolean)) return;
 
     submittingRef.current = true;
     setSending(true);
@@ -79,18 +98,20 @@ export default function ReviewForm({ handle, onSent }) {
       const res = await fetch("/api/storefront/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...cleaned, handle, honeypot }),
+        body: JSON.stringify({ ...cleaned, handle, honeypot, recaptchaToken }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.success) {
         setFormError(json?.error || SEND_FAILED);
         setSending(false);
+        resetRecaptcha();
         return;
       }
       onSent({ firstName: cleaned.displayName.split(" ")[0] });
     } catch {
       setFormError(SEND_FAILED);
       setSending(false);
+      resetRecaptcha();
     } finally {
       submittingRef.current = false;
     }
@@ -153,6 +174,16 @@ export default function ReviewForm({ handle, onSent }) {
           <input type="text" name="hp_contact" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(event) => setHoneypot(event.target.value)} />
         </label>
       </div>
+
+      {enableRecaptcha && (
+        <div>
+          {/* The storefront is light-only, so the widget is too (it would otherwise follow the admin's .dark class). */}
+          <Recaptcha key={recaptchaKey} theme="light" onChange={handleRecaptcha} />
+          <p role="alert" className="mt-1 text-xs text-error empty:hidden">
+            {errors.recaptcha}
+          </p>
+        </div>
+      )}
 
       <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-error empty:hidden">
         {formError}

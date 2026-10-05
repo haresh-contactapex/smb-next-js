@@ -109,6 +109,15 @@ in the request. Protections, in order:
 - **Settings → Products → "Allow customer reviews"** (`allowReviews`, default
   on). When off, the form is hidden and the endpoint returns `403`; reviews
   already approved keep displaying. A missing settings row counts as on.
+- **Google reCAPTCHA**, the same rule every other storefront form follows: the
+  widget shows in the form, and a solved token is required, only when **both**
+  Settings → Security's "Enable reCAPTCHA on login and checkout" and
+  Settings → Integrations' "Google reCAPTCHA" are on. The form sends it as
+  `recaptchaToken` and `checkRecaptchaIfEnabled` (`src/lib/auth/recaptcha.js`)
+  verifies it; a missing or bad token gets `400` before any database access.
+  It is checked after validation and the rate limit, so a single-use token
+  isn't spent on a form that was going to be refused anyway, and the form
+  resets the widget after any failed submission.
 - The same validation the form uses (`src/components/storefront/reviews/helpers.js`,
   limits from `src/lib/reviewFields.js`), then `createReview` validates again.
   Invalid input returns `400`; a body over 40 KB returns `413`.

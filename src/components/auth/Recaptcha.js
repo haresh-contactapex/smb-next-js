@@ -29,8 +29,12 @@ function loadRecaptchaScript() {
  * (see useGeneralSettings().enableRecaptcha) — callers own that condition
  * and are responsible for including the token from `onChange` in their
  * submit payload as `recaptchaToken`.
+ *
+ * `theme` ("light" | "dark") forces the widget's look; without it the widget
+ * follows the admin's `.dark` class on <html>, which is wrong on the light-only
+ * storefront, so storefront forms pass "light".
  */
-export default function Recaptcha({ onChange }) {
+export default function Recaptcha({ onChange, theme }) {
   const { googleRecaptchaEnabled, googleRecaptchaSiteKey } = useGeneralSettings();
   // Settings -> Integrations' "Google reCAPTCHA" site key wins when the
   // admin has entered one there; otherwise fall back to .env.local so a
@@ -49,7 +53,7 @@ export default function Recaptcha({ onChange }) {
       return undefined;
     }
 
-    const isDark = document.documentElement.classList.contains("dark");
+    const isDark = theme ? theme === "dark" : document.documentElement.classList.contains("dark");
 
     loadRecaptchaScript()
       .then((grecaptcha) => {

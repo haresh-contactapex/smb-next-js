@@ -1,6 +1,7 @@
 import { sql } from "./db";
 import { createRateLimiter } from "./rateLimit";
 import { getProductsSettings } from "./productsSettings";
+import { checkRecaptchaIfEnabled } from "./auth/recaptcha";
 import { isValidEmail } from "@/components/auth/helpers";
 import { normalizeReview, validateReview } from "@/components/storefront/reviews/helpers";
 import {
@@ -267,6 +268,14 @@ export async function submitStorefrontReview({ payload, clientKey }) {
   if (allowed.includes(false)) {
     throw new ReviewError("You've sent a few reviews already. Please wait a little while before sending another.", 429);
   }
+
+  // Required only when both Settings -> Security's reCAPTCHA toggle and
+  // Settings -> Integrations' Google reCAPTCHA toggle are on (the rule every
+  // other storefront form uses). After validation and the rate limit, so a
+  // single-use token isn't spent on a form that was going to be refused anyway.
+  const recaptchaToken = typeof payload?.recaptchaToken === "string" ? payload.recaptchaToken.slice(0, 4096) : "";
+  const recaptcha = await checkRecaptchaIfEnabled(recaptchaToken);
+  if (recaptcha.required && !recaptcha.valid) throw new ReviewError("reCAPTCHA verification failed. Please try again.");
 
   // The product comes from the catalog, never from an id in the request.
   const productId = await findActiveProductId(handle);
