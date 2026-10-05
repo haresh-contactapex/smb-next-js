@@ -29,7 +29,7 @@ const ORANGE = "#EF9822";
 const FONT = "'Google Sans','Google Sans Text',Arial,Helvetica,sans-serif";
 const FONT_CSS = "https://fonts.googleapis.com/css2?family=Google+Sans:wght@400..700&display=swap";
 
-function escapeHtml(value) {
+export function escapeHtml(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -42,8 +42,20 @@ const lines = (list) => list.filter(Boolean).map(escapeHtml).join("<br>");
 const itemCount = (items) => items.reduce((sum, item) => sum + item.quantity, 0);
 
 function factCell([label, value], width) {
-  return `<td width="${width}%" valign="top" style="padding:12px 14px;width:${width}%;vertical-align:top;"><div style="font-size:11px;color:#8A7A55;margin-bottom:3px;">${escapeHtml(label)}</div><div style="font-size:14px;font-weight:bold;color:${NAVY};">${escapeHtml(value)}</div></td>`;
+  return `<td width="${width}%" valign="top" style="padding:12px 14px;width:${width}%;vertical-align:top;"><div style="font-size:11px;color:#8A7A55;margin-bottom:3px;">${escapeHtml(label)}</div><div style="font-size:14px;font-weight:bold;color:${NAVY};word-wrap:break-word;word-break:break-word;">${escapeHtml(value)}</div></td>`;
 }
+
+// A customer's own words, set apart in the note style (grey box, orange edge). `text` is escaped here.
+export const quoteBlock = (text) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;"><tr><td width="4" bgcolor="${ORANGE}" style="width:4px;background:${ORANGE};font-size:0;line-height:0;">&nbsp;</td><td bgcolor="#F3F4F6" style="background:#F3F4F6;padding:13px 16px;font-size:13px;color:#444444;line-height:20px;mso-line-height-rule:exactly;">${String(text).split(/\r?\n/).map(escapeHtml).join("<br>")}</td></tr></table>`;
+
+// Label and value rows for the "details" block between the intro and the button. `rows` are
+// [label, valueHtml]; the values must already be escaped.
+export const detailRows = (rows) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;font-size:13px;">${rows
+    .filter(Boolean)
+    .map(([label, value]) => `<tr><td valign="top" style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`)
+    .join("")}</table>`;
 
 function itemRow(item) {
   const picture = item.imageUrl
@@ -105,16 +117,17 @@ function bulletproofButton(label, url) {
     <!--[if !mso]><!--><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${ORANGE}" align="center" style="background:${ORANGE};border-radius:6px;padding:12px 28px;"><a href="${href}" target="_blank" style="display:inline-block;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;"><span style="color:#ffffff;">${text}</span></a></td></tr></table><!--<![endif]-->`;
 }
 
-// spec: { subject, heading, intro, facts: [[label, value]], button: { label, url } | null,
+// spec: { subject, heading, intro, facts: [[label, value]] (optional), button: { label, url } | null,
 //   detailsHtml, showItems, showAddresses, stepsTitle, steps: [[lead, text]], note: { lead, html } }
-function render(data, spec) {
+export function render(data, spec) {
   const { storeName, supportEmail, shopUrl } = data;
 
   const logo = data.logoSrc
     ? `<img src="${escapeHtml(data.logoSrc)}" width="220" alt="${escapeHtml(storeName)}" style="display:block;width:220px;max-width:100%;height:auto;border:0;-ms-interpolation-mode:bicubic;">`
     : `<span style="font-size:27px;color:#D9A02E;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span>`;
 
-  const width = Math.floor(100 / spec.facts.length);
+  const facts = spec.facts || [];
+  const width = Math.floor(100 / (facts.length || 1));
   const button = spec.button?.url ? bulletproofButton(spec.button.label, spec.button.url) : "";
   const contact = supportEmail ? `<a href="mailto:${escapeHtml(supportEmail)}" style="color:#222222;font-weight:bold;">contact us</a>` : "contact us";
   const footerLinks = [
@@ -136,7 +149,7 @@ function render(data, spec) {
   <tr><td style="padding:30px 32px 6px;">
     <h1 style="margin:0 0 12px;font-size:30px;line-height:36px;mso-line-height-rule:exactly;color:${NAVY};font-weight:bold;font-family:${FONT};">${escapeHtml(spec.heading)}</h1>
     <p style="margin:0 0 20px;font-size:14px;line-height:22px;mso-line-height-rule:exactly;color:#444444;">${escapeHtml(spec.intro)}</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FBF7EF" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;"><tr>${spec.facts.map((fact) => factCell(fact, width)).join("")}</tr></table></td></tr></table>
+    ${facts.length ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FBF7EF" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;"><tr>${facts.map((fact) => factCell(fact, width)).join("")}</tr></table></td></tr></table>` : ""}
     ${spec.detailsHtml ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;">${spec.detailsHtml}</td></tr></table>` : ""}
     ${button}
   </td></tr>
@@ -154,7 +167,7 @@ function render(data, spec) {
     "",
     spec.intro,
     "",
-    ...spec.facts.map(([label, value]) => `${label}: ${value}`),
+    ...facts.map(([label, value]) => `${label}: ${value}`),
     spec.detailsText || "",
     spec.button?.url ? `${spec.button.label}: ${spec.button.url}` : "",
     "",

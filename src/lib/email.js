@@ -1,9 +1,11 @@
 import nodemailer from "nodemailer";
-import { getEmailTransportSettings } from "./emailSettings";
+import { getEmailSettings, getEmailTransportSettings } from "./emailSettings";
+import { getGeneralSettings } from "./generalSettings";
 import { readFile } from "fs/promises";
 import path from "path";
 import { buildNewOrderAlertEmail, buildOrderConfirmationEmail, buildOrderStatusEmail, buildRefundRequestAlertEmail } from "./orderEmail";
-import { isPublicOrigin } from "./siteUrl";
+import { buildCustomerWelcomeEmail, buildNewCustomerAlertEmail, buildPasswordResetEmail, buildProductQuestionAlertEmail, buildProductQuestionConfirmationEmail, buildStaffWelcomeEmail } from "./notificationEmail";
+import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 
 const LOGO_CID = "shopmyband-logo";
 
@@ -133,29 +135,24 @@ export async function sendEmail({ to, subject, html, text, replyTo, attachments 
   }
 }
 
-export async function sendPasswordResetEmail({ to, resetLink }) {
-  const subject = "Reset your password";
-  const text = `We received a request to reset your password. Use the link below to choose a new one. This link expires in 1 hour and can only be used once.\n\n${resetLink}\n\nIf you didn't request this, you can safely ignore this email.`;
-  const html = `
-    <p>We received a request to reset your password.</p>
-    <p><a href="${resetLink}">Click here to choose a new password</a></p>
-    <p>This link expires in 1 hour and can only be used once.</p>
-    <p>If you didn't request this, you can safely ignore this email.</p>
-  `;
+// The account and enquiry emails use the order emails' design (see notificationEmail.js). They
+// carry the logo and the store's address like the order emails do, so the callers pass only what is
+// particular to the email. `replyTo` is optional: an address, or { name, address }.
+async function sendBrandedEmail(to, build, data, { replyTo } = {}) {
+  const shopUrl = await getSiteOrigin();
+  const emailSettings = await getEmailSettings().catch(() => null);
+  const storeName = data.storeName || (await getGeneralSettings().catch(() => null))?.storeName || "Shop My Band";
+  const { logoSrc, attachments } = await loadEmailLogo(shopUrl);
+  const { subject, html, text } = build({ ...data, storeName, shopUrl, logoSrc, supportEmail: emailSettings?.senderEmail || "" });
+  return sendEmail({ to, subject, html, text, replyTo, attachments });
+}
 
-  return sendEmail({ to, subject, html, text });
+export async function sendPasswordResetEmail({ to, resetLink }) {
+  return sendBrandedEmail(to, buildPasswordResetEmail, { resetLink });
 }
 
 export async function sendCustomerWelcomeEmail({ to, firstName, storeName }) {
-  const subject = `Welcome to ${storeName}`;
-  const text = `Hi ${firstName},\n\nYour ${storeName} account has been created. You can now sign in to check out faster and track your orders.\n\nIf you didn't create this account, please contact us.`;
-  const html = `
-    <p>Hi ${firstName},</p>
-    <p>Your ${storeName} account has been created. You can now sign in to check out faster and track your orders.</p>
-    <p>If you didn't create this account, please contact us.</p>
-  `;
-
-  return sendEmail({ to, subject, html, text });
+  return sendBrandedEmail(to, buildCustomerWelcomeEmail, { storeName, firstName });
 }
 
 // Notifies the store's contact address (Settings -> General -> Store Email)
@@ -163,106 +160,29 @@ export async function sendCustomerWelcomeEmail({ to, firstName, storeName }) {
 // transactional email the customer is waiting on, so a delivery failure here
 // is logged (by sendEmail) but never surfaces to the registering customer.
 export async function sendNewCustomerAdminNotification({ to, customer, storeName }) {
-  const subject = `New customer registered on ${storeName}`;
-  const fullName = `${customer.firstName} ${customer.lastName}`.trim();
-  const text = `A new customer just registered on ${storeName}.\n\nName: ${fullName}\nEmail: ${customer.email}`;
-  const html = `
-    <p>A new customer just registered on ${storeName}.</p>
-    <p><strong>Name:</strong> ${fullName}<br/><strong>Email:</strong> ${customer.email}</p>
-  `;
-
-  return sendEmail({ to, subject, html, text });
+  const origin = await getSiteOrigin();
+  const adminUrl = origin ? `${origin}/admin/${customer.id ? `edit-customer/${encodeURIComponent(customer.id)}` : "all-customers"}` : null;
+  return sendBrandedEmail(to, buildNewCustomerAlertEmail, { storeName, customer, adminUrl });
 }
 
 // Sent when an admin creates a staff account on Users -> Add User. The
 // account starts with a random password; the link lets the new user replace
 // it (it reuses the staff reset-password flow).
 export async function sendStaffWelcomeEmail({ to, firstName, storeName, temporaryPassword, setPasswordLink, loginLink, linkExpiresInHours }) {
-  const subject = `Your ${storeName} admin account has been created`;
-  const text = `Hi ${firstName},\n\nAn admin account has been created for you on ${storeName}.\n\nSign in: ${loginLink}\nEmail: ${to}\nTemporary password: ${temporaryPassword}\n\nFor your security, set your own password using this link (it expires in ${linkExpiresInHours} hours and can only be used once):\n${setPasswordLink}\n\nIf you weren't expecting this, please contact your store administrator.`;
-  const html = `
-    <p>Hi ${escapeHtml(firstName)},</p>
-    <p>An admin account has been created for you on <strong>${escapeHtml(storeName)}</strong>.</p>
-    <p>
-      <strong>Email:</strong> ${escapeHtml(to)}<br/>
-      <strong>Temporary password:</strong> <code style="font-size:15px">${escapeHtml(temporaryPassword)}</code>
-    </p>
-    <p><a href="${setPasswordLink}">Set your own password</a> &nbsp;·&nbsp; <a href="${loginLink}">Sign in</a></p>
-    <p>For your security, set your own password now. The link expires in ${linkExpiresInHours} hours and can only be used once.</p>
-    <p>If you weren't expecting this, please contact your store administrator.</p>
-  `;
-
-  return sendEmail({ to, subject, html, text });
+  return sendBrandedEmail(to, buildStaffWelcomeEmail, { to, firstName, storeName, temporaryPassword, setPasswordLink, loginLink, linkExpiresInHours });
 }
-
-// Subjects and display names must stay on one line.
-const oneLine = (value) => String(value).replace(/\s+/g, " ").trim();
-
-const MUTED = "color:#64748b";
-const QUOTE = "margin:0;padding:12px 14px;background:#f4f4f4;border-left:3px solid #ef9822;white-space:pre-wrap";
 
 // Sent to the store when a shopper uses "Ask a question" on a product page.
 // Reply-To is the shopper, so answering the email answers them directly.
-// Everything in `question` is visitor input and is escaped.
+// Everything in `question` is visitor input and is escaped by the template.
 export async function sendProductQuestionAdminEmail({ to, storeName, question, product }) {
-  const subject = `New question about ${oneLine(product.title)} from ${question.name}`;
-  const text = [
-    `A customer asked a question about a product on ${storeName}.`,
-    "",
-    `Name: ${question.name}`,
-    `Email: ${question.email}`,
-    `Phone: ${question.phone}`,
-    `Product: ${product.title}${product.sku ? ` (SKU ${product.sku})` : ""}`,
-    `Product page: ${product.url}`,
-    "",
-    "Question:",
-    question.question,
-    "",
-    `Reply to this email to answer ${question.name} directly.`,
-  ].join("\n");
-  const row = (label, value) =>
-    `<tr><td style="padding:3px 16px 3px 0;${MUTED}">${label}</td><td style="padding:3px 0">${value}</td></tr>`;
-  const html = `
-    <p>A customer asked a question about a product on <strong>${escapeHtml(storeName)}</strong>.</p>
-    <table style="border-collapse:collapse;font-size:14px">
-      ${row("Name", escapeHtml(question.name))}
-      ${row("Email", `<a href="mailto:${escapeHtml(question.email)}">${escapeHtml(question.email)}</a>`)}
-      ${row("Phone", escapeHtml(question.phone))}
-      ${row("Product", `<a href="${escapeHtml(product.url)}">${escapeHtml(product.title)}</a>`)}
-      ${product.sku ? row("SKU", escapeHtml(product.sku)) : ""}
-    </table>
-    <p style="margin:18px 0 6px;${MUTED}">Question</p>
-    <p style="${QUOTE}">${escapeHtml(question.question)}</p>
-    <p style="${MUTED};font-size:13px">Reply to this email to answer ${escapeHtml(question.name)} directly.</p>
-  `;
-
-  return sendEmail({ to, subject, html, text, replyTo: { name: question.name, address: question.email } });
+  return sendBrandedEmail(to, buildProductQuestionAlertEmail, { storeName, question, product }, { replyTo: { name: question.name, address: question.email } });
 }
 
 // Sent to the shopper to confirm the store received their question. Replies go
 // to `replyTo` (the store's support address) rather than the no-reply sender.
 export async function sendProductQuestionConfirmationEmail({ to, storeName, question, product, replyTo }) {
-  const firstName = question.name.split(" ")[0];
-  const subject = `We received your question about ${oneLine(product.title)}`;
-  const text = [
-    `Hi ${firstName},`,
-    "",
-    `Thanks for contacting ${storeName}. We've received your question about ${product.title} and will reply as soon as we can.`,
-    "",
-    "Your question:",
-    question.question,
-    "",
-    "If there's anything you'd like to add, just reply to this email.",
-  ].join("\n");
-  const html = `
-    <p>Hi ${escapeHtml(firstName)},</p>
-    <p>Thanks for contacting <strong>${escapeHtml(storeName)}</strong>. We've received your question about <a href="${escapeHtml(product.url)}">${escapeHtml(product.title)}</a> and will reply as soon as we can.</p>
-    <p style="margin:18px 0 6px;${MUTED}">Your question</p>
-    <p style="${QUOTE}">${escapeHtml(question.question)}</p>
-    <p>If there's anything you'd like to add, just reply to this email.</p>
-  `;
-
-  return sendEmail({ to, subject, html, text, replyTo: replyTo || undefined });
+  return sendBrandedEmail(to, buildProductQuestionConfirmationEmail, { storeName, question, product }, { replyTo: replyTo || undefined });
 }
 
 // The logo travels inside order emails (an inline attachment the HTML points at with cid:), so it
