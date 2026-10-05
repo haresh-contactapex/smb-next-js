@@ -10,7 +10,9 @@ const STARS = [1, 2, 3, 4, 5];
 // (arrow keys) and screen-reader behavior; each star also has two invisible
 // half-width labels over it so the mouse can choose a half or a whole star.
 // Hovering previews the rating, and the first radio takes `inputRef` so the form
-// can focus the control when the rating is missing.
+// can focus the control when the rating is missing. The focus ring surrounds the
+// whole star and shows only for keyboard focus (:focus-visible), so the form
+// moving focus here after a mouse click doesn't leave a stray box.
 export default function RatingInput({ value, onChange, error, disabled = false, inputRef }) {
   const name = useId();
   const [hover, setHover] = useState(0);
@@ -25,12 +27,12 @@ export default function RatingInput({ value, onChange, error, disabled = false, 
           </span>
           <div className="absolute inset-0 flex">
             {STARS.map((star) => (
-              <div key={star} className="flex h-8 w-8">
+              <div key={star} className="flex h-8 w-8 rounded-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#ef9822]">
                 {[star - 0.5, star].map((rating) => (
                   <label
                     key={rating}
                     onMouseEnter={() => setHover(rating)}
-                    className={`h-full w-1/2 focus-within:ring-2 focus-within:ring-[#ef9822] ${disabled ? "" : "cursor-pointer"}`}
+                    className={`h-full w-1/2 ${disabled ? "" : "cursor-pointer"}`}
                   >
                     <input
                       ref={rating === 0.5 ? inputRef : undefined}
