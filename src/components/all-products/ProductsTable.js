@@ -36,7 +36,15 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
 
   return (
     <div className="overflow-x-auto custom-scroll -mx-1">
-      <table className="w-full text-sm min-w-[820px]">
+      <table className="w-full table-fixed text-sm min-w-[900px]">
+        <colgroup>
+          <col />
+          <col className="w-[170px]" />
+          <col className="w-[120px]" />
+          <col className="w-[120px]" />
+          <col className="w-[100px]" />
+          <col className="w-[110px]" />
+        </colgroup>
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
             <SortableHeader label="Product" sortKey="title" sort={sort} onSortChange={onSortChange} />
@@ -57,14 +65,16 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
                   <div className="flex items-center gap-3">
                     <ProductThumbnail src={product.thumbnail} alt={product.title} iconColor={product.iconColor} />
                     <span className="min-w-0">
-                      <span className="block font-medium text-slate-700 dark:text-slate-200 truncate">
+                      <span className="block font-medium text-slate-700 dark:text-slate-200 truncate" title={product.title}>
                         {product.title}
                       </span>
                       <span className="block text-[11px] text-slate-400 system-field">{product.sku}</span>
                     </span>
                   </div>
                 </td>
-                <td className="py-3 px-1 text-slate-500 dark:text-slate-400">{product.category}</td>
+                <td className="py-3 px-1 pr-3 text-slate-500 dark:text-slate-400">
+                  <span className="block truncate" title={product.category}>{product.category}</span>
+                </td>
                 <td className="py-3 px-1">
                   <span className="font-semibold text-slate-700 dark:text-slate-200">
                     {formatMoney(product.price)}
@@ -75,7 +85,7 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
                     </span>
                   )}
                 </td>
-                <td className={`py-3 px-1 ${STOCK_TEXT_CLASSES[stock.level]}`}>{stock.label}</td>
+                <td className={`py-3 px-1 whitespace-nowrap ${STOCK_TEXT_CLASSES[stock.level]}`}>{stock.label}</td>
                 <td className="py-3 px-1">
                   <span
                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${STATUS_BADGE_CLASSES[product.status]}`}
