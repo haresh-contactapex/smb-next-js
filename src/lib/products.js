@@ -611,6 +611,13 @@ export async function deleteProduct(id) {
   await sql`DELETE FROM products WHERE id = ${id}`;
 }
 
+// Removes several products in one statement and returns how many existed.
+// Dependent rows (variants, media, ...) go with them exactly as in deleteProduct.
+export async function deleteProducts(ids) {
+  const rows = await sql`DELETE FROM products WHERE id = ANY(${ids}::uuid[]) RETURNING id`;
+  return rows.length;
+}
+
 // Storefront listing: only ACTIVE products, with the first two images (main +
 // hover) from the product's media order. blob: URLs are skipped as above.
 // `hasVariants` tells a card whether it can add the product straight to the cart

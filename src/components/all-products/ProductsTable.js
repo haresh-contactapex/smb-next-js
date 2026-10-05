@@ -3,7 +3,22 @@ import Icon from "@/components/admin-panel/Icon";
 import ProductThumbnail from "./ProductThumbnail";
 import { getStockInfo, STOCK_TEXT_CLASSES, STATUS_BADGE_CLASSES } from "./productHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { Can } from "@/components/providers/StaffPermissionsProvider";
+import { Can, useCan } from "@/components/providers/StaffPermissionsProvider";
+
+function SelectCheckbox({ checked, indeterminate = false, onChange, label }) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      aria-label={label}
+      ref={(el) => {
+        if (el) el.indeterminate = indeterminate;
+      }}
+      className="w-4 h-4 rounded cursor-pointer accent-primary-500 dark:accent-accent-500"
+    />
+  );
+}
 
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
   const active = sort?.key === sortKey;
@@ -23,8 +38,20 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
   );
 }
 
-export default function ProductsTable({ products, onDelete, deletingId, sort, onSortChange }) {
+export default function ProductsTable({
+  products,
+  onDelete,
+  deletingId,
+  sort,
+  onSortChange,
+  selectedIds,
+  onToggleSelect,
+  onTogglePage,
+}) {
   const { formatMoney } = useGeneralSettings();
+  const selectable = useCan()("products.delete") && Boolean(selectedIds);
+  const selectedOnPage = selectable ? products.filter((p) => selectedIds.has(p.id)).length : 0;
+  const allOnPageSelected = products.length > 0 && selectedOnPage === products.length;
 
   if (products.length === 0) {
     return (
@@ -36,8 +63,9 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
 
   return (
     <div className="overflow-x-auto custom-scroll -mx-1">
-      <table className="w-full table-fixed text-sm min-w-[900px]">
+      <table className={`w-full table-fixed text-sm ${selectable ? "min-w-[950px]" : "min-w-[900px]"}`}>
         <colgroup>
+          {selectable && <col className="w-[44px]" />}
           <col />
           <col className="w-[170px]" />
           <col className="w-[120px]" />
@@ -47,6 +75,16 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
         </colgroup>
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={allOnPageSelected}
+                  indeterminate={selectedOnPage > 0 && !allOnPageSelected}
+                  onChange={() => onTogglePage(!allOnPageSelected)}
+                  label="Select all products on this page"
+                />
+              </th>
+            )}
             <SortableHeader label="Product" sortKey="title" sort={sort} onSortChange={onSortChange} />
             <SortableHeader label="Category" sortKey="category" sort={sort} onSortChange={onSortChange} />
             <SortableHeader label="Price" sortKey="price" sort={sort} onSortChange={onSortChange} />
@@ -59,8 +97,21 @@ export default function ProductsTable({ products, onDelete, deletingId, sort, on
           {products.map((product) => {
             const stock = getStockInfo(product.inventory);
             const isDeleting = product.id === deletingId;
+            const isSelected = selectable && selectedIds.has(product.id);
             return (
-              <tr key={product.id} className="table-row transition-colors">
+              <tr
+                key={product.id}
+                className={`table-row transition-colors ${isSelected ? "bg-primary-50/60 dark:bg-white/5" : ""}`}
+              >
+                {selectable && (
+                  <td className="py-3 pl-3 pr-1">
+                    <SelectCheckbox
+                      checked={isSelected}
+                      onChange={() => onToggleSelect(product.id)}
+                      label={`Select ${product.title}`}
+                    />
+                  </td>
+                )}
                 <td className="py-3 px-1">
                   <div className="flex items-center gap-3">
                     <ProductThumbnail src={product.thumbnail} alt={product.title} iconColor={product.iconColor} />
