@@ -1,7 +1,7 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
-import StarRating from "./StarRating";
+import { useEffect, useId, useRef, useState } from "react";
+import ProductReviews from "./reviews/ProductReviews";
 
 const TABS = [
   { key: "info", label: "Product Information" },
@@ -19,17 +19,24 @@ const TAB_BASE = "pb-3 text-[20px] sm:text-[24px] border-b-2 transition-colors";
 const TAB_ACTIVE = "font-medium text-gray-800 border-gray-800";
 const TAB_INACTIVE = "text-gray-400 hover:text-[#ef9822] border-transparent";
 
-function formatReviewDate(iso) {
-  // UTC so the server render and the browser always print the same date.
-  return new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" });
-}
+// The rating line beside the title dispatches this to open the reviews tab.
+export const SHOW_REVIEWS_EVENT = "product-tabs:show-reviews";
 
 // `descriptionHtml` must already be sanitized (see src/lib/sanitizeHtml.js).
-export default function ProductTabs({ descriptionHtml, reviews }) {
+export default function ProductTabs({ descriptionHtml, reviews, handle, productTitle, allowReviews }) {
   const baseId = useId();
   const [active, setActive] = useState(TABS[0].key);
   const tabRefs = useRef({});
   const display = { fontFamily: "var(--font-playfair), serif" };
+
+  // Open the reviews tab for a shared "#reviews" link, and whenever the rating
+  // summary above is clicked (the browser still scrolls here via its href).
+  useEffect(() => {
+    const showReviews = () => setActive("reviews");
+    if (window.location.hash === "#reviews") showReviews();
+    window.addEventListener(SHOW_REVIEWS_EVENT, showReviews);
+    return () => window.removeEventListener(SHOW_REVIEWS_EVENT, showReviews);
+  }, []);
 
   // WAI-ARIA tabs: arrow keys move between tabs, Home/End jump to the ends.
   function onKeyDown(event) {
@@ -43,7 +50,7 @@ export default function ProductTabs({ descriptionHtml, reviews }) {
   }
 
   return (
-    <div className="mt-16 pt-8 text-center sm:text-left">
+    <div id="reviews" className="mt-16 pt-8 text-center sm:text-left scroll-mt-24">
       <div
         role="tablist"
         aria-label="Product details"
@@ -87,30 +94,7 @@ export default function ProductTabs({ descriptionHtml, reviews }) {
         </div>
 
         <div role="tabpanel" id={`${baseId}-panel-reviews`} aria-labelledby={`${baseId}-tab-reviews`} hidden={active !== "reviews"}>
-          {reviews.count === 0 ? (
-            <p>There are no reviews for this product yet.</p>
-          ) : (
-            <>
-              <div className="flex items-center gap-3 mb-6">
-                <StarRating rating={reviews.average} />
-                <span className="text-sm text-gray-500">
-                  {reviews.average.toFixed(1)} out of 5 · {reviews.count} {reviews.count === 1 ? "review" : "reviews"}
-                </span>
-              </div>
-              <ul className="divide-y divide-gray-100">
-                {reviews.reviews.map((review) => (
-                  <li key={review.id} className="py-5 first:pt-0">
-                    <StarRating rating={review.rating} className="w-4 h-4" />
-                    <h3 className="mt-2 font-semibold text-[#333333]">{review.title}</h3>
-                    <p className="mt-1 whitespace-pre-line">{review.content}</p>
-                    <p className="mt-2 text-sm text-gray-400">
-                      {review.displayName} · {formatReviewDate(review.createdAt)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+          <ProductReviews reviews={reviews} handle={handle} productTitle={productTitle} allowReviews={allowReviews} />
         </div>
 
         <div role="tabpanel" id={`${baseId}-panel-additional`} aria-labelledby={`${baseId}-tab-additional`} hidden={active !== "additional"}>

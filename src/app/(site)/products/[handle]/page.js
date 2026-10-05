@@ -8,6 +8,7 @@ import RecentlyViewed from "@/components/storefront/RecentlyViewed";
 import { getStorefrontProductByHandle } from "@/lib/products";
 import { getPublicReviewsForProduct } from "@/lib/reviews";
 import { getStoreSettings } from "@/lib/storeSettings";
+import { getProductsSettings } from "@/lib/productsSettings";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // Reads live catalog data, so never prerender it at build time.
@@ -43,6 +44,16 @@ async function loadSupportEmail() {
   }
 }
 
+// Settings -> Products -> "Allow customer reviews". A missing settings row (fresh
+// environment) falls back to the setting's default, which is on.
+async function loadAllowReviews() {
+  try {
+    return (await getProductsSettings()).allowReviews !== false;
+  } catch {
+    return true;
+  }
+}
+
 export async function generateMetadata({ params }) {
   const { handle } = await params;
   const { product } = await loadProduct(handle);
@@ -70,9 +81,10 @@ export default async function ProductPage({ params }) {
   }
   if (!product) notFound();
 
-  const [reviews, supportEmail] = await Promise.all([
+  const [reviews, supportEmail, allowReviews] = await Promise.all([
     loadReviews(product.id),
     loadSupportEmail(),
+    loadAllowReviews(),
   ]);
 
   // Only what the client components need; the description and image list stay server-side.
@@ -133,7 +145,14 @@ export default async function ProductPage({ params }) {
           <ProductPurchasePanel key={id} product={purchaseProduct} reviews={reviews} supportEmail={supportEmail} />
         </div>
 
-        <ProductTabs key={id} descriptionHtml={sanitizeHtml(product.description)} reviews={reviews} />
+        <ProductTabs
+          key={id}
+          descriptionHtml={sanitizeHtml(product.description)}
+          reviews={reviews}
+          handle={product.handle}
+          productTitle={title}
+          allowReviews={allowReviews}
+        />
       </div>
 
       <RecentlyViewed key={id} current={recentlyViewedEntry} />

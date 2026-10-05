@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import StoreIcon from "./icons";
 import StarRating from "./StarRating";
+import { SHOW_REVIEWS_EVENT } from "./ProductTabs";
 import { isMetalOption, metalColor } from "./metals";
 import { useCart } from "./cart/CartProvider";
 import { findVariant } from "./cart/cartHelpers";
@@ -128,7 +129,12 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
         )}
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
+      {/* Jumps to the Customer Reviews tab: the href scrolls there, the event opens the tab. */}
+      <a
+        href="#reviews"
+        onClick={() => window.dispatchEvent(new Event(SHOW_REVIEWS_EVENT))}
+        className="mb-4 flex w-fit items-center gap-2 transition-opacity hover:opacity-80"
+      >
         {reviews.count > 0 ? (
           <>
             <StarRating rating={reviews.average} />
@@ -139,7 +145,7 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
         ) : (
           <span className="text-[12px] text-gray-400 font-medium">No reviews yet</span>
         )}
-      </div>
+      </a>
 
       {hasAbout && (
         <Section title="About Item">

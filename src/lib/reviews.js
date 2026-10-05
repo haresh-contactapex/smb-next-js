@@ -1,5 +1,8 @@
 import { sql } from "./db";
+import { createRateLimiter } from "./rateLimit";
+import { getProductsSettings } from "./productsSettings";
 import { isValidEmail } from "@/components/auth/helpers";
+import { normalizeReview, validateReview } from "@/components/storefront/reviews/helpers";
 import {
   MAX_CONTENT_LENGTH,
   MAX_DISPLAY_NAME_LENGTH,
@@ -217,6 +220,69 @@ export async function createReview(payload, { canApprove = false } = {}) {
   } catch (error) {
     throw translateProductError(error);
   }
+}
+
+// Public submissions come from visitors with no login, so cap how often one
+// client (IP) and one email address can submit. In-memory, so it is a speed bump
+// rather than a hard cap (see rateLimit.js); moderation is the real backstop.
+const clientLimiter = createRateLimiter({ limit: 5, windowMs: 10 * 60 * 1000 });
+const addressLimiter = createRateLimiter({ limit: 3, windowMs: 60 * 60 * 1000 });
+
+const MAX_HANDLE_LENGTH = 200;
+
+// Reviews may only be written for products the storefront actually shows.
+async function findActiveProductId(handle) {
+  const [row] = await sql`SELECT id FROM products WHERE handle = ${handle} AND status = 'ACTIVE'`;
+  return row?.id ?? null;
+}
+
+// The storefront's "Write a review" form. `payload` is the raw request body and
+// `clientKey` identifies the caller for rate limiting. The review is always
+// saved as PENDING through createReview (never `canApprove`), so nothing a
+// visitor sends can publish itself; a moderator approves it in All Reviews.
+// Resolves to { received: true }.
+export async function submitStorefrontReview({ payload, clientKey }) {
+  // A bot that fills the hidden field is told it worked and nothing is saved.
+  if (String(payload?.honeypot ?? "").trim()) return { received: true };
+
+  // Settings -> Products -> "Allow customer reviews". A missing settings row
+  // (fresh environment) falls back to the default, which is on.
+  let allowReviews = true;
+  try {
+    allowReviews = (await getProductsSettings()).allowReviews !== false;
+  } catch {
+    // Settings unavailable: keep the default.
+  }
+  if (!allowReviews) throw new ReviewError("Customer reviews are turned off for this store.", 403);
+
+  const values = normalizeReview(payload);
+  const firstError = Object.values(validateReview(values))[0];
+  if (firstError) throw new ReviewError(firstError);
+
+  const handle = typeof payload?.handle === "string" ? payload.handle.trim() : "";
+  if (!handle || handle.length > MAX_HANDLE_LENGTH) throw new ReviewError("Choose a valid product.");
+
+  // No short-circuit: both limiters record the attempt, so neither count drifts.
+  const allowed = [clientLimiter(clientKey), addressLimiter(values.email)];
+  if (allowed.includes(false)) {
+    throw new ReviewError("You've sent a few reviews already. Please wait a little while before sending another.", 429);
+  }
+
+  // The product comes from the catalog, never from an id in the request.
+  const productId = await findActiveProductId(handle);
+  if (!productId) throw new ReviewError("This product could not be found.", 404);
+
+  // One review per email per product. A rejected one doesn't count, so a
+  // visitor whose review was turned down can try again.
+  const [existing] = await sql`
+    SELECT 1 AS found FROM product_reviews
+    WHERE product_id = ${productId} AND email = ${values.email} AND status IN ('PENDING', 'APPROVED')
+    LIMIT 1
+  `;
+  if (existing) throw new ReviewError("It looks like you've already reviewed this product. Thank you!", 409);
+
+  await createReview({ productId, ...values });
+  return { received: true };
 }
 
 export async function updateReview(id, payload, { canApprove = false } = {}) {
