@@ -177,6 +177,37 @@ function buildOptionsAndVariants(groupRows, defaultWeightUnit, errors) {
   return { options, variants };
 }
 
+const ATTRIBUTE_LABEL_COLUMN = /^attribute(\d+)_label$/;
+const MAX_ATTRIBUTE_LABEL_LENGTH = 100; // product_attributes.label is VARCHAR(100)
+
+// Reads the free-form Label/Value pairs from attributeN_label /
+// attributeN_value column pairs (any N present in the header, in numeric
+// order) on the product's first row. Attributes are descriptive only — they
+// never create variants.
+function buildAttributes(row, rowNumber, errors) {
+  const indexes = Object.keys(row)
+    .map((key) => ATTRIBUTE_LABEL_COLUMN.exec(key)?.[1])
+    .filter(Boolean)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  const attributes = [];
+  for (const n of indexes) {
+    const label = String(row[`attribute${n}_label`] || "").trim();
+    const value = String(row[`attribute${n}_value`] || "").trim();
+    if (!label) {
+      if (value) errors.push(`row ${rowNumber}: attribute${n}_label is required when attribute${n}_value is set`);
+      continue;
+    }
+    if (label.length > MAX_ATTRIBUTE_LABEL_LENGTH) {
+      errors.push(`row ${rowNumber}: attribute${n}_label must be ${MAX_ATTRIBUTE_LABEL_LENGTH} characters or fewer`);
+      continue;
+    }
+    attributes.push({ label, value });
+  }
+  return attributes;
+}
+
 // Maps one product group (its rows, already validated to share a handle) to
 // the same nested payload shape `createProduct` expects (mirrors
 // assembleProduct() in components/add-product/helpers.js). Every validation
@@ -220,6 +251,8 @@ function mapGroupToProductPayload(group) {
     variants = built.variants;
   }
 
+  const attributes = buildAttributes(firstRow, firstRowNumber, errors);
+
   if (errors.length) {
     throw new Error(errors.join("; "));
   }
@@ -255,6 +288,7 @@ function mapGroupToProductPayload(group) {
     },
     options,
     variants,
+    attributes,
     seo: {
       title: String(firstRow.seo_title || "").trim(),
       description: String(firstRow.seo_description || "").trim(),

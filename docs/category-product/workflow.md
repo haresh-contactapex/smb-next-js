@@ -185,6 +185,14 @@ products as one row per variant, grouped by `handle`) — so an exported file
 can be re-imported unchanged, and it doubles as a full backup of the
 catalog.
 
+Product attributes (the free-form Label/Value pairs in `product_attributes`)
+are written as `attribute1_label`, `attribute1_value`, `attribute2_label`, ...
+columns appended after the fixed ones, on a product's first row only. The
+export sizes them to the product with the most attributes (never fewer than
+one pair), and `buildAttributes()` in `productImport.js` reads any
+`attributeN_label`/`attributeN_value` pair present in the header, so there is
+no fixed limit on import.
+
 ## Data lifecycle today vs. with a backend
 
 | Step | Today (this app) | With the schema in `category-product-catalog-database-schema.md` |

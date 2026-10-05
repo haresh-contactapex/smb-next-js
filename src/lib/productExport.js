@@ -6,13 +6,14 @@ const MAX_OPTION_DIMENSIONS = 3;
 // be re-imported unchanged, including variable products (see
 // docs/category-product/workflow.md's "Import Products (CSV)" section for
 // the shared column contract).
-const CSV_COLUMNS = [
+const BASE_CSV_COLUMNS = [
   "handle",
   "title",
   "sku",
   "price",
   "compare_at_price",
   "cost_per_item",
+  "barcode",
   "description",
   "category",
   "product_type",
@@ -43,23 +44,43 @@ const CSV_COLUMNS = [
   "variant_image_url",
 ];
 
+// attribute1_label, attribute1_value, attribute2_label, ... — sized to the
+// product with the most attributes (never fewer than one pair, so the columns
+// are always visible), appended after the fixed columns so existing column
+// positions don't shift.
+function buildCsvColumns(attributeCount) {
+  const attributeColumns = [];
+  for (let n = 1; n <= attributeCount; n++) {
+    attributeColumns.push(`attribute${n}_label`, `attribute${n}_value`);
+  }
+  return [...BASE_CSV_COLUMNS, ...attributeColumns];
+}
+
 function toCsvField(value) {
   const str = String(value ?? "");
   return /[",\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
 }
 
-function rowToCsvLine(rowFields) {
-  return CSV_COLUMNS.map((col) => toCsvField(rowFields[col])).join(",");
+function rowToCsvLine(columns, rowFields) {
+  return columns.map((col) => toCsvField(rowFields[col])).join(",");
 }
 
 function productLevelFields(product) {
+  const attributeFields = {};
+  product.attributes.forEach((attribute, i) => {
+    attributeFields[`attribute${i + 1}_label`] = attribute.label;
+    attributeFields[`attribute${i + 1}_value`] = attribute.value;
+  });
+
   return {
+    ...attributeFields,
     handle: product.handle,
     title: product.title,
     sku: product.sku,
     price: product.price,
     compare_at_price: product.compare_at_price,
     cost_per_item: product.cost_per_item,
+    barcode: product.barcode,
     description: product.body_html,
     category: product.category,
     product_type: product.product_type,
@@ -126,13 +147,18 @@ function buildRowsForProduct(product) {
 
 export async function exportProductsToCsv() {
   const summaries = await listProducts();
-  const lines = [CSV_COLUMNS.join(",")];
+  const productRows = [];
+  let attributeCount = 1;
 
   for (const summary of summaries) {
     const product = await getProductById(summary.id);
     if (!product) continue;
-    buildRowsForProduct(product).forEach((row) => lines.push(rowToCsvLine(row)));
+    attributeCount = Math.max(attributeCount, product.attributes.length);
+    productRows.push(...buildRowsForProduct(product));
   }
+
+  const columns = buildCsvColumns(attributeCount);
+  const lines = [columns.join(","), ...productRows.map((row) => rowToCsvLine(columns, row))];
 
   return lines.join("\r\n") + "\r\n";
 }

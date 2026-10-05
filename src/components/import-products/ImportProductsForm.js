@@ -9,6 +9,7 @@ import {
   REQUIRED_COLUMNS,
   OPTIONAL_COLUMNS,
   VARIANT_COLUMNS,
+  ATTRIBUTE_COLUMNS,
   buildSampleCsv,
   buildVariableSampleCsv,
   buildFailedRowsCsv,
@@ -143,6 +144,11 @@ export default function ImportProductsForm() {
             For a product with variants (e.g. Size/Color), give every row of that product the same{" "}
             <span className="font-mono">handle</span> and add: <span className="font-mono">{VARIANT_COLUMNS.join(", ")}</span>.
             Only the first row of a handle needs the product-level columns above — leave them blank on the rest.
+          </p>
+          <p className="text-xs text-slate-400 mb-3">
+            Product attributes (descriptive Label/Value pairs, e.g. Material: Cotton) go in numbered column pairs such
+            as <span className="font-mono">{ATTRIBUTE_COLUMNS.join(", ")}</span> — add as many pairs as you need
+            (<span className="font-mono">attribute3_label</span>, …) on the product&apos;s first row.
           </p>
 
           {!file ? (

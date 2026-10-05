@@ -38,8 +38,20 @@ export const VARIANT_COLUMNS = [
   "variant_weight_unit",
   "variant_image_url",
 ];
+// Free-form Label/Value pairs (descriptive only, never create variants). The
+// importer accepts any attributeN_label / attributeN_value pair in the header;
+// the export sizes these columns to the product with the most attributes.
+export const ATTRIBUTE_COLUMNS = ["attribute1_label", "attribute1_value", "attribute2_label", "attribute2_value"];
 
-const TEMPLATE_HEADER = [...REQUIRED_COLUMNS, "description", "category", "tags", "status", "image_url"];
+const TEMPLATE_HEADER = [
+  ...REQUIRED_COLUMNS,
+  "description",
+  "category",
+  "tags",
+  "status",
+  "image_url",
+  ...ATTRIBUTE_COLUMNS,
+];
 const TEMPLATE_ROW = [
   "Rose Gold Eternity Band",
   "RGB-001",
@@ -49,6 +61,10 @@ const TEMPLATE_ROW = [
   "bestseller;gold",
   "active",
   "https://example.com/images/rgb-001.jpg",
+  "Material",
+  "18k Rose Gold",
+  "Stone",
+  "Diamond",
 ];
 
 // A variable product spans several rows that share the same `handle`. Only
@@ -74,6 +90,7 @@ const VARIABLE_TEMPLATE_HEADER = [
   "variant_compare_at_price",
   "variant_inventory_quantity",
   "variant_image_url",
+  ...ATTRIBUTE_COLUMNS,
 ];
 const VARIABLE_TEMPLATE_ROWS = [
   [
@@ -95,6 +112,10 @@ const VARIABLE_TEMPLATE_ROWS = [
     "29.99",
     "25",
     "https://example.com/images/tshirt-black.jpg",
+    "Material",
+    "100% Cotton",
+    "Fit",
+    "Regular",
   ],
   [
     "classic-crew-tshirt",
@@ -108,6 +129,7 @@ const VARIABLE_TEMPLATE_ROWS = [
     "29.99",
     "18",
     "https://example.com/images/tshirt-black.jpg",
+    "", "", "", "",
   ],
   [
     "classic-crew-tshirt",
@@ -121,6 +143,7 @@ const VARIABLE_TEMPLATE_ROWS = [
     "29.99",
     "30",
     "https://example.com/images/tshirt-white.jpg",
+    "", "", "", "",
   ],
   [
     "classic-crew-tshirt",
@@ -134,6 +157,7 @@ const VARIABLE_TEMPLATE_ROWS = [
     "29.99",
     "20",
     "https://example.com/images/tshirt-white.jpg",
+    "", "", "", "",
   ],
 ];
 
