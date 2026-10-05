@@ -88,7 +88,7 @@ export function slugify(str) {
 
 // Splits a taxonomy path like "Jewelry > Rings > Wedding Bands" into a
 // parent/child chain of `categories` rows, reusing any level that already
-// exists (by slug, scoped to its parent) instead of duplicating it.
+// exists (by slug or name, scoped to its parent) instead of duplicating it.
 export async function upsertCategoryPath(path) {
   const levels = String(path || "")
     .split(">")
@@ -98,9 +98,18 @@ export async function upsertCategoryPath(path) {
   let parentId = null;
   for (const name of levels) {
     const baseSlug = slugify(name);
+    // Match by name as well as slug: a level that was created earlier with a
+    // disambiguated slug (e.g. "rings-2") must still be found, otherwise every
+    // save would try to create it again.
     const [existing] = parentId
-      ? await sql`SELECT id FROM categories WHERE slug = ${baseSlug} AND parent_id = ${parentId}`
-      : await sql`SELECT id FROM categories WHERE slug = ${baseSlug} AND parent_id IS NULL`;
+      ? await sql`
+          SELECT id FROM categories
+          WHERE (slug = ${baseSlug} OR lower(name) = lower(${name})) AND parent_id = ${parentId}
+          ORDER BY created_at LIMIT 1`
+      : await sql`
+          SELECT id FROM categories
+          WHERE (slug = ${baseSlug} OR lower(name) = lower(${name})) AND parent_id IS NULL
+          ORDER BY created_at LIMIT 1`;
 
     if (existing) {
       parentId = existing.id;
