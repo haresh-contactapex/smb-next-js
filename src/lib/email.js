@@ -282,12 +282,66 @@ async function loadEmailLogo(shopUrl) {
   return { logoSrc, attachments };
 }
 
+// Outlook (and Gmail by default for some senders) blocks pictures that live on another server until
+// the reader allows them, leaving a red cross. So each product photo is fetched here and attached to the
+// email (cid:), like the logo. Outlook also can't show WebP (what most of the catalog is stored as) and
+// the original uploads can be several megabytes, so every photo is shrunk to a small JPEG thumbnail
+// first (shown at 60px, stored at 120px for sharp screens). A photo that can't be fetched or converted is
+// left out and the email shows a plain grey square instead.
+const MAX_SOURCE_BYTES = 15 * 1024 * 1024;
+const MAX_EMBEDDED_IMAGES = 6;
+const THUMBNAIL_PX = 120;
+
+async function toThumbnail(content) {
+  const { default: sharp } = await import("sharp");
+  return sharp(content).rotate().resize(THUMBNAIL_PX, THUMBNAIL_PX, { fit: "cover" }).flatten({ background: "#ffffff" }).jpeg({ quality: 80 }).toBuffer();
+}
+
+async function loadItemImage(source) {
+  try {
+    let content;
+    if (/^https:\/\//.test(source)) {
+      const response = await fetch(source, { signal: AbortSignal.timeout(8000) });
+      if (!response.ok || !(response.headers.get("content-type") || "").startsWith("image/")) return null;
+      content = Buffer.from(await response.arrayBuffer());
+    } else if (source.startsWith("/")) {
+      // An upload kept in /public (never anything outside it).
+      const root = path.join(process.cwd(), "public");
+      const file = path.join(root, source.split("?")[0]);
+      if (!file.startsWith(root + path.sep)) return null;
+      content = await readFile(file);
+    } else {
+      return null;
+    }
+    if (content.length > MAX_SOURCE_BYTES) return null;
+    return { content: await toThumbnail(content), contentType: "image/jpeg" };
+  } catch (error) {
+    console.error("email: product photo left out", error.message);
+    return null;
+  }
+}
+
+async function embedItemImages(items = []) {
+  const attachments = [];
+  const embedded = await Promise.all(
+    items.map(async (item, index) => {
+      if (!item.imageUrl || index >= MAX_EMBEDDED_IMAGES) return { ...item, imageUrl: null };
+      const image = await loadItemImage(item.imageUrl);
+      if (!image) return { ...item, imageUrl: null };
+      const cid = `item-${index}@shopmyband`;
+      attachments.push({ filename: `item-${index}.jpg`, content: image.content, cid, contentType: image.contentType, contentDisposition: "inline" });
+      return { ...item, imageUrl: `cid:${cid}` };
+    })
+  );
+  return { items: embedded, attachments };
+}
+
 // The order emails (see orderEmail.js for what each carries). All of them go out from the sender
 // name and address saved in Settings -> Email, like every other email.
 async function sendOrderEmail(to, build, data, subjectPrefix = "") {
-  const { logoSrc, attachments } = await loadEmailLogo(data.shopUrl);
-  const { subject, html, text } = build({ ...data, logoSrc });
-  return sendEmail({ to, subject: `${subjectPrefix}${subject}`, html, text, attachments });
+  const [{ logoSrc, attachments: logo = [] }, images] = await Promise.all([loadEmailLogo(data.shopUrl), embedItemImages(data.items)]);
+  const { subject, html, text } = build({ ...data, ...(data.items ? { items: images.items } : {}), logoSrc });
+  return sendEmail({ to, subject: `${subjectPrefix}${subject}`, html, text, attachments: [...logo, ...images.attachments] });
 }
 
 // To the customer once an order is placed (cash on delivery) or paid (card).

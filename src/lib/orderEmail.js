@@ -16,6 +16,12 @@
 // { customer: { name, email, phone }, paymentLabel, cod, adminUrl }; the refund alert adds
 // paymentReference (the gateway's payment id, to find the payment there).
 
+// Written for Outlook's Word-based renderer as much as for Gmail: it ignores padding and borders on
+// <div>, <p> and <a>, ignores margins on tables, doesn't know border-radius, object-fit, position or
+// max-width, and shows images as blocked until the reader allows them. So layout, spacing, the button and
+// the note box are all table cells with bgcolor/padding, tables carry cellpadding/cellspacing/border
+// attributes, and every picture is an inline attachment (cid:). Rounded corners are a bonus elsewhere.
+
 const NAVY = "#1F3A6B";
 const ORANGE = "#EF9822";
 // Google Sans, as on the storefront. Mail clients that load web fonts (Apple Mail, iOS Mail)
@@ -41,8 +47,8 @@ function factCell([label, value], width) {
 
 function itemRow(item) {
   const picture = item.imageUrl
-    ? `<img src="${escapeHtml(item.imageUrl)}" width="60" height="60" alt="" style="display:block;width:60px;height:60px;object-fit:cover;border-radius:6px;background:#F4F4F4;">`
-    : `<div style="width:60px;height:60px;background:#F4F4F4;border-radius:6px;"><div style="width:28px;height:28px;margin:0 auto;position:relative;top:14px;border:5px solid #C9C9C9;border-radius:50%;"></div></div>`;
+    ? `<img src="${escapeHtml(item.imageUrl)}" width="60" height="60" alt="${escapeHtml(item.title)}" border="0" style="display:block;width:60px;height:60px;border:0;background:#F4F4F4;">`
+    : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="60"><tr><td width="60" height="60" bgcolor="#F4F4F4" style="width:60px;height:60px;background:#F4F4F4;font-size:0;line-height:0;">&nbsp;</td></tr></table>`;
   return `<tr>
     <td style="padding:14px 0;width:72px;vertical-align:top;border-top:1px solid #eeeeee;">${picture}</td>
     <td style="padding:14px 8px;vertical-align:top;border-top:1px solid #eeeeee;"><div style="font-size:14px;font-weight:bold;color:#222222;line-height:1.35;">${escapeHtml(item.title)}</div><div style="font-size:12px;color:#777777;margin-top:3px;">Qty ${escapeHtml(item.quantity)}</div></td>
@@ -70,8 +76,8 @@ function itemsSection(data) {
   ].join("");
   return `<tr><td style="padding:26px 32px 0;">
     <div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 12px;">Your items</div>
-    <table role="presentation" width="100%" style="border-collapse:collapse;">${items.map(itemRow).join("")}</table>
-    <table role="presentation" width="100%" style="border-collapse:collapse;border-top:1px solid #eeeeee;font-size:13px;">
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;">${items.map(itemRow).join("")}</table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;border-top:1px solid #eeeeee;font-size:13px;">
       ${totals}
       <tr><td style="padding:12px 0 14px;font-size:16px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">Total</td><td style="padding:12px 0 14px;text-align:right;font-size:18px;font-weight:bold;color:${NAVY};border-top:1px solid #eeeeee;">${escapeHtml(total)}</td></tr>
     </table>
@@ -85,7 +91,7 @@ function addressesSection(data) {
     `<td style="vertical-align:top;padding-right:12px;">${heading(title)}<p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(list)}</p></td>`;
   const body = sameAddress(data)
     ? `${heading("Shipping and billing address")}<p style="margin:0;font-size:13px;line-height:1.6;color:#444444;">${lines(data.shippingAddress)}</p><p style="margin:8px 0 0;font-size:12px;color:#888888;">The shipping and billing addresses are the same.</p>`
-    : `<table role="presentation" width="100%" style="border-collapse:collapse;"><tr>${block("Shipping address", data.shippingAddress)}${block("Billing address", data.billingAddress)}</tr></table>`;
+    : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr>${block("Shipping address", data.shippingAddress)}${block("Billing address", data.billingAddress)}</tr></table>`;
   return `<tr><td style="padding:8px 32px 0;">${body}</td></tr>`;
 }
 
@@ -100,7 +106,7 @@ function render(data, spec) {
 
   const width = Math.floor(100 / spec.facts.length);
   const button = spec.button?.url
-    ? `<a href="${escapeHtml(spec.button.url)}" style="display:inline-block;background:${ORANGE};color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;padding:12px 28px;border-radius:6px;">${escapeHtml(spec.button.label)}</a>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${ORANGE}" align="center" style="background:${ORANGE};border-radius:6px;padding:12px 28px;mso-padding-alt:12px 28px;"><a href="${escapeHtml(spec.button.url)}" target="_blank" style="display:inline-block;color:#ffffff;font-weight:bold;font-size:14px;text-decoration:none;"><span style="color:#ffffff;">${escapeHtml(spec.button.label)}</span></a></td></tr></table>`
     : "";
   const contact = supportEmail ? `<a href="mailto:${escapeHtml(supportEmail)}" style="color:#222222;font-weight:bold;">contact us</a>` : "contact us";
   const footerLinks = [
@@ -111,23 +117,25 @@ function render(data, spec) {
     .join("<br>");
 
   const html = `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="${FONT_CSS}"></head>
-<body style="margin:0;padding:0;background:#f3f3f3;font-family:${FONT};">
-<table role="presentation" width="100%" style="border-collapse:collapse;background:#f3f3f3;"><tr><td align="center" style="padding:20px 10px;">
-<table role="presentation" width="600" style="border-collapse:collapse;width:100%;max-width:600px;background:#ffffff;border:1px solid #e6e6e6;font-family:${FONT};color:#333333;">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="x-apple-disable-message-reformatting"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>${escapeHtml(spec.subject)}</title>
+<!--[if mso]><style type="text/css">body, table, td, p, a, h1, div, span, b { font-family: Arial, Helvetica, sans-serif !important; }</style><![endif]-->
+<link rel="stylesheet" href="${FONT_CSS}"></head>
+<body bgcolor="#f3f3f3" style="margin:0;padding:0;background:#f3f3f3;font-family:${FONT};">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#f3f3f3" style="border-collapse:collapse;background:#f3f3f3;"><tr><td align="center" style="padding:20px 10px;">
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="600" bgcolor="#ffffff" style="border-collapse:collapse;width:100%;max-width:600px;background:#ffffff;border:1px solid #e6e6e6;font-family:${FONT};color:#333333;">
   <tr><td style="padding:26px 32px 20px;border-bottom:4px solid ${ORANGE};">${logo}</td></tr>
   <tr><td style="padding:30px 32px 6px;">
     <h1 style="margin:0 0 12px;font-size:30px;line-height:1.15;color:${NAVY};font-weight:bold;font-family:${FONT};">${escapeHtml(spec.heading)}</h1>
     <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:#444444;">${escapeHtml(spec.intro)}</p>
-    <table role="presentation" width="100%" style="border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;margin:0 0 22px;"><tr>${spec.facts.map((fact) => factCell(fact, width)).join("")}</tr></table>
-    ${spec.detailsHtml || ""}
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" bgcolor="#FBF7EF" style="border-collapse:collapse;background:#FBF7EF;border:1px solid #F0E6D2;"><tr>${spec.facts.map((fact) => factCell(fact, width)).join("")}</tr></table></td></tr></table>
+    ${spec.detailsHtml ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"><tr><td style="padding:0 0 22px 0;">${spec.detailsHtml}</td></tr></table>` : ""}
     ${button}
   </td></tr>
   ${spec.showItems ? itemsSection(data) : ""}
   ${spec.showAddresses ? addressesSection(data) : ""}
   ${spec.steps?.length ? `<tr><td style="padding:26px 32px 0;"><div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 10px;">${escapeHtml(spec.stepsTitle || "What happens next")}</div>${spec.steps.map(step).join("")}</td></tr>` : ""}
-  <tr><td style="padding:17px 32px 30px;"><div style="padding:13px 16px;background:#F3F4F6;border-left:4px solid ${ORANGE};font-size:13px;color:#444444;line-height:1.5;"><b style="color:#222222;">${escapeHtml(spec.note.lead)}</b> ${spec.note.html.replace("{contact}", contact)}</div></td></tr>
-  <tr><td style="background:#243A66;padding:20px 32px;font-size:12px;line-height:1.6;color:#DCE3F0;"><div style="font-weight:bold;color:#ffffff;margin-bottom:3px;">${escapeHtml(storeName)}</div>${footerLinks}</td></tr>
+  <tr><td style="padding:17px 32px 30px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;"><tr><td width="4" bgcolor="${ORANGE}" style="width:4px;background:${ORANGE};font-size:0;line-height:0;">&nbsp;</td><td bgcolor="#F3F4F6" style="background:#F3F4F6;padding:13px 16px;font-size:13px;color:#444444;line-height:1.5;"><b style="color:#222222;">${escapeHtml(spec.note.lead)}</b> ${spec.note.html.replace("{contact}", contact)}</td></tr></table></td></tr>
+  <tr><td bgcolor="#243A66" style="background:#243A66;padding:20px 32px;font-size:12px;line-height:1.6;color:#DCE3F0;"><div style="font-weight:bold;color:#ffffff;margin-bottom:3px;">${escapeHtml(storeName)}</div>${footerLinks}</td></tr>
 </table>
 </td></tr></table>
 </body></html>`;
@@ -278,7 +286,7 @@ export function buildNewOrderAlertEmail(data) {
   const { orderNumber, placedAt, paymentLabel, cod, total, customer } = data;
   const row = (label, value) =>
     `<tr><td style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`;
-  const detailsHtml = `<table role="presentation" style="border-collapse:collapse;font-size:13px;margin:0 0 22px;">
+  const detailsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
     ${row("Customer", escapeHtml(customer.name))}
     ${row("Email", `<a href="mailto:${escapeHtml(customer.email)}" style="color:#222222;">${escapeHtml(customer.email)}</a>`)}
     ${customer.phone ? row("Phone", escapeHtml(customer.phone)) : ""}
@@ -307,7 +315,7 @@ export function buildRefundRequestAlertEmail(data) {
   const { orderNumber, placedAt, paymentLabel, paymentReference, total, customer } = data;
   const row = (label, value) =>
     `<tr><td style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`;
-  const detailsHtml = `<table role="presentation" style="border-collapse:collapse;font-size:13px;margin:0 0 22px;">
+  const detailsHtml = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
     ${row("Customer", escapeHtml(customer.name))}
     ${row("Email", `<a href="mailto:${escapeHtml(customer.email)}" style="color:#222222;">${escapeHtml(customer.email)}</a>`)}
     ${customer.phone ? row("Phone", escapeHtml(customer.phone)) : ""}

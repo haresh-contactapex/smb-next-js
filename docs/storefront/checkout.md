@@ -336,8 +336,17 @@ welcome email) and sent with `sendOrderConfirmationEmail()` (`src/lib/email.js`)
 - **Content:** order number, date, payment (cash on delivery or "Visa ending 4242" / "Card"),
   items with totals, shipping and billing address (merged into one block when equal), what
   happens next, and a "View your order" button to `/account/orders/<number>` for signed-in
-  customers only (guests have no account). Product photos are included only when the store's
-  address is public (`SITE_URL` in `.env.local`, else the request's host; never localhost).
+  customers only (guests have no account). Product photos are attached to the email
+  (see **Outlook and Gmail** below).
+- **Outlook and Gmail.** The layout is written for Outlook's Word-based renderer, which ignores padding
+  and borders on `<div>`/`<a>`, margins on tables, rounded corners and `max-width`: so the button, the
+  facts band and the "Didn't place this order?" note are table cells with `bgcolor` and padding, and every
+  table carries `cellpadding/cellspacing/border`. Outlook forces Arial (a `[if mso]` rule). Outlook also
+  blocks remote pictures and can't show WebP, so the logo **and each product photo** are attached
+  inline (`cid:`); `embedItemImages()` in `email.js` fetches each photo and shrinks it to a ~3 KB 120px
+  JPEG with `sharp`, so even a 5 MB original or a WebP works. A photo that can't be fetched shows a plain
+  grey square. Keep new email markup table-based. Check changes in real Outlook and Gmail: the browser can't
+  reproduce Outlook's renderer.
 - **Logo and font:** the header is the storefront logo (`public/storefront/logo.png`), attached
   to the email as an inline `cid:` image so it shows even before the store is public; if the file
   can't be read it falls back to the public URL, then to a text wordmark. The font is Google

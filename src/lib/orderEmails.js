@@ -7,7 +7,7 @@ import { getShippingSettings } from "./shippingSettings";
 import { getEmailSettings } from "./emailSettings";
 import { isEmailConfigured, sendNewOrderAlertEmail, sendOrderConfirmationEmail, sendOrderStatusEmail as sendStatusEmail, sendRefundRequestAlertEmail } from "./email";
 import { after } from "next/server";
-import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
+import { getSiteOrigin } from "./siteUrl";
 
 // When each order email goes out, and what fills it from the order. The templates are in
 // orderEmail.js; the sending (SMTP, sender name and address from Settings -> Email) is in
@@ -65,8 +65,6 @@ async function loadOrderEmail(orderId, origin, { needsCustomerEmail = true } = {
   const [general, shipping, moneyFormat] = await Promise.all([getGeneralSettings(), orNull(getShippingSettings), loadMoneyFormat()]);
   const money = (amount) => formatCurrency(amount, order.currency, moneyFormat);
   const { amounts } = details;
-  // A photo is only worth including when the customer's mail client can reach it.
-  const imageUrl = (image) => (!image ? null : /^https?:\/\//.test(image) ? image : image.startsWith("/") && isPublicOrigin(origin) ? `${origin}${image}` : null);
 
   return {
     order,
@@ -78,7 +76,7 @@ async function loadOrderEmail(orderId, origin, { needsCustomerEmail = true } = {
       orderNumber: order.order_number,
       placedAt: new Date(details.placedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       total: money(amounts.total),
-      items: details.items.map((item) => ({ title: item.title, quantity: item.quantity, lineTotal: money(item.lineTotal), imageUrl: imageUrl(item.image) })),
+      items: details.items.map((item) => ({ title: item.title, quantity: item.quantity, lineTotal: money(item.lineTotal), imageUrl: item.image || null })),
       amounts: {
         subtotal: money(amounts.subtotal ?? amounts.total),
         discount: amounts.discount > 0 ? money(amounts.discount) : "",
