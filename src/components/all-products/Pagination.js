@@ -28,6 +28,31 @@ export function PaginationSummary({ page, totalCount, pageSize, className = "" }
   );
 }
 
+export function RowsPerPageSelect({ pageSize, onPageSizeChange }) {
+  return (
+    <label className="flex items-center gap-2 text-xs text-slate-400">
+      Rows per page
+      <span className="relative">
+        <select
+          value={pageSize}
+          onChange={(e) => onPageSizeChange(Number(e.target.value))}
+          aria-label="Rows per page"
+          className="field-input h-8 w-[4.25rem] pl-2.5 pr-6 text-xs appearance-none cursor-pointer"
+        >
+          {PAGE_SIZE_OPTIONS.map((size) => (
+            <option key={size} value={size}>
+              {size}
+            </option>
+          ))}
+        </select>
+        <span className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none">
+          <Icon name="chevron-down" className="w-3.5 h-3.5" />
+        </span>
+      </span>
+    </label>
+  );
+}
+
 export default function Pagination({ page, pageCount, totalCount, pageSize, onPageChange, onPageSizeChange }) {
   if (totalCount === 0) return null;
 
@@ -37,26 +62,7 @@ export default function Pagination({ page, pageCount, totalCount, pageSize, onPa
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 mt-4 border-t border-slate-100 dark:border-white/5">
       <div className="flex flex-wrap items-center gap-4">
         <PaginationSummary page={page} totalCount={totalCount} pageSize={pageSize} />
-        <label className="flex items-center gap-2 text-xs text-slate-400">
-          Rows per page
-          <span className="relative">
-            <select
-              value={pageSize}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              aria-label="Rows per page"
-              className="field-input h-8 w-[4.25rem] pl-2.5 pr-6 text-xs appearance-none cursor-pointer"
-            >
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size}>
-                  {size}
-                </option>
-              ))}
-            </select>
-            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none">
-              <Icon name="chevron-down" className="w-3.5 h-3.5" />
-            </span>
-          </span>
-        </label>
+        <RowsPerPageSelect pageSize={pageSize} onPageSizeChange={onPageSizeChange} />
       </div>
 
       <div className="flex items-center gap-1.5">
