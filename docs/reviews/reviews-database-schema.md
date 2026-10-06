@@ -47,6 +47,7 @@ Indexes: `product_id`, `status`, `created_at DESC`.
 | --------------------------- | ----------------- | -------------------------------------------------- |
 | `/admin/all-reviews`        | `reviews.view`    | Stats, search/filter, approve/reject, edit, delete |
 | `/admin/add-review`         | `reviews.create`  | Add a review by hand                               |
+| `/admin/import-reviews`     | `reviews.import`  | Import a product's reviews from a Word file ([details](import-reviews.md)) |
 | `/admin/edit-review/[id]`   | `reviews.edit`    | Edit a review                                      |
 
 The **Product** field on the form is a type-to-search box: it asks
@@ -58,7 +59,8 @@ the selection, so the saved product always matches what is shown.
 | Route                       | Method | Permission        |
 | --------------------------- | ------ | ----------------- |
 | `/api/reviews`              | GET    | `reviews.view`    |
-| `/api/reviews/products`     | GET    | `reviews.create` or `reviews.edit` (product suggestions, `?q=`) |
+| `/api/reviews/products`     | GET    | `reviews.create`, `reviews.edit` or `reviews.import` (product suggestions, `?q=`) |
+| `/api/reviews/import`       | POST   | `reviews.import` (Word upload; preview or import — see [import-reviews.md](import-reviews.md)) |
 | `/api/reviews`              | POST   | `reviews.create`  |
 | `/api/reviews/[id]`         | GET    | `reviews.view` or `reviews.edit` |
 | `/api/reviews/[id]`         | PUT    | `reviews.edit`    |
@@ -75,6 +77,7 @@ flowchart LR
     ALL -- "Add Review button" --> ADD
     ALL -- "Edit icon" --> EDIT["Edit Review\n(/admin/edit-review/[id])"]
     ALL -- "Approve / Reject" --> ALL
+    SB --> IMP["Import Reviews\n(/admin/import-reviews)"]
     ADD -- "Save / Discard" --> ALL
     EDIT -- "Update / Discard" --> ALL
 ```

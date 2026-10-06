@@ -94,7 +94,7 @@ export const KNOWN_MODULES = {
     label: "Reviews",
     singular: "Review",
     plural: "Reviews",
-    actions: ["view", "create", "approve", "edit", "delete"],
+    actions: ["view", "create", "import", "approve", "edit", "delete"],
     alwaysInclude: true,
   },
   content: {

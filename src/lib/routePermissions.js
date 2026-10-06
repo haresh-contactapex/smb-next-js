@@ -47,6 +47,7 @@ const ROUTE_RULES = [
 
   { path: "/admin/all-reviews", permission: "reviews.view" },
   { path: "/admin/add-review", permission: "reviews.create" },
+  { path: "/admin/import-reviews", permission: "reviews.import" },
   { prefix: "/admin/edit-review", permission: "reviews.edit" },
 
   { prefix: "/admin/media", permission: "media.view" },

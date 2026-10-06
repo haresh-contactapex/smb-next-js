@@ -101,6 +101,7 @@ export const adminPanelConfig = {
       items: [
         { id: "all-reviews", label: "All Reviews", href: "/admin/all-reviews" },
         { id: "add-review", label: "Add Review", href: "/admin/add-review" },
+        { id: "import-reviews", label: "Import Reviews", href: "/admin/import-reviews" },
       ],
     },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/admin/media" },
