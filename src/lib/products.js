@@ -146,6 +146,39 @@ export async function upsertCategoryPath(path) {
   return parentId;
 }
 
+// The category paths a save should store, in order, without blanks or repeats.
+// The form sends `categories` (every chip) next to the primary `category`;
+// CSV import and older clients send only `category`, which counts as one.
+function categoryPathsFromPayload(payload) {
+  const raw = Array.isArray(payload.categories) && payload.categories.length ? payload.categories : [payload.category];
+  const seen = new Set();
+  const paths = [];
+  for (const entry of raw) {
+    const path = String(entry || "")
+      .split(">")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join(" > ");
+    const key = path.toLowerCase();
+    if (!path || seen.has(key)) continue;
+    seen.add(key);
+    paths.push(path);
+  }
+  return paths;
+}
+
+// Resolves each path to its category row, one at a time so paths that share a
+// parent don't race to create it. Two paths can land on the same row (a level
+// matched by name rather than slug), hence the id de-dupe.
+async function upsertCategoryPaths(paths) {
+  const ids = [];
+  for (const path of paths) {
+    const id = await upsertCategoryPath(path);
+    if (id && !ids.includes(id)) ids.push(id);
+  }
+  return ids;
+}
+
 export async function upsertTags(names) {
   const ids = [];
   for (const name of names || []) {
@@ -271,20 +304,43 @@ export async function getProductById(id) {
   const [product] = await sql`SELECT * FROM products WHERE id = ${id}`;
   if (!product) return null;
 
-  let categoryPath = "";
-  if (product.category_id) {
-    const chain = await sql`
-      WITH RECURSIVE ancestry AS (
-        SELECT id, name, parent_id, 0 AS depth FROM categories WHERE id = ${product.category_id}
+  // Each of the product's categories with its ancestors, as "Parent > Child"
+  // paths: the primary one (products.category_id) first, then the rest of
+  // product_categories in the order the admin added them. products.category_id
+  // is always trusted, because imports and scripts set it without knowing
+  // about product_categories; the position -1 sorts it ahead of the join rows
+  // and DISTINCT ON keeps a category that is in both from appearing twice.
+  const categoryChains = await sql`
+    WITH RECURSIVE membership AS (
+      SELECT DISTINCT ON (category_id) category_id, position FROM (
+        SELECT ${product.category_id}::uuid AS category_id, -1 AS position
+        WHERE ${product.category_id}::uuid IS NOT NULL
         UNION ALL
-        SELECT c.id, c.name, c.parent_id, a.depth + 1
-        FROM categories c
-        JOIN ancestry a ON c.id = a.parent_id
-      )
-      SELECT name FROM ancestry ORDER BY depth DESC
-    `;
-    categoryPath = chain.map((r) => r.name).join(" > ");
+        SELECT category_id, position::int FROM product_categories WHERE product_id = ${id}
+      ) all_memberships
+      ORDER BY category_id, position
+    ),
+    ancestry AS (
+      SELECT m.category_id AS leaf_id, m.position, c.id, c.name, c.parent_id, 0 AS depth
+      FROM membership m
+      JOIN categories c ON c.id = m.category_id
+      UNION ALL
+      SELECT a.leaf_id, a.position, c.id, c.name, c.parent_id, a.depth + 1
+      FROM categories c
+      JOIN ancestry a ON c.id = a.parent_id
+    )
+    SELECT leaf_id, position, name FROM ancestry ORDER BY position, leaf_id, depth DESC
+  `;
+  const categoryPaths = [];
+  const namesByLeaf = new Map();
+  for (const row of categoryChains) {
+    if (!namesByLeaf.has(row.leaf_id)) {
+      namesByLeaf.set(row.leaf_id, []);
+      categoryPaths.push(namesByLeaf.get(row.leaf_id));
+    }
+    namesByLeaf.get(row.leaf_id).push(row.name);
   }
+  const categories = categoryPaths.map((names) => names.join(" > "));
 
   const options = await sql`
     SELECT id, name FROM product_options WHERE product_id = ${id} ORDER BY position
@@ -334,7 +390,8 @@ export async function getProductById(id) {
     title: product.title,
     body_html: product.description || "",
     product_type: product.product_type || "",
-    category: categoryPath,
+    category: categories[0] || "",
+    categories,
     collections: collections.map((c) => c.name),
     tags: tags.map((t) => t.name),
     handle: product.handle,
@@ -376,13 +433,22 @@ export async function getProductById(id) {
   };
 }
 
-async function replaceChildRows(productId, payload) {
+async function replaceChildRows(productId, payload, categoryIds) {
+  await sql`DELETE FROM product_categories WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_options WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_media WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_attributes WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_tags WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_collections WHERE product_id = ${productId}`;
   await sql`DELETE FROM product_variants WHERE product_id = ${productId}`;
+
+  if (categoryIds.length) {
+    await batchInsert(
+      "product_categories",
+      ["product_id", "category_id", "position"],
+      categoryIds.map((categoryId, i) => [productId, categoryId, i])
+    );
+  }
 
   const options = payload.options || [];
   const optionIdByName = {};
@@ -584,10 +650,11 @@ async function writeProductRow(id, payload, categoryId) {
 
 export async function createProduct(payload) {
   assertPersistentMediaUrls(payload);
-  const categoryId = await upsertCategoryPath(payload.category);
-  const id = await writeProductRow(null, payload, categoryId);
+  const categoryIds = await upsertCategoryPaths(categoryPathsFromPayload(payload));
+  // products.category_id is the primary (first) category; the rest live in product_categories.
+  const id = await writeProductRow(null, payload, categoryIds[0] ?? null);
   try {
-    await replaceChildRows(id, payload);
+    await replaceChildRows(id, payload, categoryIds);
   } catch (error) {
     // The HTTP driver can't wrap this in a real transaction (each statement
     // is its own request), so if the children fail partway through, delete
@@ -602,9 +669,9 @@ export async function createProduct(payload) {
 
 export async function updateProduct(id, payload) {
   assertPersistentMediaUrls(payload);
-  const categoryId = await upsertCategoryPath(payload.category);
-  await writeProductRow(id, payload, categoryId);
-  await replaceChildRows(id, payload);
+  const categoryIds = await upsertCategoryPaths(categoryPathsFromPayload(payload));
+  await writeProductRow(id, payload, categoryIds[0] ?? null);
+  await replaceChildRows(id, payload, categoryIds);
   return id;
 }
 

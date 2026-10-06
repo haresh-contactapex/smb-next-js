@@ -14,7 +14,9 @@ back to a specific form field or table column in the UI.
 ```mermaid
 erDiagram
     CATEGORIES ||--o{ CATEGORIES : "parent_id"
-    CATEGORIES ||--o{ PRODUCTS : "category_id"
+    CATEGORIES ||--o{ PRODUCTS : "category_id (primary)"
+    PRODUCTS ||--o{ PRODUCT_CATEGORIES : "product_id"
+    CATEGORIES ||--o{ PRODUCT_CATEGORIES : "category_id"
     PRODUCTS ||--o{ PRODUCT_OPTIONS : "product_id"
     PRODUCT_OPTIONS ||--o{ PRODUCT_OPTION_VALUES : "option_id"
     PRODUCTS ||--o{ PRODUCT_VARIANTS : "product_id"
@@ -64,7 +66,7 @@ top-level pricing/inventory/shipping plus an optional `variants[]` array).
 | `title`               | `VARCHAR(255)`  | NOT NULL                                                      |                                                |
 | `handle`              | `VARCHAR(255)`  | NOT NULL, UNIQUE                                              | Product URL handle, auto-slugified from title |
 | `description`         | `TEXT`          | NULL                                                          | Rich-text HTML from the description editor    |
-| `category_id`         | `UUID`          | NULL, FK → `categories.id` ON DELETE SET NULL                 | "Product category" field                      |
+| `category_id`         | `UUID`          | NULL, FK → `categories.id` ON DELETE SET NULL                 | The product's **primary** (first) category; the full list is in `product_categories` |
 | `product_type`        | `VARCHAR(100)`  | NULL                                                          |                                                |
 | `vendor`              | `VARCHAR(150)`  | NULL                                                          | Shown on the All Products listing             |
 | `status`              | `VARCHAR(10)`   | NOT NULL, DEFAULT `'DRAFT'`, CHECK IN (`ACTIVE`, `DRAFT`, `ARCHIVED`) |                                          |
@@ -87,6 +89,22 @@ top-level pricing/inventory/shipping plus an optional `variants[]` array).
 
 Indexes: `UNIQUE (handle)`, `INDEX (category_id)`, `INDEX (status)`,
 `INDEX (sku)`.
+
+### `product_categories`
+
+Every category a product is listed under — the **Product categories** chips
+on the Add/Edit Product form, where the admin can add or remove as many as
+they like. Apply to an existing database with
+`npm run db:migrate:product-categories` (it also copies each product's
+current `category_id` in as its first row).
+
+| Column        | Type       | Constraints                                          | Notes |
+| ------------- | ---------- | ----------------------------------------------------- | ----- |
+| `product_id`  | `UUID`     | NOT NULL, FK → `products.id` ON DELETE CASCADE, PK (part 1)    |       |
+| `category_id` | `UUID`     | NOT NULL, FK → `categories.id` ON DELETE CASCADE, PK (part 2)  |       |
+| `position`    | `SMALLINT` | NOT NULL, DEFAULT `0`                                  | Order the chips were added; `0` is the primary category |
+
+Indexes: `INDEX (category_id)`.
 
 ### `product_attributes`
 
@@ -228,9 +246,20 @@ Many-to-many join between products and tags.
 
 ## Design notes
 
-- `category_id` on `products` is a single nullable reference, matching the
-  "Product category" autosuggest field (one category per product). Multiple
-  loosely-grouped memberships instead go through `product_collections`.
+- A product can sit in several categories: `product_categories` lists them,
+  and `products.category_id` is the primary (first) one, which the app keeps
+  equal to the first entry when it saves. Readers that show or search a
+  single category — the All Products column, the dashboard, storefront
+  search, CSV export — keep reading `category_id` unchanged. Category product
+  counts and category-scoped coupons count a product under `category_id`
+  **and** every `product_categories` row. `category_id` is always trusted,
+  even with no matching `product_categories` row, because imports and
+  scripts that write `products` directly only know that column. The edit form
+  likewise lists `category_id` first, then the remaining rows. Loosely-grouped,
+  non-taxonomy memberships still go through `product_collections`.
+- The save payload carries `categories` (an array of `"Parent > Child"`
+  paths) alongside the primary `category` string; a payload with only
+  `category` (CSV import, older clients) is treated as a one-item list.
 - A category's breadcrumb (e.g. "Jewelry > Rings > Wedding Bands") is
   derived at read time by walking `parent_id`, not stored as a string.
 - `products.inventory_quantity` is only meaningful for a product with no

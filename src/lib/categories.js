@@ -39,9 +39,16 @@ export async function listCategories() {
         FROM categories ch
         JOIN descendants d ON ch.parent_id = d.id
       )
-      SELECT d.root_id, COUNT(p.id) AS product_count
+      -- A product is in its primary category (products.category_id) and in
+      -- every product_categories row; DISTINCT so one listed under a category
+      -- and one of its sub-categories counts once for the parent.
+      SELECT d.root_id, COUNT(DISTINCT m.product_id) AS product_count
       FROM descendants d
-      LEFT JOIN products p ON p.category_id = d.id
+      LEFT JOIN (
+        SELECT product_id, category_id FROM product_categories
+        UNION
+        SELECT id, category_id FROM products WHERE category_id IS NOT NULL
+      ) m ON m.category_id = d.id
       GROUP BY d.root_id
     ) pc ON pc.root_id = c.id
     ORDER BY c.name

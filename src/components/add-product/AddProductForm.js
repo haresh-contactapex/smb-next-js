@@ -185,13 +185,8 @@ export default function AddProductForm({ productId }) {
     setDescriptionError(false);
   }
 
-  function handleCategorySelect(path) {
-    setField("category", path);
-    setCategoryError(false);
-  }
-
-  function handleCategoryClear() {
-    setField("category", "");
+  function handleCategoriesChange(nextCategories) {
+    setField("categories", nextCategories);
     setCategoryError(false);
   }
 
@@ -350,12 +345,12 @@ export default function AddProductForm({ productId }) {
         },
       },
       {
-        invalid: !product.category.trim(),
+        invalid: product.categories.length === 0,
         setError: setCategoryError,
         onFail: () => {
           categoryInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
           categoryInputRef.current?.focus();
-          showToast("Add a product category before saving", "error");
+          showToast("Add at least one product category before saving", "error");
         },
       },
       {
@@ -595,15 +590,14 @@ export default function AddProductForm({ productId }) {
           />
 
           <OrganizationSidebar
-            category={product.category}
+            categories={product.categories}
             categoryError={categoryError}
             categoryInputRef={categoryInputRef}
             productType={product.product_type}
             collections={product.collections}
             tags={product.tags}
             onFieldChange={setField}
-            onCategorySelect={handleCategorySelect}
-            onCategoryClear={handleCategoryClear}
+            onCategoriesChange={handleCategoriesChange}
             onCollectionsChange={handleCollectionsChange}
             onTagsChange={handleTagsChange}
           />

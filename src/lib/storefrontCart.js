@@ -40,7 +40,9 @@ function parseProductIds(value) {
   return [...new Set(ids)].slice(0, MAX_CART_PRODUCTS);
 }
 
-// Which of the given products sit in the category or any of its sub-categories.
+// Which of the given products sit in the category or any of its sub-categories
+// (a product counts if its primary category, or any other one it is listed
+// under, is in that tree).
 async function productsInCategoryTree(categoryId, productIds) {
   if (!categoryId || productIds.length === 0) return [];
   const rows = await sql`
@@ -50,7 +52,14 @@ async function productsInCategoryTree(categoryId, productIds) {
       SELECT c.id FROM categories c JOIN tree t ON c.parent_id = t.id
     )
     SELECT p.id FROM products p
-    WHERE p.id = ANY(${productIds}::uuid[]) AND p.category_id IN (SELECT id FROM tree)
+    WHERE p.id = ANY(${productIds}::uuid[])
+      AND (
+        p.category_id IN (SELECT id FROM tree)
+        OR EXISTS (
+          SELECT 1 FROM product_categories pc
+          WHERE pc.product_id = p.id AND pc.category_id IN (SELECT id FROM tree)
+        )
+      )
   `;
   return rows.map((row) => row.id);
 }

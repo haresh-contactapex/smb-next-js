@@ -174,6 +174,22 @@ export function regenerateVariants(options, existingVariants, productSku) {
   });
 }
 
+// A product's category paths ("Parent > Child"), in order and without repeats.
+// Data from the API carries `categories`; older shapes (the sample product, a
+// pasted payload) only have the single `category` string.
+function categoriesFromData(data) {
+  const raw = data.categories?.length ? data.categories : data.category ? [data.category] : [];
+  const seen = new Set();
+  return raw
+    .map((path) => String(path || "").trim())
+    .filter((path) => {
+      const key = path.toLowerCase();
+      if (!path || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 export function buildProductFromData(data = {}) {
   const title = data.title || "";
   const handle = data.handle || slugify(title);
@@ -194,7 +210,7 @@ export function buildProductFromData(data = {}) {
     title,
     body_html: data.body_html || "",
     product_type: data.product_type || "",
-    category: data.category || "",
+    categories: categoriesFromData(data),
     collections: [...(data.collections || [])],
     tags: [...(data.tags || [])],
     handle,
@@ -235,7 +251,9 @@ export function assembleProduct(product) {
     title: product.title,
     body_html: product.body_html,
     product_type: product.product_type,
-    category: product.category,
+    // `category` is the primary (first) category; `categories` is every one.
+    category: product.categories[0] || "",
+    categories: product.categories,
     collections: product.collections,
     tags: product.tags,
     handle: product.handle,

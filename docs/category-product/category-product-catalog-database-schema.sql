@@ -66,6 +66,22 @@ CREATE INDEX products_status_idx ON products (status);
 CREATE INDEX products_sku_idx ON products (sku);
 
 -- =========================================================================
+-- product_categories
+-- =========================================================================
+-- Every category a product is listed under (the "Product categories" chips on
+-- the Add/Edit Product form). position 0 is the primary category, which is also
+-- mirrored in products.category_id for readers that only need one.
+CREATE TABLE product_categories (
+    product_id   UUID NOT NULL REFERENCES products (id) ON DELETE CASCADE,
+    category_id  UUID NOT NULL REFERENCES categories (id) ON DELETE CASCADE,
+    position     SMALLINT NOT NULL DEFAULT 0,
+
+    PRIMARY KEY (product_id, category_id)
+);
+
+CREATE INDEX product_categories_category_id_idx ON product_categories (category_id);
+
+-- =========================================================================
 -- product_attributes
 -- =========================================================================
 -- Freeform admin-defined Label/Value pairs shown in the Attributes section

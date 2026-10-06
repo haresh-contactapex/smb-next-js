@@ -10,6 +10,7 @@
     "lint": "next lint",
     "db:migrate": "node scripts/migrate.mjs",
     "db:migrate:media": "node scripts/migrate.mjs docs/media/media-library-schema.sql",
+    "db:migrate:product-categories": "node scripts/migrate.mjs docs/category-product/product-categories-table-only.sql",
     "db:migrate:coupons": "node scripts/migrate.mjs docs/vouchers-coupons/coupons-table-only.sql",
     "db:migrate:reviews": "node scripts/migrate.mjs docs/reviews/reviews-table-only.sql",
     "db:migrate:reviews-half-stars": "node scripts/migrate.mjs docs/reviews/reviews-half-star-ratings-only.sql",

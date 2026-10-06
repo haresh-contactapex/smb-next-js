@@ -11,28 +11,23 @@ function categoryPath(cat) {
 }
 
 export default function OrganizationSidebar({
-  category,
+  categories,
   categoryError,
   categoryInputRef,
   productType,
   collections,
   tags,
   onFieldChange,
-  onCategorySelect,
-  onCategoryClear,
+  onCategoriesChange,
   onCollectionsChange,
   onTagsChange,
 }) {
-  const [categoryQuery, setCategoryQuery] = useState(category ? category.split(" > ").pop() : "");
+  const [categoryQuery, setCategoryQuery] = useState("");
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [categoryPaths, setCategoryPaths] = useState([]);
   const [collectionQuery, setCollectionQuery] = useState("");
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [tagInput, setTagInput] = useState("");
-
-  useEffect(() => {
-    setCategoryQuery(category ? category.split(" > ").pop() : "");
-  }, [category]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,17 +44,37 @@ export default function OrganizationSidebar({
   }, []);
 
   const q = categoryQuery.trim().toLowerCase();
-  const categoryMatches = (q ? categoryPaths.filter((c) => c.toLowerCase().includes(q)) : categoryPaths).slice(0, 8);
+  const selectedCategoryKeys = new Set(categories.map((c) => c.toLowerCase()));
+  const categoryMatches = categoryPaths
+    .filter((c) => !selectedCategoryKeys.has(c.toLowerCase()) && (!q || c.toLowerCase().includes(q)))
+    .slice(0, 8);
 
   const cq = collectionQuery.trim().toLowerCase();
   const collectionMatches = COLLECTIONS.filter(
     (c) => !collections.includes(c) && (!cq || c.toLowerCase().includes(cq))
   ).slice(0, 8);
 
+  // The panel stays open after a pick (the picked one drops out of the list),
+  // so several categories can be added in a row.
   function selectCategory(path) {
-    onCategorySelect(path);
-    setCategoryQuery(path.split(" > ").pop());
-    setCategoryOpen(false);
+    onCategoriesChange([...categories, path]);
+    setCategoryQuery("");
+  }
+
+  function removeCategory(index) {
+    onCategoriesChange(categories.filter((_, i) => i !== index));
+  }
+
+  function handleCategoryKeyDown(e) {
+    if (e.key === "Backspace" && !categoryQuery && categories.length) {
+      onCategoriesChange(categories.slice(0, -1));
+    } else if (e.key === "Enter" && q && categoryMatches.length) {
+      // Picks the top suggestion instead of submitting the whole form.
+      e.preventDefault();
+      selectCategory(categoryMatches[0]);
+    } else if (e.key === "Escape") {
+      setCategoryOpen(false);
+    }
   }
 
   function selectCollection(name) {
@@ -97,55 +112,81 @@ export default function OrganizationSidebar({
     <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5">
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-3">Organization</h2>
       <div className="space-y-4">
-        <div className="relative">
+        <div>
           <label className="field-label" htmlFor="f-category">
-            Product category
+            Product categories
           </label>
-          <input
-            ref={categoryInputRef}
-            id="f-category"
-            type="text"
-            placeholder="Search category"
-            autoComplete="off"
-            aria-label="Product category"
-            value={categoryQuery}
-            onFocus={() => setCategoryOpen(true)}
-            onChange={(e) => {
-              setCategoryQuery(e.target.value);
-              onCategoryClear();
-              setCategoryOpen(true);
-            }}
-            onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
-            className={`field-input${
-              categoryError
-                ? " !border-red-400 focus:!border-red-400 !bg-red-50 focus:!bg-red-50 dark:!bg-red-500/10 dark:focus:!bg-red-500/10"
-                : ""
-            }`}
-          />
-          {categoryError && <p className="text-xs text-error mt-1">Category is required.</p>}
-          {categoryOpen && categoryMatches.length > 0 && (
-            <div className="suggest-panel bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-xl shadow-popover custom-scroll py-1">
-              {categoryMatches.map((path) => {
-                const parts = path.split(" > ");
-                return (
+          <div className="relative">
+            <div
+              className={`flex flex-wrap gap-1.5 rounded-xl border px-2.5 py-2 min-h-[42px] transition-all ${
+                categoryError
+                  ? "border-red-400 bg-red-50 dark:bg-red-500/10"
+                  : "border-transparent bg-slate-100 dark:bg-darksurface2 focus-within:border-primary-400 dark:focus-within:border-accent-500 focus-within:bg-white dark:focus-within:bg-darksurface2"
+              }`}
+            >
+              {categories.map((path, i) => (
+                <span key={path} className="chip min-w-0 max-w-full !rounded-2xl">
+                  <span className="min-w-0 break-words">{path}</span>
+                  {i === 0 && categories.length > 1 && (
+                    <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide opacity-70">Primary</span>
+                  )}
                   <button
-                    key={path}
                     type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => selectCategory(path)}
-                    className="suggest-item w-full text-left px-3 py-2 text-sm flex flex-col"
+                    className="shrink-0"
+                    aria-label={`Remove category ${path}`}
+                    onClick={() => removeCategory(i)}
                   >
-                    <span className="font-medium text-slate-700 dark:text-slate-200">{parts[parts.length - 1]}</span>
-                    <span className="text-[11px] text-slate-400">{path}</span>
+                    &times;
                   </button>
-                );
-              })}
+                </span>
+              ))}
+              <input
+                ref={categoryInputRef}
+                id="f-category"
+                type="text"
+                placeholder={categories.length ? "Add another category" : "Search categories"}
+                autoComplete="off"
+                aria-label="Search categories"
+                aria-invalid={categoryError || undefined}
+                aria-describedby={categoryError ? "f-category-error" : undefined}
+                value={categoryQuery}
+                onFocus={() => setCategoryOpen(true)}
+                onChange={(e) => {
+                  setCategoryQuery(e.target.value);
+                  setCategoryOpen(true);
+                }}
+                onKeyDown={handleCategoryKeyDown}
+                onBlur={() => setTimeout(() => setCategoryOpen(false), 150)}
+                className="flex-1 min-w-[100px] bg-transparent border-none focus:outline-none focus:ring-0 px-1 py-0.5 text-sm text-slate-800 dark:text-white placeholder:text-slate-400"
+              />
             </div>
-          )}
-          {category && (
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1.5 system-field">{category}</p>
+            {categoryOpen && categoryMatches.length > 0 && (
+              <div className="suggest-panel bg-white dark:bg-darksurface border border-slate-200 dark:border-white/10 rounded-xl shadow-popover custom-scroll py-1">
+                {categoryMatches.map((path) => {
+                  const parts = path.split(" > ");
+                  return (
+                    <button
+                      key={path}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => selectCategory(path)}
+                      className="suggest-item w-full text-left px-3 py-2 text-sm flex flex-col"
+                    >
+                      <span className="font-medium text-slate-700 dark:text-slate-200">{parts[parts.length - 1]}</span>
+                      <span className="text-[11px] text-slate-400">{path}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          {categoryError && (
+            <p id="f-category-error" className="text-xs text-error mt-1">
+              Add at least one category.
+            </p>
           )}
           <p className="text-[11px] text-slate-400 mt-1.5">
+            Add every category this product belongs to; the first is its primary category.
             Determines tax rates and adds attributes to improve search, filters, and cross-channel sales.
           </p>
         </div>
