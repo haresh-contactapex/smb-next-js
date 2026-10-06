@@ -64,9 +64,23 @@ export default function MobileMenu() {
         </div>
         <nav className="flex flex-col px-6 pt-8 space-y-6 text-[16px] font-medium tracking-wide uppercase overflow-y-auto">
           {STORE_NAV_LINKS.map((link) => (
-            <Link key={link.label} href={link.href} onClick={() => setOpen(false)} className="hover:text-[#ef9822] transition-colors whitespace-nowrap">
-              {link.label}
-            </Link>
+            <div key={link.label}>
+              <Link href={link.href} onClick={() => setOpen(false)} className="hover:text-[#ef9822] transition-colors whitespace-nowrap">
+                {link.label}
+              </Link>
+              {/* The mega menu's items, so every category stays reachable without hover. */}
+              {link.megaMenu && (
+                <ul className="mt-3 ml-1 space-y-3 border-l border-gray-100 pl-4 text-[14px] font-normal normal-case tracking-normal text-[#777777]">
+                  {link.megaMenu.columns.flat().map((item) => (
+                    <li key={item.label}>
+                      <Link href={item.href} onClick={() => setOpen(false)} className="hover:text-[#ef9822] transition-colors">
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           ))}
           <div className="h-px bg-gray-100 my-4 w-full" />
           <button

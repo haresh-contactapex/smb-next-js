@@ -752,6 +752,20 @@ export async function listStorefrontProducts() {
   return queryStorefrontProducts();
 }
 
+// One representative photo per category for the storefront mega menus: the newest
+// ACTIVE product in the category (or its sub-categories) that has an image, or
+// null when there is none or the slug is unknown. Keyed by the requested slugs.
+export async function listCategoryPreviewImages(slugs) {
+  const entries = await Promise.all(
+    slugs.map(async (slug) => {
+      // A few candidates, in case the newest ones have no image.
+      const products = await queryStorefrontProducts({ limit: 5, categorySlug: slug });
+      return [slug, products.find((product) => product.image)?.image || null];
+    }),
+  );
+  return Object.fromEntries(entries);
+}
+
 export const STOREFRONT_PAGE_SIZE = 12;
 export const STOREFRONT_MAX_PAGE_SIZE = 48;
 

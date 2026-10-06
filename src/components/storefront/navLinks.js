@@ -1,51 +1,56 @@
 // Mega menu opened from the "Wedding Bands" link: two columns of items, and a
-// preview panel that follows whichever item is hovered. Category pages don't
-// exist yet, so every item points at the full product listing for now.
+// preview panel that follows whichever item is hovered. Each item is a category:
+// it opens that category's storefront page (/collections/<slug>) and its preview
+// shows a product photo from the same category. `slug` is the category's slug in
+// the admin, so renaming it there breaks both.
+const collection = (slug) => `/collections/${slug}`;
+
 const MENU_DESCRIPTION = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.";
+
+const menuItem = (label, slug, icon) => ({ label, description: MENU_DESCRIPTION, slug, href: collection(slug), icon });
 
 export const WEDDING_BANDS_MENU = {
   columns: [
     [
-      { label: "Women's Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "women" },
-      { label: "Men's Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "men" },
-      { label: "Contemporary Metal Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "contemporary" },
+      menuItem("Women's Wedding Bands", "women-s-wedding-bands", "women"),
+      menuItem("Men's Wedding Bands", "men-s-wedding-bands", "men"),
+      menuItem("Contemporary Metal Bands", "contemporary-metal-bands", "contemporary"),
     ],
     [
-      { label: "Lab Grown Diamond Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "labDiamond" },
-      { label: "Curved Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "curved" },
-      { label: "Thin Wedding Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "thin" },
+      menuItem("Lab Grown Diamond Bands", "lab-grown-diamond-wedding-bands", "labDiamond"),
+      menuItem("Curved Wedding Bands", "curved-wedding-bands", "curved"),
+      menuItem("Thin Wedding Bands", "thin-wedding-bands", "thin"),
     ],
   ],
 };
 
-// Smaller menus: one item per column. `imageOffset` is where in the shared list
-// of preview photos the menu starts (the Wedding Bands menu uses the first six),
-// so each menu shows different products.
+// Smaller menus: one item per column.
 export const ANNIVERSARY_BANDS_MENU = {
-  imageOffset: 6,
   columns: [
-    [{ label: "Women's Anniversary Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "women" }],
-    [{ label: "Men's Anniversary Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "men" }],
+    [menuItem("Women's Anniversary Bands", "women-s-anniversary-bands", "women")],
+    [menuItem("Men's Anniversary Bands", "men-s-anniversary-bands", "men")],
   ],
 };
 
 export const CLASSIC_BANDS_MENU = {
-  imageOffset: 8,
   columns: [
-    [{ label: "Women's Classic Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "women" }],
-    [{ label: "Men's Classic Bands", description: MENU_DESCRIPTION, href: "/women-wedding-bands", icon: "men" }],
+    [menuItem("Women's Classic Bands", "women-s-classic-wedding-bands", "women")],
+    [menuItem("Men's Classic Bands", "men-s-classic-wedding-bands", "men")],
   ],
 };
 
-// Storefront category links. Category pages don't exist yet, so they all
-// point at the full product listing for now. A link with a `megaMenu` opens it
-// on hover (desktop header only; the mobile drawer lists plain links).
+// Storefront nav links. A link with a `megaMenu` opens it on hover in the desktop
+// header, and the mobile drawer lists its items under the link. There is no
+// "Wedding Bands" / "Anniversary Bands" / "Classic Bands" parent category yet, so
+// each of those three links opens the first item of its own menu.
+const firstItemHref = (menu) => menu.columns[0][0].href;
+
 export const STORE_NAV_LINKS = [
-  { label: "Wedding Bands", href: "/women-wedding-bands", megaMenu: WEDDING_BANDS_MENU },
-  { label: "Anniversary Bands", href: "/women-wedding-bands", megaMenu: ANNIVERSARY_BANDS_MENU },
-  { label: "Classic Bands", href: "/women-wedding-bands", megaMenu: CLASSIC_BANDS_MENU },
-  { label: "Eternity Bands", href: "/women-wedding-bands" },
-  { label: "New Arrivals", href: "/women-wedding-bands" },
+  { label: "Wedding Bands", href: firstItemHref(WEDDING_BANDS_MENU), megaMenu: WEDDING_BANDS_MENU },
+  { label: "Anniversary Bands", href: firstItemHref(ANNIVERSARY_BANDS_MENU), megaMenu: ANNIVERSARY_BANDS_MENU },
+  { label: "Classic Bands", href: firstItemHref(CLASSIC_BANDS_MENU), megaMenu: CLASSIC_BANDS_MENU },
+  { label: "Eternity Bands", href: collection("eternity-bands") },
+  { label: "New Arrivals", href: collection("new-arrivals") },
 ];
 
 // Messages shown in the blue bar above the storefront header.

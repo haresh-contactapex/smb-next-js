@@ -9,43 +9,42 @@ import useImageLoaded from "./useImageLoaded";
 // Grace period so the pointer can cross the gap between the link and the panel.
 const CLOSE_DELAY_MS = 150;
 
-// The preview images are real catalog photos, taken from the public storefront
-// listing. Every mega menu shares one request for the first few ACTIVE products
-// (made once per page load, when the first menu is opened) and each menu takes
-// its own slice of them via its `imageOffset`, so different menus show different
-// products. A failure yields no images (the previews still show their button)
-// and is retried the next time the page loads.
-const MENU_IMAGE_COUNT = 12;
-let menuImagesRequest = null;
+// The preview images are real catalog photos: each item shows a product from its
+// own category, from /api/storefront/category-images. One request per menu, made
+// the first time that menu is opened and shared by every later hover. A failure
+// yields no images (the previews still show their button) and is retried the
+// next time the page loads.
+const menuImageRequests = new Map();
 
-function loadMenuImages() {
-  if (!menuImagesRequest) {
-    menuImagesRequest = fetch(`/api/storefront/products?limit=${MENU_IMAGE_COUNT}`)
+function loadMenuImages(slugKey) {
+  if (!menuImageRequests.has(slugKey)) {
+    const request = fetch(`/api/storefront/category-images?slugs=${encodeURIComponent(slugKey)}`)
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok || !json.success) throw new Error(json.error || "Request failed");
-        return json.data.products.map((product) => product.image).filter(Boolean);
+        return json.data.images;
       })
       .catch(() => {
-        menuImagesRequest = null;
-        return [];
+        menuImageRequests.delete(slugKey);
+        return {};
       });
+    menuImageRequests.set(slugKey, request);
   }
-  return menuImagesRequest;
+  return menuImageRequests.get(slugKey);
 }
 
-// `null` until loaded. With fewer products than menu items the photos repeat.
-function useMenuImages(enabled) {
+// `null` until loaded, then { [categorySlug]: photoUrl | null }.
+function useMenuImages(slugKey, enabled) {
   const [images, setImages] = useState(null);
 
   useEffect(() => {
     if (!enabled || images) return undefined;
     let current = true;
-    loadMenuImages().then((list) => current && setImages(list));
+    loadMenuImages(slugKey).then((loadedImages) => current && setImages(loadedImages));
     return () => {
       current = false;
     };
-  }, [enabled, images]);
+  }, [enabled, images, slugKey]);
 
   return images;
 }
@@ -103,7 +102,7 @@ function PreviewLayer({ item, image, loading, active, showImage }) {
 // The panel is positioned against the sticky <header> (the nearest positioned
 // ancestor), so it spans below the whole navbar rather than under the link.
 export default function NavMegaMenu({ link }) {
-  const { columns, imageOffset = 0 } = link.megaMenu;
+  const { columns } = link.megaMenu;
   const items = columns.flat();
   const fillColumns = columns.every((column) => column.length === 1);
   const panelId = useId();
@@ -114,7 +113,7 @@ export default function NavMegaMenu({ link }) {
   const closeTimer = useRef(null);
   const wrapperRef = useRef(null);
   const skipFocusOpen = useRef(false);
-  const images = useMenuImages(everOpened);
+  const images = useMenuImages(items.map((item) => item.slug).join(","), everOpened);
 
   const cancelClose = useCallback(() => {
     clearTimeout(closeTimer.current);
@@ -220,7 +219,7 @@ export default function NavMegaMenu({ link }) {
             <PreviewLayer
               key={item.label}
               item={item}
-              image={images?.length ? images[(imageOffset + index) % images.length] : null}
+              image={images?.[item.slug] || null}
               loading={everOpened && images === null}
               active={index === active}
               showImage={everOpened}
