@@ -90,19 +90,32 @@ export async function getReviewById(id) {
 // admin-only and deliberately never selected. The count/average cover every
 // approved review even though the returned list is capped.
 export async function getPublicReviewsForProduct(productId, limit = 50) {
-  if (!UUID_PATTERN.test(String(productId))) return { count: 0, average: 0, reviews: [] };
-  const rows = await sql`
-    SELECT
-      id, rating, title, content, display_name, created_at,
-      COUNT(*) OVER () AS total, AVG(rating) OVER () AS average
-    FROM product_reviews
-    WHERE product_id = ${productId} AND status = 'APPROVED'
-    ORDER BY created_at DESC
-    LIMIT ${limit}
-  `;
+  const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  if (!UUID_PATTERN.test(String(productId))) return { count: 0, average: 0, distribution, reviews: [] };
+  const [rows, buckets] = await Promise.all([
+    sql`
+      SELECT
+        id, rating, title, content, display_name, created_at,
+        COUNT(*) OVER () AS total, AVG(rating) OVER () AS average
+      FROM product_reviews
+      WHERE product_id = ${productId} AND status = 'APPROVED'
+      ORDER BY created_at DESC
+      LIMIT ${limit}
+    `,
+    // How many approved reviews per star row (5 down to 1) for the rating
+    // breakdown. A half star counts in the row it rounds up to (3.5 -> 4).
+    sql`
+      SELECT GREATEST(1, round(rating))::int AS stars, COUNT(*)::int AS n
+      FROM product_reviews
+      WHERE product_id = ${productId} AND status = 'APPROVED'
+      GROUP BY 1
+    `,
+  ]);
+  for (const bucket of buckets) distribution[bucket.stars] = Number(bucket.n);
   return {
     count: Number(rows[0]?.total ?? 0),
     average: Number(rows[0]?.average ?? 0),
+    distribution,
     reviews: rows.map((row) => ({
       id: row.id,
       rating: Number(row.rating),

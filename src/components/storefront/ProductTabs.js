@@ -81,8 +81,8 @@ export default function ProductTabs({ descriptionHtml, reviews, handle, productT
         })}
       </div>
 
-      <div className="text-[16px] text-[#555555] leading-relaxed max-w-4xl text-left px-2 sm:px-0">
-        <div role="tabpanel" id={`${baseId}-panel-info`} aria-labelledby={`${baseId}-tab-info`} hidden={active !== "info"}>
+      <div className="text-[16px] text-[#555555] leading-relaxed text-left px-2 sm:px-0">
+        <div role="tabpanel" id={`${baseId}-panel-info`} aria-labelledby={`${baseId}-tab-info`} hidden={active !== "info"} className="max-w-4xl">
           {descriptionHtml ? (
             <div
               className="space-y-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-[#ef9822] [&_a]:underline [&_h1]:text-xl [&_h2]:text-xl [&_h3]:text-lg [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-gray-200 [&_blockquote]:pl-4"
@@ -97,7 +97,7 @@ export default function ProductTabs({ descriptionHtml, reviews, handle, productT
           <ProductReviews reviews={reviews} handle={handle} productTitle={productTitle} allowReviews={allowReviews} />
         </div>
 
-        <div role="tabpanel" id={`${baseId}-panel-additional`} aria-labelledby={`${baseId}-tab-additional`} hidden={active !== "additional"}>
+        <div role="tabpanel" id={`${baseId}-panel-additional`} aria-labelledby={`${baseId}-tab-additional`} hidden={active !== "additional"} className="max-w-4xl">
           <dl className="space-y-1">
             {ADDITIONAL_INFO.map((item) => (
               <div key={item.label}>
