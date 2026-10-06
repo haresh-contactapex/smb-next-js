@@ -106,7 +106,9 @@ export default function ProductGallery({ images, variantImages = [], title, ligh
 
   return (
     // self-start: size to the photos, not to the (usually taller) details column beside it.
-    <div className="flex w-full flex-col-reverse gap-3 self-start sm:flex-row sm:gap-4 lg:w-[55%] xl:gap-5">
+    // On desktop the photos stay pinned just under the sticky header (top-24 clears its
+    // ~70px) while the details column scrolls past; they leave with that column's end.
+    <div className="flex w-full flex-col-reverse gap-3 self-start sm:flex-row sm:gap-4 lg:sticky lg:top-24 lg:w-[55%] xl:gap-5">
       {several && (
         <div className="relative shrink-0 sm:w-[72px] xl:w-24">
           <ul
@@ -130,7 +132,7 @@ export default function ProductGallery({ images, variantImages = [], title, ligh
           onMouseMove={followPointer}
           aria-label={several ? `View image ${index + 1} of ${photos.length} larger` : "View image larger"}
           aria-haspopup="dialog"
-          className={`group relative block aspect-square w-full overflow-hidden rounded-md [@media(hover:hover)]:cursor-none ${FOCUS_RING}`}
+          className={`group relative block aspect-square w-full overflow-hidden rounded-md lg:max-h-[calc(100vh-8rem)] [@media(hover:hover)]:cursor-none ${FOCUS_RING}`}
         >
           <MainPhoto key={current} src={current} alt={imageAlt(title, index)} />
           <span
