@@ -6,6 +6,7 @@ import ProductPurchasePanel from "@/components/storefront/ProductPurchasePanel";
 import ProductTabs from "@/components/storefront/ProductTabs";
 import RecentlyViewed from "@/components/storefront/RecentlyViewed";
 import VariantImageProvider from "@/components/storefront/VariantImageProvider";
+import { orderedVariantImages } from "@/components/storefront/galleryImages";
 import { defaultVariant } from "@/components/storefront/wishlist/wishlistHelpers";
 import { getStorefrontProductByHandle } from "@/lib/products";
 import { getPublicReviewsForProduct } from "@/lib/reviews";
@@ -105,8 +106,10 @@ export default async function ProductPage({ params }) {
   };
   // The photo the page opens on is the default variant's own, using the same default
   // the purchase panel starts on, so there is no swap after the page loads.
-  const initialVariantImage = defaultVariant(purchaseProduct)?.imageUrl ?? null;
-  const variantImageUrls = [...new Set(variants.map((variant) => variant.imageUrl).filter(Boolean))];
+  const startVariant = defaultVariant(purchaseProduct);
+  const initialVariant = startVariant ? { id: startVariant.id, imageUrl: startVariant.imageUrl } : null;
+  // Every color's photo, in option order, so the gallery can offer each one as a thumbnail.
+  const variantImages = orderedVariantImages(purchaseProduct);
   const recentlyViewedEntry = {
     id,
     handle: product.handle,
@@ -146,9 +149,9 @@ export default async function ProductPage({ params }) {
       </nav>
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16 fade-in-up delay-100">
-        <VariantImageProvider key={`variant-image-${id}`} initialImage={initialVariantImage} preload={variantImageUrls}>
+        <VariantImageProvider key={`variant-image-${id}`} initialVariant={initialVariant}>
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
-            <ProductGallery key={`gallery-${id}`} images={product.images} title={title} />
+            <ProductGallery key={`gallery-${id}`} images={product.images} variantImages={variantImages} title={title} />
             <ProductPurchasePanel key={id} product={purchaseProduct} reviews={reviews} supportEmail={supportEmail} />
           </div>
         </VariantImageProvider>

@@ -26,15 +26,14 @@ export function sanitizeWishlist(raw) {
     .slice(0, MAX_WISHLIST_ITEMS);
 }
 
-// The variant a card shows for an item saved without a color/size: the first
-// purchasable one in the product's own option order (first color, then first
+// The product's variants in its own option order (first color, then first
 // size, ...). The order variants come back from the database in is not
 // reliable (variants created together tie on created_at, and the tie breaks
-// differently depending on which other products are in the same query), so it
-// is not used to pick the default.
-export function defaultVariant(product) {
+// differently depending on which other products are in the same query), so
+// anything that needs a predictable order should use this one.
+export function variantsInOptionOrder(product) {
   const rank = (variant) => product.options.map((option) => Math.max(0, option.values.indexOf(variant.options[option.name])));
-  const ordered = [...product.variants].sort((a, b) => {
+  return [...product.variants].sort((a, b) => {
     const rankA = rank(a);
     const rankB = rank(b);
     for (let i = 0; i < rankA.length; i += 1) {
@@ -42,6 +41,12 @@ export function defaultVariant(product) {
     }
     return 0;
   });
+}
+
+// The variant a card shows for an item saved without a color/size: the first
+// purchasable one in the product's own option order.
+export function defaultVariant(product) {
+  const ordered = variantsInOptionOrder(product);
   return ordered.find((variant) => variant.available) || ordered[0] || null;
 }
 

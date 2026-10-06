@@ -56,12 +56,13 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
   const hasVariants = product.variants.length > 0;
   const variant = hasVariants ? findVariant(product, selection) : null;
 
-  // The gallery's main image follows the selected variant's own photo.
-  const { setVariantImage } = useVariantImage();
+  // The gallery's main image follows the selected variant (and its own photo).
+  const { setVariant } = useVariantImage();
+  const variantId = variant?.id ?? null;
   const variantImage = variant?.imageUrl ?? null;
   useEffect(() => {
-    setVariantImage(variantImage);
-  }, [variantImage, setVariantImage]);
+    setVariant({ id: variantId, imageUrl: variantImage });
+  }, [variantId, variantImage, setVariant]);
 
   const price = variant ? variant.price : product.price;
   const compareAtPrice = variant ? variant.compareAtPrice : product.compareAtPrice;

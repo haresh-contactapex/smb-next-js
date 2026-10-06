@@ -39,7 +39,7 @@ function LightboxImage({ src, alt }) {
 // Full-screen photo viewer: dark backdrop, round prev/next arrows, a close
 // button and an "n / total" counter. Keyboard (Esc, arrows, Tab trap), swipe
 // and backdrop click all work; page scroll is locked and focus is restored.
-export default function ImageLightbox({ images, title, startIndex = 0, onClose, className = "" }) {
+export default function ImageLightbox({ images, title, startIndex = 0, onClose, onIndexChange, className = "" }) {
   const [index, setIndex] = useState(startIndex);
   const dialogRef = useRef(null);
   const closeRef = useRef(null);
@@ -48,6 +48,18 @@ export default function ImageLightbox({ images, title, startIndex = 0, onClose, 
   const multiple = count > 1;
 
   const go = useCallback((step) => setIndex((current) => (current + step + count) % count), [count]);
+
+  // Tells the page which photo the shopper has browsed to, so its main image
+  // matches once the viewer closes. Held in a ref so a new inline callback each
+  // render can't re-trigger the effect; the opening photo isn't reported.
+  const onIndexChangeRef = useRef(onIndexChange);
+  onIndexChangeRef.current = onIndexChange;
+  const reportedIndex = useRef(startIndex);
+  useEffect(() => {
+    if (reportedIndex.current === index) return;
+    reportedIndex.current = index;
+    onIndexChangeRef.current?.(index);
+  }, [index]);
 
   // Lock page scroll (without the scrollbar shifting the layout) and hand focus
   // to the dialog; give it back to whatever opened the viewer on the way out.

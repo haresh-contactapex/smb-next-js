@@ -148,7 +148,7 @@ option's values). Only exists for products that have at least one option.
 | `inventory_management`   | `BOOLEAN`       | NOT NULL, DEFAULT `true`                                    | "Track" checkbox per variant row |
 | `weight`                 | `DECIMAL(10,3)` | NULL                                                        |       |
 | `weight_unit`            | `VARCHAR(5)`    | NOT NULL, DEFAULT `'kg'`, CHECK IN (`kg`, `g`, `lb`, `oz`)  |       |
-| `image_url`              | `TEXT`          | NULL                                                        | Per-variant image, uploaded independently of the product's own media. On the storefront product page it becomes the main (first) gallery image while that variant is selected: it replaces the first media image, or trades places with itself when it is already in the gallery. `blob:` URLs are ignored. |
+| `image_url`              | `TEXT`          | NULL                                                        | Per-variant image, uploaded independently of the product's own media. On the storefront product page every distinct variant image is offered in the gallery (after the product media, in option order) as a thumbnail in a vertical strip beside the main image, and the selected variant's image is shown as the main image; changing any color or size returns to it. `blob:` URLs are ignored. |
 | `created_at`             | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                   |       |
 | `updated_at`             | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                   |       |
 
