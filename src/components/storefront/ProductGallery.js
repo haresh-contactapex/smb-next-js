@@ -1,12 +1,17 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import GalleryImage from "./GalleryImage";
 import ImageLightbox, { imageAlt } from "./ImageLightbox";
+import { galleryImages } from "./galleryImages";
+import { useVariantImage } from "./VariantImageProvider";
 
 // Two-column photo grid, in the order the admin arranged the product media.
-// Any photo opens in the lightbox at that position.
-export default function ProductGallery({ images, title, lightboxClassName = "" }) {
+// The first photo is the main image: the selected variant's own photo takes
+// that place (see galleryImages). Any photo opens in the lightbox at that position.
+export default function ProductGallery({ images: productImages, title, lightboxClassName = "" }) {
+  const { variantImage } = useVariantImage();
+  const images = useMemo(() => galleryImages(productImages, variantImage), [productImages, variantImage]);
   const [openIndex, setOpenIndex] = useState(null);
   const close = useCallback(() => setOpenIndex(null), []);
 

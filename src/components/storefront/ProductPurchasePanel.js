@@ -9,6 +9,8 @@ import { isMetalOption, metalColor } from "./metals";
 import { useCart } from "./cart/CartProvider";
 import { findVariant } from "./cart/cartHelpers";
 import WishlistHeart from "./wishlist/WishlistHeart";
+import { defaultVariant } from "./wishlist/wishlistHelpers";
+import { useVariantImage } from "./VariantImageProvider";
 import AskQuestionModal from "./ask-question/AskQuestionModal";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
@@ -31,8 +33,11 @@ function Section({ title, children }) {
 }
 
 // Start on the first purchasable variant so the page never opens on "Out of stock".
+// defaultVariant picks it by the product's option order (first color, then first
+// size), not by the order the database returned the rows in, which is arbitrary.
+// The product page computes the same default on the server for the opening photo.
 function defaultSelection(product) {
-  const first = product.variants.find((variant) => variant.available) || product.variants[0];
+  const first = defaultVariant(product);
   return Object.fromEntries(product.options.map((option) => [option.name, first?.options[option.name] ?? option.values[0]]));
 }
 
@@ -50,6 +55,14 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
 
   const hasVariants = product.variants.length > 0;
   const variant = hasVariants ? findVariant(product, selection) : null;
+
+  // The gallery's main image follows the selected variant's own photo.
+  const { setVariantImage } = useVariantImage();
+  const variantImage = variant?.imageUrl ?? null;
+  useEffect(() => {
+    setVariantImage(variantImage);
+  }, [variantImage, setVariantImage]);
+
   const price = variant ? variant.price : product.price;
   const compareAtPrice = variant ? variant.compareAtPrice : product.compareAtPrice;
   const sku = variant?.sku || product.sku;

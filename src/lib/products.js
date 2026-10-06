@@ -785,12 +785,20 @@ function groupOptions(rows) {
   return options;
 }
 
+// A variant's own photo, or null when it has none. blob: URLs are dead local
+// previews, like in the product media above, so they are skipped. Queries that
+// don't select image_url simply yield null.
+function variantImageUrl(value) {
+  return typeof value === "string" && value && !value.startsWith("blob:") ? value : null;
+}
+
 // Variant prices fall back to the product's, and `available` keeps the
 // inventory rules out of the storefront components.
 function toStorefrontVariant(row, productPrice, productCompareAtPrice) {
   return {
     id: row.id,
     sku: row.sku || "",
+    imageUrl: variantImageUrl(row.image_url),
     options: row.options,
     price: moneyOrNull(row.price) ?? productPrice,
     compareAtPrice: moneyOrNull(row.compare_at_price) ?? productCompareAtPrice,
@@ -828,7 +836,7 @@ export async function getStorefrontProductByHandle(handle) {
     `,
     sql`
       SELECT
-        v.id, v.sku, v.price, v.compare_at_price, v.inventory_quantity, v.inventory_management,
+        v.id, v.sku, v.price, v.compare_at_price, v.inventory_quantity, v.inventory_management, v.image_url,
         COALESCE(json_object_agg(o.name, ov.value ORDER BY o.position) FILTER (WHERE o.name IS NOT NULL), '{}'::json) AS options
       FROM product_variants v
       LEFT JOIN variant_option_values vov ON vov.variant_id = v.id
@@ -836,7 +844,7 @@ export async function getStorefrontProductByHandle(handle) {
       LEFT JOIN product_options o ON o.id = ov.option_id
       WHERE v.product_id = ${product.id}
       GROUP BY v.id
-      ORDER BY v.created_at
+      ORDER BY v.created_at, v.id
     `,
   ]);
 
