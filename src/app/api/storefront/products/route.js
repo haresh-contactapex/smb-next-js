@@ -37,12 +37,15 @@ export async function GET(request) {
   const invalid = [limit, offset, minPrice, maxPrice].find((field) => field.error);
   if (invalid) return badRequest(invalid.error);
 
+  const category = params.get("category")?.trim().slice(0, 200) || null;
+
   try {
     const data = await listStorefrontProductsPage({
       limit: limit.value,
       offset: offset.value,
       minPrice: minPrice.value,
       maxPrice: maxPrice.value,
+      categorySlug: category,
     });
     return NextResponse.json({ success: true, data });
   } catch (error) {

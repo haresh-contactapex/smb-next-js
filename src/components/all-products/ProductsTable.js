@@ -146,13 +146,19 @@ export default function ProductsTable({
                 </td>
                 <td className="py-3 px-1 text-right">
                   <div className="inline-flex items-center gap-1">
-                    <button
-                      type="button"
-                      title="View product"
-                      className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
-                    >
-                      <Icon name="eye" className="w-4 h-4" />
-                    </button>
+                    {/* Active products have a public page, drafts a staff-only preview; archived ones have none yet. */}
+                    {product.status === "Archived" ? null : (
+                      <a
+                        href={`/products/${encodeURIComponent(product.handle)}${product.status === "Draft" ? "?preview=1" : ""}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={product.status === "Draft" ? "Preview draft product" : "View product on storefront"}
+                        aria-label={`${product.status === "Draft" ? "Preview" : "View"} ${product.title} on storefront`}
+                        className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                      >
+                        <Icon name="eye" className="w-4 h-4" />
+                      </a>
+                    )}
                     <Can permission="products.edit">
                       <Link
                         href={`/admin/edit-product/${product.id}`}

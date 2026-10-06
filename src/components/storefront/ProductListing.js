@@ -21,8 +21,9 @@ const NO_FILTER = { min: "", max: "" };
 // Only a non-negative number counts as a price bound; anything else is "not set".
 const cleanPrice = (value) => (value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0 ? value : "");
 
-function listingUrl({ offset, limit, min, max }) {
+function listingUrl({ offset, limit, min, max, category }) {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
+  if (category) params.set("category", category);
   if (cleanPrice(min) !== "") params.set("minPrice", cleanPrice(min));
   if (cleanPrice(max) !== "") params.set("maxPrice", cleanPrice(max));
   return `/api/storefront/products?${params}`;
@@ -32,7 +33,7 @@ function listingUrl({ offset, limit, min, max }) {
 // and the price filter fetch from /api/storefront/products, so the browser only
 // ever holds the products the shopper has asked to see. Metal and band size are
 // captured in state ready for when products carry that data.
-export default function ProductListing({ initialProducts, initialTotal, pageSize, failed = false }) {
+export default function ProductListing({ initialProducts, initialTotal, pageSize, failed = false, categorySlug = null }) {
   const { currency, currencyPosition } = useGeneralSettings();
   // The symbol sits inside the price fields, before or after the digits per Settings -> Currency & Tax.
   const price = moneyInputWrap(currency, currencyPosition);
@@ -70,7 +71,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
       setLoadError("");
       if (replace) setProducts([]);
 
-      const result = await requestJson("GET", listingUrl({ offset, limit: pageSize, ...range }), undefined, controller.signal);
+      const result = await requestJson("GET", listingUrl({ offset, limit: pageSize, category: categorySlug, ...range }), undefined, controller.signal);
       if (result.aborted) return; // a newer request has taken over
 
       setLoading(null);
@@ -86,7 +87,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
         return [...current, ...result.data.products.filter((product) => !seen.has(product.id))];
       });
     },
-    [pageSize]
+    [pageSize, categorySlug]
   );
 
   // Price changes search again from the first page, once typing pauses.

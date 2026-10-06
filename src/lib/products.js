@@ -257,6 +257,7 @@ export async function listProducts() {
   return rows.map((row) => ({
     id: row.id,
     title: row.title,
+    handle: row.handle,
     sku: row.sku || "",
     category: row.category_name || "Uncategorized",
     price: Number(row.price) || 0,
@@ -693,7 +694,7 @@ export async function deleteProducts(ids) {
 //
 // `limit` null returns every match. The id tiebreaker keeps the order stable when
 // products share a created_at, so offset paging never skips or repeats one.
-async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = null, maxPrice = null } = {}) {
+async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = null, maxPrice = null, categorySlug = null } = {}) {
   const rows = await sql`
     SELECT
       p.id,
@@ -715,6 +716,16 @@ async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = nu
     WHERE p.status = 'ACTIVE'
       AND (${minPrice}::numeric IS NULL OR p.price >= ${minPrice}::numeric)
       AND (${maxPrice}::numeric IS NULL OR p.price <= ${maxPrice}::numeric)
+      AND (${categorySlug}::text IS NULL OR p.id IN (
+        WITH RECURSIVE tree AS (
+          SELECT id FROM categories WHERE slug = ${categorySlug}
+          UNION ALL
+          SELECT ch.id FROM categories ch JOIN tree t ON ch.parent_id = t.id
+        )
+        SELECT pc.product_id FROM product_categories pc JOIN tree ON pc.category_id = tree.id
+        UNION
+        SELECT p2.id FROM products p2 JOIN tree ON p2.category_id = tree.id
+      ))
     ORDER BY p.created_at DESC, p.id
     LIMIT ${limit}::int OFFSET ${offset}::int
   `;
@@ -747,17 +758,27 @@ export const STOREFRONT_MAX_PAGE_SIZE = 48;
 // One page of the storefront listing for "Load more": the products plus the
 // total number matching the price filter, so the shopper sees "12 of 60" and
 // the button disappears after the last page.
-export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE, offset = 0, minPrice = null, maxPrice = null } = {}) {
+export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE, offset = 0, minPrice = null, maxPrice = null, categorySlug = null } = {}) {
   const pageSize = Math.min(Math.max(Math.floor(limit) || STOREFRONT_PAGE_SIZE, 1), STOREFRONT_MAX_PAGE_SIZE);
   const start = Math.max(Math.floor(offset) || 0, 0);
 
   const [products, [{ total }]] = await Promise.all([
-    queryStorefrontProducts({ limit: pageSize, offset: start, minPrice, maxPrice }),
+    queryStorefrontProducts({ limit: pageSize, offset: start, minPrice, maxPrice, categorySlug }),
     sql`
       SELECT COUNT(*)::int AS total FROM products p
       WHERE p.status = 'ACTIVE'
         AND (${minPrice}::numeric IS NULL OR p.price >= ${minPrice}::numeric)
         AND (${maxPrice}::numeric IS NULL OR p.price <= ${maxPrice}::numeric)
+        AND (${categorySlug}::text IS NULL OR p.id IN (
+          WITH RECURSIVE tree AS (
+            SELECT id FROM categories WHERE slug = ${categorySlug}
+            UNION ALL
+            SELECT ch.id FROM categories ch JOIN tree t ON ch.parent_id = t.id
+          )
+          SELECT pc.product_id FROM product_categories pc JOIN tree ON pc.category_id = tree.id
+          UNION
+          SELECT p2.id FROM products p2 JOIN tree ON p2.category_id = tree.id
+        ))
     `,
   ]);
 
@@ -879,11 +900,12 @@ function toStorefrontVariant(row, productPrice, productCompareAtPrice) {
 // Draft/archived products and unknown handles return null (the page 404s).
 // Variant prices fall back to the product price, and each variant carries an
 // `available` flag so the page never has to interpret inventory rules itself.
-export async function getStorefrontProductByHandle(handle) {
+// `includeDraft` is for the staff preview only: it also finds DRAFT products.
+export async function getStorefrontProductByHandle(handle, { includeDraft = false } = {}) {
   const [product] = await sql`
-    SELECT id, title, handle, description, price, compare_at_price, sku, seo_title, seo_description
+    SELECT id, title, handle, status, description, price, compare_at_price, sku, seo_title, seo_description
     FROM products
-    WHERE handle = ${handle} AND status = 'ACTIVE'
+    WHERE handle = ${handle} AND (status = 'ACTIVE' OR (${includeDraft}::boolean AND status = 'DRAFT'))
   `;
   if (!product) return null;
 
@@ -922,6 +944,7 @@ export async function getStorefrontProductByHandle(handle) {
     id: product.id,
     handle: product.handle,
     title: product.title,
+    status: product.status,
     description: product.description || "",
     seoTitle: product.seo_title || "",
     seoDescription: product.seo_description || "",

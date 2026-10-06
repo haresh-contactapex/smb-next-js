@@ -70,13 +70,16 @@ export default function CategoriesTable({ categories, onDelete, deletingId, sort
               </td>
               <td className="py-3 px-1 text-right">
                 <div className="inline-flex items-center gap-1">
-                  <button
-                    type="button"
-                    title="View category"
+                  <a
+                    href={`/collections/${encodeURIComponent(category.slug)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View category on storefront"
+                    aria-label={`View ${category.name} on storefront`}
                     className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                   >
                     <Icon name="eye" className="w-4 h-4" />
-                  </button>
+                  </a>
                   <Can permission="categories.edit">
                     <Link
                       href={`/admin/edit-category/${category.id}`}

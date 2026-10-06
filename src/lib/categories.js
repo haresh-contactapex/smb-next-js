@@ -90,6 +90,23 @@ export async function getCategoryById(id) {
   };
 }
 
+// A visible category for the public storefront page, or null (unknown or hidden).
+export async function getVisibleCategoryBySlug(slug) {
+  const [row] = await sql`
+    SELECT name, slug, description, image_url, seo_title, seo_description
+    FROM categories WHERE slug = ${slug} AND is_visible = true
+  `;
+  if (!row) return null;
+  return {
+    name: row.name,
+    slug: row.slug,
+    description: row.description || "",
+    imageUrl: row.image_url || null,
+    seoTitle: row.seo_title || "",
+    seoDescription: row.seo_description || "",
+  };
+}
+
 async function assertNotCircular(id, parentId) {
   if (!id || !parentId) return;
   let current = parentId;

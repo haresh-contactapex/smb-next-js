@@ -13,6 +13,7 @@ import { getPublicReviewsForProduct } from "@/lib/reviews";
 import { getStoreSettings } from "@/lib/storeSettings";
 import { getProductsSettings } from "@/lib/productsSettings";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 
 // Reads live catalog data, so never prerender it at build time.
 export const dynamic = "force-dynamic";
@@ -20,9 +21,12 @@ export const dynamic = "force-dynamic";
 // Shared by generateMetadata and the page so the product is queried once per
 // request. A database failure is kept apart from "no such product" so an outage
 // doesn't masquerade as a 404.
-const loadProduct = cache(async (handle) => {
+const loadProduct = cache(async (handle, preview = false) => {
   try {
-    return { product: await getStorefrontProductByHandle(handle), failed: false };
+    // ?preview=1 lets signed-in staff with product access see DRAFT products;
+    // everyone else only ever gets ACTIVE ones.
+    const includeDraft = preview && (await requireStaffPermission("products.view")).ok;
+    return { product: await getStorefrontProductByHandle(handle, { includeDraft }), failed: false };
   } catch (error) {
     console.error("Storefront product failed to load", error);
     return { product: null, failed: true };
@@ -57,19 +61,22 @@ async function loadAllowReviews() {
   }
 }
 
-export async function generateMetadata({ params }) {
+export async function generateMetadata({ params, searchParams }) {
   const { handle } = await params;
-  const { product } = await loadProduct(handle);
+  const preview = (await searchParams).preview === "1";
+  const { product } = await loadProduct(handle, preview);
   if (!product) return { title: "Product | shopmyband.com" };
   return {
+    robots: preview ? { index: false, follow: false } : undefined,
     title: product.seoTitle || `${product.title} | shopmyband.com`,
     description: product.seoDescription || undefined,
   };
 }
 
-export default async function ProductPage({ params }) {
+export default async function ProductPage({ params, searchParams }) {
   const { handle } = await params;
-  const { product, failed } = await loadProduct(handle);
+  const preview = (await searchParams).preview === "1";
+  const { product, failed } = await loadProduct(handle, preview);
 
   if (failed) {
     return (
@@ -124,6 +131,11 @@ export default async function ProductPage({ params }) {
 
   return (
     <div>
+      {product.status === "DRAFT" && (
+        <p role="status" className="bg-amber-100 text-amber-900 text-center text-sm font-medium px-4 py-2">
+          Draft preview &mdash; this product is not visible to customers until it is set to Active.
+        </p>
+      )}
       <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-4 sm:px-8 py-6 text-[16px] text-gray-400 font-medium">
         <ol className="flex flex-wrap items-center">
           <li>
