@@ -1,11 +1,14 @@
 -- Multiple categories per product: adds the product_categories join table.
 -- Apply with: npm run db:migrate:product-categories
 -- Requires products and categories (npm run db:migrate). Safe to re-run.
--- products.category_id stays as the product's primary (first) category, so every
--- reader that only needs one category keeps working; each product's existing
--- category is copied in as its first row. The app counts category_id as a
--- member whether or not it has a row here, so products written later by a
--- script that only sets category_id are still found. Dialect: PostgreSQL
+-- products.category_id stays as the primary (first) category of each product,
+-- so every reader that only needs one category keeps working. Each existing
+-- category is copied in as the first row for its product. The app counts
+-- category_id as a member whether or not it has a row here, so products
+-- written later by a script that only sets category_id are still found.
+-- Dialect: PostgreSQL
+-- (No apostrophes or semicolons in these comments: scripts/migrate.mjs does
+-- not strip them from CRLF files, and it tracks quotes and semicolons.)
 
 CREATE TABLE IF NOT EXISTS product_categories (
     product_id   UUID NOT NULL REFERENCES products (id) ON DELETE CASCADE,
