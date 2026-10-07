@@ -5,6 +5,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 import { buildNewOrderAlertEmail, buildOrderConfirmationEmail, buildOrderStatusEmail, buildRefundRequestAlertEmail } from "./orderEmail";
 import { buildCustomerWelcomeEmail, buildNewCustomerAlertEmail, buildPasswordResetEmail, buildProductQuestionAlertEmail, buildProductQuestionConfirmationEmail, buildStaffWelcomeEmail } from "./notificationEmail";
+import { buildContactMessageAlertEmail, buildContactMessageConfirmationEmail } from "./notificationEmail";
 import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 
 const LOGO_CID = "shopmyband-logo";
@@ -183,6 +184,19 @@ export async function sendProductQuestionAdminEmail({ to, storeName, question, p
 // to `replyTo` (the store's support address) rather than the no-reply sender.
 export async function sendProductQuestionConfirmationEmail({ to, storeName, question, product, replyTo }) {
   return sendBrandedEmail(to, buildProductQuestionConfirmationEmail, { storeName, question, product }, { replyTo: replyTo || undefined });
+}
+
+// Sent to the store when a visitor uses the storefront Contact form. Reply-To is the
+// visitor, so answering the email answers them directly. Everything in `contact`
+// ({ name, email, phone, message }) is visitor input and is escaped by the template.
+export async function sendContactMessageAdminEmail({ to, storeName, contact }) {
+  return sendBrandedEmail(to, buildContactMessageAlertEmail, { storeName, contact }, { replyTo: { name: contact.name, address: contact.email } });
+}
+
+// Sent to the visitor to confirm the store received their message. Replies go to
+// `replyTo` (the store's support address) rather than the no-reply sender.
+export async function sendContactMessageConfirmationEmail({ to, storeName, contact, replyTo }) {
+  return sendBrandedEmail(to, buildContactMessageConfirmationEmail, { storeName, contact }, { replyTo: replyTo || undefined });
 }
 
 // The logo travels inside order emails (an inline attachment the HTML points at with cid:), so it

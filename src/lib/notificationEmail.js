@@ -8,6 +8,8 @@
 //   buildStaffWelcomeEmail(data)                staff: an admin account was created for them
 //   buildProductQuestionAlertEmail(data)        store: a shopper asked about a product
 //   buildProductQuestionConfirmationEmail(data) shopper: we got your question
+//   buildContactMessageAlertEmail(data)        store: a visitor used the Contact form
+//   buildContactMessageConfirmationEmail(data)  visitor: we got your message
 //
 // Shared `data`: { storeName, supportEmail, shopUrl, logoSrc }.
 
@@ -109,6 +111,38 @@ export function buildProductQuestionConfirmationEmail({ question, product, ...da
     detailsHtml: `<div style="font-size:14px;font-weight:bold;color:#1F3A6B;margin:0 0 8px;">Your question</div>${quoteBlock(question.question)}`,
     detailsText: `Your question:\n${question.question}`,
     button: product.url ? { label: "View the product", url: product.url } : null,
+    note: { lead: "Something to add?", html: "Just reply to this email." },
+  });
+}
+
+// The storefront Contact form. `contact` is { name, email, phone, message }, all visitor input
+// (already normalised by normalizeContact) and escaped here.
+export function buildContactMessageAlertEmail({ contact, ...data }) {
+  const detailsHtml = `${detailRows([
+    ["Name", escapeHtml(contact.name)],
+    ["Email", link(`mailto:${contact.email}`, contact.email)],
+    ["Phone", escapeHtml(contact.phone)],
+  ])}<div style="font-size:14px;font-weight:bold;color:#1F3A6B;margin:20px 0 8px;">Message</div>${quoteBlock(contact.message)}`;
+  return render(data, {
+    subject: `New message from ${oneLine(contact.name)}`,
+    heading: `New message from ${contact.name}.`,
+    intro: `A visitor sent a message through the contact form on ${data.storeName}.`,
+    detailsHtml,
+    detailsText: `Name: ${contact.name}\nEmail: ${contact.email}\nPhone: ${contact.phone}\n\nMessage:\n${contact.message}`,
+    button: { label: `Reply to ${contact.name}`, url: `mailto:${contact.email}` },
+    note: { lead: "Reply to answer.", html: "Replying to this email goes straight to the visitor." },
+  });
+}
+
+export function buildContactMessageConfirmationEmail({ contact, ...data }) {
+  const firstName = contact.name.split(" ")[0];
+  return render(data, {
+    subject: "We received your message",
+    heading: `Thanks for getting in touch, ${firstName}.`,
+    intro: "We've received your message and will reply as soon as we can.",
+    detailsHtml: `<div style="font-size:14px;font-weight:bold;color:#1F3A6B;margin:0 0 8px;">Your message</div>${quoteBlock(contact.message)}`,
+    detailsText: `Your message:\n${contact.message}`,
+    button: data.shopUrl ? { label: "Visit the shop", url: data.shopUrl } : null,
     note: { lead: "Something to add?", html: "Just reply to this email." },
   });
 }
