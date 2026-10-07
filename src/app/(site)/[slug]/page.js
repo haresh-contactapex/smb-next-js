@@ -11,9 +11,10 @@ import { getPublishedCmsPage } from "@/lib/cms";
 // never prerendered. See docs/cms/cms.md.
 export const dynamic = "force-dynamic";
 
-// A landing page (the Wedding Band page) opens with a hero: a table with the class cms-hero holding a picture
-// and text. It runs edge to edge with no heading band, and the hero's heading becomes the page's <h1>.
-const LANDING_PAGE_START = '<table class="cms-hero">';
+// A landing page (the Wedding Band pages) runs edge to edge with no heading band, and its first heading becomes the
+// page's <h1>. It is a page that opens with a cms-hero table (a picture and text), or that holds a cms-split table
+// (two colour-blocked halves) after an introduction.
+const isLandingPage = (html) => html.startsWith('<table class="cms-hero">') || html.includes('<table class="cms-split">');
 
 // One lookup per request, shared by generateMetadata and the page.
 const loadPage = cache(async (slug) => getPublishedCmsPage(slug));
@@ -35,8 +36,8 @@ export default async function CmsContentPage({ params }) {
 
   const embeds = page.contentHtml.includes("cms-embed-") && <CmsEmbeds target="cms-article" />;
 
-  if (page.contentHtml.startsWith(LANDING_PAGE_START)) {
-    // The editor writes headings as h2-h4, so the first heading is promoted here. If the hero has none, the title still gets an h1.
+  if (isLandingPage(page.contentHtml)) {
+    // The editor writes headings as h2-h4, so the first heading is promoted here. If the page has none, the title still gets an h1.
     const html = page.contentHtml.replace(/<h2([ >])/, "<h1$1").replace("</h2>", "</h1>");
     return (
       <div className="w-full bg-white">

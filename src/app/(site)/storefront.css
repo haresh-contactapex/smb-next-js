@@ -273,6 +273,50 @@
 @media (max-width: 560px) {
   .cms-content table.cms-tiles tr { grid-template-columns: minmax(0, 1fr); }
 }
+/* Her / Him landing page (the second Wedding Band page): a centered introduction, then two colour-blocked halves
+   (picture card, label, title, text, button) with an "&" between them, then a row of four small linked cards. */
+.cms-content.cms-wide > h1:first-child { margin: 0 auto 1rem; padding-top: 3.5rem; max-width: 760px; color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: clamp(2.2rem, 4.5vw, 3.2rem); font-weight: 400; line-height: 1.15; text-align: center; }
+.cms-content.cms-wide > h1:first-child + p { max-width: 760px; margin-bottom: 2.4rem; color: #666666; font-size: 15px; line-height: 1.8; text-align: center; }
+.cms-content table.cms-split,
+.cms-content table.cms-split tbody { display: block; width: 100%; margin: 0; }
+.cms-content table.cms-split tbody { position: relative; }
+.cms-content table.cms-split tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.cms-content table.cms-split td { display: flex; flex-direction: column; align-items: center; padding: 3rem 2rem 3.2rem; border: 0; background-color: #f6e9e4; text-align: center; }
+.cms-content table.cms-split td:last-child { background-color: #e9ebec; }
+.cms-content table.cms-split td > p:first-child { width: 100%; margin: 0 0 1.6rem; }
+.cms-content table.cms-split td img { display: block; box-sizing: content-box; width: 340px; max-width: calc(100% - 16px); height: auto; margin: 0 auto; border: 8px solid #ffffff; box-shadow: 0 18px 40px rgba(60, 40, 30, 0.18); }
+.cms-content table.cms-split td > p:nth-child(2) { margin: 0; color: #8a6b5f; font-size: 12px; letter-spacing: 0.25em; text-transform: uppercase; }
+.cms-content table.cms-split td:last-child > p:nth-child(2) { color: #5b6670; }
+.cms-content table.cms-split h3 { margin: 0.4rem 0 0.7rem; color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: 34px; font-weight: 400; line-height: 1.2; }
+.cms-content table.cms-split td > p:nth-child(4) { max-width: 22rem; margin: 0 auto 1.5rem; color: #555555; font-size: 15px; line-height: 1.6; }
+.cms-content table.cms-split td > p:last-child { margin: auto 0 0; }
+.cms-content table.cms-split a.cms-btn { padding: 0.75em 1.9em; border-radius: 0; background-color: #333333; font-size: 13px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
+.cms-content table.cms-split a.cms-btn:hover { background-color: #ef9822; color: #1f1f1f; }
+.cms-content table.cms-split tbody::after { content: "&"; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background-color: #ffffff; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: 20px; font-style: italic; transform: translate(-50%, -50%); }
+@media (max-width: 720px) {
+  .cms-content table.cms-split tr { grid-template-columns: minmax(0, 1fr); }
+  .cms-content table.cms-split tbody::after { display: none; }
+}
+.cms-content.cms-wide > h3 { margin: 3.5rem auto 1.8rem; color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: 26px; font-weight: 400; text-align: center; }
+/* Chips: the whole card is the link (the heading's link is stretched over it); "Shop" is drawn, not typed. */
+.cms-content table.cms-chips,
+.cms-content table.cms-chips tbody { display: block; width: 100%; max-width: 1180px; margin: 0 auto; }
+.cms-content table.cms-chips { padding: 0 1.25rem; }
+.cms-content table.cms-chips tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.cms-content table.cms-chips td { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr); grid-template-rows: 1fr auto; align-items: center; column-gap: 1rem; padding: 1rem 1.2rem; border: 1px solid #e7e2da; background-color: #ffffff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.cms-content table.cms-chips td:hover { border-color: #ef9822; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); }
+.cms-content table.cms-chips td > p:first-child { grid-row: 1 / 3; margin: 0; }
+.cms-content table.cms-chips img { display: block; width: 96px; height: auto; }
+.cms-content table.cms-chips h3 { align-self: end; margin: 0; font-size: 16px; font-weight: 500; line-height: 1.25; }
+.cms-content table.cms-chips h3 a { color: #333333; text-decoration: none; }
+.cms-content table.cms-chips h3 a::after { content: ""; position: absolute; inset: 0; }
+.cms-content table.cms-chips td::after { content: "Shop \2192"; grid-column: 2; align-self: start; margin-top: 0.15rem; color: #ef9822; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+@media (max-width: 900px) {
+  .cms-content table.cms-chips tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .cms-content table.cms-chips tr { grid-template-columns: minmax(0, 1fr); }
+}
 /* Where the contact form mounts: nothing shows until it does. */
 .cms-content p.cms-embed-contact-form { min-height: 18rem; color: transparent; }
 .cms-content p.cms-or { display: flex; align-items: center; gap: 0.9em; max-width: 260px; margin: 0.7em 0; color: #777777; }

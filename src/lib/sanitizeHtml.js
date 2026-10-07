@@ -41,12 +41,13 @@ const DROP_WITH_CONTENT = new Set([
 //   tables     cms-plain (no grid), cms-striped (dark header, shaded rows), cms-cards (a grid of cards),
 //              cms-columns (side-by-side content, one cell per column),
 //              cms-products (a row of four product cards), cms-hero (a picture beside text, edge to edge) and
-//              cms-tiles (a grid of three category tiles per row)
+//              cms-tiles (a grid of three category tiles per row), cms-split (two colour-blocked halves side by side) and
+//              cms-chips (a row of four small linked cards)
 //   images     cms-photo-right (a rounded photo floated to the right of the text)
 //   embeds     cms-embed-contact-form (a paragraph the storefront replaces with the contact form)
 const CMS_CLASSES = new Set([
   "cms-btn", "cms-btn-outline", "cms-align-center", "cms-align-right",
-  "cms-lg", "cms-accent", "cms-or", "cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-small", "cms-photo-right",
+  "cms-lg", "cms-accent", "cms-or", "cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-small", "cms-photo-right",
   "cms-embed-contact-form",
 ]);
 

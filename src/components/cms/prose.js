@@ -26,7 +26,7 @@ export const CMS_ADMIN_PROSE = [
   "[&_table.cms-columns_td]:border-0 [&_table.cms-columns_td]:align-middle",
   "[&_p.cms-embed-contact-form]:rounded-lg [&_p.cms-embed-contact-form]:border [&_p.cms-embed-contact-form]:border-dashed [&_p.cms-embed-contact-form]:border-slate-400 [&_p.cms-embed-contact-form]:p-3 [&_p.cms-embed-contact-form]:text-slate-500",
   "[&_table.cms-products_td]:border-0 [&_table.cms-products_td]:align-top [&_img.cms-photo-right]:float-right [&_img.cms-photo-right]:ml-6 [&_img.cms-photo-right]:w-2/5 [&_img.cms-photo-right]:rounded-2xl [&_img.cms-photo-right]:shadow-md",
-  "[&_table.cms-hero_td]:border-0 [&_table.cms-hero_td]:align-middle [&_table.cms-tiles_td]:border-0 [&_table.cms-tiles_td]:bg-slate-50 [&_table.cms-tiles_td]:p-4 [&_table.cms-tiles_td]:text-center dark:[&_table.cms-tiles_td]:bg-white/5 [&_p.cms-small]:text-xs",
+  "[&_table.cms-hero_td]:border-0 [&_table.cms-hero_td]:align-middle [&_table.cms-tiles_td]:border-0 [&_table.cms-tiles_td]:bg-slate-50 [&_table.cms-tiles_td]:p-4 [&_table.cms-tiles_td]:text-center dark:[&_table.cms-tiles_td]:bg-white/5 [&_table.cms-split_td]:border-0 [&_table.cms-split_td]:bg-slate-50 [&_table.cms-split_td]:text-center dark:[&_table.cms-split_td]:bg-white/5 [&_table.cms-chips_td]:border-slate-200 [&_p.cms-small]:text-xs",
   "[&_hr]:my-4 [&_hr]:border-slate-200 dark:[&_hr]:border-white/10",
   "[&_pre]:overflow-x-auto [&_pre]:rounded [&_pre]:bg-slate-100 [&_pre]:p-3 dark:[&_pre]:bg-white/5 [&_code]:text-[13px]",
   "[&_.cms-align-center]:text-center [&_.cms-align-right]:text-right",
