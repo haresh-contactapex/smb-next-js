@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
-import MediaPickerModal from "@/components/cms/MediaPickerModal";
+import MediaSelectModal from "@/components/media/MediaSelectModal";
 import CmsVersionHistory from "@/components/cms/CmsVersionHistory";
 import {
   BLOG_AUTHOR_MAX,
@@ -64,6 +64,22 @@ export default function BlogSettingsSidebar({
 }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const closePicker = useCallback(() => setPickerOpen(false), []);
+
+  const altFor = (item) => item.altText || item.fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
+
+  // The post form has no save-time upload step, so a file from the computer is
+  // uploaded to the library right away and chosen as the featured image.
+  async function uploadFeaturedImage(files) {
+    const file = files[0];
+    if (!file.type.startsWith("image/")) throw new Error("Only JPEG, PNG, WEBP, or GIF images can be used.");
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("purpose", "cms");
+    const res = await fetch("/api/media", { method: "POST", body: formData });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok || !json.success) throw new Error(json.error || "The image couldn't be uploaded.");
+    onFeaturedImageSelect({ url: json.data.url, alt: altFor(json.data) });
+  }
 
   const today = todayIso();
   const scheduled = status === "published" && publishedOn && publishedOn > today;
@@ -296,14 +312,16 @@ export default function BlogSettingsSidebar({
           </div>
         )}
 
-        <MediaPickerModal
-          title="Choose featured image"
+        <MediaSelectModal
           open={pickerOpen}
           onClose={closePicker}
-          onSelect={({ url, alt }) => {
-            onFeaturedImageSelect({ url, alt });
-            closePicker();
-          }}
+          onSelectItems={(items) => items[0] && onFeaturedImageSelect({ url: items[0].url, alt: altFor(items[0]) })}
+          onUploadFiles={uploadFeaturedImage}
+          selectedUrls={featuredImageUrl ? [featuredImageUrl] : []}
+          multiple={false}
+          title="Featured image"
+          confirmLabel="Use as featured image"
+          uploadHint="JPG, PNG, WEBP, or GIF, up to 10MB"
         />
       </section>
 

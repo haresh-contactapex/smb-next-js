@@ -9,7 +9,9 @@ const DEFAULT_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
 // from the Media library (multi-select), or upload from the computer.
 // Library picks go to onSelectItems(items); files chosen/dropped on the
 // Upload tab go to onUploadFiles(fileList) — the caller decides how they're
-// stored — and the dialog then closes.
+// stored (if onUploadFiles returns a promise the dialog stays open on
+// "Uploading..." until it settles, and a rejection's message is shown in the
+// dialog instead of closing it) — and the dialog then closes.
 export default function MediaSelectModal({
   open,
   onClose,
@@ -29,6 +31,7 @@ export default function MediaSelectModal({
   const [picked, setPicked] = useState([]);
   const [search, setSearch] = useState("");
   const [dragOver, setDragOver] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const dialogRef = useRef(null);
   const fileInputRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -85,10 +88,23 @@ export default function MediaSelectModal({
     onClose();
   }
 
-  function handleFiles(fileList) {
-    if (!fileList || !fileList.length) return;
-    onUploadFiles(multiple ? fileList : [fileList[0]]);
-    onClose();
+  async function handleFiles(fileList) {
+    if (!fileList || !fileList.length || uploading) return;
+    setError("");
+    const result = onUploadFiles(multiple ? fileList : [fileList[0]]);
+    if (!result || typeof result.then !== "function") {
+      onClose();
+      return;
+    }
+    setUploading(true);
+    try {
+      await result;
+      onClose();
+    } catch (err) {
+      setError(err.message || "The upload failed.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   function handleDrag(event, over) {
@@ -152,9 +168,10 @@ export default function MediaSelectModal({
               tabIndex={0}
               role="button"
               aria-label="Upload files from your computer"
-              onClick={() => fileInputRef.current?.click()}
+              aria-busy={uploading}
+              onClick={() => !uploading && fileInputRef.current?.click()}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+                if ((e.key === "Enter" || e.key === " ") && !uploading) {
                   e.preventDefault();
                   fileInputRef.current?.click();
                 }
@@ -166,14 +183,16 @@ export default function MediaSelectModal({
                 handleDrag(e, false);
                 handleFiles(e.dataTransfer.files);
               }}
-              className={`flex min-h-[240px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors hover:border-primary-400 dark:hover:border-accent-500/50 ${
+              className={`flex min-h-[240px] ${uploading ? "cursor-wait opacity-60" : "cursor-pointer"} flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 text-center transition-colors hover:border-primary-400 dark:hover:border-accent-500/50 ${
                 dragOver
                   ? "border-primary-400 bg-primary-50 dark:border-accent-500/50 dark:bg-white/5"
                   : "border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-darksurface2/40"
               }`}
             >
               <Icon name="upload-cloud" className="mb-2 h-10 w-10 text-slate-400" />
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-300">Drop files to upload</p>
+              <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                {uploading ? "Uploading…" : "Drop files to upload"}
+              </p>
               <p className="mt-1 text-xs text-slate-400">
                 or <span className="font-semibold text-primary-600 underline dark:text-accent-400">select files from your computer</span>
               </p>
