@@ -928,6 +928,47 @@ function toStorefrontVariant(row, productPrice, productCompareAtPrice) {
   };
 }
 
+// The category trail for a product page's breadcrumb, root first: the first of
+// the product's categories (products.category_id, then product_categories in the
+// admin's order) that has a visible category, with its visible ancestors.
+// Hidden categories are left out because their collection pages 404. A product
+// with no category, or only hidden ones, gets an empty trail.
+async function getStorefrontCategoryTrail(productId, primaryCategoryId) {
+  const rows = await sql`
+    WITH RECURSIVE membership AS (
+      SELECT DISTINCT ON (category_id) category_id, position FROM (
+        SELECT ${primaryCategoryId}::uuid AS category_id, -1 AS position
+        WHERE ${primaryCategoryId}::uuid IS NOT NULL
+        UNION ALL
+        SELECT category_id, position::int FROM product_categories WHERE product_id = ${productId}
+      ) all_memberships
+      ORDER BY category_id, position
+    ),
+    ancestry AS (
+      SELECT m.category_id AS leaf_id, m.position, c.id, c.name, c.slug, c.parent_id, c.is_visible, 0 AS depth
+      FROM membership m
+      JOIN categories c ON c.id = m.category_id
+      UNION ALL
+      SELECT a.leaf_id, a.position, c.id, c.name, c.slug, c.parent_id, c.is_visible, a.depth + 1
+      FROM categories c
+      JOIN ancestry a ON c.id = a.parent_id
+      WHERE a.depth < 10
+    )
+    SELECT leaf_id, name, slug, is_visible FROM ancestry ORDER BY position, leaf_id, depth DESC
+  `;
+
+  // Rows arrive grouped per category, in membership order, ancestors first.
+  const trails = new Map();
+  for (const row of rows) {
+    if (!trails.has(row.leaf_id)) trails.set(row.leaf_id, []);
+    if (row.is_visible) trails.get(row.leaf_id).push({ name: row.name, slug: row.slug });
+  }
+  for (const trail of trails.values()) {
+    if (trail.length) return trail;
+  }
+  return [];
+}
+
 // Storefront product page: one ACTIVE product by handle, shaped for display.
 // Draft/archived products and unknown handles return null (the page 404s).
 // Variant prices fall back to the product price, and each variant carries an
@@ -935,13 +976,13 @@ function toStorefrontVariant(row, productPrice, productCompareAtPrice) {
 // `includeDraft` is for the staff preview only: it also finds DRAFT products.
 export async function getStorefrontProductByHandle(handle, { includeDraft = false } = {}) {
   const [product] = await sql`
-    SELECT id, title, handle, status, description, price, compare_at_price, sku, seo_title, seo_description
+    SELECT id, title, handle, status, description, price, compare_at_price, sku, seo_title, seo_description, category_id
     FROM products
     WHERE handle = ${handle} AND (status = 'ACTIVE' OR (${includeDraft}::boolean AND status = 'DRAFT'))
   `;
   if (!product) return null;
 
-  const [media, attributes, optionRows, variantRows] = await Promise.all([
+  const [media, attributes, optionRows, variantRows, categoryTrail] = await Promise.all([
     sql`
       SELECT url FROM product_media
       WHERE product_id = ${product.id} AND type = 'image' AND url NOT LIKE 'blob:%'
@@ -967,6 +1008,7 @@ export async function getStorefrontProductByHandle(handle, { includeDraft = fals
       GROUP BY v.id
       ORDER BY v.created_at, v.id
     `,
+    getStorefrontCategoryTrail(product.id, product.category_id),
   ]);
 
   const price = Number(product.price) || 0;
@@ -977,6 +1019,7 @@ export async function getStorefrontProductByHandle(handle, { includeDraft = fals
     handle: product.handle,
     title: product.title,
     status: product.status,
+    categoryTrail,
     description: product.description || "",
     seoTitle: product.seo_title || "",
     seoDescription: product.seo_description || "",

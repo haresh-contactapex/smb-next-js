@@ -1,5 +1,4 @@
-import Link from "next/link";
-import Icon from "@/components/admin-panel/Icon";
+import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 
 // Settings-style breadcrumb header shared by the list, add/edit and view
 // screens. `crumb` adds a level after "Admin & Roles"; `children` are the
@@ -8,22 +7,14 @@ export default function RolesPageHeader({ title, crumb, children }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div className="min-w-0">
-        <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Icon name="shield" className="w-4 h-4" />
-          <span>Settings</span>
-          <span>/</span>
-          {crumb ? (
-            <>
-              <Link href="/admin/settings/admin-roles" className="hover:text-primary-600 dark:hover:text-accent-400">
-                Admin &amp; Roles
-              </Link>
-              <span>/</span>
-              <span className="font-semibold text-slate-800 dark:text-white truncate">{crumb}</span>
-            </>
-          ) : (
-            <span className="font-semibold text-slate-800 dark:text-white">Admin &amp; Roles</span>
-          )}
-        </nav>
+        <Breadcrumbs
+          icon="shield"
+          items={[
+            { label: "Settings" },
+            crumb ? { label: "Admin & Roles", href: "/admin/settings/admin-roles" } : { label: "Admin & Roles" },
+            ...(crumb ? [{ label: crumb }] : []),
+          ]}
+        />
         <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white truncate">{title}</h1>
       </div>
       {children && <div className="flex flex-wrap items-center gap-2 shrink-0">{children}</div>}

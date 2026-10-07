@@ -1,12 +1,10 @@
+import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
+
 export default function PageToolbar({ isEdit, saving, onLoadSample, onDiscard }) {
   return (
     <div className="sticky top-16 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3.5 bg-slate-50/90 dark:bg-darkbg/90 backdrop-blur-sm border-b border-slate-200/70 dark:border-white/5 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <span>Products</span>
-          <span>/</span>
-          <span className="font-semibold text-slate-800 dark:text-white">{isEdit ? "Edit product" : "Add product"}</span>
-        </div>
+        <Breadcrumbs items={[{ label: "Products", href: "/admin/all-products" }, { label: isEdit ? "Edit Product" : "Add Product" }]} />
         <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">
           {isEdit ? "Edit Product" : "Add Product"}
         </h1>

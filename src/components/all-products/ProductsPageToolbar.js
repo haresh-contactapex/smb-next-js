@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 import Icon from "@/components/admin-panel/Icon";
 import ExportProductsButton from "./ExportProductsButton";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
@@ -7,11 +8,7 @@ export default function ProductsPageToolbar() {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <span>Products</span>
-          <span>/</span>
-          <span className="font-semibold text-slate-800 dark:text-white">All Products</span>
-        </div>
+        <Breadcrumbs items={[{ label: "Products", href: "/admin/all-products" }, { label: "All Products" }]} />
         <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">All Products</h1>
       </div>
       <div className="flex items-center gap-2 shrink-0">

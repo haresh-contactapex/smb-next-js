@@ -1,14 +1,11 @@
+import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 import Icon from "@/components/admin-panel/Icon";
 
 export default function OrdersPageToolbar({ title, breadcrumb }) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <span>Orders</span>
-          <span>/</span>
-          <span className="font-semibold text-slate-800 dark:text-white">{breadcrumb}</span>
-        </div>
+        <Breadcrumbs items={[{ label: "Orders", href: "/admin/orders" }, { label: breadcrumb }]} />
         <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">{title}</h1>
       </div>
       <button

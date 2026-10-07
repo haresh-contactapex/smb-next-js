@@ -1,4 +1,4 @@
-import Link from "next/link";
+import Breadcrumb from "@/components/storefront/Breadcrumb";
 import CartPage from "@/components/storefront/cart/CartPage";
 import { listStorefrontProducts } from "@/lib/products";
 import { getCurrencyTaxSettings } from "@/lib/currencyTaxSettings";
@@ -35,21 +35,7 @@ export default async function CartRoute() {
 
   return (
     <>
-      <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-4 sm:px-8 py-6 text-[16px] text-gray-400 font-medium">
-        <ol className="flex flex-wrap items-center">
-          <li>
-            <Link href="/" className="hover:text-[#ef9822] transition-colors">
-              Home
-            </Link>
-          </li>
-          <li aria-hidden="true" className="mx-1.5">
-            &gt;
-          </li>
-          <li aria-current="page" className="text-gray-500">
-            Shopping Cart
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={[{ label: "Home", href: "/" }, { label: "Shopping Cart" }]} />
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16">
         <h1

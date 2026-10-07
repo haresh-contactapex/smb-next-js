@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { STATUS_OPTIONS, PAYMENT_OPTIONS } from "./orderHelpers";
@@ -102,13 +103,7 @@ export default function EditOrderForm({ orderId }) {
     <form onSubmit={handleSave}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <Link
-            href="/admin/orders"
-            className="inline-flex items-center gap-1 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 mb-1"
-          >
-            <Icon name="chevron-left" className="w-4 h-4" />
-            Orders
-          </Link>
+          <Breadcrumbs items={[{ label: "Orders", href: "/admin/orders" }, { label: "Edit Order" }]} />
           <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">Edit Order {order.id}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2 shrink-0">

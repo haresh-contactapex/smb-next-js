@@ -1,17 +1,13 @@
-import Icon from "@/components/admin-panel/Icon";
+import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 
 export default function PageToolbar({ isEdit, saving, onDiscard }) {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Icon name="users" className="w-4 h-4" />
-          <span>Customers</span>
-          <span>/</span>
-          <span className="font-semibold text-slate-800 dark:text-white">
-            {isEdit ? "Edit Customer" : "Add Customer"}
-          </span>
-        </div>
+        <Breadcrumbs
+          icon="users"
+          items={[{ label: "Customers", href: "/admin/all-customers" }, { label: isEdit ? "Edit Customer" : "Add Customer" }]}
+        />
         <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">
           {isEdit ? "Edit Customer" : "Add Customer"}
         </h1>

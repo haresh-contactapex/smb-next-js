@@ -17,6 +17,34 @@ export function navItemForPath(pathname) {
   return ACCOUNT_NAV.find((item) => (item.exact ? path === item.href : path === item.href || path.startsWith(`${item.href}/`)));
 }
 
+// Breadcrumb trail for an /account page: Home > My Account > section, plus the
+// order number on an order's own page. Every level above the current page links.
+export function accountBreadcrumbs(pathname) {
+  const path = (pathname || "").replace(/\/+$/, "") || "/";
+  const section = navItemForPath(path);
+  const items = [{ label: "Home", href: "/" }];
+
+  if (!section || section.exact) {
+    items.push(section ? { label: "My Account" } : { label: "My Account", href: "/account" });
+    return items;
+  }
+
+  items.push({ label: "My Account", href: "/account" });
+  const [detail] = path.slice(section.href.length).split("/").filter(Boolean);
+  if (section.id === "orders" && detail) {
+    let orderNumber = detail;
+    try {
+      orderNumber = decodeURIComponent(detail);
+    } catch {
+      // A malformed escape: show the segment as typed.
+    }
+    items.push({ label: section.label, href: section.href }, { label: `Order #${orderNumber}` });
+  } else {
+    items.push({ label: section.label });
+  }
+  return items;
+}
+
 export function initialsOf(customer) {
   const first = String(customer?.firstName || "").trim()[0] || "";
   const last = String(customer?.lastName || "").trim()[0] || "";

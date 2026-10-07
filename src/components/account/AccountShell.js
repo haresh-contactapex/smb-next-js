@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Breadcrumb from "../storefront/Breadcrumb";
 import StoreIcon from "../storefront/icons";
-import { ACCOUNT_NAV, fullNameOf, initialsOf, navItemForPath, tierLabel } from "./accountHelpers";
+import { ACCOUNT_NAV, accountBreadcrumbs, fullNameOf, initialsOf, navItemForPath, tierLabel } from "./accountHelpers";
 import { CARD, HEADING_FONT } from "./accountStyles";
 
 // Frame around every /account page: breadcrumb, the signed-in customer's card
@@ -28,37 +29,7 @@ export default function AccountShell({ customer, children }) {
 
   return (
     <>
-      <nav aria-label="Breadcrumb" className="mx-auto max-w-[1280px] px-4 py-6 text-[15px] font-medium text-gray-400 sm:px-8">
-        <ol className="flex flex-wrap items-center">
-          <li>
-            <Link href="/" className="transition-colors hover:text-[#ef9822]">
-              Home
-            </Link>
-          </li>
-          <li aria-hidden="true" className="mx-1.5">
-            &gt;
-          </li>
-          <li className={current?.exact ? "text-gray-500" : ""}>
-            {current?.exact ? (
-              <span aria-current="page">My Account</span>
-            ) : (
-              <Link href="/account" className="transition-colors hover:text-[#ef9822]">
-                My Account
-              </Link>
-            )}
-          </li>
-          {current && !current.exact && (
-            <>
-              <li aria-hidden="true" className="mx-1.5">
-                &gt;
-              </li>
-              <li aria-current="page" className="text-gray-500">
-                {current.label}
-              </li>
-            </>
-          )}
-        </ol>
-      </nav>
+      <Breadcrumb items={accountBreadcrumbs(pathname)} className="max-w-[1280px] text-[15px]" />
 
       <div className="mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)] gap-6 px-4 pb-16 sm:px-8 lg:grid-cols-[272px_minmax(0,1fr)] lg:gap-10">
         <aside className="lg:sticky lg:top-28 lg:self-start">

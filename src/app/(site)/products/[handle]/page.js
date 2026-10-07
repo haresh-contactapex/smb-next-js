@@ -1,6 +1,7 @@
 import { cache } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import Breadcrumb from "@/components/storefront/Breadcrumb";
 import ProductGallery from "@/components/storefront/ProductGallery";
 import ProductPurchasePanel from "@/components/storefront/ProductPurchasePanel";
 import ProductTabs from "@/components/storefront/ProductTabs";
@@ -120,6 +121,15 @@ export default async function ProductPage({ params, searchParams }) {
   const initialVariant = startVariant ? { id: startVariant.id, imageUrl: startVariant.imageUrl } : null;
   // Every color's photo, in option order, so the gallery can offer each one as a thumbnail.
   const variantImages = orderedVariantImages(purchaseProduct);
+  // Home > the product's own category (with its parents) > the product. A product
+  // without a visible category falls back to the all-products page.
+  const breadcrumbItems = [
+    { label: "Home", href: "/" },
+    ...(product.categoryTrail.length
+      ? product.categoryTrail.map((category) => ({ label: category.name, href: `/collections/${category.slug}` }))
+      : [{ label: "Women's Wedding Bands", href: "/women-wedding-bands" }]),
+    { label: title },
+  ];
   const recentlyViewedEntry = {
     id,
     handle: product.handle,
@@ -139,29 +149,7 @@ export default async function ProductPage({ params, searchParams }) {
           Draft preview &mdash; this product is not visible to customers until it is set to Active.
         </p>
       )}
-      <nav aria-label="Breadcrumb" className="max-w-[1600px] mx-auto px-4 sm:px-8 py-6 text-[16px] text-gray-400 font-medium">
-        <ol className="flex flex-wrap items-center">
-          <li>
-            <Link href="/" className="hover:text-[#ef9822] transition-colors">
-              Home
-            </Link>
-          </li>
-          <li aria-hidden="true" className="mx-2">
-            /
-          </li>
-          <li>
-            <Link href="/women-wedding-bands" className="hover:text-[#ef9822] transition-colors">
-              Women&apos;s Wedding Bands
-            </Link>
-          </li>
-          <li aria-hidden="true" className="mx-2">
-            /
-          </li>
-          <li aria-current="page" className="text-gray-500">
-            {title}
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} />
 
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16 fade-in-up delay-100">
         <VariantImageProvider key={`variant-image-${id}`} initialVariant={initialVariant}>

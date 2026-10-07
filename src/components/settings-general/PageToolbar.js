@@ -1,3 +1,4 @@
+import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 import Icon from "@/components/admin-panel/Icon";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 import { settingsPermission } from "@/lib/permissions";
@@ -6,12 +7,7 @@ export default function PageToolbar({ onDiscard, onSave, saving = false, disable
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
       <div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Icon name="settings" className="w-4 h-4" />
-          <span>Settings</span>
-          <span>/</span>
-          <span className="font-semibold text-slate-800 dark:text-white">General</span>
-        </div>
+        <Breadcrumbs icon="settings" items={[{ label: "Settings" }, { label: "General" }]} />
         <h1 className="text-xl sm:text-2xl font-bold text-primary-700 dark:text-white">General Settings</h1>
       </div>
       {/* Without Edit General settings the page is view-only: no Save/Discard. */}
