@@ -117,6 +117,19 @@ export const adminPanelConfig = {
         { id: "add-page", label: "Add Page", href: "/admin/cms/new" },
       ],
     },
+    {
+      type: "submenu",
+      id: "blog",
+      label: "Blog",
+      icon: "edit-2",
+      // The "blog" id maps onto the Blog module in src/lib/permissions.js
+      // (View / Create / Edit / Delete / Publish). Keep the id: renaming it orphans
+      // the permissions roles already hold.
+      items: [
+        { id: "all-posts", label: "All Posts", href: "/admin/blog" },
+        { id: "add-post", label: "Add Post", href: "/admin/blog/new" },
+      ],
+    },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/admin/media" },
     { type: "link", id: "reports", label: "Reports", icon: "bar-chart-2", href: "/admin/reports" },
     {

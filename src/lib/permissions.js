@@ -104,6 +104,13 @@ export const KNOWN_MODULES = {
     actions: ["view", "create", "edit", "delete", "publish"],
     alwaysInclude: true,
   },
+  blog: {
+    label: "Blog",
+    singular: "Post",
+    plural: "Posts",
+    actions: ["view", "create", "edit", "delete", "publish"],
+    alwaysInclude: true,
+  },
   reports: {
     label: "Reports",
     singular: "Report",

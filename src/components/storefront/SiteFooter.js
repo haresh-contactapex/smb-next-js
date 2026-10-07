@@ -3,17 +3,27 @@ import { connection } from "next/server";
 import { STORE_FOOTER_LINES } from "./navLinks";
 import { listFooterPages } from "@/lib/cms";
 import { CMS_FOOTER_GROUPS } from "@/lib/cmsRules";
+import { hasPublishedBlogPosts } from "@/lib/blog";
+import { BLOG_INDEX_PATH } from "@/lib/blogRules";
+
+// The Blog link sits in the Customer Service column between About Us and Contact (CMS
+// pages are ordered 10, 20, 30 ... there). It shows once the blog has a published post.
+const BLOG_FOOTER_LINK = { slug: BLOG_INDEX_PATH.slice(1), label: "Blog", footerGroup: "customer-service", position: 15 };
 
 // The footer links come from CMS pages that are published and placed in a footer
 // column (admin panel -> CMS). A failed lookup just leaves the columns out: the footer
 // must never take a page down with it.
 async function loadFooterColumns() {
   try {
-    const pages = await listFooterPages();
+    const [cmsPages, hasBlog] = await Promise.all([listFooterPages(), hasPublishedBlogPosts().catch(() => false)]);
+    const pages = hasBlog ? [...cmsPages, BLOG_FOOTER_LINK] : cmsPages;
     return CMS_FOOTER_GROUPS.map((group) => ({
       label: group.label,
       columns: group.columns || 1,
-      pages: pages.filter((page) => page.footerGroup === group.value),
+      // CMS pages arrive ordered by position, then title; the Blog link takes its place among them.
+      pages: pages
+        .filter((page) => page.footerGroup === group.value)
+        .sort((a, b) => a.position - b.position || a.label.localeCompare(b.label)),
     })).filter((column) => column.pages.length > 0);
   } catch (error) {
     console.error("Footer pages failed to load", error);

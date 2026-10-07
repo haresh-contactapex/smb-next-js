@@ -124,12 +124,12 @@ export async function getPublishedCmsPage(slug) {
 export async function listFooterPages() {
   try {
     const rows = await sql`
-      SELECT slug, title, footer_group, footer_label
+      SELECT slug, title, footer_group, footer_label, position
       FROM cms_pages
       WHERE status = 'published' AND footer_group IS NOT NULL
       ORDER BY position, title
     `;
-    return rows.map((row) => ({ slug: row.slug, label: row.footer_label || row.title, footerGroup: row.footer_group }));
+    return rows.map((row) => ({ slug: row.slug, label: row.footer_label || row.title, footerGroup: row.footer_group, position: Number(row.position) || 0 }));
   } catch (error) {
     if (isMissingRelation(error)) return [];
     throw error;

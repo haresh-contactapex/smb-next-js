@@ -56,6 +56,10 @@ const ROUTE_RULES = [
   { pattern: /^\/admin\/cms\/[^/]+\/edit$/, permission: "content.edit" },
   { prefix: "/admin/cms", permission: "content.view" },
 
+  { path: "/admin/blog/new", permission: "blog.create" },
+  { pattern: /^\/admin\/blog\/[^/]+\/edit$/, permission: "blog.edit" },
+  { prefix: "/admin/blog", permission: "blog.view" },
+
   { path: "/admin/users/new", permission: "users.create" },
   { pattern: /^\/admin\/users\/[^/]+\/edit$/, permission: "users.edit" },
   { prefix: "/admin/users", permission: "users.view" },

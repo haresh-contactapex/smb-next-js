@@ -17,6 +17,7 @@ export const ENTITY_ICONS = {
   review: "star",
   media: "image",
   content: "file-text",
+  blog: "edit-2",
   settings: "settings",
   system: "alert-triangle",
 };
@@ -33,6 +34,7 @@ export const ENTITY_LABELS = {
   review: "Reviews",
   media: "Media",
   content: "CMS pages",
+  blog: "Blog posts",
   settings: "Settings",
   system: "System",
 };
@@ -77,6 +79,8 @@ export function notificationHref(n) {
       return `/admin/edit-review/${id}`;
     case "content":
       return `/admin/cms/${id}/edit`;
+    case "blog":
+      return `/admin/blog/${id}/edit`;
     case "user":
       return `/admin/users/${id}/edit`;
     case "role":

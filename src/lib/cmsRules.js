@@ -30,7 +30,7 @@ export const CMS_FOOTER_GROUPS = [
 // already has (or an area it reserves): the folders under src/app/(site), the
 // customer auth pages, /admin, /api and the static folders.
 export const RESERVED_SLUGS = new Set([
-  "account", "admin", "api", "cart", "checkout", "collections", "forgot-password", "login",
+  "account", "admin", "api", "blog", "blogs", "cart", "checkout", "collections", "forgot-password", "login",
   "maintenance", "products", "register", "reset-password", "search", "storefront",
   "uploads", "wishlist", "women-wedding-bands",
 ]);

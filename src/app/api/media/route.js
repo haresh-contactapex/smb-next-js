@@ -21,13 +21,16 @@ const READ_PERMISSIONS = [
   settingsPermission("general", "edit"),
   "content.create",
   "content.edit",
+  "blog.create",
+  "blog.edit",
 ];
 const UPLOAD_PERMISSIONS = ["media.create", settingsPermission("general", "edit")];
 
-// The CMS page editor (purpose=cms) inserts images from the library, uploads new ones
-// (recorded in the library like any image) and uploads PDFs to link to, such as a
-// printable ring sizer. PDFs are stored and referenced from the page alone.
-const CMS_UPLOAD_PERMISSIONS = ["content.create", "content.edit"];
+// The CMS page editor and the Blog post editor (purpose=cms) insert images from the
+// library, upload new ones (recorded in the library like any image) and upload PDFs to
+// link to, such as a printable ring sizer. PDFs are stored and referenced from the
+// page alone.
+const CMS_UPLOAD_PERMISSIONS = ["content.create", "content.edit", "blog.create", "blog.edit"];
 const CMS_MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
 
 // The product editor (purpose=product) also uploads videos and 3D models.

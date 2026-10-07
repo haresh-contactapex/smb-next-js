@@ -18,6 +18,7 @@
     "db:migrate:orders": "node scripts/migrate.mjs docs/orders/orders-table-only.sql",
     "db:migrate:order-details": "node scripts/migrate.mjs docs/orders/order-details-tables-only.sql",
     "db:migrate:cms": "node scripts/migrate.mjs docs/cms/cms-pages-table-only.sql",
+    "db:migrate:blog": "node scripts/migrate.mjs docs/blog/blog-posts-table-only.sql",
     "db:migrate:engraving": "node scripts/migrate.mjs docs/engraving/engraving-tables-only.sql",
     "db:migrate:wishlist": "node scripts/migrate.mjs docs/storefront/wishlist-table-only.sql",
     "db:migrate:account": "node scripts/migrate.mjs docs/account/customer-account-tables-only.sql",
@@ -42,6 +43,7 @@
     "db:migrate:users-security": "node scripts/migrate.mjs docs/my-account/users-security-columns-only.sql",
     "db:seed:admin": "node scripts/create-admin-user.mjs",
     "db:seed:cms": "node scripts/seed-cms-pages.mjs",
+    "db:seed:blog": "node scripts/seed-blog-posts.mjs",
     "db:migrate:admin-notifications": "node scripts/migrate.mjs docs/notifications/admin-notifications-table-only.sql",
     "ws:notifications": "node scripts/notifications-ws-server.mjs"
   },

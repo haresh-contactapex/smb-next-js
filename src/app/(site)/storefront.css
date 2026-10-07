@@ -244,3 +244,6 @@
 @media (max-width: 640px) {
   .cms-content table { display: block; overflow-x: auto; }
 }
+
+/* Blog posts (src/components/storefront/blog/BlogPostView.js): a picture on its own between paragraphs is centered. */
+.cms-content.blog-body > img:not(.cms-photo-right) { display: block; margin: 1.6em auto; }

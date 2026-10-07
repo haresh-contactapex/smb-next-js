@@ -7,7 +7,7 @@ const ACCEPTED_IMAGES = "image/jpeg,image/png,image/webp,image/gif";
 // Dialog for the page editor's image button: choose a picture from the Media
 // library or upload a new one (it is added to the library). Calls
 // onSelect({ url, alt }) with the choice and onClose when dismissed.
-export default function MediaPickerModal({ open, onSelect, onClose }) {
+export default function MediaPickerModal({ open, onSelect, onClose, title = "Insert image" }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -76,7 +76,7 @@ export default function MediaPickerModal({ open, onSelect, onClose }) {
       >
         <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-white/5">
           <h2 id="cms-media-picker-title" className="text-base font-bold text-slate-800 dark:text-white">
-            Insert image
+            {title}
           </h2>
           <div className="flex items-center gap-2">
             <input ref={fileInputRef} type="file" accept={ACCEPTED_IMAGES} onChange={handleUpload} className="sr-only" tabIndex={-1} aria-label="Upload an image" />

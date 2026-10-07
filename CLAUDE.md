@@ -38,8 +38,10 @@ npm run db:migrate:currency-tax
 npm run db:migrate:products
 npm run db:migrate:engraving
 npm run db:migrate:cms
+npm run db:migrate:blog
 npm run db:seed:admin
 npm run db:seed:cms
+npm run db:seed:blog
 ```
 
 `DATABASE_URL` and `JWT_SECRET` belong in `.env.local`; use `.env.example` as the non-secret template. Never commit or print real credentials.
