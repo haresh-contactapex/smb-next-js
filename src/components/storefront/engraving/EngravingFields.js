@@ -54,7 +54,11 @@ export default function EngravingFields({ config, value, onChange, showHelp = tr
 
   const { settings, fonts } = config;
   const { result, font } = readEngravingValue(value, config);
-  const message = stripped ? invalidCharactersMessage(settings) : result.error;
+  // A real problem (too long) is an error. Dropping a character the customer typed or pasted is
+  // only a notice: the text that is left is valid, so the field isn't marked invalid.
+  const error = result.error;
+  const notice = !error && stripped ? invalidCharactersMessage(settings) : "";
+  const message = error || notice;
   const over = result.length > settings.maxCharacters;
   const sample = result.ok && !result.empty ? result.text : ENGRAVING_SAMPLE_TEXT;
 
@@ -96,13 +100,13 @@ export default function EngravingFields({ config, value, onChange, showHelp = tr
         autoCapitalize="off"
         autoCorrect="off"
         spellCheck={false}
-        aria-invalid={Boolean(message) || undefined}
+        aria-invalid={Boolean(error) || undefined}
         aria-describedby={`${hintId}${message ? ` ${errorId}` : ""}`}
         className={`mt-1.5 block h-11 w-full rounded border px-3 text-[16px] text-[#333333] outline-none transition-colors placeholder:text-gray-300 focus:border-[#ef9822] focus:ring-1 focus:ring-[#ef9822] ${
-          message ? "border-error bg-red-50" : "border-gray-300"
+          error ? "border-error bg-red-50" : "border-gray-300"
         }`}
       />
-      <p id={errorId} role="status" className={`text-[13px] text-error ${message ? "mt-1.5" : ""}`}>
+      <p id={errorId} role="status" className={`text-[13px] ${error ? "text-error" : "text-[#9A5B00]"} ${message ? "mt-1.5" : ""}`}>
         {message}
       </p>
 
