@@ -53,6 +53,19 @@ export const STORE_NAV_LINKS = [
   { label: "New Arrivals", href: collection("new-arrivals") },
 ];
 
+// True when `pathname` is the page `href` points at (a trailing slash doesn't matter).
+export function isCurrentPath(pathname, href) {
+  const clean = (path) => (path.length > 1 ? path.replace(/\/+$/, "") : path);
+  return clean(pathname || "") === clean(href);
+}
+
+// A nav link is current on its own page and, for one with a mega menu, on any of
+// that menu's pages, so "Wedding Bands" stays lit while you browse "Thin Wedding Bands".
+export function isCurrentLink(link, pathname) {
+  if (isCurrentPath(pathname, link.href)) return true;
+  return Boolean(link.megaMenu?.columns.flat().some((item) => isCurrentPath(pathname, item.href)));
+}
+
 // Messages shown in the blue bar above the storefront header.
 export const STORE_ANNOUNCEMENTS = [
   "Free shipping to US",

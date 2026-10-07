@@ -2,8 +2,11 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import BandIcon from "./bandIcons";
 import StoreIcon from "./icons";
+import { CURRENT_NAV_LINK } from "./NavLink";
+import { isCurrentLink, isCurrentPath } from "./navLinks";
 import useImageLoaded from "./useImageLoaded";
 
 // Grace period so the pointer can cross the gap between the link and the panel.
@@ -93,8 +96,10 @@ function PreviewLayer({ item, image, loading, active, showImage }) {
 
 // A header link that opens a mega menu below the navbar: columns of items on the
 // left, and a preview of the hovered (or focused) item on the right. The first
-// item is active whenever the menu opens. Opens on hover and keyboard focus;
-// Escape closes it.
+// item for the page you're on is active whenever the menu opens (the first item
+// on any other page), and that item keeps an orange label so it still reads as
+// current once you hover another. The link itself is highlighted for any page in
+// the menu. Opens on hover and keyboard focus; Escape closes it.
 //
 // When every column holds a single item, that item stretches to fill the whole
 // column instead of sitting at the top, so a short menu doesn't look empty.
@@ -106,6 +111,10 @@ export default function NavMegaMenu({ link }) {
   const items = columns.flat();
   const fillColumns = columns.every((column) => column.length === 1);
   const panelId = useId();
+
+  const pathname = usePathname();
+  const currentIndex = items.findIndex((item) => isCurrentPath(pathname, item.href));
+  const sectionCurrent = isCurrentLink(link, pathname);
 
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -122,10 +131,10 @@ export default function NavMegaMenu({ link }) {
 
   const openMenu = useCallback(() => {
     cancelClose();
-    if (!open) setActive(0);
+    if (!open) setActive(Math.max(currentIndex, 0));
     setOpen(true);
     setEverOpened(true);
-  }, [cancelClose, open]);
+  }, [cancelClose, open, currentIndex]);
 
   const closeNow = useCallback(() => {
     cancelClose();
@@ -171,7 +180,10 @@ export default function NavMegaMenu({ link }) {
         href={link.href}
         aria-expanded={open}
         aria-controls={panelId}
+        aria-current={isCurrentPath(pathname, link.href) ? "page" : sectionCurrent ? "true" : undefined}
         className={`relative inline-flex items-center gap-1 whitespace-nowrap hover:text-[#ef9822] transition-colors ${open ? "text-[#ef9822]" : ""} ${
+          sectionCurrent ? CURRENT_NAV_LINK : ""
+        } ${
           // Bridges the header padding between the link and the panel while open.
           open ? "after:absolute after:inset-x-0 after:top-full after:h-8" : ""
         }`}
@@ -194,6 +206,7 @@ export default function NavMegaMenu({ link }) {
                 <li key={item.label} className={fillColumns ? "flex flex-1" : undefined}>
                   <Link
                     href={item.href}
+                    aria-current={index === currentIndex ? "page" : undefined}
                     onMouseEnter={() => setActive(index)}
                     onFocus={() => setActive(index)}
                     className={`flex items-start gap-3 rounded-[9px] transition-colors duration-200 hover:bg-[#f5f5f5] ${
@@ -204,7 +217,7 @@ export default function NavMegaMenu({ link }) {
                       <BandIcon name={item.icon} />
                     </span>
                     <span>
-                      <strong className="block text-[14px] font-semibold leading-[18px]">{item.label}</strong>
+                      <strong className={`block text-[14px] font-semibold leading-[18px] ${index === currentIndex ? "text-[#ef9822]" : ""}`}>{item.label}</strong>
                       <small className="mt-0.5 block text-[12px] leading-4 text-[#777777]">{item.description}</small>
                     </span>
                   </Link>

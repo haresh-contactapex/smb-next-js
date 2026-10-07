@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import StoreIcon from "./icons";
-import { STORE_NAV_LINKS } from "./navLinks";
+import { CURRENT_NAV_LINK } from "./NavLink";
+import { STORE_NAV_LINKS, isCurrentLink, isCurrentPath } from "./navLinks";
 import { useSearch } from "./search/SearchProvider";
 
 // Hamburger button + slide-in drawer for < lg screens.
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
   const { openSearch } = useSearch();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!open) return undefined;
@@ -65,7 +68,12 @@ export default function MobileMenu() {
         <nav className="flex flex-col px-6 pt-8 space-y-6 text-[16px] font-medium tracking-wide uppercase overflow-y-auto">
           {STORE_NAV_LINKS.map((link) => (
             <div key={link.label}>
-              <Link href={link.href} onClick={() => setOpen(false)} className="hover:text-[#ef9822] transition-colors whitespace-nowrap">
+              <Link
+                href={link.href}
+                onClick={() => setOpen(false)}
+                aria-current={isCurrentPath(pathname, link.href) ? "page" : isCurrentLink(link, pathname) ? "true" : undefined}
+                className={`hover:text-[#ef9822] transition-colors whitespace-nowrap ${isCurrentLink(link, pathname) ? CURRENT_NAV_LINK : ""}`}
+              >
                 {link.label}
               </Link>
               {/* The mega menu's items, so every category stays reachable without hover. */}
@@ -73,7 +81,12 @@ export default function MobileMenu() {
                 <ul className="mt-3 ml-1 space-y-3 border-l border-gray-100 pl-4 text-[14px] font-normal normal-case tracking-normal text-[#777777]">
                   {link.megaMenu.columns.flat().map((item) => (
                     <li key={item.label}>
-                      <Link href={item.href} onClick={() => setOpen(false)} className="hover:text-[#ef9822] transition-colors">
+                      <Link
+                        href={item.href}
+                        onClick={() => setOpen(false)}
+                        aria-current={isCurrentPath(pathname, item.href) ? "page" : undefined}
+                        className={`hover:text-[#ef9822] transition-colors ${isCurrentPath(pathname, item.href) ? "font-medium text-[#ef9822]" : ""}`}
+                      >
                         {item.label}
                       </Link>
                     </li>

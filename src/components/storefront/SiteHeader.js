@@ -1,5 +1,6 @@
 import Link from "next/link";
 import MobileMenu from "./MobileMenu";
+import NavLink from "./NavLink";
 import NavMegaMenu from "./NavMegaMenu";
 import CartButton from "./cart/CartButton";
 import WishlistButton from "./wishlist/WishlistButton";
@@ -27,9 +28,9 @@ export default function SiteHeader() {
             link.megaMenu ? (
               <NavMegaMenu key={link.label} link={link} />
             ) : (
-              <Link key={link.label} href={link.href} className="hover:text-[#ef9822] transition-colors whitespace-nowrap">
+              <NavLink key={link.label} href={link.href}>
                 {link.label}
-              </Link>
+              </NavLink>
             ),
           )}
         </nav>
