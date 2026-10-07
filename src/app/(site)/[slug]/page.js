@@ -11,6 +11,10 @@ import { getPublishedCmsPage } from "@/lib/cms";
 // never prerendered. See docs/cms/cms.md.
 export const dynamic = "force-dynamic";
 
+// A landing page (the Wedding Band page) opens with a hero: a table with the class cms-hero holding a picture
+// and text. It runs edge to edge with no heading band, and the hero's heading becomes the page's <h1>.
+const LANDING_PAGE_START = '<table class="cms-hero">';
+
 // One lookup per request, shared by generateMetadata and the page.
 const loadPage = cache(async (slug) => getPublishedCmsPage(slug));
 
@@ -28,6 +32,20 @@ export default async function CmsContentPage({ params }) {
   const { slug } = await params;
   const page = await loadPage(slug);
   if (!page) notFound();
+
+  const embeds = page.contentHtml.includes("cms-embed-") && <CmsEmbeds target="cms-article" />;
+
+  if (page.contentHtml.startsWith(LANDING_PAGE_START)) {
+    // The editor writes headings as h2-h4, so the first heading is promoted here. If the hero has none, the title still gets an h1.
+    const html = page.contentHtml.replace(/<h2([ >])/, "<h1$1").replace("</h2>", "</h1>");
+    return (
+      <div className="w-full bg-white">
+        {!html.includes("<h1") && <h1 className="sr-only">{page.title}</h1>}
+        <article id="cms-article" className="cms-content cms-wide" dangerouslySetInnerHTML={{ __html: html }} />
+        {embeds}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full bg-white">
@@ -49,7 +67,7 @@ export default async function CmsContentPage({ params }) {
       {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
       <article id="cms-article" className="cms-content mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14" dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
       {/* A page can hold a placeholder for an interactive part (the contact form); only those pages load the code for it. */}
-      {page.contentHtml.includes("cms-embed-") && <CmsEmbeds target="cms-article" />}
+      {embeds}
     </div>
   );
 }

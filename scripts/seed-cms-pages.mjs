@@ -8,7 +8,7 @@
 // Requires: npm run db:migrate:cms
 // Usage:    npm run db:seed:cms                       every page in the manifest
 //           npm run db:seed:cms -- ring-sizer-tool    only the pages named (by slug)
-//           npm run db:seed:cms -- education          every page of a folder: education, customer-service or cities
+//           npm run db:seed:cms -- education          every page of a folder: education, customer-service, cities or landing
 
 import { existsSync, readFileSync } from "fs";
 import { fileURLToPath, pathToFileURL } from "url";

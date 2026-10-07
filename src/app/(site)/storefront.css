@@ -232,6 +232,47 @@
 @media (max-width: 480px) {
   .cms-content table.cms-products tr { grid-template-columns: minmax(0, 1fr); }
 }
+/* A landing page (the Wedding Band page): the article runs edge to edge with no heading band. Anything that is
+   not a table (a paragraph of fine print) keeps a readable width. */
+.cms-content.cms-wide { max-width: none; margin: 0; padding: 0; font-size: 14px; }
+.cms-content.cms-wide > :not(table) { max-width: 1000px; margin-left: auto; margin-right: auto; padding-left: 1.5rem; padding-right: 1.5rem; }
+.cms-content p.cms-small { font-size: 13px; line-height: 1.75; color: #555555; }
+.cms-content.cms-wide > p.cms-small { margin-top: 2.5rem; margin-bottom: 2.5rem; }
+/* Hero: a picture filling the left half, the heading and text on a light panel on the right. */
+.cms-content table.cms-hero,
+.cms-content table.cms-hero tbody { display: block; width: 100%; margin: 0; }
+.cms-content table.cms-hero tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background-color: #f6f6f6; }
+.cms-content table.cms-hero td { padding: 0; border: 0; }
+.cms-content table.cms-hero td:first-child { position: relative; overflow: hidden; aspect-ratio: 528 / 360; min-height: 16rem; max-height: 30rem; }
+.cms-content table.cms-hero td:first-child p { margin: 0; }
+.cms-content table.cms-hero td:first-child img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.cms-content table.cms-hero td:last-child { display: flex; flex-direction: column; justify-content: center; padding: 2.5rem clamp(1.5rem, 4vw, 3.2rem); }
+.cms-content table.cms-hero h1,
+.cms-content table.cms-hero h2 { margin: 0 0 1.1rem; color: #333333; font-size: 32px; font-weight: 400; line-height: 1.2; }
+.cms-content table.cms-hero td:last-child p { margin: 0; color: #555555; font-size: 14px; line-height: 1.8; }
+@media (max-width: 720px) {
+  .cms-content table.cms-hero tr { grid-template-columns: minmax(0, 1fr); }
+  .cms-content table.cms-hero td:first-child { max-height: none; }
+}
+/* Tiles: three per row, each a picture, title, text and button on a pale panel (two close greys, checkerboard). */
+.cms-content table.cms-tiles,
+.cms-content table.cms-tiles tbody { display: block; width: 100%; margin: 0; }
+.cms-content table.cms-tiles tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cms-content table.cms-tiles td { display: flex; flex-direction: column; align-items: center; padding: 3rem 2rem 2.6rem; border: 0; background-color: #f9f9f9; text-align: center; }
+.cms-content table.cms-tiles tr:nth-child(odd) td:nth-child(odd),
+.cms-content table.cms-tiles tr:nth-child(even) td:nth-child(even) { background-color: #f6f6f6; }
+.cms-content table.cms-tiles td > p:first-child { width: 100%; margin: 0; }
+.cms-content table.cms-tiles td img { display: block; width: 100%; max-width: 340px; height: auto; margin: 0 auto 1.6rem; }
+.cms-content table.cms-tiles h3 { margin: 0 0 0.9rem; color: #333333; font-size: 26px; font-weight: 400; line-height: 1.2; }
+.cms-content table.cms-tiles td p { margin: 0 0 1.5rem; color: #333333; font-size: 15px; line-height: 1.55; }
+.cms-content table.cms-tiles td > p:last-child { margin: auto 0 0; padding-top: 0.4rem; }
+.cms-content table.cms-tiles a.cms-btn-outline { padding: 0.65em 1.7em; border-color: #333333; font-size: 14px; letter-spacing: 0.02em; text-transform: uppercase; }
+@media (max-width: 900px) {
+  .cms-content table.cms-tiles tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .cms-content table.cms-tiles tr { grid-template-columns: minmax(0, 1fr); }
+}
 /* Where the contact form mounts: nothing shows until it does. */
 .cms-content p.cms-embed-contact-form { min-height: 18rem; color: transparent; }
 .cms-content p.cms-or { display: flex; align-items: center; gap: 0.9em; max-width: 260px; margin: 0.7em 0; color: #777777; }

@@ -39,7 +39,7 @@ const CmsAlign = Extension.create({
 // sanitizeHtml.js): a table style (cms-plain / cms-striped / cms-cards), a heading style (cms-lg / cms-accent)
 // and "cms-or" on a paragraph (a divider line either side of the word). Kept as an attribute, so editing
 // a page does not drop them.
-const CMS_STYLE_CLASSES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-photo-right", "cms-or", "cms-lg", "cms-accent", "cms-embed-contact-form"];
+const CMS_STYLE_CLASSES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-small", "cms-photo-right", "cms-or", "cms-lg", "cms-accent", "cms-embed-contact-form"];
 const CmsStyleClass = Extension.create({
   name: "cmsStyleClass",
   addGlobalAttributes() {
@@ -338,6 +338,8 @@ function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
               <option value="cms-cards">Cards (two per row)</option>
               <option value="cms-columns">Columns (side by side)</option>
               <option value="cms-products">Product row (four cards)</option>
+              <option value="cms-hero">Hero (picture beside text, full width)</option>
+              <option value="cms-tiles">Tiles (three per row, full width)</option>
             </select>
             <ToolButton label="Delete table" onClick={() => run().deleteTable().run()} className="text-error">Delete table</ToolButton>
           </div>

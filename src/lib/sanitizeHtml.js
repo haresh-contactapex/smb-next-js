@@ -36,15 +36,17 @@ const DROP_WITH_CONTENT = new Set([
 // The only classes a page may carry. The editor produces them and storefront.css styles them:
 //   links      cms-btn (red button), cms-btn-outline (outlined button)
 //   text       cms-align-center / cms-align-right, cms-lg (large heading), cms-accent (blue uppercase heading),
+//              cms-small (fine print),
 //              cms-or (a paragraph drawn as a line either side of its text)
 //   tables     cms-plain (no grid), cms-striped (dark header, shaded rows), cms-cards (a grid of cards),
 //              cms-columns (side-by-side content, one cell per column),
-//              cms-products (a row of four product cards)
+//              cms-products (a row of four product cards), cms-hero (a picture beside text, edge to edge) and
+//              cms-tiles (a grid of three category tiles per row)
 //   images     cms-photo-right (a rounded photo floated to the right of the text)
 //   embeds     cms-embed-contact-form (a paragraph the storefront replaces with the contact form)
 const CMS_CLASSES = new Set([
   "cms-btn", "cms-btn-outline", "cms-align-center", "cms-align-right",
-  "cms-lg", "cms-accent", "cms-or", "cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-photo-right",
+  "cms-lg", "cms-accent", "cms-or", "cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-small", "cms-photo-right",
   "cms-embed-contact-form",
 ]);
 

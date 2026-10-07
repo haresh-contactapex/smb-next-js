@@ -284,5 +284,15 @@
     "content": "portland.html",
     "seoTitle": "Portland Wedding Bands for Men and Women | ShopMyBand",
     "seoDescription": "Shop wedding bands for men and women in Portland: anniversary, classic and eternity bands from Shop My Band, delivered to your door."
+  },
+  {
+    "slug": "wedding-bands",
+    "title": "Wedding Band",
+    "folder": "landing",
+    "group": null,
+    "position": 5,
+    "content": "wedding-bands.html",
+    "seoTitle": "Wedding Bands for Men and Women | ShopMyBand",
+    "seoDescription": "Shop wedding bands for men and women: classic, diamond, lab grown and contemporary metal bands crafted in 18K gold and platinum."
   }
 ]

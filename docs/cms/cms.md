@@ -8,7 +8,7 @@ Staff manage the store's content pages (About Us, Privacy Policy, the education 
 npm run db:migrate:cms   # creates cms_pages and cms_page_revisions (safe to run again)
 npm run db:seed:cms      # optional: creates every page in scripts/cms-content/pages.json
 npm run db:seed:cms -- ring-sizer-tool   # or only the pages you name (by slug)
-npm run db:seed:cms -- education         # or a whole set of pages: education, customer-service, cities
+npm run db:seed:cms -- education         # or a whole set of pages: education, customer-service, cities, landing
 ```
 
 The seed script never overwrites a page whose URL already exists. Every page is listed in `scripts/cms-content/pages.json` (slug, title, `folder` (the set it came with, only used to pick pages to seed), footer group or none, footer link text, order and SEO fields). The city pages have no footer group. A page is created as an empty **draft** (nothing is live until someone writes the content and publishes it), unless its content is ready in `scripts/cms-content/<slug>.html`: it is then created with that content, cleaned by the same sanitizer, and **published**. Pictures used by those pages are in `public/storefront/<page or group>/` and are referenced by path, so they are served with the site rather than from the Media library. Page URLs follow the handles the old store used (`/pages/gold` became `/gold`), so one redirect rule `/pages/:handle` to `/:handle` covers them. Until the migration has run, the admin CMS pages explain what is missing, and the storefront simply has no content pages (an unknown URL is a normal 404 and the footer shows no columns).
@@ -73,6 +73,7 @@ Rules shared by the form and the server live in `src/lib/cmsRules.js`: title, UR
 
 - `src/app/(site)/[slug]/page.js` shows a published page: heading band with the title, a `/`-separated breadcrumb, then the body styled by `.cms-content` in `storefront.css`. Draft and unknown URLs are a 404. Next serves the storefront's own routes before this one.
 - `SiteFooter` lists published pages that are placed in a footer column (Customer Service, Education), using the page's footer link text or its title. Education is laid out as two lists, set by `columns` on the group in `cmsRules.js`. It is read per request, so publishing a page updates the footer straight away.
+- **Landing pages.** A page whose body starts with a `cms-hero` table is a landing page: the storefront shows it edge to edge with no heading band, and the heading inside the hero becomes the page's `<h1>` (so keep the hero as the first thing on the page). The Wedding Band page (`/wedding-bands`, from `scripts/cms-content/wedding-bands.html`) is one; the storefront's **Wedding Bands** nav link opens it (`WEDDING_BANDS_PAGE_HREF` in `navLinks.js`), and the mega menu still opens on hover. Without the page the link would 404, so seed it with `npm run db:seed:cms -- wedding-bands`.
 - A page can carry a placeholder for an interactive part. A paragraph with the class `cms-embed-contact-form` is replaced by the contact form (see `docs/storefront/contact-form.md`) by `CmsEmbeds`, which only pages that contain a placeholder load.
 
 ## What the sanitizer keeps
@@ -87,6 +88,8 @@ The cms profile keeps paragraphs, headings, text formatting, lists, quotes, link
 | `cms-accent` | heading | blue uppercase heading | HTML source |
 | `cms-or` | paragraph | a line either side of its text ("or") | HTML source |
 | `cms-plain`, `cms-striped`, `cms-cards`, `cms-columns`, `cms-products` | table | no grid; dark header with shaded rows (an empty cell is a gap, so two tables sit side by side); a grid of cards; side-by-side columns; a row of four product cards | the table tools' **Table style** list |
+| `cms-hero`, `cms-tiles` | table | a full-width hero (picture on the left half, heading and text on a pale panel) and a full-width grid of three category tiles per row (picture, title, text, outline button) | the table tools' **Table style** list |
+| `cms-small` | paragraph | fine print | HTML source |
 | `cms-photo-right` | image | a rounded photo floated beside the text | HTML source |
 | `cms-embed-contact-form` | paragraph | replaced by the contact form | HTML source |
 
