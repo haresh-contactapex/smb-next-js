@@ -4,7 +4,25 @@ import { Can } from "@/components/providers/StaffPermissionsProvider";
 import { blogPostPath, formatBlogDate, todayIso } from "@/lib/blogRules";
 import { STATUS_BADGE_CLASSES, STATUS_LABELS, displayStatus } from "./helpers";
 
-export default function BlogTable({ posts, emptyMessage = "No posts match your filters.", onDelete, deletingId }) {
+function SortableHeader({ label, sortKey, sort, onSortChange }) {
+  const active = sort?.key === sortKey;
+  const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
+  return (
+    <th scope="col" className="py-3 px-1 font-semibold">
+      <button
+        type="button"
+        onClick={() => onSortChange(sortKey)}
+        aria-label={`Sort by ${label}${active ? (sort.direction === "asc" ? ", ascending" : ", descending") : ""}`}
+        className="inline-flex items-center gap-1 uppercase tracking-wide hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+      >
+        {label}
+        <Icon name={icon} className={`w-3 h-3 ${active ? "text-primary-500 dark:text-accent-400" : "text-slate-300 dark:text-slate-600"}`} />
+      </button>
+    </th>
+  );
+}
+
+export default function BlogTable({ posts, emptyMessage = "No posts match your filters.", onDelete, deletingId, sort, onSortChange }) {
   if (posts.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">{emptyMessage}</div>;
   }
@@ -16,11 +34,11 @@ export default function BlogTable({ posts, emptyMessage = "No posts match your f
       <table className="w-full text-sm min-w-[900px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
-            <th className="py-3 px-1 font-semibold">Post</th>
-            <th className="py-3 px-1 font-semibold">Category</th>
-            <th className="py-3 px-1 font-semibold">Author</th>
-            <th className="py-3 px-1 font-semibold">Date</th>
-            <th className="py-3 px-1 font-semibold">Status</th>
+            <SortableHeader label="Post" sortKey="title" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Category" sortKey="category" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Author" sortKey="author" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Date" sortKey="date" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Status" sortKey="status" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold text-right">Action</th>
           </tr>
         </thead>

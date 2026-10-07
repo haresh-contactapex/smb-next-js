@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import BlogFilters from "./BlogFilters";
 import BlogTable from "./BlogTable";
+import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import Toast from "@/components/add-product/Toast";
 import { blogPostPath, todayIso } from "@/lib/blogRules";
@@ -17,6 +18,10 @@ export default function BlogListing({ posts: initialPosts }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [category, setCategory] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
+  // Newest first, like the storefront; a post with no date yet (a draft) counts as the newest.
+  const [sort, setSort] = useState({ key: "date", direction: "desc" });
   const [deletingPost, setDeletingPost] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: "", variant: "success" });
   const toastTimerRef = useRef(null);
@@ -68,25 +73,70 @@ export default function BlogListing({ posts: initialPosts }) {
     });
   }, [posts, search, status, activeCategory]);
 
+  const sorted = useMemo(() => {
+    const dir = sort.direction === "asc" ? 1 : -1;
+    const today = todayIso();
+    const text = (a, b) => String(a || "").localeCompare(String(b || ""), undefined, { sensitivity: "base" });
+    return [...filtered].sort((a, b) => {
+      if (sort.key === "category") return text(a.category, b.category) * dir;
+      if (sort.key === "author") return text(a.author, b.author) * dir;
+      if (sort.key === "status") return text(displayStatus(a, today), displayStatus(b, today)) * dir;
+      if (sort.key === "date") return text(a.publishedOn || "9999-12-31", b.publishedOn || "9999-12-31") * dir;
+      return text(a.title, b.title) * dir;
+    });
+  }, [filtered, sort]);
+
+  const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const currentPage = Math.min(page, pageCount);
+  const pageItems = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  // A new filter starts again from the first page.
+  function updateFilter(setter) {
+    return (value) => {
+      setter(value);
+      setPage(1);
+    };
+  }
+
+  function handleSortChange(key) {
+    setSort((prev) => ({ key, direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc" }));
+    setPage(1);
+  }
+
+  function handlePageSizeChange(size) {
+    setPageSize(size);
+    setPage(1);
+  }
+
   return (
     <>
       <BlogFilters
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={updateFilter(setSearch)}
         status={status}
-        onStatusChange={setStatus}
+        onStatusChange={updateFilter(setStatus)}
         category={activeCategory}
-        onCategoryChange={setCategory}
+        onCategoryChange={updateFilter(setCategory)}
         categories={categories}
-        resultCount={filtered.length}
+        resultCount={sorted.length}
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
         <BlogTable
-          posts={filtered}
+          posts={pageItems}
           emptyMessage={posts.length === 0 ? "No posts yet." : "No posts match your filters."}
           onDelete={handleDelete}
           deletingId={deletingPost?.id}
+          sort={sort}
+          onSortChange={handleSortChange}
+        />
+        <Pagination
+          page={currentPage}
+          pageCount={pageCount}
+          totalCount={sorted.length}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={handlePageSizeChange}
         />
       </section>
 
