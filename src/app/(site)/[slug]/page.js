@@ -32,7 +32,7 @@ export default async function CmsContentPage({ params }) {
   return (
     <div className="w-full bg-white">
       {/* Heading band: the title with the breadcrumb under it */}
-      <div className="bg-[#e8f4f6] px-4 pt-10 sm:pt-14 pb-2">
+      <div className="bg-[#faf7f2] px-4 pt-10 sm:pt-14 pb-2">
         <h1
           className="mx-auto max-w-4xl text-center text-[30px] sm:text-[40px] font-normal text-[#333333] leading-tight"
           style={{ fontFamily: "var(--font-playfair), serif" }}
