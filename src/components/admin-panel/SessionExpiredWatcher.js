@@ -79,6 +79,8 @@ export default function SessionExpiredWatcher() {
         <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
           Your session has timed out. You&apos;ll be signed out and redirected to sign in.
         </p>
+        {/* A full page load on purpose: it drops the dead session, which a client-side <Link> would not. */}
+        {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
         <a
           href="/admin/login?reason=timeout"
           className="inline-flex h-9 items-center justify-center rounded-xl bg-primary-500 dark:bg-accent-500 px-4 text-xs font-semibold text-white hover:bg-primary-600 dark:hover:bg-accent-600 transition-colors"
