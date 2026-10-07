@@ -83,7 +83,7 @@ export default function ProductsListing({ products: initialProducts }) {
   }
 
   const categories = useMemo(
-    () => Array.from(new Set(products.map((p) => p.category))).sort(),
+    () => Array.from(new Set(products.flatMap((p) => p.categories || [p.category]))).sort(),
     [products]
   );
 
@@ -92,7 +92,7 @@ export default function ProductsListing({ products: initialProducts }) {
     return products.filter((p) => {
       if (q && !p.title.toLowerCase().includes(q) && !p.sku.toLowerCase().includes(q)) return false;
       if (status && p.status !== status) return false;
-      if (category && p.category !== category) return false;
+      if (category && !(p.categories || [p.category]).includes(category)) return false;
       return true;
     });
   }, [products, search, status, category]);

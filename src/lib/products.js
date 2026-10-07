@@ -235,10 +235,18 @@ export async function listProducts() {
       p.compare_at_price,
       p.inventory_quantity,
       c.name AS category_name,
+      COALESCE(ac.names, ARRAY[]::text[]) AS category_names,
       COALESCE(v.variant_qty, p.inventory_quantity, 0) AS inventory,
       m.url AS thumbnail
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
+    -- Every category the product belongs to (primary + product_categories), for the list filter.
+    LEFT JOIN LATERAL (
+      SELECT ARRAY_AGG(DISTINCT cc.name) AS names
+      FROM categories cc
+      WHERE cc.id = p.category_id
+         OR cc.id IN (SELECT pc.category_id FROM product_categories pc WHERE pc.product_id = p.id)
+    ) ac ON true
     -- The main image: the first image in the product's media order. blob:
     -- URLs are dead local previews saved before uploads existed, so they're
     -- skipped rather than shown as a broken thumbnail.
@@ -262,6 +270,7 @@ export async function listProducts() {
     handle: row.handle,
     sku: row.sku || "",
     category: row.category_name || "Uncategorized",
+    categories: row.category_names?.length ? row.category_names : ["Uncategorized"],
     price: Number(row.price) || 0,
     compareAtPrice: row.compare_at_price ? Number(row.compare_at_price) : null,
     inventory: Number(row.inventory) || 0,
