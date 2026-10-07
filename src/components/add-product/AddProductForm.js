@@ -308,6 +308,15 @@ export default function AddProductForm({ productId }) {
     });
   }
 
+  // Already stored in the Media library, so no upload is needed on save.
+  function handleVariantLibraryImage(index, item) {
+    setProduct((prev) => {
+      const nextVariants = prev.variants.slice();
+      nextVariants[index] = { ...nextVariants[index], image: { url: item.url, name: item.fileName } };
+      return { ...prev, variants: nextVariants };
+    });
+  }
+
   function handleVariantImageRemove(index) {
     setProduct((prev) => {
       const nextVariants = prev.variants.slice();
@@ -576,6 +585,7 @@ export default function AddProductForm({ productId }) {
             onOptionsChange={handleOptionsChange}
             onVariantsChange={handleVariantsChange}
             onVariantImageChange={handleVariantImageChange}
+            onVariantLibraryImage={handleVariantLibraryImage}
             onVariantImageRemove={handleVariantImageRemove}
           />
 

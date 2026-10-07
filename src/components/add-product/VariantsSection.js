@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import MediaSelectModal from "@/components/media/MediaSelectModal";
 import { WEIGHT_UNITS } from "@/data/addProductData";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { getCurrencySymbol } from "@/lib/currency";
@@ -96,21 +97,15 @@ function OptionRow({ option, onNameChange, onRemove, onAddValue, onRemoveValue, 
   );
 }
 
-function VariantImageCell({ image, label, onChange, onRemove }) {
-  const inputRef = useRef(null);
+function VariantImageCell({ image, label, onOpenPicker, onRemove }) {
   const missing = isMissingUpload(image);
-
-  function handleFileSelected(e) {
-    const file = e.target.files?.[0];
-    if (file) onChange(file);
-    e.target.value = "";
-  }
 
   return (
     <div className="relative group w-9 h-9 shrink-0">
       <button
         type="button"
-        onClick={() => inputRef.current?.click()}
+        onClick={onOpenPicker}
+        aria-haspopup="dialog"
         title={missing ? "Image missing — upload it again" : image ? "Change variant image" : "Add variant image"}
         aria-label={missing ? `${label} image missing, upload again` : `${label} image`}
         className={`w-9 h-9 rounded-lg border border-dashed ${missing ? "border-red-400 bg-red-50 dark:bg-red-500/10" : "border-slate-300 dark:border-white/15 bg-slate-50 dark:bg-darksurface2/60"} overflow-hidden grid place-items-center hover:border-primary-400 dark:hover:border-accent-500/60 transition-colors`}
@@ -141,14 +136,6 @@ function VariantImageCell({ image, label, onChange, onRemove }) {
           &times;
         </button>
       )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        className="hidden"
-        aria-hidden="true"
-        onChange={handleFileSelected}
-      />
     </div>
   );
 }
@@ -161,11 +148,14 @@ export default function VariantsSection({
   onOptionsChange,
   onVariantsChange,
   onVariantImageChange,
+  onVariantLibraryImage,
   onVariantImageRemove,
 }) {
   const symbol = getCurrencySymbol(useGeneralSettings().currency);
   const [bulkPrice, setBulkPrice] = useState("");
   const [bulkQty, setBulkQty] = useState("");
+  const [pickerIndex, setPickerIndex] = useState(null);
+  const pickerVariant = pickerIndex === null ? null : variants[pickerIndex];
 
   function addOption() {
     onOptionsChange([
@@ -327,7 +317,7 @@ export default function VariantsSection({
                           <VariantImageCell
                             image={v.image}
                             label={label}
-                            onChange={(file) => onVariantImageChange(i, file)}
+                            onOpenPicker={() => setPickerIndex(i)}
                             onRemove={() => onVariantImageRemove(i)}
                           />
                         </td>
@@ -412,6 +402,19 @@ export default function VariantsSection({
           </div>
         </div>
       )}
+
+      <MediaSelectModal
+        open={pickerIndex !== null}
+        onClose={() => setPickerIndex(null)}
+        onSelectItems={(items) => items[0] && onVariantLibraryImage(pickerIndex, items[0])}
+        onUploadFiles={(files) => onVariantImageChange(pickerIndex, files[0])}
+        selectedUrls={pickerVariant?.image ? [pickerVariant.image.url] : []}
+        multiple={false}
+        title={`Variant image${pickerVariant ? ` — ${Object.values(pickerVariant.options).join(" / ") || "Default"}` : ""}`}
+        confirmLabel="Use as variant image"
+        accept="image/jpeg,image/png,image/webp"
+        uploadHint="JPG, PNG, or WEBP, up to 5MB"
+      />
     </section>
   );
 }
