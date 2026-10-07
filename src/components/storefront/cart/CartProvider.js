@@ -12,6 +12,7 @@ import {
   readStoredCart,
   sanitizeCoupon,
   sanitizeShipping,
+  stockLeftForLine,
 } from "./cartHelpers";
 import { postJson } from "./cartApi";
 
@@ -106,15 +107,16 @@ export default function CartProvider({ countries = [], children }) {
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
-  // Adds one more of a product/variant, refreshing its price and stock limit
-  // from the page it was added on, then shows the drawer.
+  // Adds one more of a product/variant (and engraving), refreshing its price and stock
+  // limit from the page it was added on, then shows the drawer. The same variant with a
+  // different engraving is a separate line (see lineKey()), but it shares the variant's stock.
   const addItem = useCallback((line) => {
     const incoming = normalizeCartItem({ ...line, quantity: 1 });
     if (!incoming) return;
     setCart((current) => {
       const existing = current.items.find((item) => item.key === incoming.key);
       if (!existing) return { ...current, items: [...current.items, incoming] };
-      const quantity = clampQuantity(existing.quantity + 1, incoming);
+      const quantity = Math.min(clampQuantity(existing.quantity + 1, incoming), stockLeftForLine(current.items, incoming));
       return { ...current, items: current.items.map((item) => (item.key === incoming.key ? { ...incoming, quantity } : item)) };
     });
     setIsOpen(true);
@@ -140,7 +142,9 @@ export default function CartProvider({ countries = [], children }) {
   const setQuantity = useCallback((key, quantity) => {
     setCart((current) => ({
       ...current,
-      items: current.items.map((item) => (item.key === key ? { ...item, quantity: clampQuantity(quantity, item) } : item)),
+      items: current.items.map((item) =>
+        item.key === key ? { ...item, quantity: Math.min(clampQuantity(quantity, item), stockLeftForLine(current.items, item)) } : item
+      ),
     }));
   }, []);
 
@@ -177,6 +181,28 @@ export default function CartProvider({ countries = [], children }) {
         maxQuantity: variant.maxQuantity,
       });
       if (!changed || changed.key === key) return current;
+
+      const target = current.items.find((item) => item.key === changed.key);
+      if (!target) return { ...current, items: current.items.map((item) => (item.key === key ? changed : item)) };
+
+      const merged = { ...changed, quantity: clampQuantity(target.quantity + line.quantity, changed) };
+      return {
+        ...current,
+        items: current.items.filter((item) => item.key !== key).map((item) => (item.key === changed.key ? merged : item)),
+      };
+    });
+  }, []);
+
+  // Changes or removes (engraving = null) the engraving on a line. The key includes the engraving,
+  // so if the cart already has a line with the same variant and the new engraving the two merge,
+  // like changeVariant() does for a color or size.
+  const setEngraving = useCallback((key, engraving) => {
+    setCart((current) => {
+      const line = current.items.find((item) => item.key === key);
+      if (!line) return current;
+      const changed = normalizeCartItem({ ...line, engraving });
+      if (!changed) return current;
+      if (changed.key === key) return { ...current, items: current.items.map((item) => (item.key === key ? changed : item)) };
 
       const target = current.items.find((item) => item.key === changed.key);
       if (!target) return { ...current, items: current.items.map((item) => (item.key === key ? changed : item)) };
@@ -238,21 +264,31 @@ export default function CartProvider({ countries = [], children }) {
   }, []);
 
   // Brings the lines in line with what the checkout's server found when it priced them:
-  // each is { key, found, available, price, maxQuantity }. A line that is gone or out of
-  // stock is dropped, the price and stock limit are replaced by the current ones, and a
-  // quantity above what is left is lowered.
+  // each is { key, found, available, price, maxQuantity, engravingInvalid }. A line that is
+  // gone or out of stock is dropped, the price and stock limit are replaced by the current
+  // ones, and a quantity above what is left is lowered. A line whose engraving the server
+  // refused (switched off, no longer allowed, font removed) keeps the ring but loses the
+  // engraving, so the customer can add it again.
   const syncLines = useCallback((lines) => {
     setCart((current) => {
       const items = [];
+      const addLine = (line) => {
+        const index = items.findIndex((other) => other.key === line.key);
+        if (index === -1) items.push(line);
+        else items[index] = { ...items[index], quantity: clampQuantity(items[index].quantity + line.quantity, items[index]) };
+      };
+
       for (const item of current.items) {
         const latest = lines.find((line) => line.key === item.key);
         if (!latest) {
-          items.push(item);
+          addLine(item);
           continue;
         }
         if (!latest.found || !latest.available) continue;
         const next = { ...item, price: Number(latest.price), maxQuantity: latest.maxQuantity ?? null };
-        items.push({ ...next, quantity: clampQuantity(item.quantity, next) });
+        const synced = { ...next, quantity: clampQuantity(item.quantity, next) };
+        const result = latest.engravingInvalid ? normalizeCartItem({ ...synced, engraving: null }) : synced;
+        if (result) addLine(result);
       }
       return items.length > 0 ? { ...current, items } : EMPTY_CART;
     });
@@ -279,6 +315,7 @@ export default function CartProvider({ countries = [], children }) {
       ensureItem,
       setQuantity,
       changeVariant,
+      setEngraving,
       removeItem,
       setNote,
       applyCoupon,
@@ -290,8 +327,8 @@ export default function CartProvider({ countries = [], children }) {
       syncLines,
     }),
     [
-      cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, ensureItem, setQuantity, changeVariant, removeItem,
-      setNote, applyCoupon, removeCoupon, estimateShipping, clearShipping, selectShippingRate, clearCart, syncLines,
+      cart, count, totals, countries, hydrated, isOpen, couponNotice, openCart, closeCart, addItem, ensureItem, setQuantity, changeVariant, setEngraving,
+      removeItem, setNote, applyCoupon, removeCoupon, estimateShipping, clearShipping, selectShippingRate, clearCart, syncLines,
     ]
   );
 

@@ -12,25 +12,14 @@ import WishlistHeart from "./wishlist/WishlistHeart";
 import { defaultVariant } from "./wishlist/wishlistHelpers";
 import { useVariantImage } from "./VariantImageProvider";
 import AskQuestionModal from "./ask-question/AskQuestionModal";
+import ProductSection from "./ProductSection";
+import EngravingSection from "./engraving/EngravingSection";
+import { emptyEngravingValue, readEngravingValue } from "./engraving/engravingHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#ef9822] transition-colors";
 
-// Rounded card whose title is a small bordered pill centered on the top edge.
-function Section({ title, children }) {
-  const headingId = useId();
-  return (
-    <section aria-labelledby={headingId} className="relative min-w-0 mb-6 rounded-xl border border-gray-200 px-5 pb-5 pt-7">
-      <h2
-        id={headingId}
-        className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-gray-200 bg-white px-4 py-1 text-[13px] font-medium text-[#333333]"
-      >
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
-}
+const Section = ProductSection;
 
 // Start on the first purchasable variant so the page never opens on "Out of stock".
 // defaultVariant picks it by the product's option order (first color, then first
@@ -41,12 +30,15 @@ function defaultSelection(product) {
   return Object.fromEntries(product.options.map((option) => [option.name, first?.options[option.name] ?? option.values[0]]));
 }
 
-export default function ProductPurchasePanel({ product, reviews, supportEmail = "" }) {
+// `engraving` is { settings, fonts } when this product offers engraving (decided on the server,
+// see src/lib/engraving.js), otherwise null and the page has no engraving section at all.
+export default function ProductPurchasePanel({ product, reviews, supportEmail = "", engraving = null }) {
   const { formatMoney } = useGeneralSettings();
   const baseId = useId();
   const router = useRouter();
   const { addItem, ensureItem, closeCart } = useCart();
   const [selection, setSelection] = useState(() => defaultSelection(product));
+  const [engravingValue, setEngravingValue] = useState(() => (engraving ? emptyEngravingValue(engraving) : null));
   const [copied, setCopied] = useState(false);
   const [askOpen, setAskOpen] = useState(false);
   const copiedTimer = useRef(null);
@@ -68,9 +60,14 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
   const compareAtPrice = variant ? variant.compareAtPrice : product.compareAtPrice;
   const sku = variant?.sku || product.sku;
 
+  // The engraving the customer has typed so far: usable (goes on the cart line), blank (none),
+  // or invalid (blocks Add To Cart / Buy Now until fixed; the form says what is wrong).
+  const engravingState = engraving ? readEngravingValue(engravingValue, engraving) : null;
+
   let notice = "";
   if (hasVariants && !variant) notice = "This combination is currently unavailable.";
   else if (variant && !variant.available) notice = "This item is currently out of stock.";
+  else if (engravingState?.blocked) notice = "Please fix the engraving text above before adding this item to your cart.";
   const canBuy = !notice;
 
   const select = (name, value) => setSelection((current) => ({ ...current, [name]: value }));
@@ -89,6 +86,8 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
       price,
       compareAtPrice: compareAtPrice > price ? compareAtPrice : null,
       maxQuantity: variant?.maxQuantity ?? null,
+      // null unless the customer typed a valid engraving; it is part of what makes the line unique.
+      engraving: engravingState?.engraving ?? null,
     };
   }
 
@@ -260,6 +259,8 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
           </div>
         </Section>
       )}
+
+      {engraving && <EngravingSection config={engraving} value={engravingValue} onChange={setEngravingValue} />}
 
       <p role="status" className={`text-sm text-error ${notice ? "mb-3" : ""}`}>
         {notice}

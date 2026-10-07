@@ -3,6 +3,7 @@
 import Link from "next/link";
 import StoreIcon from "../icons";
 import CartOptionSelect from "./CartOptionSelect";
+import CartEngraving from "../engraving/CartEngraving";
 import { useCart } from "./CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { isMetalOption } from "../metals";
@@ -17,7 +18,7 @@ const STEP_BUTTON =
 // pickers choose from. While it is still being fetched (`loading`) the pickers
 // shimmer; if the product is no longer sold, the line's current options are
 // shown but can't be changed.
-export default function CartPageLine({ item, product, loading = false, onVariantChange }) {
+export default function CartPageLine({ item, product, loading = false, onVariantChange, onEngravingChange }) {
   const { removeItem, setQuantity } = useCart();
   const { formatMoney } = useGeneralSettings();
   const { loaded: imageLoaded, imageProps } = useImageLoaded();
@@ -130,6 +131,8 @@ export default function CartPageLine({ item, product, loading = false, onVariant
             </div>
           )
         )}
+
+        <CartEngraving item={item} onChange={onEngravingChange} />
 
         <div className="mt-5 flex items-center gap-5 sm:mt-7">
           <span className="text-[11px] font-bold uppercase tracking-wider text-[#333333]">Quantity</span>

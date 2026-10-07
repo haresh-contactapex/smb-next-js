@@ -3,6 +3,7 @@
 import Link from "next/link";
 import StoreIcon from "../icons";
 import { useCart } from "./CartProvider";
+import EngravingLines from "../engraving/EngravingLines";
 import useImageLoaded from "../useImageLoaded";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { lineLimit, round2 } from "./cartHelpers";
@@ -61,6 +62,7 @@ export default function CartLine({ item }) {
         </div>
 
         {optionText && <p className="mt-0.5 text-[12px] text-gray-400">{optionText}</p>}
+        <EngravingLines engraving={item.engraving} className="mt-1 text-[12px] leading-snug text-gray-500" />
 
         <p className="mt-1 text-[13px] text-[#555555]">
           {formatMoney(item.price)}

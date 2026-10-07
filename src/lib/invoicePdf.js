@@ -276,7 +276,11 @@ export async function buildInvoicePdf(invoice) {
   for (const item of invoice.items) {
     const titleLines = wrap(clean(item.title), regular, 9, COL.itemWidth);
     const sku = item.sku ? `SKU ${clean(item.sku)}` : "";
-    const rowHeight = 8 + titleLines.length * 11.5 + (sku ? 10 : 0) + 8;
+    // What the customer asked to have engraved, under the SKU: "Engraving: Forever" / "Font: Elegant Script".
+    const personalization = item.engraving?.text
+      ? [`Engraving: ${clean(item.engraving.text)}`, ...(item.engraving.fontName ? [`Font: ${clean(item.engraving.fontName)}`] : [])]
+      : [];
+    const rowHeight = 8 + titleLines.length * 11.5 + (sku ? 10 : 0) + personalization.length * 10 + 8;
 
     if (cursor + rowHeight > TABLE_LIMIT) {
       addPage();
@@ -288,7 +292,14 @@ export async function buildInvoicePdf(invoice) {
       text(line, COL.item, lineTop, { size: 9 });
       lineTop += 11.5;
     }
-    if (sku) text(sku, COL.item, lineTop, { size: 7.5, color: COLORS.muted });
+    if (sku) {
+      text(sku, COL.item, lineTop, { size: 7.5, color: COLORS.muted });
+      lineTop += 10;
+    }
+    for (const line of personalization) {
+      text(line, COL.item, lineTop, { size: 7.5, color: COLORS.navy });
+      lineTop += 10;
+    }
 
     text(String(item.quantity), COL.qty, cursor + 8, { size: 9, align: "right" });
     text(money(item.unitPrice), COL.rate, cursor + 8, { size: 9, align: "right" });

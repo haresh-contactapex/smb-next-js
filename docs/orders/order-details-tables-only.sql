@@ -10,6 +10,9 @@
 -- Differences from the full schema in orders-database-schema.sql:
 --   * payments has no payment_method_id: the saved-card table the checkout would
 --     link to is customer_payment_methods, and nothing links to it yet.
+--   * order_line_items also has the four engraving_* columns (what the customer asked to have
+--     engraved). A database created before they existed gets them from
+--     docs/engraving/engraving-tables-only.sql (npm run db:migrate:engraving).
 --   * orders gains subtotal_amount, discount_amount, shipping_amount, tax_amount and
 --     coupon_code, so the one total_amount can be broken down. They are NULL on orders
 --     placed before this existed.
@@ -54,7 +57,11 @@ CREATE TABLE IF NOT EXISTS order_line_items (
     sku         VARCHAR(100) NULL,
     unit_price  DECIMAL(12, 2) NOT NULL,
     quantity    INTEGER NOT NULL DEFAULT 1,
-    line_total  DECIMAL(12, 2) NOT NULL
+    line_total  DECIMAL(12, 2) NOT NULL,
+    engraving_enabled   BOOLEAN NOT NULL DEFAULT false,
+    engraving_text      VARCHAR(100) NULL,
+    engraving_font_id   VARCHAR(60) NULL,
+    engraving_font_name VARCHAR(60) NULL
 );
 COMMENT ON TABLE order_line_items IS 'One row per product/quantity purchased on an order.';
 COMMENT ON COLUMN order_line_items.title IS 'Snapshot of the product title at purchase time, with the chosen options, e.g. Classic Gold Band (18K Yellow Gold, 7).';

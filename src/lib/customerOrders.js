@@ -6,6 +6,8 @@ import { loadMoneyFormat } from "./moneyFormat";
 import { cancelPaymentIntent, loadStripeConfig } from "./stripe";
 import { sendOrderStatusEmail, sendRefundRequestAlert } from "./orderEmails";
 import { getWishlistProducts } from "./wishlist";
+import { getProductEngraving, loadOrderLineEngravings } from "./engraving";
+import { validateEngravingText } from "./engravingRules";
 
 // Server side of the account's order history (/account/orders). The customer
 // only ever sees their own orders: every query filters on customer_id, and an
@@ -162,7 +164,7 @@ export async function getCustomerOrder(customerId, orderNumber) {
   if (!row) return null;
 
   const addressIds = [row.shipping_address_id, row.billing_address_id].filter(Boolean);
-  const [lineRows, addressRows, paymentRows] = await Promise.all([
+  const [lineRows, addressRows, paymentRows, engravings] = await Promise.all([
     optionalQuery(
       () => sql`
         SELECT li.id, li.product_id, li.variant_id, li.title, li.sku, li.unit_price, li.quantity, li.line_total,
@@ -180,9 +182,10 @@ export async function getCustomerOrder(customerId, orderNumber) {
       ? optionalQuery(() => sql`SELECT * FROM order_addresses WHERE id = ANY(${addressIds}::uuid[])`, [])
       : [],
     optionalQuery(() => sql`SELECT * FROM payments WHERE order_id = ${row.id} ORDER BY created_at`, []),
+    loadOrderLineEngravings(row.id),
   ]);
 
-  const items = lineRows.map(toLine);
+  const items = lineRows.map((line) => ({ ...toLine(line), engraving: engravings.get(line.id) || null }));
   const itemsSubtotal = items.reduce((sum, line) => sum + line.lineTotal, 0);
   const summary = toOrderSummary(row);
 
@@ -274,6 +277,19 @@ async function closeOpenCardPayment(order) {
 // is gone, or whose color/size no longer exists, is returned in `skipped` with
 // a reason instead; an out-of-stock line is skipped too. The shape of `lines`
 // is what the cart's addItem() takes, plus a quantity.
+// An engraved line is ordered again with its engraving only while the store still offers engraving
+// on that product and the text and font are still valid; otherwise the ring is added plain, and
+// the customer can personalize it again on the product page. `offers` caches the lookup per product.
+async function reorderEngraving(engraving, productId, offers) {
+  if (!engraving) return null;
+  if (!offers.has(productId)) offers.set(productId, await getProductEngraving(productId));
+  const offer = offers.get(productId);
+  if (!offer) return null;
+  const font = offer.fonts.find((candidate) => candidate.id === engraving.fontId);
+  if (!font || !validateEngravingText(engraving.text, offer.settings).ok) return null;
+  return { text: engraving.text, fontId: font.id, fontName: font.name };
+}
+
 export async function buildReorderLines(customerId, orderNumber) {
   const order = await getCustomerOrder(customerId, orderNumber);
   if (!order) throw new AccountError("We couldn't find that order.", 404);
@@ -284,6 +300,7 @@ export async function buildReorderLines(customerId, orderNumber) {
 
   const lines = [];
   const skipped = [];
+  const engravingOffers = new Map();
   for (const item of order.items) {
     const product = products.find((candidate) => candidate.id === item.productId);
     if (!product) {
@@ -316,6 +333,7 @@ export async function buildReorderLines(customerId, orderNumber) {
       price,
       compareAtPrice: compareAtPrice > price ? compareAtPrice : null,
       maxQuantity: variant?.maxQuantity ?? null,
+      engraving: await reorderEngraving(item.engraving, product.id, engravingOffers),
       quantity: item.quantity,
     });
   }

@@ -1,4 +1,6 @@
 import { sql, sqlQuery } from "./db";
+import { setProductEngravingMode } from "./engraving";
+import { normalizeEngravingMode } from "./engravingRules";
 
 // Inserts many rows in a single round trip (one INSERT ... VALUES (...),(...),...)
 // instead of one query per row — the sequential-await version of this loop is
@@ -397,6 +399,8 @@ export async function getProductById(id) {
     tags: tags.map((t) => t.name),
     handle: product.handle,
     status: product.status,
+    // "inherit" (follow the engraving categories), "enabled" or "disabled"; see lib/engraving.js.
+    engraving_mode: normalizeEngravingMode(product.engraving_mode),
     price: product.price !== null ? String(product.price) : "",
     compare_at_price: product.compare_at_price !== null ? String(product.compare_at_price) : "",
     charge_tax: product.charge_tax,
@@ -656,6 +660,7 @@ export async function createProduct(payload) {
   const id = await writeProductRow(null, payload, categoryIds[0] ?? null);
   try {
     await replaceChildRows(id, payload, categoryIds);
+    await saveEngravingMode(id, payload);
   } catch (error) {
     // The HTTP driver can't wrap this in a real transaction (each statement
     // is its own request), so if the children fail partway through, delete
@@ -673,7 +678,20 @@ export async function updateProduct(id, payload) {
   const categoryIds = await upsertCategoryPaths(categoryPathsFromPayload(payload));
   await writeProductRow(id, payload, categoryIds[0] ?? null);
   await replaceChildRows(id, payload, categoryIds);
+  await saveEngravingMode(id, payload);
   return id;
+}
+
+// The product's own engraving setting lives beside the aggregate rather than in it. Only
+// written when the payload carries one, so imports and scripts that know nothing about
+// engraving leave an existing choice alone.
+async function saveEngravingMode(id, payload) {
+  if (payload.engraving_mode === undefined) return;
+  try {
+    await setProductEngravingMode(id, payload.engraving_mode);
+  } catch (error) {
+    throw error.status ? new ProductError(error.message, error.status) : error;
+  }
 }
 
 export async function deleteProduct(id) {

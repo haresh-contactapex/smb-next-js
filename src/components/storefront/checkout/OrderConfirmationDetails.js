@@ -3,6 +3,7 @@
 import StoreIcon from "../icons";
 import { CHECKOUT_CARD } from "./checkoutStyles";
 import { LineImage, Row } from "./OrderSummaryParts";
+import PersonalizationSummary from "../engraving/PersonalizationSummary";
 import { addressLines, formatDate, pluralize } from "@/components/account/accountHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
@@ -141,6 +142,7 @@ export default function OrderConfirmationDetails({ orderNumber, total, currency,
                   <div className="min-w-0 flex-1">
                     <p className="text-[16px] font-semibold leading-snug text-[#222222]">{item.title}</p>
                     {item.sku && <p className="mt-1 text-[14px] text-[#777777]">SKU {item.sku}</p>}
+                    <PersonalizationSummary engraving={item.engraving} className="mt-2 w-fit max-w-full" />
                     <p className="mt-1.5 text-[14px] text-[#777777]">
                       Qty: {item.quantity} × {money(item.unitPrice)}
                     </p>

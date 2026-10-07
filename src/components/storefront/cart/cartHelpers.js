@@ -1,6 +1,8 @@
 // Pure cart logic shared by the provider and the drawer sections. Nothing here
 // touches the DOM or the network, so it is safe to call during render.
 
+import { engravingKeyPart, sanitizeLineEngraving } from "@/lib/engravingRules";
+
 export const CART_STORAGE_KEY = "smb:cart";
 export const NOTE_MAX_LENGTH = 500;
 export const MAX_LINE_QUANTITY = 99;
@@ -11,8 +13,11 @@ export function round2(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 }
 
-export function lineKey(productId, variantId) {
-  return `${productId}:${variantId || ""}`;
+// A line is the product, its variant and its engraving: the same ring engraved two different
+// ways is two lines, and the same ring with the same engraving is one. `engraving` is
+// { text, fontId } (or null). The server builds the same key from the order request.
+export function lineKey(productId, variantId, engraving = null) {
+  return `${productId}:${variantId || ""}${engravingKeyPart(engraving)}`;
 }
 
 export function cartCount(items) {
@@ -30,6 +35,16 @@ export function lineLimit(item) {
 
 export function clampQuantity(quantity, item) {
   return Math.max(1, Math.min(Math.floor(quantity) || 1, lineLimit(item)));
+}
+
+// Lines of the same variant that differ only in their engraving draw on one stock count, so a
+// line may only take what the variant's other lines leave. Untracked stock has no cap beyond 99.
+export function stockLeftForLine(items, line) {
+  if (!(line.maxQuantity > 0)) return MAX_LINE_QUANTITY;
+  const others = items
+    .filter((other) => other.key !== line.key && other.productId === line.productId && other.variantId === line.variantId)
+    .reduce((total, other) => total + other.quantity, 0);
+  return Math.max(1, Math.min(line.maxQuantity - others, MAX_LINE_QUANTITY));
 }
 
 // What a coupon does to the current cart. `amount` is the money taken off,
@@ -128,8 +143,13 @@ export function normalizeCartItem(raw) {
   const quantity = Math.floor(Number(raw.quantity));
   if (!raw.productId || !raw.title || price === null || price < 0 || !(quantity > 0)) return null;
 
+  // Engraving is optional. Anything stored that isn't a usable { text, fontId } is dropped,
+  // so a hand-edited or outdated cart can't carry a half engraving.
+  const engraving = sanitizeLineEngraving(raw.engraving);
+  const lineEngraving = engraving?.fontId ? engraving : null;
+
   const item = {
-    key: lineKey(raw.productId, raw.variantId),
+    key: lineKey(raw.productId, raw.variantId, lineEngraving),
     productId: String(raw.productId),
     variantId: raw.variantId ? String(raw.variantId) : null,
     handle: String(raw.handle || ""),
@@ -140,6 +160,7 @@ export function normalizeCartItem(raw) {
     price,
     compareAtPrice: finiteNumber(raw.compareAtPrice),
     maxQuantity: finiteNumber(raw.maxQuantity),
+    engraving: lineEngraving,
     quantity: 1,
   };
   item.quantity = clampQuantity(quantity, item);

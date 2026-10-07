@@ -3,6 +3,8 @@ import { CartError, listShippingCountries, lookupCartCoupon, lookupShippingRules
 import { loadCheckoutPricingSettings } from "./storefrontCheckout";
 import { formatCurrency } from "./currency";
 import { validateUsLocation } from "./usAddress";
+import { loadCheckoutEngravingContext, resolveLineEngraving } from "./engraving";
+import { sanitizeLineEngraving } from "./engravingRules";
 // Pure cart arithmetic (coupons, shipping rates, totals) and the checkout's form
 // validation. Both are shared with the browser on purpose: the server must reach the
 // same totals the customer was shown, and prices and discounts are never taken from
@@ -29,6 +31,15 @@ export class CheckoutError extends Error {
 
 const text = (value, max) => (typeof value === "string" ? value.trim().slice(0, max) : "");
 
+// The engraving the customer asked for on one line: { text, fontId } or nothing. This only gives
+// it a safe shape (so the line key is stable); whether the text is allowed, the product offers
+// engraving and the font exists is decided in priceLines() against the store's current settings.
+function parseItemEngraving(raw) {
+  if (raw === undefined || raw === null) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) throw new CheckoutError("An item in your cart isn't valid. Please review your cart.");
+  return sanitizeLineEngraving(raw);
+}
+
 function parseItems(raw) {
   if (!Array.isArray(raw) || raw.length === 0) throw new CheckoutError("Your cart is empty.");
   if (raw.length > MAX_LINES) throw new CheckoutError("There are too many items in your cart.");
@@ -45,10 +56,12 @@ function parseItems(raw) {
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) throw new CheckoutError("An item in your cart has an invalid quantity.");
     if (!Number.isFinite(price) || price < 0) throw new CheckoutError("An item in your cart has an invalid price.");
 
-    const key = lineKey(productId, variantId);
+    // The same ring with different engraving is a different line; the same ring with the same engraving is not.
+    const engraving = parseItemEngraving(item?.engraving);
+    const key = lineKey(productId, variantId, engraving);
     if (seen.has(key)) throw new CheckoutError("The same item is in your cart twice. Please review your cart.");
     seen.add(key);
-    return { key, productId, variantId, quantity, shownPrice: price };
+    return { key, productId, variantId, quantity, shownPrice: price, engraving };
   });
 }
 
@@ -100,7 +113,15 @@ function parseAddress(raw, section, countries) {
 // they saw makes the whole request fail with "cart_changed" and the current truth for
 // every line, so the cart can bring itself up to date before the customer decides again.
 async function priceLines(items, currency, moneyFormat) {
-  const products = await listCheckoutProducts([...new Set(items.map((item) => item.productId))]);
+  const productIds = [...new Set(items.map((item) => item.productId))];
+  const products = await listCheckoutProducts(productIds);
+  // Only looked up when something in the cart is engraved.
+  const engravingContext = items.some((item) => item.engraving) ? await loadCheckoutEngravingContext(productIds) : null;
+
+  // Lines of one variant that differ only in their engraving share its stock, so stock is
+  // checked against everything the cart wants of that variant, not line by line.
+  const wanted = new Map();
+  for (const item of items) wanted.set(item.variantId || item.productId, (wanted.get(item.variantId || item.productId) || 0) + item.quantity);
 
   const lines = [];
   const report = [];
@@ -120,10 +141,24 @@ async function priceLines(items, currency, moneyFormat) {
     const price = variant ? variant.price : product.price;
     const maxQuantity = variant ? variant.maxQuantity : product.stock;
     const available = variant ? variant.available : product.stock === null || product.stock > 0;
-    report.push({ key: item.key, found: true, available, price, maxQuantity });
 
+    // The engraving is checked from the store's settings, never from what the browser says. One the
+    // server refuses is reported so the cart can drop it from the line (see syncLines).
+    let engraving = null;
+    let engravingInvalid = false;
+    if (item.engraving) {
+      const outcome = resolveLineEngraving(item.engraving, product.id, engravingContext);
+      if (outcome.ok) engraving = outcome.engraving;
+      else {
+        engravingInvalid = true;
+        problems.push(`The engraving on ${product.title} couldn't be used. ${outcome.reason}`);
+      }
+    }
+    report.push({ key: item.key, found: true, available, price, maxQuantity, engravingInvalid });
+
+    const totalWanted = wanted.get(item.variantId || item.productId) || item.quantity;
     if (!available) problems.push(`${product.title} is out of stock.`);
-    else if (maxQuantity !== null && item.quantity > maxQuantity) problems.push(`Only ${maxQuantity} of ${product.title} ${maxQuantity === 1 ? "is" : "are"} in stock.`);
+    else if (maxQuantity !== null && totalWanted > maxQuantity) problems.push(`Only ${maxQuantity} of ${product.title} ${maxQuantity === 1 ? "is" : "are"} in stock.`);
     else if (Math.abs(price - item.shownPrice) > PRICE_TOLERANCE) {
       problems.push(`The price of ${product.title} changed from ${formatCurrency(item.shownPrice, currency, moneyFormat)} to ${formatCurrency(price, currency, moneyFormat)}.`);
     }
@@ -138,6 +173,8 @@ async function priceLines(items, currency, moneyFormat) {
       unitPrice: price,
       quantity: item.quantity,
       lineTotal: round2(price * item.quantity),
+      // { enabled, text, fontId, fontName } as it will be stored on the order, or null.
+      engraving,
     });
   }
 

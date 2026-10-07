@@ -132,6 +132,7 @@ export const adminPanelConfig = {
         { id: "orders", label: "Orders", href: "/admin/settings/orders" },
         { id: "customers", label: "Customers", href: "/admin/settings/customers" },
         { id: "products", label: "Products", href: "/admin/settings/products" },
+        { id: "engraving", label: "Engraving", href: "/admin/settings/engraving" },
         { id: "pricing", label: "Pricing", href: "/admin/settings/pricing" },
         { id: "inventory", label: "Inventory", href: "/admin/settings/inventory" },
         { id: "checkout", label: "Checkout", href: "/admin/settings/checkout" },

@@ -9,12 +9,13 @@ import CartSummary from "./CartSummary";
 import CartRecommended from "./CartRecommended";
 import useCartProducts from "./useCartProducts";
 import { useCart } from "./CartProvider";
+import { lineKey } from "./cartHelpers";
 
 // Full-page view of the same cart the drawer shows: the lines on the left,
 // where each one's color and size can be changed in place, the order summary
 // on the right, and a few recommended products underneath.
 export default function CartPage({ recommended = [], pricesIncludeTax = null }) {
-  const { items, hydrated, changeVariant } = useCart();
+  const { items, hydrated, changeVariant, setEngraving } = useCart();
   const { products, failed, loading } = useCartProducts(items, hydrated);
   const [notice, setNotice] = useState("");
 
@@ -31,9 +32,20 @@ export default function CartPage({ recommended = [], pricesIncludeTax = null }) 
   });
 
   function switchVariant(item, variant) {
-    const duplicate = items.some((other) => other.key !== item.key && other.productId === item.productId && other.variantId === variant.id);
+    // The same variant with different engraving stays its own line, so compare whole line keys.
+    const nextKey = lineKey(item.productId, variant.id, item.engraving);
+    const duplicate = items.some((other) => other.key !== item.key && other.key === nextKey);
     setNotice(duplicate ? `${item.title} now matches another line in your cart, so the two were combined.` : "");
     changeVariant(item.key, variant);
+  }
+
+  // Edits or removes (engraving null) a line's engraving. The same ring with the same engraving is
+  // one line, so if the change makes this line identical to another they merge.
+  function changeEngraving(item, engraving) {
+    const nextKey = lineKey(item.productId, item.variantId, engraving);
+    const duplicate = items.some((other) => other.key !== item.key && other.key === nextKey);
+    setNotice(duplicate ? `${item.title} now matches another line in your cart, so the two were combined.` : "");
+    setEngraving(item.key, engraving);
   }
 
   return (
@@ -60,6 +72,7 @@ export default function CartPage({ recommended = [], pricesIncludeTax = null }) 
                   product={products[item.productId]}
                   loading={loading}
                   onVariantChange={switchVariant}
+                  onEngravingChange={changeEngraving}
                 />
               ))}
             </ul>

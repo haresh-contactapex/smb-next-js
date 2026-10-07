@@ -115,12 +115,20 @@ CREATE TABLE order_line_items (
     sku            VARCHAR(100) NULL,
     unit_price     DECIMAL(12, 2) NOT NULL,
     quantity       INTEGER NOT NULL DEFAULT 1,
-    line_total     DECIMAL(12, 2) NOT NULL
+    line_total     DECIMAL(12, 2) NOT NULL,
+    engraving_enabled   BOOLEAN NOT NULL DEFAULT false,
+    engraving_text      VARCHAR(100) NULL,
+    engraving_font_id   VARCHAR(60) NULL,
+    engraving_font_name VARCHAR(60) NULL
 );
 COMMENT ON TABLE order_line_items IS 'One row per product/quantity purchased on an order. Backs the listing''s Products count via COUNT/SUM at read time.';
 COMMENT ON COLUMN order_line_items.title IS 'Snapshot of products.title at purchase time.';
 COMMENT ON COLUMN order_line_items.unit_price IS 'Snapshot; independent of the current product price.';
 COMMENT ON COLUMN order_line_items.line_total IS 'unit_price * quantity at purchase time.';
+COMMENT ON COLUMN order_line_items.engraving_enabled IS 'True when the customer personalized this item with engraving (docs/engraving/engraving.md).';
+COMMENT ON COLUMN order_line_items.engraving_text IS 'The sanitized engraving text, exactly as it is to be engraved.';
+COMMENT ON COLUMN order_line_items.engraving_font_id IS 'engraving_fonts.id at purchase time. Not a foreign key, so removing a font keeps old orders readable.';
+COMMENT ON COLUMN order_line_items.engraving_font_name IS 'Snapshot of the font display name at purchase time.';
 
 CREATE INDEX order_line_items_order_id_idx ON order_line_items (order_id);
 CREATE INDEX order_line_items_product_id_idx ON order_line_items (product_id);

@@ -297,6 +297,16 @@ Choosing it (when switched on in *Settings → Payment*) shows a note and a work
    order only if it has a `cod` payment; the random order UUID is the proof the visitor placed
    it (the counterpart of the card flow's client secret). The page then empties the cart.
 
+## Engraving
+
+An engraved cart line travels as `engraving: { text, fontId }` (never a font name or a price).
+`priceLines()` in `checkoutPricing.js` validates it against the store's current settings and answers
+`409 cart_changed` with `engravingInvalid` on the line when it can't be used, which makes the cart drop the
+engraving from that line. A valid one is stored on `order_line_items` and shown in the summary, the
+confirmation page, the account, the admin order, the emails and the invoice. Stock is checked per variant
+across all of its lines, since engraved copies of one variant share its stock. Details in
+[engraving](../engraving/engraving.md).
+
 ## Order emails
 
 Six emails, all in one design (`src/lib/orderEmail.js`, sent by `src/lib/email.js`, triggered by

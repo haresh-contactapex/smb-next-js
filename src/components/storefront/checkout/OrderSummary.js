@@ -3,6 +3,7 @@
 import Link from "next/link";
 import StoreIcon from "../icons";
 import CheckoutPromo from "./CheckoutPromo";
+import EngravingLines from "../engraving/EngravingLines";
 import { LineImage, Row } from "./OrderSummaryParts";
 import { useCart } from "../cart/CartProvider";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
@@ -92,6 +93,7 @@ export default function OrderSummary({ checkout, tax }) {
                   ))}
                 </p>
               )}
+              <EngravingLines engraving={item.engraving} className="mt-1.5 text-[14px] leading-snug text-[#777777]" />
               <p className="mt-1.5 text-[14px] text-[#777777]">Qty: {item.quantity}</p>
             </div>
             <p className="flex-shrink-0 text-[16px] font-semibold text-[#222222]">{formatMoney(round2(item.price * item.quantity))}</p>

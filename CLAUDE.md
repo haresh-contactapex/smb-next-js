@@ -36,6 +36,7 @@ npm run db:migrate:auth
 npm run db:migrate:staff-users
 npm run db:migrate:currency-tax
 npm run db:migrate:products
+npm run db:migrate:engraving
 npm run db:seed:admin
 ```
 

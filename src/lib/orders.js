@@ -2,6 +2,7 @@ import { sql } from "./db";
 import { formatCurrency } from "./currency";
 import { loadMoneyFormat } from "./moneyFormat";
 import { isUuid, optionalQuery } from "./accountError";
+import { loadOrderLineEngravings } from "./engraving";
 
 const STATUS_COLORS = { Pending: "warning", Processing: "info", Completed: "success", Cancelled: "error" };
 const PAYMENT_COLORS = { Paid: "success", Unpaid: "warning", Refunded: "info", Failed: "error" };
@@ -85,7 +86,7 @@ async function loadOrderDetailRows(id) {
   if (!row) return null;
 
   const addressIds = [row.billing_address_id, row.shipping_address_id].filter(Boolean);
-  const [moneyFormat, customerRows, addressRows, lineRows, paymentRows] = await Promise.all([
+  const [moneyFormat, customerRows, addressRows, lineRows, paymentRows, engravings] = await Promise.all([
     loadMoneyFormat(),
     row.customer_id
       ? sql`SELECT email, phone, customer_group, is_guest, created_at FROM customers WHERE id = ${row.customer_id}`
@@ -104,6 +105,9 @@ async function loadOrderDetailRows(id) {
       []
     ),
     optionalQuery(() => sql`SELECT * FROM payments WHERE order_id = ${row.id} ORDER BY created_at`, []),
+    // What the customer asked to have engraved, per line. Its own query so an order still loads
+    // in a database that hasn't been given the engraving columns yet.
+    loadOrderLineEngravings(row.id),
   ]);
 
   const itemsSubtotal = lineRows.reduce((sum, line) => sum + (Number(line.line_total) || 0), 0);
@@ -124,6 +128,7 @@ async function loadOrderDetailRows(id) {
     addressRows,
     lineRows,
     paymentRows,
+    engravings,
     amounts: {
       subtotal,
       discount,
@@ -143,7 +148,7 @@ async function loadOrderDetailRows(id) {
 export async function getOrderDetails(id) {
   const details = await loadOrderDetailRows(id);
   if (!details) return null;
-  const { row, moneyFormat, customer, addressRows, lineRows, paymentRows, amounts } = details;
+  const { row, moneyFormat, customer, addressRows, lineRows, paymentRows, engravings, amounts } = details;
 
   const money = (amount) => (amount === null ? null : formatCurrency(amount, row.currency, moneyFormat));
   return {
@@ -168,6 +173,7 @@ export async function getOrderDetails(id) {
       quantity: Number(line.quantity) || 1,
       unitPrice: money(toAmount(line.unit_price)),
       lineTotal: money(toAmount(line.line_total)),
+      engraving: engravings.get(line.id) || null,
     })),
     pricing: {
       subtotal: money(amounts.subtotal),
@@ -197,7 +203,7 @@ export async function getOrderDetails(id) {
 export async function getOrderInvoice(id) {
   const details = await loadOrderDetailRows(id);
   if (!details) return null;
-  const { row, moneyFormat, customer, addressRows, lineRows, paymentRows, amounts } = details;
+  const { row, moneyFormat, customer, addressRows, lineRows, paymentRows, engravings, amounts } = details;
 
   return {
     orderNumber: row.order_number,
@@ -219,6 +225,7 @@ export async function getOrderInvoice(id) {
       quantity: Number(line.quantity) || 1,
       unitPrice: toAmount(line.unit_price) ?? 0,
       lineTotal: toAmount(line.line_total) ?? 0,
+      engraving: engravings.get(line.id) || null,
     })),
     amounts,
     payments: paymentRows.map((payment) => ({
@@ -237,7 +244,7 @@ export async function getOrderInvoice(id) {
 export async function getOrderConfirmation(id) {
   const details = await loadOrderDetailRows(id);
   if (!details) return null;
-  const { row, customer, addressRows, lineRows, amounts } = details;
+  const { row, customer, addressRows, lineRows, engravings, amounts } = details;
   const billingAddress = toOrderAddress(addressRows.find((address) => address.id === row.billing_address_id));
   const shippingAddress = toOrderAddress(addressRows.find((address) => address.id === row.shipping_address_id));
 
@@ -261,6 +268,7 @@ export async function getOrderConfirmation(id) {
       quantity: Number(line.quantity) || 1,
       unitPrice: toAmount(line.unit_price) ?? 0,
       lineTotal: toAmount(line.line_total) ?? 0,
+      engraving: engravings.get(line.id) || null,
     })),
     amounts,
   };

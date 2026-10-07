@@ -12,6 +12,7 @@ import { getStorefrontProductByHandle } from "@/lib/products";
 import { getPublicReviewsForProduct } from "@/lib/reviews";
 import { getStoreSettings } from "@/lib/storeSettings";
 import { getProductsSettings } from "@/lib/productsSettings";
+import { getProductEngraving } from "@/lib/engraving";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 
@@ -91,10 +92,12 @@ export default async function ProductPage({ params, searchParams }) {
   }
   if (!product) notFound();
 
-  const [reviews, supportEmail, allowReviews] = await Promise.all([
+  // `engraving` is null unless Settings -> Engraving and this product's own setting say so.
+  const [reviews, supportEmail, allowReviews, engraving] = await Promise.all([
     loadReviews(product.id),
     loadSupportEmail(),
     loadAllowReviews(),
+    getProductEngraving(product.id),
   ]);
 
   // Only what the client components need; the description and image list stay server-side.
@@ -164,7 +167,13 @@ export default async function ProductPage({ params, searchParams }) {
         <VariantImageProvider key={`variant-image-${id}`} initialVariant={initialVariant}>
           <div className="flex flex-col lg:flex-row gap-8 lg:gap-16">
             <ProductGallery key={`gallery-${id}`} images={product.images} variantImages={variantImages} title={title} />
-            <ProductPurchasePanel key={id} product={purchaseProduct} reviews={reviews} supportEmail={supportEmail} />
+            <ProductPurchasePanel
+              key={id}
+              product={purchaseProduct}
+              reviews={reviews}
+              supportEmail={supportEmail}
+              engraving={engraving ? { settings: engraving.settings, fonts: engraving.fonts } : null}
+            />
           </div>
         </VariantImageProvider>
 

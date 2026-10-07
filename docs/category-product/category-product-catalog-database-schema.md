@@ -84,6 +84,7 @@ top-level pricing/inventory/shipping plus an optional `variants[]` array).
 | `hs_code`             | `VARCHAR(20)`   | NULL                                                          | Harmonized System code (customs)              |
 | `seo_title`           | `VARCHAR(70)`   | NULL                                                          |                                                |
 | `seo_description`     | `VARCHAR(160)`  | NULL                                                          |                                                |
+| `engraving_mode`      | `VARCHAR(10)`   | NOT NULL, DEFAULT `'inherit'`, CHECK IN (`inherit`, `enabled`, `disabled`) | This product's own engraving setting. `inherit` follows the engraving categories, the other two override them. See [engraving](../engraving/engraving.md) |
 | `created_at`          | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                     |                                                |
 | `updated_at`          | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                     |                                                |
 

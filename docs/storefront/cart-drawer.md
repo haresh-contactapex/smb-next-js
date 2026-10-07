@@ -30,7 +30,11 @@ endpoints answer the questions the browser can't.
 
 - **Add To Cart** adds the selected variant (or the plain product) and opens the
   drawer. The same variant merges into one line; a different variant is a new
-  line. Quantity is capped at the variant's tracked stock (`maxQuantity`, null
+  line, and so is the same variant with different **engraving** (the engraving is
+  part of the line key, `lineKey(productId, variantId, engraving)`; see
+  [engraving](../engraving/engraving.md)). An engraved line shows *Engraving: …* and
+  *Font: …* under its name, and on `/cart` it has **Edit** and **Remove** for the
+  engraving (`CartEngraving.js`, `setEngraving()` in `CartProvider.js`). Quantity is capped at the variant's tracked stock (`maxQuantity`, null
   when stock isn't tracked) and at 99.
 - The cart is stored under `localStorage["smb:cart"]` as
   `{ items, note, coupon, shipping }` and syncs between tabs. Stored data is

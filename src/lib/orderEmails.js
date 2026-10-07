@@ -76,7 +76,14 @@ async function loadOrderEmail(orderId, origin, { needsCustomerEmail = true } = {
       orderNumber: order.order_number,
       placedAt: new Date(details.placedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       total: money(amounts.total),
-      items: details.items.map((item) => ({ title: item.title, quantity: item.quantity, lineTotal: money(item.lineTotal), imageUrl: item.image || null })),
+      // engraving: what the customer asked to have engraved, { text, fontName } or null (see orderEmail.js)
+      items: details.items.map((item) => ({
+        title: item.title,
+        quantity: item.quantity,
+        lineTotal: money(item.lineTotal),
+        imageUrl: item.image || null,
+        engraving: item.engraving?.text ? { text: item.engraving.text, fontName: item.engraving.fontName || "" } : null,
+      })),
       amounts: {
         subtotal: money(amounts.subtotal ?? amounts.total),
         discount: amounts.discount > 0 ? money(amounts.discount) : "",

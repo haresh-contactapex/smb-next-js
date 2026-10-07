@@ -3,6 +3,8 @@
  * admin-dashboard-template add-product.html prototype's inline script.
  */
 
+import { normalizeEngravingMode } from "@/lib/engravingRules";
+
 export function slugify(str) {
   return String(str)
     .toLowerCase()
@@ -216,6 +218,8 @@ export function buildProductFromData(data = {}) {
     handle,
     handleTouched: !!data.handle,
     status: data.status || "ACTIVE",
+    // "inherit" | "enabled" | "disabled": this product's own engraving setting (see EngravingSidebar).
+    engraving_mode: normalizeEngravingMode(data.engraving_mode),
     price: data.price || "",
     compare_at_price: data.compare_at_price || "",
     charge_tax: data.charge_tax !== undefined ? data.charge_tax : true,
@@ -258,6 +262,7 @@ export function assembleProduct(product) {
     tags: product.tags,
     handle: product.handle,
     status: product.status,
+    engraving_mode: normalizeEngravingMode(product.engraving_mode),
     pricing: {
       price: product.price,
       compare_at_price: product.compare_at_price,

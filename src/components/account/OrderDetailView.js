@@ -3,6 +3,7 @@ import StoreIcon from "../storefront/icons";
 import AccountPageHeader from "./AccountPageHeader";
 import OrderActions from "./OrderActions";
 import OrderTimeline from "./OrderTimeline";
+import PersonalizationSummary from "../storefront/engraving/PersonalizationSummary";
 import { OrderStatusBadge, PaymentStatusBadge } from "./StatusBadge";
 import { CARD } from "./accountStyles";
 import { PAYMENT_PROVIDER_LABELS, addressLines, formatDate, pluralize } from "./accountHelpers";
@@ -101,6 +102,7 @@ export default function OrderDetailView({ order, moneyFormat }) {
                       )}
                     </p>
                     {item.sku && <p className="mt-0.5 text-[12.5px] text-gray-400">SKU {item.sku}</p>}
+                    <PersonalizationSummary engraving={item.engraving} className="mt-2 w-fit max-w-full" />
                     <p className="mt-1 text-[13.5px] text-gray-500">
                       Qty {item.quantity} × {money(item.unitPrice)}
                     </p>

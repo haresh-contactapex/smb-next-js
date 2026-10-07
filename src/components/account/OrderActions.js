@@ -46,7 +46,7 @@ export default function OrderActions({ orderNumber, canCancel, awaitingRefund = 
     // addItem adds one and opens the cart; the quantity is then set on that line.
     for (const line of lines) {
       addItem(line);
-      if (line.quantity > 1) setQuantity(lineKey(line.productId, line.variantId), line.quantity);
+      if (line.quantity > 1) setQuantity(lineKey(line.productId, line.variantId, line.engraving), line.quantity);
     }
     notify(
       unavailable.length > 0

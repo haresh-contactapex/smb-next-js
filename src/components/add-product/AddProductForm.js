@@ -26,6 +26,7 @@ import AttributesSection from "./AttributesSection";
 import SeoSection from "./SeoSection";
 import StatusSidebar from "./StatusSidebar";
 import OrganizationSidebar from "./OrganizationSidebar";
+import EngravingSidebar from "./EngravingSidebar";
 import JsonPayloadCard from "./JsonPayloadCard";
 import JsonModal from "./JsonModal";
 import Toast from "./Toast";
@@ -601,6 +602,8 @@ export default function AddProductForm({ productId }) {
             onCollectionsChange={handleCollectionsChange}
             onTagsChange={handleTagsChange}
           />
+
+          <EngravingSidebar mode={product.engraving_mode} onChange={(mode) => setField("engraving_mode", mode)} />
 
           <JsonPayloadCard onPreview={openModal} />
         </div>

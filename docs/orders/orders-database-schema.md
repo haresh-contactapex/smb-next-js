@@ -135,6 +135,14 @@ column and for `total_amount` to mean anything — see Design notes.
 | `unit_price`   | `DECIMAL(12,2)` | NOT NULL                                                          | Snapshot                                      |
 | `quantity`     | `INTEGER`       | NOT NULL, DEFAULT `1`                                             |                                                |
 | `line_total`   | `DECIMAL(12,2)` | NOT NULL                                                          | `unit_price * quantity` at purchase time      |
+| `engraving_enabled`   | `BOOLEAN`      | NOT NULL, DEFAULT `false`                                       | True when the customer personalized the item with engraving |
+| `engraving_text`      | `VARCHAR(100)` | NULL                                                              | The sanitized text to engrave, exactly as typed (after trimming) |
+| `engraving_font_id`   | `VARCHAR(60)`  | NULL                                                              | `engraving_fonts.id` at purchase time. Not an FK, so removing a font keeps old orders readable |
+| `engraving_font_name` | `VARCHAR(60)`  | NULL                                                              | Snapshot of the font's display name           |
+
+The engraving columns come from the engraving migration (`npm run db:migrate:engraving`, see
+[engraving](../engraving/engraving.md)). Every reader loads them with a separate query, so orders still
+open in a database that has not been migrated yet, just without the personalization.
 
 Indexes: `INDEX (order_id)`, `INDEX (product_id)`.
 

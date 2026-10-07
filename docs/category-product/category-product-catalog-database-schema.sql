@@ -55,6 +55,8 @@ CREATE TABLE products (
     hs_code             VARCHAR(20) NULL,
     seo_title           VARCHAR(70) NULL,
     seo_description     VARCHAR(160) NULL,
+    engraving_mode      VARCHAR(10) NOT NULL DEFAULT 'inherit'
+                        CHECK (engraving_mode IN ('inherit', 'enabled', 'disabled')),
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
 

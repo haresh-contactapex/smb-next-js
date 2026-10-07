@@ -82,10 +82,27 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
           RETURNING order_number
         `);
         for (const line of lines) {
-          statements.push(tx`
-            INSERT INTO order_line_items (order_id, product_id, variant_id, title, sku, unit_price, quantity, line_total)
-            VALUES (${orderId}, ${line.productId}, ${line.variantId}, ${line.title.slice(0, 255)}, ${line.sku || null}, ${line.unitPrice}, ${line.quantity}, ${line.lineTotal})
-          `);
+          // A line the customer engraved also records what they asked for (already checked and
+          // cleaned by checkoutPricing.js; the font name is the store's own, not the request's).
+          // A plain line keeps the original insert, which still works before the engraving
+          // migration has been run.
+          statements.push(
+            line.engraving
+              ? tx`
+                  INSERT INTO order_line_items (
+                    order_id, product_id, variant_id, title, sku, unit_price, quantity, line_total,
+                    engraving_enabled, engraving_text, engraving_font_id, engraving_font_name
+                  )
+                  VALUES (
+                    ${orderId}, ${line.productId}, ${line.variantId}, ${line.title.slice(0, 255)}, ${line.sku || null}, ${line.unitPrice}, ${line.quantity}, ${line.lineTotal},
+                    true, ${line.engraving.text}, ${line.engraving.fontId}, ${line.engraving.fontName}
+                  )
+                `
+              : tx`
+                  INSERT INTO order_line_items (order_id, product_id, variant_id, title, sku, unit_price, quantity, line_total)
+                  VALUES (${orderId}, ${line.productId}, ${line.variantId}, ${line.title.slice(0, 255)}, ${line.sku || null}, ${line.unitPrice}, ${line.quantity}, ${line.lineTotal})
+                `
+          );
         }
         statements.push(tx`
           INSERT INTO payments (order_id, provider, status, amount, provider_reference)

@@ -20,6 +20,28 @@ function Empty({ children }) {
   return <p className="text-sm text-slate-400">{children}</p>;
 }
 
+// What the customer asked to have engraved on this line. Shown in full, in its own block, because
+// whoever fulfils the order has to engrave exactly this text in exactly this font. The text is
+// rendered as plain text (React escapes it).
+function PersonalizationBlock({ engraving }) {
+  return (
+    <div className="mt-2 rounded-xl border border-accent-500/30 bg-accent-500/5 px-3 py-2 text-xs w-fit max-w-full">
+      <p className="flex items-center gap-1.5 font-bold uppercase tracking-wide text-accent-600 dark:text-accent-400">
+        <Icon name="edit-2" className="w-3.5 h-3.5" />
+        Personalization
+      </p>
+      <p className="mt-1 text-slate-600 dark:text-slate-300 break-words">
+        Engraving: <span className="font-semibold text-slate-800 dark:text-white">{engraving.text}</span>
+      </p>
+      {engraving.fontName && (
+        <p className="text-slate-600 dark:text-slate-300">
+          Font: <span className="font-semibold text-slate-800 dark:text-white">{engraving.fontName}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
 export function OrderItemsCard({ items }) {
   return (
     <section className={CARD}>
@@ -29,7 +51,7 @@ export function OrderItemsCard({ items }) {
       ) : (
         <ul className="divide-y divide-slate-100 dark:divide-white/5 -my-3">
           {items.map((item) => (
-            <li key={item.id} className="flex items-center gap-4 py-3">
+            <li key={item.id} className="flex items-start sm:items-center gap-4 py-3">
               {item.image ? (
                 // eslint-disable-next-line @next/next/no-img-element -- store-uploaded product photo, not optimizable by next/image
                 <img src={item.image} alt="" className="w-14 h-14 rounded-xl object-cover shrink-0 bg-slate-100 dark:bg-darksurface2" />
@@ -50,6 +72,7 @@ export function OrderItemsCard({ items }) {
                   <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">{item.title}</p>
                 )}
                 {item.sku && <p className="text-xs text-slate-400 mt-0.5">SKU {item.sku}</p>}
+                {item.engraving && <PersonalizationBlock engraving={item.engraving} />}
               </div>
               <p className="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap hidden sm:block">
                 {item.unitPrice} × {item.quantity}

@@ -10,7 +10,7 @@
 //   buildRefundRequestAlertEmail(data)     store: a customer cancelled a paid order, refund it by hand
 //
 // Shared `data`: { storeName, supportEmail, shopUrl, logoSrc, orderNumber, placedAt, total,
-//   items: [{ title, quantity, lineTotal, imageUrl }], amounts: { subtotal, discount, couponCode,
+//   items: [{ title, quantity, lineTotal, imageUrl, engraving: { text, fontName } | null }], amounts: { subtotal, discount, couponCode,
 //   shipping, tax }, shippingAddress: string[], billingAddress: string[], viewUrl }.
 // Customer emails add { firstName, paymentLabel, cod, processingDays, paid }; the store alert adds
 // { customer: { name, email, phone }, paymentLabel, cod, adminUrl }; the refund alert adds
@@ -57,13 +57,23 @@ export const detailRows = (rows) =>
     .map(([label, value]) => `<tr><td valign="top" style="padding:3px 16px 3px 0;color:#8A7A55;">${escapeHtml(label)}</td><td style="padding:3px 0;color:#222222;">${value}</td></tr>`)
     .join("")}</table>`;
 
+// "Personalization / Engraving: Forever / Font: Elegant Script" under an engraved item. Both values
+// are the customer's and the store's own words, so they are escaped like everything else.
+function personalizationHtml(engraving) {
+  if (!engraving?.text) return "";
+  return `<div style="margin-top:7px;font-size:12px;line-height:18px;mso-line-height-rule:exactly;color:#444444;"><b style="color:#8A7A55;">Personalization</b><br>Engraving: <b style="color:#222222;">${escapeHtml(engraving.text)}</b>${engraving.fontName ? `<br>Font: <b style="color:#222222;">${escapeHtml(engraving.fontName)}</b>` : ""}</div>`;
+}
+
+const personalizationText = (engraving) =>
+  engraving?.text ? ["    Personalization", `    Engraving: ${engraving.text}`, ...(engraving.fontName ? [`    Font: ${engraving.fontName}`] : [])] : [];
+
 function itemRow(item) {
   const picture = item.imageUrl
     ? `<img src="${escapeHtml(item.imageUrl)}" width="60" height="60" alt="${escapeHtml(item.title)}" border="0" style="display:block;width:60px;height:60px;border:0;background:#F4F4F4;">`
     : `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="60"><tr><td width="60" height="60" bgcolor="#F4F4F4" style="width:60px;height:60px;background:#F4F4F4;font-size:0;line-height:0;">&nbsp;</td></tr></table>`;
   return `<tr>
     <td style="padding:14px 0;width:72px;vertical-align:top;border-top:1px solid #eeeeee;">${picture}</td>
-    <td style="padding:14px 8px;vertical-align:top;border-top:1px solid #eeeeee;"><div style="font-size:14px;font-weight:bold;color:#222222;line-height:19px;mso-line-height-rule:exactly;">${escapeHtml(item.title)}</div><div style="font-size:12px;color:#777777;margin-top:3px;">Qty ${escapeHtml(item.quantity)}</div></td>
+    <td style="padding:14px 8px;vertical-align:top;border-top:1px solid #eeeeee;"><div style="font-size:14px;font-weight:bold;color:#222222;line-height:19px;mso-line-height-rule:exactly;">${escapeHtml(item.title)}</div><div style="font-size:12px;color:#777777;margin-top:3px;">Qty ${escapeHtml(item.quantity)}</div>${personalizationHtml(item.engraving)}</td>
     <td style="padding:14px 0;text-align:right;vertical-align:top;font-size:14px;font-weight:bold;color:#222222;white-space:nowrap;border-top:1px solid #eeeeee;">${escapeHtml(item.lineTotal)}</td>
   </tr>`;
 }
@@ -174,7 +184,7 @@ export function render(data, spec) {
     ...(spec.showItems
       ? [
           "Your items",
-          ...data.items.map((item) => `- ${item.title} x ${item.quantity}: ${item.lineTotal}`),
+          ...data.items.flatMap((item) => [`- ${item.title} x ${item.quantity}: ${item.lineTotal}`, ...personalizationText(item.engraving)]),
           "",
           `Subtotal: ${data.amounts.subtotal}`,
           data.amounts.discount ? `Discount${data.amounts.couponCode ? ` (${data.amounts.couponCode})` : ""}: -${data.amounts.discount}` : "",

@@ -139,7 +139,14 @@ export default function CheckoutPage({ settings, account = null }) {
   // What Place Order sends: only what the customer chose, never a price or a discount
   // amount. The server prices the cart itself and checks `expectedTotal` against its own.
   const buildOrder = () => ({
-    items: items.map(({ productId, variantId, quantity, price }) => ({ productId, variantId, quantity, price })),
+    // The engraving is sent as { text, fontId } only: the server decides the font's name itself.
+    items: items.map(({ productId, variantId, quantity, price, engraving }) => ({
+      productId,
+      variantId,
+      quantity,
+      price,
+      engraving: engraving ? { text: engraving.text, fontId: engraving.fontId } : null,
+    })),
     couponCode: coupon?.code || null,
     shippingRateId: cartShipping?.selectedRateId || "standard",
     expectedTotal: checkout.total,
