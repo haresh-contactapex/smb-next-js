@@ -1,12 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import MediaSelectModal from "@/components/media/MediaSelectModal";
 import { isMissingUpload } from "./helpers";
 
-export default function MediaSection({ media, mediaError, sectionRef, onAddFiles, onRemoveMedia }) {
-  const fileInputRef = useRef(null);
+const ACCEPT = "image/jpeg,image/png,image/webp,video/*,.glb,.usdz";
+
+export default function MediaSection({ media, mediaError, sectionRef, onAddFiles, onAddLibraryItems, onRemoveMedia }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+
+  function closePicker() {
+    setPickerOpen(false);
+  }
 
   function handleFilesPicked(fileList) {
     if (fileList && fileList.length) onAddFiles(fileList);
@@ -36,12 +43,13 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
       <div
         tabIndex={0}
         role="button"
-        aria-label="Upload images, videos, or 3D models"
-        onClick={() => fileInputRef.current?.click()}
+        aria-label="Add media: choose from the Media library or upload from your computer"
+        aria-haspopup="dialog"
+        onClick={() => setPickerOpen(true)}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            fileInputRef.current?.click();
+            setPickerOpen(true);
           }
         }}
         onDragEnter={handleDragEnter}
@@ -59,22 +67,22 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
           Drag and drop images, videos, or 3D models
         </p>
         <p className="text-xs text-slate-400 mt-1">
-          or <span className="text-primary-600 dark:text-accent-400 font-semibold underline">browse files</span> —
-          images (.jpg, .jpeg, .png, .webp, up to 5MB), video, .glb, .usdz
+          or <span className="text-primary-600 dark:text-accent-400 font-semibold underline">choose from the Media library</span>{" "}
+          / browse files — images (.jpg, .jpeg, .png, .webp, up to 5MB), video, .glb, .usdz
         </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          accept="image/jpeg,image/png,image/webp,video/*,.glb,.usdz"
-          className="hidden"
-          aria-hidden="true"
-          onChange={(e) => {
-            handleFilesPicked(e.target.files);
-            e.target.value = "";
-          }}
-        />
       </div>
+
+      <MediaSelectModal
+        open={pickerOpen}
+        onClose={closePicker}
+        onSelectItems={onAddLibraryItems}
+        onUploadFiles={handleFilesPicked}
+        selectedUrls={media.map((m) => m.url)}
+        title="Add product media"
+        confirmLabel="Add to product"
+        accept={ACCEPT}
+        uploadHint="Images (.jpg, .jpeg, .png, .webp, up to 5MB), video, .glb, .usdz"
+      />
 
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
         {media.map((m, i) => (

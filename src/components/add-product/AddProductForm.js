@@ -253,6 +253,19 @@ export default function AddProductForm({ productId }) {
     }
   }
 
+  // Images chosen from the Media library are already stored, so unlike freshly
+  // picked files they carry no File and need no upload on save.
+  function handleAddLibraryItems(libraryItems) {
+    setProduct((prev) => {
+      const have = new Set(prev.media.map((m) => m.url));
+      const additions = libraryItems
+        .filter((item) => !have.has(item.url))
+        .map((item) => ({ type: "image", url: item.url, name: item.fileName }));
+      return additions.length ? { ...prev, media: [...prev.media, ...additions] } : prev;
+    });
+    setMediaError(false);
+  }
+
   function handleRemoveMedia(index) {
     setProduct((prev) => ({ ...prev, media: prev.media.filter((_, i) => i !== index) }));
   }
@@ -524,6 +537,7 @@ export default function AddProductForm({ productId }) {
             mediaError={mediaError}
             sectionRef={mediaSectionRef}
             onAddFiles={handleAddFiles}
+            onAddLibraryItems={handleAddLibraryItems}
             onRemoveMedia={handleRemoveMedia}
           />
 
