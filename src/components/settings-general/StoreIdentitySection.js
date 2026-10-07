@@ -1,16 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import MediaSelectModal from "@/components/media/MediaSelectModal";
 
-function ImageDropTarget({ label, shape, image, error, onPicked, onRemoved, dimensionsHint }) {
-  const fileInputRef = useRef(null);
-
-  function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (file) onPicked(file);
-    e.target.value = "";
-  }
+function ImageDropTarget({ label, shape, image, error, onPicked, onLibraryPicked, onRemoved, dimensionsHint }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   return (
     <div>
@@ -20,11 +15,12 @@ function ImageDropTarget({ label, shape, image, error, onPicked, onRemoved, dime
           role="button"
           tabIndex={0}
           aria-label={`Change ${label.toLowerCase()}`}
-          onClick={() => fileInputRef.current?.click()}
+          aria-haspopup="dialog"
+          onClick={() => setPickerOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              fileInputRef.current?.click();
+              setPickerOpen(true);
             }
           }}
           className={`relative w-20 h-20 ${shape === "square" ? "rounded-xl" : "rounded-2xl"} border-2 border-dashed hover:border-primary-400 dark:hover:border-accent-500/50 flex flex-col items-center justify-center cursor-pointer transition-colors group shrink-0 overflow-hidden${
@@ -35,7 +31,7 @@ function ImageDropTarget({ label, shape, image, error, onPicked, onRemoved, dime
         >
           {image ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element -- blob: object URL from a local upload, not optimizable by next/image */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- stored Blob URL, not optimizable by next/image */}
               <img src={image.url} alt={image.name || ""} className="w-full h-full object-contain p-1" />
               <button
                 type="button"
@@ -55,15 +51,18 @@ function ImageDropTarget({ label, shape, image, error, onPicked, onRemoved, dime
               className="w-6 h-6 text-slate-400 group-hover:text-primary-500 dark:group-hover:text-accent-400 transition-colors"
             />
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            aria-hidden="true"
-            onChange={handleFileChange}
-          />
         </div>
+        <MediaSelectModal
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onSelectItems={(items) => items[0] && onLibraryPicked(items[0])}
+          onUploadFiles={(files) => onPicked(files[0])}
+          selectedUrls={image ? [image.url] : []}
+          multiple={false}
+          title={label}
+          confirmLabel={`Use as ${label.toLowerCase()}`}
+          uploadHint="JPG, PNG, WEBP, or GIF, up to 10MB"
+        />
         <div>
           <p className="text-xs text-slate-400">{dimensionsHint}</p>
           {error && <p className="text-xs text-error mt-1">{error}</p>}
@@ -84,8 +83,10 @@ export default function StoreIdentitySection({
   faviconError,
   onFieldChange,
   onLogoPicked,
+  onLogoLibraryPicked,
   onLogoRemoved,
   onFaviconPicked,
+  onFaviconLibraryPicked,
   onFaviconRemoved,
   onEnter,
 }) {
@@ -132,6 +133,7 @@ export default function StoreIdentitySection({
             image={logo}
             error={logoError}
             onPicked={onLogoPicked}
+            onLibraryPicked={onLogoLibraryPicked}
             onRemoved={onLogoRemoved}
             dimensionsHint="Recommended 512×512px, PNG or SVG."
           />
@@ -141,6 +143,7 @@ export default function StoreIdentitySection({
             image={favicon}
             error={faviconError}
             onPicked={onFaviconPicked}
+            onLibraryPicked={onFaviconLibraryPicked}
             onRemoved={onFaviconRemoved}
             dimensionsHint="Recommended 32×32px, PNG or ICO."
           />

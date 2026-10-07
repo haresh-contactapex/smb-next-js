@@ -8,6 +8,7 @@ import {
   updateLocationField,
   validateGeneralSettingsForm,
 } from "./helpers";
+import { uploadLibraryImage } from "@/components/media/helpers";
 import PageToolbar from "./PageToolbar";
 import StoreIdentitySection from "./StoreIdentitySection";
 import StoreContactSection from "./StoreContactSection";
@@ -96,31 +97,24 @@ export default function GeneralSettingsForm() {
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   }
 
+  // Files from the computer upload to the Media library right away. A failure
+  // rejects so the picker dialog can show it instead of closing.
   async function uploadImage(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    const res = await fetch("/api/media", { method: "POST", body: formData });
-    const json = await res.json();
-    if (!res.ok || !json.success) throw new Error(json.error || "Failed to upload image");
-    return { url: json.data.url, name: json.data.fileName };
+    const item = await uploadLibraryImage(file, "general");
+    return { url: item.url, name: item.fileName };
   }
 
   async function handleLogoPicked(file) {
-    try {
-      const uploaded = await uploadImage(file);
-      setField("logo", uploaded);
-    } catch (error) {
-      showToast(error.message, "error");
-    }
+    setField("logo", await uploadImage(file));
   }
 
   async function handleFaviconPicked(file) {
-    try {
-      const uploaded = await uploadImage(file);
-      setField("favicon", uploaded);
-    } catch (error) {
-      showToast(error.message, "error");
-    }
+    setField("favicon", await uploadImage(file));
+  }
+
+  // Already stored in the Media library, so nothing to upload.
+  function handleLibraryPicked(field, item) {
+    setField(field, { url: item.url, name: item.fileName });
   }
 
   async function handleSave() {
@@ -173,8 +167,10 @@ export default function GeneralSettingsForm() {
             faviconError={errors.favicon}
             onFieldChange={setField}
             onLogoPicked={handleLogoPicked}
+            onLogoLibraryPicked={(item) => handleLibraryPicked("logo", item)}
             onLogoRemoved={() => setField("logo", null)}
             onFaviconPicked={handleFaviconPicked}
+            onFaviconLibraryPicked={(item) => handleLibraryPicked("favicon", item)}
             onFaviconRemoved={() => setField("favicon", null)}
             onEnter={handleSave}
           />
