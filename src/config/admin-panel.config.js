@@ -104,6 +104,19 @@ export const adminPanelConfig = {
         { id: "import-reviews", label: "Import Reviews", href: "/admin/import-reviews" },
       ],
     },
+    {
+      type: "submenu",
+      id: "content",
+      label: "CMS",
+      icon: "file-text",
+      // The "content" id maps onto the Content / CMS module in src/lib/permissions.js
+      // (View / Create / Edit / Delete / Publish). Keep the id: renaming it orphans
+      // the permissions roles already hold.
+      items: [
+        { id: "all-pages", label: "All Pages", href: "/admin/cms" },
+        { id: "add-page", label: "Add Page", href: "/admin/cms/new" },
+      ],
+    },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/admin/media" },
     { type: "link", id: "reports", label: "Reports", icon: "bar-chart-2", href: "/admin/reports" },
     {

@@ -12,7 +12,7 @@ import { MANAGE_ROLES_PERMISSION, settingsPermission } from "./permissions";
  * lives in notificationAudience.mjs for the WebSocket server.
  */
 
-export const ENTITY_TYPES = ["auth", "user", "role", "product", "category", "order", "customer", "coupon", "review", "media", "settings", "system"];
+export const ENTITY_TYPES = ["auth", "user", "role", "product", "category", "order", "customer", "coupon", "review", "media", "content", "settings", "system"];
 export const SEVERITIES = ["info", "success", "warning", "error"];
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 50;
@@ -34,6 +34,7 @@ const ENTITY_AUDIENCE = {
   coupon: "coupons.view",
   review: "reviews.view",
   media: "media.view",
+  content: "content.view",
   user: "users.view",
   role: MANAGE_ROLES_PERMISSION,
   auth: MANAGE_ROLES_PERMISSION,

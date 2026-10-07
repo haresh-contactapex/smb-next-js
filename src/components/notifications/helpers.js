@@ -16,6 +16,7 @@ export const ENTITY_ICONS = {
   coupon: "tag",
   review: "star",
   media: "image",
+  content: "file-text",
   settings: "settings",
   system: "alert-triangle",
 };
@@ -31,6 +32,7 @@ export const ENTITY_LABELS = {
   coupon: "Coupons",
   review: "Reviews",
   media: "Media",
+  content: "CMS pages",
   settings: "Settings",
   system: "System",
 };
@@ -73,6 +75,8 @@ export function notificationHref(n) {
       return `/admin/edit-coupon/${id}`;
     case "review":
       return `/admin/edit-review/${id}`;
+    case "content":
+      return `/admin/cms/${id}/edit`;
     case "user":
       return `/admin/users/${id}/edit`;
     case "role":

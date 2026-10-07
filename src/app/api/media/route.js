@@ -19,8 +19,16 @@ const READ_PERMISSIONS = [
   "categories.create",
   "categories.edit",
   settingsPermission("general", "edit"),
+  "content.create",
+  "content.edit",
 ];
 const UPLOAD_PERMISSIONS = ["media.create", settingsPermission("general", "edit")];
+
+// The CMS page editor (purpose=cms) inserts images from the library, uploads new ones
+// (recorded in the library like any image) and uploads PDFs to link to, such as a
+// printable ring sizer. PDFs are stored and referenced from the page alone.
+const CMS_UPLOAD_PERMISSIONS = ["content.create", "content.edit"];
+const CMS_MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
 
 // The product editor (purpose=product) also uploads videos and 3D models.
 // Only images are recorded in the Media library, which is image-only; the
@@ -50,6 +58,22 @@ function productContentType(file, kind) {
   if (file.type) return file.type;
   if (kind === "model") return file.name.toLowerCase().endsWith(".usdz") ? "model/vnd.usdz+zip" : "model/gltf-binary";
   return "application/octet-stream";
+}
+
+async function handleCmsPdfUpload(file) {
+  if (file.size > CMS_MAX_PDF_SIZE_BYTES) {
+    return NextResponse.json({ success: false, error: "The PDF exceeds the 10MB limit" }, { status: 400 });
+  }
+  // A PDF starts with "%PDF-"; the browser-reported type alone is not trusted.
+  const header = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+  if (String.fromCharCode(...header) !== "%PDF-") {
+    return NextResponse.json({ success: false, error: "That file is not a valid PDF" }, { status: 400 });
+  }
+  const blob = await put(`${randomUUID()}.pdf`, file, { access: "public", contentType: "application/pdf" });
+  return NextResponse.json(
+    { success: true, data: { id: null, fileName: file.name, url: blob.url, mimeType: "application/pdf", kind: "pdf" } },
+    { status: 201 }
+  );
 }
 
 async function handleProductUpload(file) {
@@ -113,6 +137,9 @@ export async function POST(request) {
     } else if (purpose === "product") {
       const auth = await requireStaffPermission(PRODUCT_UPLOAD_PERMISSIONS);
       if (!auth.ok) return permissionDeniedResponse(auth);
+    } else if (purpose === "cms") {
+      const auth = await requireStaffPermission(CMS_UPLOAD_PERMISSIONS);
+      if (!auth.ok) return permissionDeniedResponse(auth);
     } else {
       const auth = await requireStaffPermission(UPLOAD_PERMISSIONS);
       if (!auth.ok) return permissionDeniedResponse(auth);
@@ -124,6 +151,7 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
     }
     if (purpose === "product") return handleProductUpload(file);
+    if (purpose === "cms" && file.type === "application/pdf") return handleCmsPdfUpload(file);
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
         { success: false, error: "Only JPEG, PNG, WEBP, or GIF images are allowed" },
