@@ -20,6 +20,7 @@ export default function MediaSelectModal({
   confirmLabel = "Add selected",
   accept = DEFAULT_ACCEPT,
   uploadHint = "JPEG, PNG, WEBP, or GIF images",
+  multiple = true,
 }) {
   const [tab, setTab] = useState("library");
   const [items, setItems] = useState([]);
@@ -72,7 +73,10 @@ export default function MediaSelectModal({
   if (!open) return null;
 
   function togglePick(item) {
-    setPicked((prev) => (prev.includes(item.id) ? prev.filter((id) => id !== item.id) : [...prev, item.id]));
+    setPicked((prev) => {
+      if (prev.includes(item.id)) return prev.filter((id) => id !== item.id);
+      return multiple ? [...prev, item.id] : [item.id];
+    });
   }
 
   function handleConfirm() {
@@ -83,7 +87,7 @@ export default function MediaSelectModal({
 
   function handleFiles(fileList) {
     if (!fileList || !fileList.length) return;
-    onUploadFiles(fileList);
+    onUploadFiles(multiple ? fileList : [fileList[0]]);
     onClose();
   }
 
@@ -177,7 +181,7 @@ export default function MediaSelectModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                multiple
+                multiple={multiple}
                 accept={accept}
                 className="hidden"
                 aria-hidden="true"
@@ -209,6 +213,7 @@ export default function MediaSelectModal({
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
                   placeholder="Search media…"
                   aria-label="Search the Media library"
                   className="h-9 w-full max-w-xs rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none focus:border-primary-400 dark:border-white/10 dark:bg-darksurface2/40 dark:text-slate-200"
@@ -266,7 +271,7 @@ export default function MediaSelectModal({
         {tab === "library" && (
           <div className="flex items-center justify-between gap-3 border-t border-slate-100 px-5 py-3.5 dark:border-white/5">
             <span className="text-xs text-slate-500 dark:text-slate-400">
-              {picked.length ? `${picked.length} selected` : "Select one or more images"}
+              {picked.length ? `${picked.length} selected` : multiple ? "Select one or more images" : "Select an image"}
             </span>
             <div className="flex items-center gap-2">
               <button

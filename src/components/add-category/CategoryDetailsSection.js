@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import MediaSelectModal from "@/components/media/MediaSelectModal";
 import { validateImageFile } from "./helpers";
 
 export default function CategoryDetailsSection({
@@ -14,22 +15,25 @@ export default function CategoryDetailsSection({
   onTitleChange,
   onDescriptionChange,
   onImagePicked,
+  onLibraryImagePicked,
   onImageRemoved,
   onImageRejected,
 }) {
-  const fileInputRef = useRef(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (file) {
-      const error = validateImageFile(file);
-      if (error) {
-        onImageRejected(error);
-      } else {
-        onImagePicked(file);
-      }
+  function handleUploadFiles(fileList) {
+    const file = fileList?.[0];
+    if (!file) return;
+    const error = validateImageFile(file);
+    if (error) {
+      onImageRejected(error);
+    } else {
+      onImagePicked(file);
     }
-    e.target.value = "";
+  }
+
+  function handleLibrarySelect(items) {
+    if (items[0]) onLibraryImagePicked(items[0]);
   }
 
   return (
@@ -39,12 +43,13 @@ export default function CategoryDetailsSection({
         <div
           role="button"
           tabIndex={0}
-          aria-label="Add category image"
-          onClick={() => fileInputRef.current?.click()}
+          aria-label={image ? "Change category image" : "Add category image"}
+          aria-haspopup="dialog"
+          onClick={() => setPickerOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              fileInputRef.current?.click();
+              setPickerOpen(true);
             }
           }}
           className={`relative w-full md:w-36 h-36 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors group overflow-hidden ${
@@ -55,7 +60,7 @@ export default function CategoryDetailsSection({
         >
           {image ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element -- blob: object URL from a local upload, not optimizable by next/image */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- blob: preview or stored Blob URL, not optimizable by next/image */}
               <img src={image.url} alt={image.name || ""} className="w-full h-full object-cover" />
               <button
                 type="button"
@@ -80,15 +85,19 @@ export default function CategoryDetailsSection({
               </span>
             </>
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            aria-hidden="true"
-            onChange={handleFileChange}
-          />
         </div>
+        <MediaSelectModal
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onSelectItems={handleLibrarySelect}
+          onUploadFiles={handleUploadFiles}
+          selectedUrls={image ? [image.url] : []}
+          multiple={false}
+          title="Category image"
+          confirmLabel="Use as category image"
+          accept="image/jpeg,image/png,image/webp"
+          uploadHint="JPG, PNG, or WEBP, up to 5MB"
+        />
         {imageError && <p className="text-xs text-error mt-1">Image is required.</p>}
         </div>
 

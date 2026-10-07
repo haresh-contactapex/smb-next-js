@@ -37,6 +37,10 @@ const CMS_MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
 // Only images are recorded in the Media library, which is image-only; the
 // rest are stored and referenced from product_media alone.
 const PRODUCT_UPLOAD_PERMISSIONS = ["products.create", "products.edit", "media.create"];
+
+// The category editor (purpose=category) uploads a single image, handled like
+// any library image.
+const CATEGORY_UPLOAD_PERMISSIONS = ["categories.create", "categories.edit", "media.create"];
 const PRODUCT_VIDEO_TYPES = new Set(["video/mp4", "video/webm", "video/ogg", "video/quicktime"]);
 const PRODUCT_MODEL_EXTENSIONS = new Set([".glb", ".usdz"]);
 const PRODUCT_MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -131,7 +135,8 @@ export async function POST(request) {
     const purpose = formData.get("purpose");
 
     // Every staff member may upload their own profile avatar (purpose=avatar);
-    // product editors may upload product media (purpose=product); any other
+    // product editors may upload product media (purpose=product), category
+    // editors a category image (purpose=category); any other
     // upload needs media or settings rights.
     if (purpose === "avatar") {
       if (!(await getCurrentStaffUser())) {
@@ -139,6 +144,9 @@ export async function POST(request) {
       }
     } else if (purpose === "product") {
       const auth = await requireStaffPermission(PRODUCT_UPLOAD_PERMISSIONS);
+      if (!auth.ok) return permissionDeniedResponse(auth);
+    } else if (purpose === "category") {
+      const auth = await requireStaffPermission(CATEGORY_UPLOAD_PERMISSIONS);
       if (!auth.ok) return permissionDeniedResponse(auth);
     } else if (purpose === "cms") {
       const auth = await requireStaffPermission(CMS_UPLOAD_PERMISSIONS);

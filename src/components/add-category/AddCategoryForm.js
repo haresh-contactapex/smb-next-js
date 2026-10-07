@@ -19,6 +19,16 @@ import Toast from "@/components/add-product/Toast";
 // also drives the progress-bar animation for both success and error messages.
 const TOAST_AUTO_DISMISS_MS = 10000;
 
+async function uploadCategoryImage(file) {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("purpose", "category");
+  const res = await fetch("/api/media", { method: "POST", body: formData });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.success) throw new Error(json.error || `Failed to upload ${file.name}`);
+  return json.data.url;
+}
+
 export default function AddCategoryForm({ categoryId, categories = [] }) {
   const isEdit = Boolean(categoryId);
   const router = useRouter();
@@ -96,7 +106,13 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   }
 
   function handleImagePicked(file) {
-    setField("image", { url: URL.createObjectURL(file), name: file.name });
+    setField("image", { url: URL.createObjectURL(file), name: file.name, file });
+    setImageError(false);
+  }
+
+  // Already stored in the Media library, so no upload is needed on save.
+  function handleLibraryImagePicked(item) {
+    setField("image", { url: item.url, name: item.fileName });
     setImageError(false);
   }
 
@@ -137,12 +153,22 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   async function persistCategory() {
     setSaving(true);
     try {
+      // A file picked in this session is uploaded now, swapping its blob:
+      // preview URL for the stored one (kept in state so a failed save
+      // doesn't re-upload on retry).
+      let toSave = category;
+      if (category.image?.file) {
+        const url = await uploadCategoryImage(category.image.file);
+        toSave = { ...category, image: { url, name: category.image.name } };
+        setCategory(toSave);
+      }
+
       const res = await fetch(
         isEdit ? `/api/categories/${categoryId}` : "/api/categories",
         {
           method: isEdit ? "PUT" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(assembleCategory(category)),
+          body: JSON.stringify(assembleCategory(toSave)),
         },
       );
       const json = await res.json();
@@ -200,6 +226,7 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
             onTitleChange={handleTitleChange}
             onDescriptionChange={(value) => setField("description", value)}
             onImagePicked={handleImagePicked}
+            onLibraryImagePicked={handleLibraryImagePicked}
             onImageRemoved={handleImageRemoved}
             onImageRejected={handleImageRejected}
           />
