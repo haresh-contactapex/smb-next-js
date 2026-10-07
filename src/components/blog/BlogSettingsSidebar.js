@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
 import MediaSelectModal from "@/components/media/MediaSelectModal";
+import { altTextFor, uploadLibraryImage } from "@/components/media/helpers";
 import CmsVersionHistory from "@/components/cms/CmsVersionHistory";
 import {
   BLOG_AUTHOR_MAX,
@@ -65,20 +66,11 @@ export default function BlogSettingsSidebar({
   const [pickerOpen, setPickerOpen] = useState(false);
   const closePicker = useCallback(() => setPickerOpen(false), []);
 
-  const altFor = (item) => item.altText || item.fileName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ");
-
   // The post form has no save-time upload step, so a file from the computer is
   // uploaded to the library right away and chosen as the featured image.
   async function uploadFeaturedImage(files) {
-    const file = files[0];
-    if (!file.type.startsWith("image/")) throw new Error("Only JPEG, PNG, WEBP, or GIF images can be used.");
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("purpose", "cms");
-    const res = await fetch("/api/media", { method: "POST", body: formData });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok || !json.success) throw new Error(json.error || "The image couldn't be uploaded.");
-    onFeaturedImageSelect({ url: json.data.url, alt: altFor(json.data) });
+    const item = await uploadLibraryImage(files[0], "cms");
+    onFeaturedImageSelect({ url: item.url, alt: altTextFor(item) });
   }
 
   const today = todayIso();
@@ -315,7 +307,7 @@ export default function BlogSettingsSidebar({
         <MediaSelectModal
           open={pickerOpen}
           onClose={closePicker}
-          onSelectItems={(items) => items[0] && onFeaturedImageSelect({ url: items[0].url, alt: altFor(items[0]) })}
+          onSelectItems={(items) => items[0] && onFeaturedImageSelect({ url: items[0].url, alt: altTextFor(items[0]) })}
           onUploadFiles={uploadFeaturedImage}
           selectedUrls={featuredImageUrl ? [featuredImageUrl] : []}
           multiple={false}

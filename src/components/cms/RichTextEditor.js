@@ -7,7 +7,8 @@ import { StarterKit } from "@tiptap/starter-kit";
 import { Link } from "@tiptap/extension-link";
 import { Image } from "@tiptap/extension-image";
 import { Table, TableCell, TableHeader, TableRow } from "@tiptap/extension-table";
-import MediaPickerModal from "./MediaPickerModal";
+import MediaSelectModal from "@/components/media/MediaSelectModal";
+import { altTextFor, uploadLibraryImage } from "@/components/media/helpers";
 import { CMS_ADMIN_PROSE } from "./prose";
 
 // Text alignment stored as the class the storefront styles (cms-align-center /
@@ -255,6 +256,17 @@ function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
     }
   }
 
+  function insertImage({ url, alt }) {
+    editor.chain().focus().setImage({ src: url, alt }).run();
+  }
+
+  // Uploaded to the library right away (the editor has no save-time upload
+  // step), then inserted at the cursor.
+  async function uploadImage(files) {
+    const item = await uploadLibraryImage(files[0], "cms");
+    insertImage({ url: item.url, alt: altTextFor(item) });
+  }
+
   return (
     <div>
       <div
@@ -412,13 +424,15 @@ function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
       )}
 
       <input ref={fileInputRef} type="file" accept="application/pdf" onChange={handleFileUpload} className="sr-only" tabIndex={-1} aria-label="Upload a PDF" />
-      <MediaPickerModal
+      <MediaSelectModal
         open={imagePickerOpen}
         onClose={() => setImagePickerOpen(false)}
-        onSelect={({ url, alt }) => {
-          editor.chain().focus().setImage({ src: url, alt }).run();
-          setImagePickerOpen(false);
-        }}
+        onSelectItems={(items) => items[0] && insertImage({ url: items[0].url, alt: altTextFor(items[0]) })}
+        onUploadFiles={uploadImage}
+        multiple={false}
+        title="Insert image"
+        confirmLabel="Insert image"
+        uploadHint="JPG, PNG, WEBP, or GIF, up to 10MB"
       />
     </div>
   );
