@@ -306,13 +306,33 @@
     "seoDescription": "Shop wedding bands for her and for him, plus contemporary metal, lab grown diamond, curved and thin bands crafted in 18K gold and platinum."
   },
   {
-    "slug": "wedding-band-new",
-    "title": "Wedding Band New",
+    "slug": "wedding-band",
+    "title": "Wedding Band",
     "folder": "landing",
     "group": null,
     "position": 6,
-    "content": "wedding-band-new.html",
+    "content": "wedding-band.html",
     "seoTitle": "Wedding Band Collection | ShopMyBand",
     "seoDescription": "Shop the wedding band collection for men and women: classic, diamond, lab grown and contemporary metal bands in 18K gold and platinum."
+  },
+  {
+    "slug": "anniversary-bands",
+    "title": "Anniversary Bands",
+    "folder": "landing",
+    "group": null,
+    "position": 7,
+    "content": "anniversary-bands.html",
+    "seoTitle": "Anniversary Bands for Her and Him | ShopMyBand",
+    "seoDescription": "Shop diamond, rose gold, white gold, yellow gold and platinum anniversary bands for her and for him to celebrate every milestone."
+  },
+  {
+    "slug": "classic-bands",
+    "title": "Classic Bands",
+    "folder": "landing",
+    "group": null,
+    "position": 8,
+    "content": "classic-bands.html",
+    "seoTitle": "Classic Wedding Bands for Her and Him | ShopMyBand",
+    "seoDescription": "Shop classic wedding bands for brides and grooms: timeless gold and platinum bands in simple, sophisticated designs."
   }
 ]

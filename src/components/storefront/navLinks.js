@@ -44,17 +44,18 @@ export const CLASSIC_BANDS_MENU = {
 };
 
 // Storefront nav links. A link with a `megaMenu` opens it on hover in the desktop
-// header, and the mobile drawer lists its items under the link. "Wedding Bands" opens
-// the Wedding Band landing page, a CMS page at /wedding-bands (seeded from
-// scripts/cms-content/wedding-bands.html). There is no "Anniversary Bands" / "Classic
-// Bands" parent page yet, so those two links open the first item of their own menu.
-const firstItemHref = (menu) => menu.columns[0][0].href;
-export const WEDDING_BANDS_PAGE_HREF = "/wedding-bands";
+// header, and the mobile drawer lists its items under the link. "Wedding Bands",
+// "Anniversary Bands" and "Classic Bands" each open a landing page, a CMS page at
+// /wedding-band, /anniversary-bands and /classic-bands (seeded from
+// scripts/cms-content/<slug>.html).
+export const WEDDING_BANDS_PAGE_HREF = "/wedding-band";
+export const ANNIVERSARY_BANDS_PAGE_HREF = "/anniversary-bands";
+export const CLASSIC_BANDS_PAGE_HREF = "/classic-bands";
 
 export const STORE_NAV_LINKS = [
   { label: "Wedding Bands", href: WEDDING_BANDS_PAGE_HREF, megaMenu: WEDDING_BANDS_MENU },
-  { label: "Anniversary Bands", href: firstItemHref(ANNIVERSARY_BANDS_MENU), megaMenu: ANNIVERSARY_BANDS_MENU },
-  { label: "Classic Bands", href: firstItemHref(CLASSIC_BANDS_MENU), megaMenu: CLASSIC_BANDS_MENU },
+  { label: "Anniversary Bands", href: ANNIVERSARY_BANDS_PAGE_HREF, megaMenu: ANNIVERSARY_BANDS_MENU },
+  { label: "Classic Bands", href: CLASSIC_BANDS_PAGE_HREF, megaMenu: CLASSIC_BANDS_MENU },
   { label: "Eternity Bands", href: collection("eternity-bands") },
   { label: "New Arrivals", href: collection("new-arrivals") },
 ];
