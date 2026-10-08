@@ -33,6 +33,11 @@ export const TYPE_LABELS = {
   guest: "Guest",
 };
 
+export const TYPE_BADGE_CLASSES = {
+  registered: "bg-success/10 text-success",
+  guest: "bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-300",
+};
+
 export function computeCustomerStats(customers) {
   return {
     total: customers.length,

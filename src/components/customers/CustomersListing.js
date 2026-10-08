@@ -99,7 +99,7 @@ export default function CustomersListing({ customers: initialCustomers }) {
     const { key, direction } = sort;
     const dir = direction === "asc" ? 1 : -1;
     return [...filtered].sort((a, b) => {
-      if (key === "loyaltyPoints") return (a.loyaltyPoints - b.loyaltyPoints) * dir;
+      if (key === "accountType") return (Number(a.isGuest) - Number(b.isGuest)) * dir;
       if (key === "createdAt") return String(a.createdAt || "").localeCompare(String(b.createdAt || "")) * dir;
       if (key === "customerGroup") return String(a.customerGroup).localeCompare(String(b.customerGroup), undefined, { sensitivity: "base" }) * dir;
       const nameA = `${a.firstName} ${a.lastName}`;

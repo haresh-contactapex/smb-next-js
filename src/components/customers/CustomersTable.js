@@ -1,7 +1,14 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
-import { pickAvatarColor, getInitials, formatDate, GROUP_BADGE_CLASSES } from "./customerHelpers";
+import {
+  pickAvatarColor,
+  getInitials,
+  formatDate,
+  GROUP_BADGE_CLASSES,
+  TYPE_BADGE_CLASSES,
+  TYPE_LABELS,
+} from "./customerHelpers";
 import { Can, useCan } from "@/components/providers/StaffPermissionsProvider";
 
 function SelectCheckbox({ checked, indeterminate = false, onChange, label }) {
@@ -73,7 +80,7 @@ export default function CustomersTable({
             <SortableHeader label="Customer" sortKey="name" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Phone</th>
             <SortableHeader label="Group" sortKey="customerGroup" sort={sort} onSortChange={onSortChange} />
-            <SortableHeader label="Loyalty Points" sortKey="loyaltyPoints" sort={sort} onSortChange={onSortChange} />
+            <SortableHeader label="Account" sortKey="accountType" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Marketing</th>
             <SortableHeader label="Joined" sortKey="createdAt" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold text-right">Action</th>
@@ -107,11 +114,6 @@ export default function CustomersTable({
                   <span className="min-w-0">
                     <span className="flex items-center gap-2 font-medium text-slate-700 dark:text-slate-200 truncate">
                       {customer.firstName} {customer.lastName}
-                      {customer.isGuest && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200/60 dark:bg-white/10 text-slate-500 dark:text-slate-300">
-                          Guest
-                        </span>
-                      )}
                     </span>
                     <span className="block text-[11px] text-slate-400 truncate system-field">{customer.email}</span>
                   </span>
@@ -125,7 +127,13 @@ export default function CustomersTable({
                   {customer.customerGroup}
                 </span>
               </td>
-              <td className="py-3 px-1 text-slate-600 dark:text-slate-300">{customer.loyaltyPoints}</td>
+              <td className="py-3 px-1">
+                <span
+                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${TYPE_BADGE_CLASSES[customer.isGuest ? "guest" : "registered"]}`}
+                >
+                  {customer.isGuest ? TYPE_LABELS.guest : TYPE_LABELS.registered}
+                </span>
+              </td>
               <td className="py-3 px-1 text-slate-500 dark:text-slate-400">
                 {customer.acceptsMarketing ? "Subscribed" : "Not subscribed"}
               </td>
