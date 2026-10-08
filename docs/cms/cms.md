@@ -94,5 +94,9 @@ The cms profile keeps paragraphs, headings, text formatting, lists, quotes, link
 | `cms-small` | paragraph | fine print | HTML source |
 | `cms-photo-right` | image | a rounded photo floated beside the text | HTML source |
 | `cms-embed-contact-form` | paragraph | replaced by the contact form | HTML source |
+| `cms-contact` | table | the Contact page layout: a navy info panel (first cell) beside a white form card (second cell) | the table tools' **Table style** list |
+| `cms-contact-phone`, `cms-contact-mail` | paragraph | a row in the info panel with a round phone or email icon (first line is the label, then the link) | HTML source |
+| `cms-social` | paragraph | the "Follow us" row: its links become round icon buttons, the link text is kept only for screen readers | HTML source |
+| `cms-social-facebook`, `cms-social-x`, `cms-social-instagram`, `cms-social-pinterest` | link | which icon a `cms-social` link shows (icons in `public/storefront/contact/icons/`) | the **Link** tool's style list |
 
  Scripts, event handlers, styles, iframes, forms and `data:` or `javascript:` URLs are removed. The default (basic) profile used by product descriptions is unchanged.

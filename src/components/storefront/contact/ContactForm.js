@@ -2,7 +2,9 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
-import { CONTACT_FIELDS, CONTACT_LIMITS, EMPTY_CONTACT, normalizeContact, validateContact } from "./helpers";
+import Recaptcha from "@/components/auth/Recaptcha";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
+import { CONTACT_FIELDS, CONTACT_LIMITS, EMPTY_CONTACT, formatUsPhone, normalizeContact, validateContact } from "./helpers";
 
 const DEFAULT_FALLBACK_EMAIL = "info@shopmyband.com";
 const SEND_FAILED = "We couldn't send your message. Please try again.";
@@ -12,7 +14,7 @@ const LABELS = { name: "Name", email: "Email address", phone: "Phone number", me
 const PLACEHOLDERS = {
   name: "What's your good name?",
   email: "Enter your email address",
-  phone: "Enter your phone number",
+  phone: "(213) 290-9999",
   message: "Enter your message",
 };
 const ICONS = { name: "user", email: "mail", phone: "phone", message: "message-square" };
@@ -26,7 +28,7 @@ const CONTROL_OK = "border-[#e0e0e0] focus:border-[#333333] focus:shadow-[0_1px_
 const CONTROL_INVALID = "border-error focus:border-error focus:shadow-[0_1px_0_0_#dc2626]";
 
 const SUBMIT_BUTTON =
-  "inline-flex h-14 max-w-full items-center justify-center rounded-sm bg-[#333333] px-8 text-base text-white transition-colors hover:bg-black focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#333333] disabled:opacity-60";
+  "inline-flex h-14 max-w-full items-center justify-center rounded-sm bg-[#ef9822] px-9 text-[13px] font-medium uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#d6830f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef9822] disabled:opacity-60";
 
 // Label (hidden), control with its icon at the right end, message underneath.
 function Field({ id, name, error, children }) {
@@ -53,6 +55,8 @@ function Field({ id, name, error, children }) {
 // mounts it in its right-hand column). Posts to /api/contact, which emails the store and sends the
 // visitor a confirmation copy. `fallbackEmail` is offered when the problem is on our side.
 export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) {
+  // The Google reCAPTCHA box shows only when Settings -> Security and Settings -> Integrations both turn it on.
+  const { enableRecaptcha } = useGeneralSettings();
   const baseId = useId();
   const fieldRefs = useRef({});
   const doneRef = useRef(null);
@@ -61,6 +65,8 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
 
   const [values, setValues] = useState(EMPTY_CONTACT);
   const [honeypot, setHoneypot] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState("");
+  const [recaptchaKey, setRecaptchaKey] = useState(0); // remounting the widget gives a fresh challenge
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState(null); // { text, offerEmail } | null
   const [status, setStatus] = useState("idle"); // "idle" | "sending" | "sent"
@@ -81,9 +87,21 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
   }, [formError]);
 
   function update(name, value) {
-    setValues((current) => ({ ...current, [name]: value }));
+    // The phone number is laid out as (213) 290-9999 while it is typed.
+    setValues((current) => ({ ...current, [name]: name === "phone" ? formatUsPhone(value) : value }));
     // Clear a field's message as soon as the visitor starts fixing it.
     if (errors[name]) setErrors((current) => ({ ...current, [name]: undefined }));
+  }
+
+  // A token works once, so a failed attempt needs a new challenge.
+  function resetRecaptcha() {
+    setRecaptchaToken("");
+    setRecaptchaKey((key) => key + 1);
+  }
+
+  function handleRecaptcha(token) {
+    setRecaptchaToken(token);
+    if (token) setErrors((current) => ({ ...current, recaptcha: undefined }));
   }
 
   async function handleSubmit(event) {
@@ -92,6 +110,7 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
 
     const cleaned = normalizeContact(values);
     const found = validateContact(cleaned);
+    if (enableRecaptcha && !recaptchaToken) found.recaptcha = "Please complete the reCAPTCHA verification.";
     setErrors(found);
     setFormError(null);
     const firstInvalid = CONTACT_FIELDS.find((name) => found[name]);
@@ -99,6 +118,7 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
       fieldRefs.current[firstInvalid]?.focus();
       return;
     }
+    if (found.recaptcha) return;
 
     submittingRef.current = true;
     setStatus("sending");
@@ -106,13 +126,14 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...cleaned, honeypot }),
+        body: JSON.stringify({ ...cleaned, honeypot, recaptchaToken }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.success) {
         // The fallback address is offered when the problem is on our side rather than in what they typed.
         setFormError({ text: json?.error || SEND_FAILED, offerEmail: res.status >= 500 });
         setStatus("idle");
+        resetRecaptcha();
         return;
       }
       setSent({
@@ -124,6 +145,7 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
     } catch {
       setFormError({ text: SEND_FAILED, offerEmail: true });
       setStatus("idle");
+      resetRecaptcha();
     } finally {
       submittingRef.current = false;
     }
@@ -189,6 +211,15 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
           <input type="text" name="hp_contact" tabIndex={-1} autoComplete="off" value={honeypot} onChange={(event) => setHoneypot(event.target.value)} />
         </label>
       </div>
+
+      {enableRecaptcha && (
+        <div className="mt-6">
+          <Recaptcha key={recaptchaKey} theme="light" onChange={handleRecaptcha} />
+          <p role="alert" className="mt-1.5 text-xs text-error empty:hidden">
+            {errors.recaptcha}
+          </p>
+        </div>
+      )}
 
       <p role="alert" className="mt-6 break-words rounded-sm border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-error empty:hidden">
         {formError && (

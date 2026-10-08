@@ -52,6 +52,7 @@ const CMS_CLASSES = new Set([
   "cms-lg", "cms-accent", "cms-or", "cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-small", "cms-photo-right",
   "cms-luxe-hero", "cms-luxe-tiles", "cms-eyebrow", "cms-btn-gold", "cms-btn-gold-outline",
   "cms-embed-contact-form",
+  "cms-contact", "cms-contact-phone", "cms-contact-mail", "cms-social", "cms-social-facebook", "cms-social-x", "cms-social-instagram", "cms-social-pinterest",
 ]);
 
 // A profile allows `tags`; `attributes` says whether anything beyond the basic

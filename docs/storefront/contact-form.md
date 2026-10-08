@@ -46,11 +46,22 @@ mounting.
 
 ## What the visitor sees
 
-- All four fields are required. Limits: name 100, email 254, phone 30 (7-15
-  digits; `+ ( ) . -` and spaces allowed), message 2000 characters.
+- All four fields are required. Limits: name 100, email 254, message 2000
+  characters. The phone is a **US number**: it is laid out as `(213) 290-9999` while
+  the visitor types (extra digits are ignored, a leading `+1`/`1` is dropped) and must
+  be ten digits with an area code and exchange that start 2-9
+  (`usPhoneDigits`, `formatUsPhone`, `isValidUsPhone` in `contact/helpers.js`; the
+  server applies the same rule and stores the formatted number in the email).
 - Each field has a real `<label>` (visually hidden, because the placeholder is the
   visible hint): "What's your good name?", "Enter your email address", "Enter
-  your phone number", "Enter your message".
+  your phone number" (shown as the example `(213) 290-9999`), "Enter your message".
+- **reCAPTCHA**: when Settings -> Security's "Enable reCAPTCHA" and Settings ->
+  Integrations' "Google reCAPTCHA" are both on (`enableRecaptcha` from
+  `useGeneralSettings()`), the Google checkbox appears above the send button and a
+  completed challenge is required. The token travels as `recaptchaToken`; the server
+  checks it with `checkRecaptchaIfEnabled()` (`src/lib/auth/recaptcha.js`) and
+  answers 400 "reCAPTCHA verification failed" when it does not verify. A failed send
+  gives a fresh challenge. With the settings off nothing is shown or checked.
 - Invalid fields get a red rule and a message under the field, linked with
   `aria-describedby`, and the first invalid field is focused. A field's message
   clears as soon as the visitor edits it.
@@ -89,7 +100,7 @@ never fails the request; the response just reports `confirmationSent: false`.
 `POST /api/contact` (public, no session; other methods are not allowed)
 
 ```json
-{ "name": "...", "email": "...", "phone": "...", "message": "...", "honeypot": "" }
+{ "name": "...", "email": "...", "phone": "(213) 290-9999", "message": "...", "honeypot": "", "recaptchaToken": "" }
 ```
 
 | Status | Meaning |
@@ -120,4 +131,4 @@ it will send:
 The limiter keeps its counts in server memory. On serverless hosting each warm
 instance counts separately and a cold start resets it, so treat it as a speed
 bump, not a hard cap. If abuse becomes a real problem, move the counters to the
-database or a shared store, or add reCAPTCHA (see `src/lib/auth/recaptcha.js`).
+database or a shared store, or keep reCAPTCHA switched on in the settings.

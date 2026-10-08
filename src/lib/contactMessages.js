@@ -2,6 +2,7 @@ import { getGeneralSettings } from "./generalSettings";
 import { getStoreSettings } from "./storeSettings";
 import { createRateLimiter } from "./rateLimit";
 import { isEmailConfigured, sendContactMessageAdminEmail, sendContactMessageConfirmationEmail } from "./email";
+import { checkRecaptchaIfEnabled } from "./auth/recaptcha";
 import { normalizeContact, validateContact } from "@/components/storefront/contact/helpers";
 
 // Server side of the storefront Contact form. Nothing is stored: the message is
@@ -43,6 +44,12 @@ export async function submitContactMessage({ payload, clientKey }) {
   const values = normalizeContact(payload);
   const firstError = Object.values(validateContact(values))[0];
   if (firstError) throw new ContactMessageError(firstError);
+
+  // Only when Settings -> Security and Settings -> Integrations turn Google reCAPTCHA on.
+  const recaptcha = await checkRecaptchaIfEnabled(payload?.recaptchaToken);
+  if (recaptcha.required && !recaptcha.valid) {
+    throw new ContactMessageError("reCAPTCHA verification failed. Please try again.");
+  }
 
   // No short-circuit: both limiters record the attempt, so neither count drifts.
   const allowed = [clientLimiter(clientKey), addressLimiter(values.email.toLowerCase())];

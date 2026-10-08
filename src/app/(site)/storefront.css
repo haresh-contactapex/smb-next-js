@@ -385,3 +385,43 @@
 
 /* Blog posts (src/components/storefront/blog/BlogPostView.js): a picture on its own between paragraphs is centered. */
 .cms-content.blog-body > img:not(.cms-photo-right) { display: block; margin: 1.6em auto; }
+
+/* Contact page: a navy info panel (phone, email and social icons) beside the form card. A phone stacks them. */
+.cms-content table.cms-contact,
+.cms-content table.cms-contact tbody { display: block; width: 100%; margin: 0; }
+.cms-content table.cms-contact { overflow: hidden; border-radius: 8px; box-shadow: 0 8px 34px rgba(15, 34, 82, 0.14); }
+.cms-content table.cms-contact tr { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); }
+.cms-content table.cms-contact td { display: block; min-width: 0; padding: 2.8rem clamp(1.4rem, 3.6vw, 3rem); border: 0; }
+.cms-content table.cms-contact td:first-child { background: linear-gradient(160deg, #14306f 0%, #0f2252 55%, #0b1a40 100%); color: #cfd8ee; }
+.cms-content table.cms-contact td:last-child { background-color: #ffffff; border: 1px solid #ece8e2; border-left: 0; }
+.cms-content table.cms-contact td > :first-child { margin-top: 0; }
+.cms-content table.cms-contact p.cms-eyebrow { margin: 0 0 0.8rem; color: #ef9822; }
+.cms-content table.cms-contact h2 { margin: 0 0 1rem; font-family: var(--font-playfair), serif; font-size: clamp(28px, 3.2vw, 36px); font-weight: 400; line-height: 1.12; }
+.cms-content table.cms-contact td:first-child h2 { color: #ffffff; }
+.cms-content table.cms-contact td:last-child h2 { margin-bottom: 1.2rem; color: #0f2252; font-size: clamp(24px, 2.6vw, 30px); }
+.cms-content table.cms-contact td:first-child p { margin: 0 0 1.5rem; font-size: 14px; line-height: 1.75; }
+.cms-content table.cms-contact td:first-child a { color: #ffffff; text-decoration: none; }
+.cms-content table.cms-contact td:first-child a:hover { color: #ef9822; }
+.cms-content table.cms-contact p.cms-contact-phone,
+.cms-content table.cms-contact p.cms-contact-mail { position: relative; min-height: 2.8rem; padding-left: 3.7rem; font-size: 11px; letter-spacing: 0.16em; line-height: 1.5; text-transform: uppercase; }
+.cms-content table.cms-contact p.cms-contact-phone a,
+.cms-content table.cms-contact p.cms-contact-mail a { display: inline-block; margin-top: 0.15rem; font-size: 17px; font-weight: 500; letter-spacing: 0.01em; text-transform: none; }
+.cms-content table.cms-contact p.cms-contact-phone::before,
+.cms-content table.cms-contact p.cms-contact-mail::before { content: ""; position: absolute; top: 0; left: 0; width: 2.8rem; height: 2.8rem; border: 1px solid rgba(239, 152, 34, 0.7); border-radius: 50%; }
+.cms-content table.cms-contact p.cms-contact-phone::after,
+.cms-content table.cms-contact p.cms-contact-mail::after { content: ""; position: absolute; top: 0.75rem; left: 0.75rem; width: 1.3rem; height: 1.3rem; background-color: #ef9822; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
+.cms-content table.cms-contact p.cms-contact-phone { --ico: url(/storefront/contact/icons/phone.svg); }
+.cms-content table.cms-contact p.cms-contact-mail { --ico: url(/storefront/contact/icons/mail.svg); }
+.cms-content table.cms-contact p.cms-social { font-size: 11px; letter-spacing: 0.16em; line-height: 1.5; text-transform: uppercase; }
+.cms-content table.cms-contact p.cms-social a { position: relative; display: inline-block; width: 2.6rem; height: 2.6rem; margin: 0.7rem 0.65rem 0 0; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%; font-size: 0; transition: background-color 0.2s ease, border-color 0.2s ease; }
+.cms-content table.cms-contact p.cms-social a:hover { border-color: #ef9822; background-color: #ef9822; }
+.cms-content table.cms-contact p.cms-social a::before { content: ""; position: absolute; top: 50%; left: 50%; width: 1.1rem; height: 1.1rem; transform: translate(-50%, -50%); background-color: #ffffff; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
+.cms-content a.cms-social-facebook { --ico: url(/storefront/contact/icons/facebook.svg); }
+.cms-content a.cms-social-x { --ico: url(/storefront/contact/icons/x.svg); }
+.cms-content a.cms-social-instagram { --ico: url(/storefront/contact/icons/instagram.svg); }
+.cms-content a.cms-social-pinterest { --ico: url(/storefront/contact/icons/pinterest.svg); }
+@media (max-width: 720px) {
+  .cms-content table.cms-contact tr { grid-template-columns: minmax(0, 1fr); }
+  .cms-content table.cms-contact td { padding: 2.2rem 1.4rem; }
+  .cms-content table.cms-contact td:last-child { border-left: 1px solid #ece8e2; border-top: 0; }
+}
