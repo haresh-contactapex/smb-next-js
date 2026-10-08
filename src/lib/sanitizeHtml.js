@@ -43,11 +43,14 @@ const DROP_WITH_CONTENT = new Set([
 //              cms-products (a row of four product cards), cms-hero (a picture beside text, edge to edge) and
 //              cms-tiles (a grid of three category tiles per row), cms-split (two colour-blocked halves side by side) and
 //              cms-chips (a row of four small linked cards)
+//   luxe       the gold-and-navy Wedding Band New design: cms-luxe-hero / cms-luxe-tiles (tables), cms-eyebrow (small gold
+//              caps line), cms-btn-gold / cms-btn-gold-outline (links)
 //   images     cms-photo-right (a rounded photo floated to the right of the text)
 //   embeds     cms-embed-contact-form (a paragraph the storefront replaces with the contact form)
 const CMS_CLASSES = new Set([
   "cms-btn", "cms-btn-outline", "cms-align-center", "cms-align-right",
   "cms-lg", "cms-accent", "cms-or", "cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-small", "cms-photo-right",
+  "cms-luxe-hero", "cms-luxe-tiles", "cms-eyebrow", "cms-btn-gold", "cms-btn-gold-outline",
   "cms-embed-contact-form",
 ]);
 

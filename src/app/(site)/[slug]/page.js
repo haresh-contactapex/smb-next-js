@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic";
 // A landing page (the Wedding Band pages) runs edge to edge with no heading band, and its first heading becomes the
 // page's <h1>. It is a page that opens with a cms-hero table (a picture and text), or that holds a cms-split table
 // (two colour-blocked halves) after an introduction.
-const isLandingPage = (html) => html.startsWith('<table class="cms-hero">') || html.includes('<table class="cms-split">');
+const isLandingPage = (html) =>
+  html.startsWith('<table class="cms-hero">') || html.startsWith('<table class="cms-luxe-hero">') || html.includes('<table class="cms-split">');
 
 // One lookup per request, shared by generateMetadata and the page.
 const loadPage = cache(async (slug) => getPublishedCmsPage(slug));

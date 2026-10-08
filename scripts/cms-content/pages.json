@@ -304,5 +304,15 @@
     "content": "wedding-bands-her-him.html",
     "seoTitle": "Wedding Bands for Her and Him | ShopMyBand",
     "seoDescription": "Shop wedding bands for her and for him, plus contemporary metal, lab grown diamond, curved and thin bands crafted in 18K gold and platinum."
+  },
+  {
+    "slug": "wedding-band-new",
+    "title": "Wedding Band New",
+    "folder": "landing",
+    "group": null,
+    "position": 6,
+    "content": "wedding-band-new.html",
+    "seoTitle": "Wedding Band Collection | ShopMyBand",
+    "seoDescription": "Shop the wedding band collection for men and women: classic, diamond, lab grown and contemporary metal bands in 18K gold and platinum."
   }
 ]

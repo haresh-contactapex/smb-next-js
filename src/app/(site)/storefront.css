@@ -317,6 +317,55 @@
 @media (max-width: 560px) {
   .cms-content table.cms-chips tr { grid-template-columns: minmax(0, 1fr); }
 }
+/* The gold-and-navy Wedding Band New design. Hero: a photo that fades into a cream panel (a gold leaf drawing sits on the
+   right), a small gold eyebrow line, a navy serif heading and a solid gold button. */
+.cms-content table.cms-luxe-hero,
+.cms-content table.cms-luxe-hero tbody { display: block; width: 100%; margin: 0; }
+.cms-content table.cms-luxe-hero tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background-color: #f8f7f3; }
+.cms-content table.cms-luxe-hero td { padding: 0; border: 0; }
+.cms-content table.cms-luxe-hero td:first-child { position: relative; overflow: hidden; aspect-ratio: 526 / 350; min-height: 16rem; max-height: 34rem; }
+.cms-content table.cms-luxe-hero td:first-child p { margin: 0; }
+.cms-content table.cms-luxe-hero td:first-child img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
+.cms-content table.cms-luxe-hero td:first-child::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 24%; background: linear-gradient(to right, rgba(248, 247, 243, 0), #f8f7f3); }
+.cms-content table.cms-luxe-hero td:last-child { display: flex; flex-direction: column; justify-content: center; padding: 2.5rem clamp(6.5rem, 17vw, 12rem) 2.5rem clamp(1.5rem, 3vw, 2.4rem); background: url(/storefront/wedding-band-new/leaf.png) no-repeat right clamp(1rem, 3vw, 2.4rem) center / auto 64%; }
+.cms-content p.cms-eyebrow { margin: 0 0 0.9rem; color: #b8923a; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
+.cms-content table.cms-luxe-hero h1,
+.cms-content table.cms-luxe-hero h2 { margin: 0 0 1.2rem; color: #0f2252; font-family: var(--font-playfair), serif; font-size: clamp(30px, 4.2vw, 46px); font-weight: 400; line-height: 1.08; }
+.cms-content table.cms-luxe-hero td:last-child p { margin: 0; color: #3a4256; font-size: 13px; line-height: 1.85; }
+.cms-content table.cms-luxe-hero td:last-child p.cms-eyebrow { margin-bottom: 0.9rem; color: #b8923a; font-size: 11px; line-height: 1.4; }
+.cms-content table.cms-luxe-hero td:last-child p:last-child { margin-top: 1.7rem; }
+.cms-content a.cms-btn-gold,
+.cms-content a.cms-btn-gold-outline { display: inline-flex; align-items: center; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-decoration: none; text-transform: uppercase; transition: background-color 0.2s ease, color 0.2s ease; }
+.cms-content a.cms-btn-gold::after,
+.cms-content a.cms-btn-gold-outline::after { content: "\2192"; margin-left: 0.9em; letter-spacing: 0; }
+.cms-content a.cms-btn-gold { padding: 1em 2em; background-color: #c49342; color: #ffffff; }
+.cms-content a.cms-btn-gold:hover { background-color: #ab7d33; color: #ffffff; }
+.cms-content a.cms-btn-gold-outline { padding: 0.85em 1.6em; border: 1px solid #b8923a; color: #a07a2d; font-size: 10.5px; }
+.cms-content a.cms-btn-gold-outline:hover { background-color: #b8923a; color: #ffffff; }
+/* Tiles: photo cards on a white page, three per row (two, then one on smaller screens). */
+.cms-content table.cms-luxe-tiles,
+.cms-content table.cms-luxe-tiles tbody { display: block; width: 100%; margin: 0; }
+.cms-content table.cms-luxe-tiles { box-sizing: border-box; max-width: 1240px; margin: 0 auto; padding: 1.8rem clamp(1rem, 3vw, 2rem) 2.4rem; }
+.cms-content table.cms-luxe-tiles tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-bottom: 1.25rem; }
+.cms-content table.cms-luxe-tiles td { display: flex; flex-direction: column; align-items: center; padding: 0 0 1.9rem; border: 0; background-color: #fbf9f7; text-align: center; }
+.cms-content table.cms-luxe-tiles td > p:first-child { width: 100%; margin: 0; }
+.cms-content table.cms-luxe-tiles td img { display: block; width: 100%; height: auto; aspect-ratio: 306 / 156; object-fit: cover; margin: 0; }
+.cms-content table.cms-luxe-tiles h3 { margin: 1.4rem 1.2rem 0.6rem; color: #0f2252; font-family: var(--font-playfair), serif; font-size: 22px; font-weight: 400; line-height: 1.2; }
+.cms-content table.cms-luxe-tiles td p { margin: 0 1.6rem 1.2rem; color: #3a4256; font-size: 12.5px; line-height: 1.9; }
+.cms-content table.cms-luxe-tiles td > p:first-child { margin: 0; }
+.cms-content table.cms-luxe-tiles td > p:last-child { margin: auto 0 0; padding-top: 0.6rem; }
+@media (max-width: 900px) {
+  .cms-content table.cms-luxe-tiles tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .cms-content table.cms-luxe-hero tr { grid-template-columns: minmax(0, 1fr); }
+  .cms-content table.cms-luxe-hero td:first-child { aspect-ratio: auto; height: 17rem; min-height: 0; max-height: none; }
+  .cms-content table.cms-luxe-hero td:first-child::after { top: auto; left: 0; width: auto; height: 22%; background: linear-gradient(to bottom, rgba(248, 247, 243, 0), #f8f7f3); }
+  .cms-content table.cms-luxe-hero td:last-child { padding-right: 4.5rem; background-size: auto 40%; background-position: right 1rem top 1.6rem; }
+}
+@media (max-width: 560px) {
+  .cms-content table.cms-luxe-tiles tr { grid-template-columns: minmax(0, 1fr); }
+}
 /* Where the contact form mounts: nothing shows until it does. */
 .cms-content p.cms-embed-contact-form { min-height: 18rem; color: transparent; }
 .cms-content p.cms-or { display: flex; align-items: center; gap: 0.9em; max-width: 260px; margin: 0.7em 0; color: #777777; }

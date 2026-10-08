@@ -39,7 +39,7 @@ const CmsAlign = Extension.create({
 // sanitizeHtml.js): a table style (cms-plain / cms-striped / cms-cards), a heading style (cms-lg / cms-accent)
 // and "cms-or" on a paragraph (a divider line either side of the word). Kept as an attribute, so editing
 // a page does not drop them.
-const CMS_STYLE_CLASSES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-small", "cms-photo-right", "cms-or", "cms-lg", "cms-accent", "cms-embed-contact-form"];
+const CMS_STYLE_CLASSES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-small", "cms-photo-right", "cms-luxe-hero", "cms-luxe-tiles", "cms-eyebrow", "cms-or", "cms-lg", "cms-accent", "cms-embed-contact-form"];
 const CmsStyleClass = Extension.create({
   name: "cmsStyleClass",
   addGlobalAttributes() {
@@ -76,6 +76,8 @@ const LINK_STYLES = [
   { value: "", label: "Text link" },
   { value: "cms-btn", label: "Red button" },
   { value: "cms-btn-outline", label: "Outline button" },
+  { value: "cms-btn-gold", label: "Gold button" },
+  { value: "cms-btn-gold-outline", label: "Gold outline button" },
 ];
 
 // Same rule the server applies to a link: a full web address, a path on this site,
@@ -342,6 +344,8 @@ function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
               <option value="cms-tiles">Tiles (three per row, full width)</option>
               <option value="cms-split">Split (two halves, full width)</option>
               <option value="cms-chips">Chips (row of four small cards)</option>
+              <option value="cms-luxe-hero">Luxe hero (photo, gold and navy, full width)</option>
+              <option value="cms-luxe-tiles">Luxe tiles (photo cards, three per row)</option>
             </select>
             <ToolButton label="Delete table" onClick={() => run().deleteTable().run()} className="text-error">Delete table</ToolButton>
           </div>
