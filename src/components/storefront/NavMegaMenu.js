@@ -218,7 +218,11 @@ export default function NavMegaMenu({ link }) {
                     </span>
                     <span>
                       <strong className={`block text-[14px] font-semibold leading-[18px] ${index === currentIndex ? "text-[#ef9822]" : ""}`}>{item.label}</strong>
-                      <small className="mt-0.5 block text-[12px] leading-4 text-[#777777]">{item.description}</small>
+                      {item.description && (
+                        <small className={`mt-0.5 block text-[12px] leading-4 text-[#777777] ${link.megaMenu.fullDescriptions ? "" : "line-clamp-3"}`}>
+                          {item.description}
+                        </small>
+                      )}
                     </span>
                   </Link>
                 </li>

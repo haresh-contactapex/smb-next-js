@@ -2,12 +2,13 @@
 // preview panel that follows whichever item is hovered. Each item is a category:
 // it opens that category's storefront page (/collections/<slug>) and its preview
 // shows a product photo from the same category. `slug` is the category's slug in
-// the admin, so renaming it there breaks both.
+// the admin, so renaming it there breaks both. The description under each item
+// isn't kept here: the header loads it from the category (see
+// `withMenuDescriptions`), so it always matches the text at the top of the page.
+// It is a short version unless the menu sets `fullDescriptions`.
 const collection = (slug) => `/collections/${slug}`;
 
-const MENU_DESCRIPTION = "Lorem Ipsum is simply dummy text of the printing and typesetting industry.";
-
-const menuItem = (label, slug, icon) => ({ label, description: MENU_DESCRIPTION, slug, href: collection(slug), icon });
+const menuItem = (label, slug, icon) => ({ label, description: "", slug, href: collection(slug), icon });
 
 export const WEDDING_BANDS_MENU = {
   columns: [
@@ -24,8 +25,10 @@ export const WEDDING_BANDS_MENU = {
   ],
 };
 
-// Smaller menus: one item per column.
+// Smaller menus: one item per column. Their items fill the whole column, so they
+// have room to show each category's full description.
 export const ANNIVERSARY_BANDS_MENU = {
+  fullDescriptions: true,
   columns: [
     [menuItem("Women's Anniversary Bands", "women-s-anniversary-bands", "women")],
     [menuItem("Men's Anniversary Bands", "men-s-anniversary-bands", "men")],
@@ -33,6 +36,7 @@ export const ANNIVERSARY_BANDS_MENU = {
 };
 
 export const CLASSIC_BANDS_MENU = {
+  fullDescriptions: true,
   columns: [
     [menuItem("Women's Classic Bands", "women-s-classic-wedding-bands", "women")],
     [menuItem("Men's Classic Bands", "men-s-classic-wedding-bands", "men")],
@@ -54,6 +58,27 @@ export const STORE_NAV_LINKS = [
   { label: "Eternity Bands", href: collection("eternity-bands") },
   { label: "New Arrivals", href: collection("new-arrivals") },
 ];
+
+// Every category slug used by a mega menu item, for loading their descriptions.
+export const STORE_MENU_SLUGS = STORE_NAV_LINKS.flatMap((link) => (link.megaMenu ? link.megaMenu.columns.flat().map((item) => item.slug) : []));
+
+// A copy of the nav links with each mega menu item's description filled in from
+// `descriptions` ({ [slug]: { short, full } }): the full text for a menu that sets
+// `fullDescriptions`, the short text otherwise. An item without one keeps none.
+export function withMenuDescriptions(links, descriptions) {
+  return links.map((link) => {
+    if (!link.megaMenu) return link;
+    const { fullDescriptions } = link.megaMenu;
+    const describe = (item) => (fullDescriptions ? descriptions[item.slug]?.full : descriptions[item.slug]?.short) || "";
+    return {
+      ...link,
+      megaMenu: {
+        ...link.megaMenu,
+        columns: link.megaMenu.columns.map((column) => column.map((item) => ({ ...item, description: describe(item) }))),
+      },
+    };
+  });
+}
 
 // True when `pathname` is the page `href` points at (a trailing slash doesn't matter).
 export function isCurrentPath(pathname, href) {

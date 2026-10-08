@@ -107,6 +107,44 @@ export async function getVisibleCategoryBySlug(slug) {
   };
 }
 
+const BLURB_MAX_LENGTH = 110;
+
+// A category description with its line breaks and runs of spaces flattened, so it
+// flows to whatever width it is shown at.
+function tidyDescription(text) {
+  return String(text || "").replace(/\s+/g, " ").trim();
+}
+
+// A category description cut down to a line or two for a menu: whitespace tidied,
+// then its first sentence when that is short enough, otherwise cut at a word
+// boundary with an ellipsis.
+export function shortenDescription(text, max = BLURB_MAX_LENGTH) {
+  const clean = tidyDescription(text);
+  if (clean.length <= max) return clean;
+  const sentence = clean.match(/^.{30,}?[.!?](?=\s|$)/);
+  if (sentence && sentence[0].length <= max) return sentence[0];
+  const cut = clean.slice(0, max + 1);
+  const lastSpace = cut.lastIndexOf(" ");
+  return cut.slice(0, lastSpace > 40 ? lastSpace : max).replace(/[\s,;:.-]+$/, "") + "…";
+}
+
+// Descriptions for the storefront mega menus, keyed by category slug: each visible
+// category's description (the text at the top of its page) as `full` and a cut-down
+// `short` version. A hidden or unknown category, or one without a description,
+// simply has no entry.
+export async function listCategoryDescriptions(slugs) {
+  if (slugs.length === 0) return {};
+  const rows = await sql`
+    SELECT slug, description FROM categories
+    WHERE slug = ANY(${slugs}::text[]) AND is_visible = true
+  `;
+  return Object.fromEntries(
+    rows
+      .map((row) => [row.slug, { short: shortenDescription(row.description), full: tidyDescription(row.description) }])
+      .filter(([, description]) => description.full),
+  );
+}
+
 async function assertNotCircular(id, parentId) {
   if (!id || !parentId) return;
   let current = parentId;

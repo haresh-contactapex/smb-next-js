@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { connection } from "next/server";
 import MobileMenu from "./MobileMenu";
 import NavLink from "./NavLink";
 import NavMegaMenu from "./NavMegaMenu";
@@ -6,11 +7,28 @@ import CartButton from "./cart/CartButton";
 import WishlistButton from "./wishlist/WishlistButton";
 import SearchButton from "./search/SearchButton";
 import StoreIcon from "./icons";
-import { STORE_NAV_LINKS } from "./navLinks";
+import { STORE_MENU_SLUGS, STORE_NAV_LINKS, withMenuDescriptions } from "./navLinks";
+import { listCategoryDescriptions } from "@/lib/categories";
+
+// The nav links with each mega menu item's description taken from its
+// category (the text at the top of the category page). A failed lookup just leaves
+// the descriptions out: the header must never take a page down with it.
+async function loadNavLinks() {
+  try {
+    return withMenuDescriptions(STORE_NAV_LINKS, await listCategoryDescriptions(STORE_MENU_SLUGS));
+  } catch (error) {
+    console.error("Mega menu descriptions failed to load", error);
+    return STORE_NAV_LINKS;
+  }
+}
 
 // Storefront header: white bar with a hairline border + soft shadow so it
 // reads as its own region above the page content.
-export default function SiteHeader() {
+export default async function SiteHeader() {
+  // Read per request so an edited category description shows up straight away,
+  // even on pages that would otherwise be prerendered.
+  await connection();
+  const navLinks = await loadNavLinks();
   const iconButton = "hover:text-[#ef9822] transition-colors hover:scale-110 transform duration-300";
 
   return (
@@ -24,7 +42,7 @@ export default function SiteHeader() {
         </Link>
 
         <nav aria-label="Main" className="hidden lg:flex lg:space-x-3 xl:space-x-6 2xl:space-x-8 lg:text-[11px] xl:text-[13px] 2xl:text-[16px] font-medium tracking-wide uppercase flex-shrink">
-          {STORE_NAV_LINKS.map((link) =>
+          {navLinks.map((link) =>
             link.megaMenu ? (
               <NavMegaMenu key={link.label} link={link} />
             ) : (
