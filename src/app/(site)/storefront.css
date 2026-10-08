@@ -338,10 +338,10 @@
 .cms-content a.cms-btn-gold-outline { display: inline-flex; align-items: center; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-decoration: none; text-transform: uppercase; transition: background-color 0.2s ease, color 0.2s ease; }
 .cms-content a.cms-btn-gold::after,
 .cms-content a.cms-btn-gold-outline::after { content: "\2192"; margin-left: 0.9em; letter-spacing: 0; }
-.cms-content a.cms-btn-gold { padding: 1em 2em; background-color: #c49342; color: #ffffff; }
-.cms-content a.cms-btn-gold:hover { background-color: #ab7d33; color: #ffffff; }
-.cms-content a.cms-btn-gold-outline { padding: 0.85em 1.6em; border: 1px solid #b8923a; color: #a07a2d; font-size: 10.5px; }
-.cms-content a.cms-btn-gold-outline:hover { background-color: #b8923a; color: #ffffff; }
+.cms-content a.cms-btn-gold { padding: 1em 2em; background-color: #ef9822; color: #ffffff; }
+.cms-content a.cms-btn-gold:hover { background-color: #d6830f; color: #ffffff; }
+.cms-content a.cms-btn-gold-outline { padding: 0.85em 1.6em; border: 1px solid #ef9822; color: #ef9822; font-size: 10.5px; }
+.cms-content a.cms-btn-gold-outline:hover { background-color: #ef9822; color: #ffffff; }
 /* Tiles: photo cards on a white page, three per row (two, then one on smaller screens). */
 .cms-content table.cms-luxe-tiles,
 .cms-content table.cms-luxe-tiles tbody { display: block; width: 100%; margin: 0; }
