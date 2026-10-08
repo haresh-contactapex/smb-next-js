@@ -6,8 +6,8 @@ import { checkRecaptchaIfEnabled } from "./auth/recaptcha";
 import { normalizeContact, validateContact } from "@/components/storefront/contact/helpers";
 
 // Server side of the storefront Contact form. Nothing is stored: the message is
-// emailed to the store (Settings -> Store support email, else Settings ->
-// General store email) and the visitor gets a confirmation copy.
+// emailed to the store (Settings -> General store email, else Settings ->
+// Store support email) and the visitor gets a confirmation copy.
 
 // Thrown for problems the visitor can understand; the route turns `status` into the HTTP status.
 export class ContactMessageError extends Error {
@@ -30,7 +30,7 @@ async function loadStoreContact() {
   const [general, store] = await Promise.all([getGeneralSettings().catch(() => null), getStoreSettings().catch(() => null)]);
   return {
     storeName: general?.storeName || "Shop My Band",
-    recipient: store?.supportEmail || general?.storeEmail || "",
+    recipient: general?.storeEmail || store?.supportEmail || "",
   };
 }
 

@@ -83,7 +83,7 @@ variables in `.env.local`) and get the same footer.
 
 | Email | To | Reply-To | Subject | Contents |
 | --- | --- | --- | --- | --- |
-| Store notification | **Settings -> Store support email**, else **Settings -> General store email** | the visitor | `New message from <name>` | name, email, phone, the message quoted |
+| Store notification | **Settings -> General store email**, else **Settings -> Store support email** | the visitor | `New message from <name>` | name, email, phone, the message quoted |
 | Confirmation | the visitor | the store address above | `We received your message` | thanks, a copy of their message |
 
 Replying to the store notification answers the visitor directly. All
