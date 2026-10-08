@@ -14,17 +14,31 @@ const WHITE = "#E0E0E0";
 const YELLOW = "#E8C581";
 const PLATINUM = "#D4D4D4";
 
-// Swatch color for an option value such as "14KW" or "14K White Gold";
-// null when the value isn't a recognizable metal.
+const BLACK = "#2B2B2B";
+
+// Other metals a band can be made of, matched by name.
+const OTHER_METALS = [
+  [/cobalt/, "#A7B0BA"],
+  [/titanium/, "#8B9097"],
+  [/zirconium/, "#3B3B3D"],
+  [/tungsten/, "#6E7378"],
+  [/silver|stainless|steel/, "#CFCFD2"],
+  [/black/, BLACK],
+];
+
+// A CSS `background` value for an option value such as "14KW", "14K White Gold" or
+// "18K Rose Gold PVD and Black PVD" (drawn half gold, half black); null when the value
+// isn't a recognizable metal. Use it as `background`, not `backgroundColor`.
 export function metalColor(value) {
   const text = String(value ?? "").trim().toLowerCase();
   const exact = METALS.find((metal) => metal.code.toLowerCase() === text);
   if (exact) return exact.color;
   if (/platinum|^pt\d*$/.test(text)) return PLATINUM;
-  if (/rose|^\d+k?r$/.test(text)) return ROSE;
-  if (/yellow|^\d+k?y$/.test(text)) return YELLOW;
-  if (/white|^\d+k?w$/.test(text)) return WHITE;
-  return null;
+
+  const gold = /rose|^\d+k?r$/.test(text) ? ROSE : /yellow|^\d+k?y$/.test(text) ? YELLOW : /white|^\d+k?w$/.test(text) ? WHITE : null;
+  if (gold && /black/.test(text)) return `linear-gradient(135deg, ${gold} 50%, ${BLACK} 50%)`;
+  if (gold) return gold;
+  return OTHER_METALS.find(([pattern]) => pattern.test(text))?.[1] ?? null;
 }
 
 // Neutral swatch for a metal with no known color (cobalt, titanium, ...).

@@ -30,15 +30,20 @@ the admin catalog (`products`, `product_media`, `product_variants`).
 - Products already shown are never added twice, even if the catalog changes
   between clicks.
 - The **Filters** heading collapses the whole filter area (closed by default) and
-  shows a badge with how many filters are set; **Clear all filters** resets them.
+  shows a badge with how many filters are set. Each filter in use also appears as
+  a removable chip in the Filters bar (metals with their swatch, "Size 7", and the
+  price range such as "From $500"), visible even while the panel is closed;
+  **Clear all filters** resets them all.
 - **Metal color** and **band size** are built from the catalog, not a fixed list:
   `listStorefrontFilterOptions()` collects every value of a product option named
   like *color/metal* or *size* on ACTIVE products in the listing (the category and
   its sub-categories on a collection page, the whole shop otherwise). Values that
   differ only by case count once, sizes sort numerically, and a group with no
-  values is hidden. Swatches come from `metals.js` (`metalColor`, `metalLabel`);
-  an unrecognized metal (cobalt, titanium, ...) gets a neutral swatch and keeps
-  its full name.
+  values is hidden. Swatches come from `metals.js` (`metalColor`, `metalLabel`):
+  gold, platinum, cobalt, titanium, zirconium and the like have their own colors,
+  and a two-tone PVD finish ("... and Black PVD") is a half-gold, half-black
+  swatch. Only a metal `metalColor` doesn't know gets a neutral grey swatch.
+  Names without a short code (cobalt, PVD finishes) are shown in full.
 - Choosing metals (any of them) and/or a band size searches on the server like the
   price boxes do, from page one. Clicking the chosen size again clears it.
 

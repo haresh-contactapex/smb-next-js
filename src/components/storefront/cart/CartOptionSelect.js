@@ -26,7 +26,7 @@ export default function CartOptionSelect({ name, value, choices, swatch = false,
           inset ? "pl-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#ef9822]" : ""
         }`}
       >
-        {color && <span aria-hidden="true" style={{ backgroundColor: color }} className="h-[22px] w-[22px] flex-shrink-0 rounded-full ring-1 ring-gray-300" />}
+        {color && <span aria-hidden="true" style={{ background: color }} className="h-[22px] w-[22px] flex-shrink-0 rounded-full ring-1 ring-gray-300" />}
         <select
           id={id}
           value={value}

@@ -127,6 +127,22 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
     setMinPrice("");
     setMaxPrice("");
   };
+  // One removable chip per filter in use, shown in the Filters bar.
+  const money = (amount) => (symbolAfter ? `${amount} ${price.symbol}` : `${price.symbol}${amount}`);
+  const priceLabel =
+    minPrice !== "" && maxPrice !== "" ? `${money(minPrice)} – ${money(maxPrice)}` : minPrice !== "" ? `From ${money(minPrice)}` : `Up to ${money(maxPrice)}`;
+  const chips = [
+    ...metals.map((value) => ({
+      key: `metal:${value}`,
+      label: value,
+      swatch: metalColor(value) || OTHER_METAL_COLOR,
+      remove: () => toggleMetal(value),
+    })),
+    ...(size ? [{ key: "size", label: `Size ${size}`, remove: () => setSize("") }] : []),
+    ...(minPrice !== "" || maxPrice !== ""
+      ? [{ key: "price", label: priceLabel, remove: () => { setMinPrice(""); setMaxPrice(""); } }]
+      : []),
+  ];
   const GRID = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-10 sm:pt-12";
   const RETRY_BUTTON =
     "mt-4 border border-[#ef9822] text-[#ef9822] hover:bg-[#ef9822] hover:text-white px-6 py-2 text-xs font-semibold tracking-wide uppercase rounded-md transition-colors";
@@ -140,29 +156,61 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   return (
     <>
       <section aria-label="Filters" className="border-t border-b border-gray-200 mt-10 sm:mt-12 fade-in-up delay-300">
-        <h2 className="m-0">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 py-4">
+          <h2 className="m-0">
+            <button
+              type="button"
+              id="filters-toggle"
+              aria-expanded={filtersOpen}
+              aria-controls="filters-panel"
+              onClick={() => setFiltersOpen((open) => !open)}
+              className="flex items-center gap-3 text-left cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822] rounded-md"
+            >
+              <span className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-[#333333] group-hover:text-[#ef9822] transition-colors">
+                <svg aria-hidden="true" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <path d="M4 6h16M7 12h10M10 18h4" />
+                </svg>
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-[#ef9822] text-white text-[11px] font-semibold normal-case tracking-normal">
+                    {activeFilterCount}
+                    <span className="sr-only"> active</span>
+                  </span>
+                )}
+              </span>
+            </button>
+          </h2>
+
+          {/* What is filtered right now, readable and removable even while the panel is closed. */}
+          {chips.length > 0 && (
+            <ul aria-label="Applied filters" className="order-last sm:order-none flex w-full sm:w-auto sm:flex-1 flex-wrap items-center gap-2 m-0 p-0 list-none">
+              {chips.map((chip) => (
+                <li key={chip.key}>
+                  <button
+                    type="button"
+                    onClick={chip.remove}
+                    aria-label={`Remove filter: ${chip.label}`}
+                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 pl-3 pr-2 py-1 text-xs font-medium text-[#333333] hover:border-[#ef9822] hover:text-[#ef9822] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822]"
+                  >
+                    {chip.swatch && <span aria-hidden="true" style={{ background: chip.swatch }} className="w-3 h-3 rounded-full ring-1 ring-gray-300" />}
+                    {chip.label}
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <path d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+
           <button
             type="button"
-            id="filters-toggle"
-            aria-expanded={filtersOpen}
-            aria-controls="filters-panel"
+            tabIndex={-1}
+            aria-hidden="true"
             onClick={() => setFiltersOpen((open) => !open)}
-            className="flex w-full items-center justify-between gap-3 py-4 text-left cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822] rounded-md"
+            className="ml-auto cursor-pointer"
           >
-            <span className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-[#333333] group-hover:text-[#ef9822] transition-colors">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <path d="M4 6h16M7 12h10M10 18h4" />
-              </svg>
-              Filters
-              {activeFilterCount > 0 && (
-                <span className="min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-[#ef9822] text-white text-[11px] font-semibold normal-case tracking-normal">
-                  {activeFilterCount}
-                  <span className="sr-only"> active</span>
-                </span>
-              )}
-            </span>
             <svg
-              aria-hidden="true"
               viewBox="0 0 24 24"
               className={`w-5 h-5 shrink-0 transition-transform duration-300 ${filtersOpen ? "rotate-180" : ""}`}
               fill="none"
@@ -174,7 +222,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
               <path d="m6 9 6 6 6-6" />
             </svg>
           </button>
-        </h2>
+        </div>
 
         <div
           id="filters-panel"
@@ -201,7 +249,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                   className="flex flex-col items-center gap-2 cursor-pointer group max-w-[4.5rem]"
                 >
                   <span
-                    style={{ backgroundColor: metalColor(value) || OTHER_METAL_COLOR }}
+                    style={{ background: metalColor(value) || OTHER_METAL_COLOR }}
                     className={`w-5 h-5 rounded-full ring-1 ring-offset-2 transition-all ${
                       active ? "ring-[#ef9822]" : "ring-transparent group-hover:ring-gray-300"
                     }`}

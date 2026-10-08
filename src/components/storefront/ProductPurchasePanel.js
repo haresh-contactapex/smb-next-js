@@ -206,7 +206,7 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
                               className="peer sr-only"
                             />
                             <span
-                              style={{ backgroundColor: metalColor(value) }}
+                              style={{ background: metalColor(value) }}
                               className={`w-[22px] h-[22px] rounded-full ring-1 ring-offset-2 transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-[#ef9822] ${
                                 checked ? "ring-gray-400" : "ring-transparent group-hover:ring-[#ef9822]"
                               }`}
