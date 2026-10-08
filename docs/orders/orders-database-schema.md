@@ -71,10 +71,11 @@ schema, which models the store's own admin/staff login. See Design notes.
 | `updated_at`          | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`                                        |                                                                      |
 
 Indexes: `UNIQUE (lower(email))` (one row per email, guest or registered),
-`INDEX (email)`. A guest checkout reuses the row already holding its email
-instead of adding one, and registering with a guest row's email turns that
-row into the account (its old orders are unlinked first, since registration
-doesn't verify the email).
+`INDEX (email)`. A guest checkout is refused when its email is already on
+file: the shopper is asked to sign in (registered account) or to create an
+account / use another email (earlier guest). Registering with a guest row's
+email turns that row into the account (its old orders are unlinked first,
+since registration doesn't verify the email).
 
 ### `order_addresses`
 

@@ -31,16 +31,15 @@ export async function getCustomerById(id) {
 }
 
 // Email is unique across every customer row (guest or registered), compared
-// case-insensitively. Returns the id of the row holding it, preferring a
-// registered account over a guest row.
-export async function findCustomerIdByEmail(email) {
+// case-insensitively. Returns who holds it ({ id, isGuest }) or null.
+export async function findCustomerEmailOwner(email) {
   const [row] = await sql`
-    SELECT id FROM customers
+    SELECT id, is_guest FROM customers
     WHERE lower(email) = ${String(email).trim().toLowerCase()}
     ORDER BY is_guest, created_at
     LIMIT 1
   `;
-  return row?.id || null;
+  return row ? { id: row.id, isGuest: row.is_guest } : null;
 }
 
 export async function createCustomer({ firstName, lastName, email, phone, passwordHash, acceptsMarketing, agreedToTerms }) {

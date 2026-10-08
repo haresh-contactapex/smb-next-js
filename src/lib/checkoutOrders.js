@@ -1,6 +1,6 @@
 import { randomUUID, timingSafeEqual } from "crypto";
 import { sql, sqlTransaction } from "./db";
-import { findCustomerIdByEmail } from "./customers";
+import { findCustomerEmailOwner } from "./customers";
 import { getOrdersSettings } from "./ordersSettings";
 import { isGuestCheckoutAllowed } from "./checkoutSettings";
 import { getPaymentSettings } from "./paymentSettings";
@@ -52,13 +52,11 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
   const shippingId = randomUUID();
   const guestEmail = String(contact.email || "").trim().toLowerCase();
   const itemCount = lines.reduce((total, line) => total + line.quantity, 0);
+  // The email was checked before pricing (assertGuestEmailFree); only a checkout that raced
+  // another one for the same new email can still collide, and the unique index catches that.
+  const guestId = customer ? null : randomUUID();
 
   for (let attempt = 1; attempt <= MAX_ORDER_NUMBER_ATTEMPTS; attempt += 1) {
-    // One customer row per email: a guest whose email is already on file (a returning
-    // guest, or someone with an account) places the order on that row instead of a new one.
-    // Looked up on every attempt so a retry after a lost race picks up the row that won.
-    const existingId = customer ? null : await findCustomerIdByEmail(guestEmail);
-    const guestId = customer || existingId ? null : randomUUID();
     try {
       let orderIndex = 0;
       const results = await sqlTransaction((tx) => {
@@ -86,7 +84,7 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
           VALUES (
             ${orderId},
             (SELECT ${prefix}::text || GREATEST(${startingNumber}::bigint, COALESCE(MAX(NULLIF(regexp_replace(order_number, '[^0-9]', '', 'g'), '')::bigint), 0) + 1)::text FROM orders),
-            ${customer?.id || existingId || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
+            ${customer?.id || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
             ${priced.total}, ${priced.currency}, ${status}, 'Unpaid', ${priced.subtotal}, ${priced.discount}, ${priced.shippingAmount}, ${priced.tax}, ${priced.couponCode}
           )
           RETURNING order_number
@@ -124,8 +122,8 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
     } catch (error) {
       // Two checkouts picked the same number at once: nothing was written, so try again.
       if (isOrderNumberCollision(error) && attempt < MAX_ORDER_NUMBER_ATTEMPTS) continue;
-      // Two checkouts for a new email at once: nothing was written, and the retry finds the winner's row.
-      if (isCustomerEmailCollision(error) && attempt < MAX_ORDER_NUMBER_ATTEMPTS) continue;
+      // Another guest checkout took this email a moment ago: nothing was written.
+      if (isCustomerEmailCollision(error)) throw emailInUseError({ isGuest: true });
       if (isMissingTable(error)) console.error("Order tables are missing. Run `npm run db:migrate:order-details`.", error.message);
       throw error;
     }
@@ -139,6 +137,26 @@ async function assertMayCheckout(customer) {
   if (!customer && !(await isGuestCheckoutAllowed())) {
     throw new CheckoutError("Please sign in or create an account to place your order.", 403, { reason: "sign_in_required" });
   }
+}
+
+function emailInUseError({ isGuest }) {
+  return new CheckoutError(
+    isGuest
+      ? "This email was already used for a guest order. Please create an account with it, or use a different email address, to place your order."
+      : "An account already exists for this email. Please sign in to place your order.",
+    409,
+    { reason: "email_in_use" }
+  );
+}
+
+// A guest can't check out with an email that is already on file: a registered account's owner
+// must sign in (otherwise anyone could place orders on, and see mail about, someone else's
+// account), and an email a previous guest used belongs to that guest's record. The API is
+// public, so this is the real gate. A signed-in customer isn't a guest, so it never applies.
+async function assertGuestEmailFree(customer, email) {
+  if (customer) return;
+  const owner = await findCustomerEmailOwner(email);
+  if (owner) throw emailInUseError(owner);
 }
 
 // Places a cash-on-delivery order: nothing is paid online, so there is no gateway to ask.
@@ -155,6 +173,7 @@ export async function placeCodOrder(input, customer) {
   }
 
   const priced = await priceCheckout(input);
+  await assertGuestEmailFree(customer, priced.contact.email);
   const minimum = Number(payment.codMinOrder) || 0;
   if (minimum > 0 && priced.total < minimum) {
     const moneyFormat = await loadMoneyFormat();
@@ -170,6 +189,7 @@ export async function placeCodOrder(input, customer) {
   try {
     orderNumber = await insertOrder({ orderId, priced, customer, provider: "cod" });
   } catch (error) {
+    if (error instanceof CheckoutError) throw error;
     console.error("The cash on delivery order could not be saved", error.code || "", error.message);
     const details = process.env.NODE_ENV === "development" ? { cause: error.message } : null;
     throw new CheckoutError("We couldn't save your order. Please try again.", 500, { reason: "order_failed", details });
@@ -203,6 +223,7 @@ export async function startCardPayment(input, customer) {
   }
 
   const priced = await priceCheckout(input);
+  await assertGuestEmailFree(customer, priced.contact.email);
   const orderId = randomUUID();
 
   const shippingCountry = countryCode(priced.shipping.country);
@@ -238,9 +259,10 @@ export async function startCardPayment(input, customer) {
     const orderNumber = await insertOrder({ orderId, priced, customer, intentId: intent.id });
     return { orderNumber, clientSecret: intent.client_secret, amount: priced.total, currency: priced.currency };
   } catch (error) {
-    console.error("The order could not be saved", error.code || "", error.message);
     // Nothing was charged; don't leave an intent hanging for an order that doesn't exist.
     await cancelPaymentIntent(stripe.secretKey, intent.id).catch(() => {});
+    if (error instanceof CheckoutError) throw error;
+    console.error("The order could not be saved", error.code || "", error.message);
     // In development the database's own message comes back too, so a missing migration is obvious.
     const details = process.env.NODE_ENV === "development" ? { cause: error.message } : null;
     throw new CheckoutError("We couldn't save your order. You have not been charged. Please try again.", 500, { reason: "order_failed", details });
