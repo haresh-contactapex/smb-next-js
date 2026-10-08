@@ -185,16 +185,18 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
           {chips.length > 0 && (
             <ul aria-label="Applied filters" className="order-last sm:order-none flex w-full sm:w-auto sm:flex-1 flex-wrap items-center gap-2 m-0 p-0 list-none">
               {chips.map((chip) => (
-                <li key={chip.key}>
+                <li key={chip.key} className="max-w-full min-w-0">
                   <button
                     type="button"
                     onClick={chip.remove}
+                    title={chip.label}
                     aria-label={`Remove filter: ${chip.label}`}
-                    className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 pl-3 pr-2 py-1 text-xs font-medium text-[#333333] hover:border-[#ef9822] hover:text-[#ef9822] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822]"
+                    className="inline-flex max-w-[12rem] sm:max-w-none items-center gap-2 rounded-full border border-gray-200 bg-gray-50 pl-3 pr-2 py-1 text-xs font-medium text-[#333333] hover:border-[#ef9822] hover:text-[#ef9822] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822]"
                   >
-                    {chip.swatch && <span aria-hidden="true" style={{ background: chip.swatch }} className="w-3 h-3 rounded-full ring-1 ring-gray-300" />}
-                    {chip.label}
-                    <svg aria-hidden="true" viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    {chip.swatch && <span aria-hidden="true" style={{ background: chip.swatch }} className="w-3 h-3 shrink-0 rounded-full ring-1 ring-gray-300" />}
+                    {/* On a phone a long name ends in an ellipsis; the swatch and × keep their size. */}
+                    <span className="min-w-0 truncate">{chip.label}</span>
+                    <svg aria-hidden="true" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                       <path d="M6 6l12 12M18 6L6 18" />
                     </svg>
                   </button>
