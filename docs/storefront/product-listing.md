@@ -13,6 +13,7 @@ the admin catalog (`products`, `product_media`, `product_variants`).
 | Card (wishlist heart, cart icon) | `src/components/storefront/ProductCard.js` |
 | Shimmer skeletons (page load, filter search, Load more) | `ProductListingSkeleton.js`, `src/app/(site)/women-wedding-bands/loading.js` |
 | Query | `queryStorefrontProducts()`, `listStorefrontProductsPage()` in `src/lib/products.js` |
+| Sort options (shared by the dropdown and the query) | `src/lib/productSort.js` |
 | Public endpoint | `src/app/api/storefront/products/route.js` |
 
 ## Behavior
@@ -46,6 +47,25 @@ the admin catalog (`products`, `product_media`, `product_variants`).
   Names without a short code (cobalt, PVD finishes) are shown in full.
 - Choosing metals (any of them) and/or a band size searches on the server like the
   price boxes do, from page one. Clicking the chosen size again clears it.
+- The **sort dropdown** sits right-aligned directly above the grid (a native
+  `<select>`, so it works with a keyboard and opens the device's own list on a
+  phone). Picking an order searches again from page one at once, keeps the filters,
+  and **Load more** continues in that order. "Clear all filters" leaves the sort
+  alone. It is hidden when there is nothing to sort.
+
+### Sort orders
+
+The options live in `PRODUCT_SORTS` (`src/lib/productSort.js`); the query orders
+by the chosen one and always ends with newest first, then id.
+
+| Option (`sort`) | Orders by |
+| --- | --- |
+| Featured (`featured`, default) | The store's own order. There is no hand-picked order yet, so this is newest first, same as the listing has always been |
+| Most relevant (`relevance`) | Products offering more of the chosen metals first. With no metal chosen there is nothing to rank by, so it matches Featured |
+| Best selling (`bestselling`) | Units sold on orders that aren't Cancelled (`order_line_items`), most first; products with no sales follow, newest first |
+| Alphabetically, A-Z / Z-A (`title-asc`, `title-desc`) | Title, ignoring case |
+| Price, low to high / high to low (`price-asc`, `price-desc`) | The product's price (the one shown on the card) |
+| Date, old to new / new to old (`date-asc`, `date-desc`) | When the product was added (`created_at`). New to old is the same order as Featured |
 
 ## Endpoint
 
@@ -58,10 +78,12 @@ the admin catalog (`products`, `product_media`, `product_variants`).
 | `minPrice`, `maxPrice` | Optional price bounds (zero or more); blank means unbounded |
 | `metal` | Repeatable. A color/metal option value (e.g. `Platinum`); products with any of them match. Case-insensitive |
 | `size` | A size option value (e.g. `7`) |
+| `sort` | One of the sort values above; blank means `featured`. Anything else is a `400` listing the valid values |
 
 Returns `{ success: true, data: { products, total, hasMore } }`, where `total`
 counts every ACTIVE product matching the filters. A bad parameter is a `400`
 with `{ success: false, error }`; a database failure is a `500`.
 
-Products are ordered `created_at DESC, id`. The `id` tiebreaker keeps the order
-stable when products share a timestamp, which offset paging depends on.
+Whatever the sort, ties fall back to `created_at DESC, id`. The `id` tiebreaker
+keeps the order stable when products share a timestamp or a price, which offset
+paging depends on.

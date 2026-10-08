@@ -1,4 +1,5 @@
 import { sql, sqlQuery } from "./db";
+import { DEFAULT_PRODUCT_SORT, isProductSort } from "./productSort";
 import { setProductEngravingMode } from "./engraving";
 import { normalizeEngravingMode } from "./engravingRules";
 
@@ -734,10 +735,13 @@ function optionFilters({ metals, size }) {
 // `hasVariants` tells a card whether it can add the product straight to the cart
 // (a simple product) or must send the shopper to the product page to choose.
 //
-// `limit` null returns every match. The id tiebreaker keeps the order stable when
-// products share a created_at, so offset paging never skips or repeats one.
-async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = null, maxPrice = null, categorySlug = null, metals = null, size = null } = {}) {
+// `limit` null returns every match. `sort` is one of PRODUCT_SORTS (src/lib/productSort.js);
+// each order ends with newest first, then id, which keeps it stable when products share a
+// created_at, so offset paging never skips or repeats one.
+async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = null, maxPrice = null, categorySlug = null, metals = null, size = null, sort = DEFAULT_PRODUCT_SORT } = {}) {
   const { metalValues, sizeValues } = optionFilters({ metals, size });
+  // Only a known sort reaches the query; anything else falls back to the default order.
+  const order = isProductSort(sort) ? sort : DEFAULT_PRODUCT_SORT;
   const rows = await sql`
     SELECT
       p.id,
@@ -777,7 +781,22 @@ async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = nu
         SELECT 1 FROM product_options o JOIN product_option_values ov ON ov.option_id = o.id
         WHERE o.product_id = p.id AND o.name ~* ${SIZE_OPTION_PATTERN}::text AND LOWER(ov.value) = ANY(${sizeValues}::text[])
       ))
-    ORDER BY p.created_at DESC, p.id
+    ORDER BY
+      CASE WHEN ${order}::text = 'price-asc' THEN p.price END ASC NULLS LAST,
+      CASE WHEN ${order}::text = 'price-desc' THEN p.price END DESC NULLS LAST,
+      CASE WHEN ${order}::text = 'title-asc' THEN LOWER(p.title) END ASC NULLS LAST,
+      CASE WHEN ${order}::text = 'title-desc' THEN LOWER(p.title) END DESC NULLS LAST,
+      CASE WHEN ${order}::text = 'date-asc' THEN p.created_at END ASC NULLS LAST,
+      CASE WHEN ${order}::text = 'bestselling' THEN (
+        SELECT COALESCE(SUM(li.quantity), 0) FROM order_line_items li
+        JOIN orders o ON o.id = li.order_id
+        WHERE li.product_id = p.id AND o.status <> 'Cancelled'
+      ) END DESC NULLS LAST,
+      CASE WHEN ${order}::text = 'relevance' THEN (
+        SELECT COUNT(DISTINCT LOWER(ov.value)) FROM product_options o JOIN product_option_values ov ON ov.option_id = o.id
+        WHERE o.product_id = p.id AND o.name ~* ${COLOR_OPTION_PATTERN}::text AND LOWER(ov.value) = ANY(${metalValues}::text[])
+      ) END DESC NULLS LAST,
+      p.created_at DESC, p.id
     LIMIT ${limit}::int OFFSET ${offset}::int
   `;
 
@@ -823,13 +842,13 @@ export const STOREFRONT_MAX_PAGE_SIZE = 48;
 // One page of the storefront listing for "Load more": the products plus the
 // total number matching the price filter, so the shopper sees "12 of 60" and
 // the button disappears after the last page.
-export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE, offset = 0, minPrice = null, maxPrice = null, categorySlug = null, metals = null, size = null } = {}) {
+export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE, offset = 0, minPrice = null, maxPrice = null, categorySlug = null, metals = null, size = null, sort = DEFAULT_PRODUCT_SORT } = {}) {
   const pageSize = Math.min(Math.max(Math.floor(limit) || STOREFRONT_PAGE_SIZE, 1), STOREFRONT_MAX_PAGE_SIZE);
   const start = Math.max(Math.floor(offset) || 0, 0);
   const { metalValues, sizeValues } = optionFilters({ metals, size });
 
   const [products, [{ total }]] = await Promise.all([
-    queryStorefrontProducts({ limit: pageSize, offset: start, minPrice, maxPrice, categorySlug, metals, size }),
+    queryStorefrontProducts({ limit: pageSize, offset: start, minPrice, maxPrice, categorySlug, metals, size, sort }),
     sql`
       SELECT COUNT(*)::int AS total FROM products p
       WHERE p.status = 'ACTIVE'

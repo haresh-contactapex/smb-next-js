@@ -7,6 +7,7 @@ import { OTHER_METAL_COLOR, metalColor, metalLabel } from "./metals";
 import { requestJson } from "./cart/cartApi";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { moneyInputWrap } from "@/lib/currency";
+import { DEFAULT_PRODUCT_SORT, PRODUCT_SORTS } from "@/lib/productSort";
 
 const PRICE_INPUT =
   "w-full bg-gray-50 text-sm pl-7 pr-2 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 transition-shadow";
@@ -15,17 +16,21 @@ const PRICE_INPUT =
 const FILTER_DEBOUNCE_MS = 350;
 
 const NO_OPTIONS = { metals: [], sizes: [] };
-const NO_FILTER = { min: "", max: "", metals: [], size: "" };
+const NO_FILTER = { min: "", max: "", metals: [], size: "", sort: DEFAULT_PRODUCT_SORT };
 
 // Only a non-negative number counts as a price bound; anything else is "not set".
 const cleanPrice = (value) => (value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0 ? value : "");
 
-// Two filters are the same search when they ask for the same price range, metals and size.
+// Two filters are the same when they ask for the same price range, metals and size.
+// The sort order is not a filter: it only reorders what the filters let through.
 const sameFilter = (a, b) => a.min === b.min && a.max === b.max && a.size === b.size && a.metals.join("|") === b.metals.join("|");
+// Two searches are the same when the filters and the sort order both match.
+const sameSearch = (a, b) => sameFilter(a, b) && a.sort === b.sort;
 
-function listingUrl({ offset, limit, min, max, metals, size, category }) {
+function listingUrl({ offset, limit, min, max, metals, size, sort, category }) {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
   if (category) params.set("category", category);
+  if (sort && sort !== DEFAULT_PRODUCT_SORT) params.set("sort", sort);
   if (cleanPrice(min) !== "") params.set("minPrice", cleanPrice(min));
   if (cleanPrice(max) !== "") params.set("maxPrice", cleanPrice(max));
   for (const metal of metals) params.append("metal", metal);
@@ -52,6 +57,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   const [size, setSize] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [sort, setSort] = useState(DEFAULT_PRODUCT_SORT);
 
   const [products, setProducts] = useState(initialProducts);
   const [total, setTotal] = useState(initialTotal);
@@ -96,16 +102,21 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
     [pageSize, categorySlug]
   );
 
-  // Any filter change searches again from the first page, once typing or clicking pauses.
+  // Any filter or sort change searches again from the first page. Filters wait for
+  // typing or clicking to pause; picking a sort order is one deliberate action, so it
+  // applies at once.
   useEffect(() => {
-    const wanted = { min: minPrice, max: maxPrice, metals, size };
-    if (sameFilter(wanted, applied)) return undefined;
-    const timer = setTimeout(() => {
-      setApplied(wanted);
-      fetchProducts({ replace: true, offset: 0, range: wanted });
-    }, FILTER_DEBOUNCE_MS);
+    const wanted = { min: minPrice, max: maxPrice, metals, size, sort };
+    if (sameSearch(wanted, applied)) return undefined;
+    const timer = setTimeout(
+      () => {
+        setApplied(wanted);
+        fetchProducts({ replace: true, offset: 0, range: wanted });
+      },
+      sameFilter(wanted, applied) ? 0 : FILTER_DEBOUNCE_MS
+    );
     return () => clearTimeout(timer);
-  }, [minPrice, maxPrice, metals, size, applied, fetchProducts]);
+  }, [minPrice, maxPrice, metals, size, sort, applied, fetchProducts]);
 
   const loadMore = () => fetchProducts({ replace: false, offset: products.length, range: applied });
   // After a failure: redo the search if nothing is on screen, otherwise fetch the next page again.
@@ -143,7 +154,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
       ? [{ key: "price", label: priceLabel, remove: () => { setMinPrice(""); setMaxPrice(""); } }]
       : []),
   ];
-  const GRID = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-10 sm:pt-12";
+  const GRID = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-6 sm:pt-8";
   const RETRY_BUTTON =
     "mt-4 border border-[#ef9822] text-[#ef9822] hover:bg-[#ef9822] hover:text-white px-6 py-2 text-xs font-semibold tracking-wide uppercase rounded-md transition-colors";
 
@@ -336,6 +347,43 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
           </div>
         </div>
       </section>
+
+      {/* How the products are ordered: right-aligned above the grid, and only shown when there is something to sort. */}
+      {(filtering || products.length > 0) && (
+        <div className="flex justify-end pt-6 sm:pt-8">
+          <div className="relative">
+            <label htmlFor="listing-sort" className="sr-only">
+              Sort products
+            </label>
+            {/* A native select: the list it opens is the device's own, so it works with a keyboard and on a phone. */}
+            <select
+              id="listing-sort"
+              value={sort}
+              onChange={(event) => setSort(event.target.value)}
+              className="appearance-none cursor-pointer rounded-md border border-gray-300 bg-white py-2.5 pl-4 pr-11 text-base sm:text-sm text-[#333333] hover:border-[#ef9822] focus:outline-none focus-visible:border-[#ef9822] focus-visible:ring-2 focus-visible:ring-[#ef9822]/40 transition-colors"
+            >
+              {PRODUCT_SORTS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-[#555555]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {/* Lines getting shorter, with a downward arrow: "sort". */}
+              <path d="M3 4.5h14.25M3 9h9.75m-9.75 4.5h9.75m4.5-4.5v12m0 0-3.75-3.75M17.25 21 21 17.25" />
+            </svg>
+          </div>
+        </div>
+      )}
 
       {filtering ? (
         <div className={`${GRID} pb-16 sm:pb-24`} role="status" aria-busy="true">

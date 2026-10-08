@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { STOREFRONT_MAX_PAGE_SIZE, STOREFRONT_PAGE_SIZE, listStorefrontProductsPage } from "@/lib/products";
+import { DEFAULT_PRODUCT_SORT, PRODUCT_SORTS, isProductSort } from "@/lib/productSort";
 
-// Public: one page of the storefront product listing for "Load more" and the
-// price, metal and size filters. Only ACTIVE products are ever returned.
+// Public: one page of the storefront product listing for "Load more", the
+// price, metal and size filters and the sort order. Only ACTIVE products are
+// ever returned.
 //   GET /api/storefront/products?offset=12&limit=12&minPrice=500&maxPrice=2500
-//       &metal=Platinum&metal=14K%20Rose%20Gold&size=7
+//       &metal=Platinum&metal=14K%20Rose%20Gold&size=7&sort=price-asc
 
 function badRequest(error) {
   return NextResponse.json({ success: false, error }, { status: 400 });
@@ -38,6 +40,10 @@ export async function GET(request) {
   const invalid = [limit, offset, minPrice, maxPrice].find((field) => field.error);
   if (invalid) return badRequest(invalid.error);
 
+  // A blank sort means the default order; anything else must be one the dropdown offers.
+  const sort = params.get("sort")?.trim() || DEFAULT_PRODUCT_SORT;
+  if (!isProductSort(sort)) return badRequest(`sort must be one of: ${PRODUCT_SORTS.map((option) => option.value).join(", ")}.`);
+
   const category = params.get("category")?.trim().slice(0, 200) || null;
   // Option values as the shopper picked them; a product matches any of the metals.
   const metals = params.getAll("metal").map((value) => value.trim().slice(0, 100)).filter(Boolean).slice(0, 30);
@@ -52,6 +58,7 @@ export async function GET(request) {
       categorySlug: category,
       metals,
       size,
+      sort,
     });
     return NextResponse.json({ success: true, data });
   } catch (error) {

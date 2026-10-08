@@ -70,8 +70,13 @@ export default function ProductListingSkeleton({ cards = 12 }) {
             </FilterGroup>
           </div>
 
+          {/* Sort dropdown */}
+          <div className="flex justify-end pt-6 sm:pt-8">
+            <Bar className="h-[42px] w-48" />
+          </div>
+
           {/* Product grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-10 sm:pt-12 pb-16 sm:pb-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-6 sm:pt-8 pb-16 sm:pb-24">
             {Array.from({ length: cards }, (_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
