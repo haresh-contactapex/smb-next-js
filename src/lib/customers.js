@@ -149,3 +149,8 @@ export async function updateCustomerRecord(id, payload) {
 export async function deleteCustomerRecord(id) {
   await sql`DELETE FROM customers WHERE id = ${id}`;
 }
+
+export async function deleteCustomerRecords(ids) {
+  const rows = await sql`DELETE FROM customers WHERE id = ANY(${ids}::uuid[]) RETURNING id`;
+  return rows.length;
+}

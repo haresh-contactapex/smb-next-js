@@ -2,7 +2,22 @@ import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { pickAvatarColor, getInitials, formatDate, GROUP_BADGE_CLASSES } from "./customerHelpers";
-import { Can } from "@/components/providers/StaffPermissionsProvider";
+import { Can, useCan } from "@/components/providers/StaffPermissionsProvider";
+
+function SelectCheckbox({ checked, indeterminate = false, onChange, label }) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      aria-label={label}
+      ref={(el) => {
+        if (el) el.indeterminate = indeterminate;
+      }}
+      className="w-4 h-4 rounded cursor-pointer accent-primary-500 dark:accent-accent-500"
+    />
+  );
+}
 
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
   const active = sort?.key === sortKey;
@@ -22,16 +37,39 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
   );
 }
 
-export default function CustomersTable({ customers, onDelete, deletingId, sort, onSortChange }) {
+export default function CustomersTable({
+  customers,
+  onDelete,
+  deletingId,
+  sort,
+  onSortChange,
+  selectedIds,
+  onToggleSelect,
+  onTogglePage,
+}) {
+  const selectable = useCan()("customers.delete") && Boolean(selectedIds);
+  const selectedOnPage = selectable ? customers.filter((c) => selectedIds.has(c.id)).length : 0;
+  const allOnPageSelected = customers.length > 0 && selectedOnPage === customers.length;
+
   if (customers.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No customers match your filters.</div>;
   }
 
   return (
     <div className="overflow-x-auto custom-scroll -mx-1">
-      <table className="w-full text-sm min-w-[900px]">
+      <table className={`w-full text-sm ${selectable ? "min-w-[950px]" : "min-w-[900px]"}`}>
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={allOnPageSelected}
+                  indeterminate={selectedOnPage > 0 && !allOnPageSelected}
+                  onChange={() => onTogglePage(!allOnPageSelected)}
+                  label="Select all customers on this page"
+                />
+              </th>
+            )}
             <SortableHeader label="Customer" sortKey="name" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Phone</th>
             <SortableHeader label="Group" sortKey="customerGroup" sort={sort} onSortChange={onSortChange} />
@@ -44,8 +82,21 @@ export default function CustomersTable({ customers, onDelete, deletingId, sort, 
         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
           {customers.map((customer) => {
             const isDeleting = customer.id === deletingId;
+            const isSelected = selectable && selectedIds.has(customer.id);
             return (
-            <tr key={customer.id} className="table-row transition-colors">
+            <tr
+              key={customer.id}
+              className={`table-row transition-colors ${isSelected ? "bg-primary-50/60 dark:bg-white/5" : ""}`}
+            >
+              {selectable && (
+                <td className="py-3 pl-3 pr-1">
+                  <SelectCheckbox
+                    checked={isSelected}
+                    onChange={() => onToggleSelect(customer.id)}
+                    label={`Select ${customer.firstName} ${customer.lastName}`}
+                  />
+                </td>
+              )}
               <td className="py-3 px-1">
                 <div className="flex items-center gap-3">
                   <span
