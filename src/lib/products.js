@@ -714,6 +714,21 @@ export async function deleteProducts(ids) {
   return rows.length;
 }
 
+// A product's metal color and band size are its variant options, found by option name
+// (the same rule the product page uses to draw swatches).
+const COLOR_OPTION_PATTERN = "colou?r|metal";
+const SIZE_OPTION_PATTERN = "size";
+
+// Listing filters arrive as the option values a shopper picked; matching ignores case.
+// An empty selection means "no filter" (null), which the queries skip.
+function optionFilters({ metals, size }) {
+  const lower = (list) => {
+    const values = [...new Set((list || []).map((value) => String(value ?? "").trim().toLowerCase()).filter(Boolean))];
+    return values.length ? values : null;
+  };
+  return { metalValues: lower(metals), sizeValues: lower(size ? [size] : []) };
+}
+
 // Storefront listing: only ACTIVE products, with the first two images (main +
 // hover) from the product's media order. blob: URLs are skipped as above.
 // `hasVariants` tells a card whether it can add the product straight to the cart
@@ -721,7 +736,8 @@ export async function deleteProducts(ids) {
 //
 // `limit` null returns every match. The id tiebreaker keeps the order stable when
 // products share a created_at, so offset paging never skips or repeats one.
-async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = null, maxPrice = null, categorySlug = null } = {}) {
+async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = null, maxPrice = null, categorySlug = null, metals = null, size = null } = {}) {
+  const { metalValues, sizeValues } = optionFilters({ metals, size });
   const rows = await sql`
     SELECT
       p.id,
@@ -752,6 +768,14 @@ async function queryStorefrontProducts({ limit = null, offset = 0, minPrice = nu
         SELECT pc.product_id FROM product_categories pc JOIN tree ON pc.category_id = tree.id
         UNION
         SELECT p2.id FROM products p2 JOIN tree ON p2.category_id = tree.id
+      ))
+      AND (${metalValues}::text[] IS NULL OR EXISTS (
+        SELECT 1 FROM product_options o JOIN product_option_values ov ON ov.option_id = o.id
+        WHERE o.product_id = p.id AND o.name ~* ${COLOR_OPTION_PATTERN}::text AND LOWER(ov.value) = ANY(${metalValues}::text[])
+      ))
+      AND (${sizeValues}::text[] IS NULL OR EXISTS (
+        SELECT 1 FROM product_options o JOIN product_option_values ov ON ov.option_id = o.id
+        WHERE o.product_id = p.id AND o.name ~* ${SIZE_OPTION_PATTERN}::text AND LOWER(ov.value) = ANY(${sizeValues}::text[])
       ))
     ORDER BY p.created_at DESC, p.id
     LIMIT ${limit}::int OFFSET ${offset}::int
@@ -799,12 +823,13 @@ export const STOREFRONT_MAX_PAGE_SIZE = 48;
 // One page of the storefront listing for "Load more": the products plus the
 // total number matching the price filter, so the shopper sees "12 of 60" and
 // the button disappears after the last page.
-export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE, offset = 0, minPrice = null, maxPrice = null, categorySlug = null } = {}) {
+export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE, offset = 0, minPrice = null, maxPrice = null, categorySlug = null, metals = null, size = null } = {}) {
   const pageSize = Math.min(Math.max(Math.floor(limit) || STOREFRONT_PAGE_SIZE, 1), STOREFRONT_MAX_PAGE_SIZE);
   const start = Math.max(Math.floor(offset) || 0, 0);
+  const { metalValues, sizeValues } = optionFilters({ metals, size });
 
   const [products, [{ total }]] = await Promise.all([
-    queryStorefrontProducts({ limit: pageSize, offset: start, minPrice, maxPrice, categorySlug }),
+    queryStorefrontProducts({ limit: pageSize, offset: start, minPrice, maxPrice, categorySlug, metals, size }),
     sql`
       SELECT COUNT(*)::int AS total FROM products p
       WHERE p.status = 'ACTIVE'
@@ -820,10 +845,59 @@ export async function listStorefrontProductsPage({ limit = STOREFRONT_PAGE_SIZE,
           UNION
           SELECT p2.id FROM products p2 JOIN tree ON p2.category_id = tree.id
         ))
+        AND (${metalValues}::text[] IS NULL OR EXISTS (
+          SELECT 1 FROM product_options o JOIN product_option_values ov ON ov.option_id = o.id
+          WHERE o.product_id = p.id AND o.name ~* ${COLOR_OPTION_PATTERN}::text AND LOWER(ov.value) = ANY(${metalValues}::text[])
+        ))
+        AND (${sizeValues}::text[] IS NULL OR EXISTS (
+          SELECT 1 FROM product_options o JOIN product_option_values ov ON ov.option_id = o.id
+          WHERE o.product_id = p.id AND o.name ~* ${SIZE_OPTION_PATTERN}::text AND LOWER(ov.value) = ANY(${sizeValues}::text[])
+        ))
     `,
   ]);
 
   return { products, total, hasMore: start + products.length < total };
+}
+
+// The metal colors and band sizes the listing filter offers: every value of a color/metal
+// or size option on an ACTIVE product in the listing (the category and its sub-categories,
+// or the whole shop). Values that differ only by case count once. Sizes sort as numbers.
+export async function listStorefrontFilterOptions({ categorySlug = null } = {}) {
+  const rows = await sql`
+    SELECT o.name AS option_name, ov.value
+    FROM product_options o
+    JOIN product_option_values ov ON ov.option_id = o.id
+    JOIN products p ON p.id = o.product_id
+    WHERE p.status = 'ACTIVE'
+      AND (o.name ~* ${COLOR_OPTION_PATTERN}::text OR o.name ~* ${SIZE_OPTION_PATTERN}::text)
+      AND (${categorySlug}::text IS NULL OR p.id IN (
+        WITH RECURSIVE tree AS (
+          SELECT id FROM categories WHERE slug = ${categorySlug}
+          UNION ALL
+          SELECT ch.id FROM categories ch JOIN tree t ON ch.parent_id = t.id
+        )
+        SELECT pc.product_id FROM product_categories pc JOIN tree ON pc.category_id = tree.id
+        UNION
+        SELECT p2.id FROM products p2 JOIN tree ON p2.category_id = tree.id
+      ))
+    GROUP BY o.name, ov.value
+  `;
+
+  const colorRule = new RegExp(COLOR_OPTION_PATTERN, "i");
+  const sizeRule = new RegExp(SIZE_OPTION_PATTERN, "i");
+  const unique = (matches) => {
+    const byKey = new Map();
+    for (const row of rows) {
+      const value = String(row.value ?? "").trim();
+      if (value && matches(row.option_name) && !byKey.has(value.toLowerCase())) byKey.set(value.toLowerCase(), value);
+    }
+    return [...byKey.values()].sort((a, b) => a.localeCompare(b, "en", { numeric: true, sensitivity: "base" }));
+  };
+
+  return {
+    metals: unique((name) => colorRule.test(name)),
+    sizes: unique((name) => sizeRule.test(name) && !colorRule.test(name)),
+  };
 }
 
 export const STOREFRONT_SEARCH_MAX_LENGTH = 100;

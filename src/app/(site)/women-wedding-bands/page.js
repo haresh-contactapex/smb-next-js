@@ -1,5 +1,5 @@
 import ProductListing from "@/components/storefront/ProductListing";
-import { STOREFRONT_PAGE_SIZE, listStorefrontProductsPage } from "@/lib/products";
+import { STOREFRONT_PAGE_SIZE, listStorefrontFilterOptions, listStorefrontProductsPage } from "@/lib/products";
 
 // Reads live catalog data, so never prerender it at build time.
 export const dynamic = "force-dynamic";
@@ -13,15 +13,18 @@ export const metadata = {
 // visitor rather than silently showing an empty shop.
 async function loadProducts() {
   try {
-    const { products, total } = await listStorefrontProductsPage({ limit: STOREFRONT_PAGE_SIZE });
-    return { products, total, failed: false };
+    const [{ products, total }, filterOptions] = await Promise.all([
+      listStorefrontProductsPage({ limit: STOREFRONT_PAGE_SIZE }),
+      listStorefrontFilterOptions().catch(() => ({ metals: [], sizes: [] })),
+    ]);
+    return { products, total, filterOptions, failed: false };
   } catch {
-    return { products: [], total: 0, failed: true };
+    return { products: [], total: 0, filterOptions: { metals: [], sizes: [] }, failed: true };
   }
 }
 
 export default async function WomenWeddingBandsPage() {
-  const { products, total, failed } = await loadProducts();
+  const { products, total, filterOptions, failed } = await loadProducts();
 
   return (
     <>
@@ -58,7 +61,7 @@ export default async function WomenWeddingBandsPage() {
             </p>
           </div>
 
-          <ProductListing initialProducts={products} initialTotal={total} pageSize={STOREFRONT_PAGE_SIZE} failed={failed} />
+          <ProductListing initialProducts={products} initialTotal={total} pageSize={STOREFRONT_PAGE_SIZE} failed={failed} filterOptions={filterOptions} />
         </div>
       </div>
     </>

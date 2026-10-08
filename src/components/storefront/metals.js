@@ -27,6 +27,18 @@ export function metalColor(value) {
   return null;
 }
 
+// Neutral swatch for a metal with no known color (cobalt, titanium, ...).
+export const OTHER_METAL_COLOR = "#BDBDBD";
+
+// Short swatch caption: "14K Rose Gold" -> "14KR", "Platinum" -> "PT". Anything else
+// (a PVD finish, titanium, ...) keeps its full name so nothing is mistaken for another metal.
+export function metalLabel(value) {
+  const text = String(value ?? "").trim();
+  if (/^platinum$/i.test(text)) return "PT";
+  const karat = text.match(/^(\d+)\s*k(?:t)?\s+(white|yellow|rose)\s+gold$/i);
+  return karat ? `${karat[1]}K${karat[2][0].toUpperCase()}` : text;
+}
+
 const METAL_OPTION = /colou?r|metal/i;
 
 // A color/metal option becomes swatches only when every value is a recognizable metal.

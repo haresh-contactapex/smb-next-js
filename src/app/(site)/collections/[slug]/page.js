@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import ProductListing from "@/components/storefront/ProductListing";
-import { STOREFRONT_PAGE_SIZE, listStorefrontProductsPage } from "@/lib/products";
+import { STOREFRONT_PAGE_SIZE, listStorefrontFilterOptions, listStorefrontProductsPage } from "@/lib/products";
 import { getVisibleCategoryBySlug } from "@/lib/categories";
 
 // Reads live catalog data, so never prerender it at build time.
@@ -33,10 +33,14 @@ export default async function CollectionPage({ params }) {
 
   let products = [];
   let total = 0;
+  let filterOptions = { metals: [], sizes: [] };
   let failed = categoryFailed;
   if (category) {
     try {
-      ({ products, total } = await listStorefrontProductsPage({ limit: STOREFRONT_PAGE_SIZE, categorySlug: category.slug }));
+      [{ products, total }, filterOptions] = await Promise.all([
+        listStorefrontProductsPage({ limit: STOREFRONT_PAGE_SIZE, categorySlug: category.slug }),
+        listStorefrontFilterOptions({ categorySlug: category.slug }).catch(() => filterOptions),
+      ]);
     } catch {
       failed = true;
     }
@@ -60,6 +64,7 @@ export default async function CollectionPage({ params }) {
           initialTotal={total}
           pageSize={STOREFRONT_PAGE_SIZE}
           failed={failed}
+          filterOptions={filterOptions}
           categorySlug={category?.slug || null}
         />
       </div>

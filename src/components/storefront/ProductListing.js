@@ -3,12 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import ProductCard from "./ProductCard";
 import { ProductCardSkeleton } from "./ProductListingSkeleton";
-import { METALS } from "./metals";
+import { OTHER_METAL_COLOR, metalColor, metalLabel } from "./metals";
 import { requestJson } from "./cart/cartApi";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { moneyInputWrap } from "@/lib/currency";
-
-const BAND_SIZES = ["5", "5.5", "6", "6.5", "7", "7.5", "8", "8.5", "9", "9.5", "10"];
 
 const PRICE_INPUT =
   "w-full bg-gray-50 text-sm pl-7 pr-2 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 transition-shadow";
@@ -16,24 +14,31 @@ const PRICE_INPUT =
 // How long to wait after the last keystroke in a price box before searching.
 const FILTER_DEBOUNCE_MS = 350;
 
-const NO_FILTER = { min: "", max: "" };
+const NO_OPTIONS = { metals: [], sizes: [] };
+const NO_FILTER = { min: "", max: "", metals: [], size: "" };
 
 // Only a non-negative number counts as a price bound; anything else is "not set".
 const cleanPrice = (value) => (value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0 ? value : "");
 
-function listingUrl({ offset, limit, min, max, category }) {
+// Two filters are the same search when they ask for the same price range, metals and size.
+const sameFilter = (a, b) => a.min === b.min && a.max === b.max && a.size === b.size && a.metals.join("|") === b.metals.join("|");
+
+function listingUrl({ offset, limit, min, max, metals, size, category }) {
   const params = new URLSearchParams({ offset: String(offset), limit: String(limit) });
   if (category) params.set("category", category);
   if (cleanPrice(min) !== "") params.set("minPrice", cleanPrice(min));
   if (cleanPrice(max) !== "") params.set("maxPrice", cleanPrice(max));
+  for (const metal of metals) params.append("metal", metal);
+  if (size) params.set("size", size);
   return `/api/storefront/products?${params}`;
 }
 
 // Filter bar + product grid. The first page arrives from the server; "Load more"
 // and the price filter fetch from /api/storefront/products, so the browser only
-// ever holds the products the shopper has asked to see. Metal and band size are
-// captured in state ready for when products carry that data.
-export default function ProductListing({ initialProducts, initialTotal, pageSize, failed = false, categorySlug = null }) {
+// ever holds the products the shopper has asked to see. The metal and band size
+// choices come from the catalog's own variant options (`filterOptions`); the price,
+// metal and size filters all search on the server.
+export default function ProductListing({ initialProducts, initialTotal, pageSize, failed = false, categorySlug = null, filterOptions = NO_OPTIONS }) {
   const { currency, currencyPosition } = useGeneralSettings();
   // The symbol sits inside the price fields, before or after the digits per Settings -> Currency & Tax.
   const price = moneyInputWrap(currency, currencyPosition);
@@ -50,8 +55,8 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
 
   const [products, setProducts] = useState(initialProducts);
   const [total, setTotal] = useState(initialTotal);
-  // The price range the list on screen was fetched with. It trails the inputs
-  // by the debounce, and "Load more" continues with it, not with half-typed text.
+  // The filters the list on screen was fetched with. They trail the inputs by the
+  // debounce, and "Load more" continues with them, not with half-typed text.
   const [applied, setApplied] = useState(NO_FILTER);
   // "filter" = replacing the list after a price change, "more" = appending the next page.
   const [loading, setLoading] = useState(null);
@@ -91,16 +96,16 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
     [pageSize, categorySlug]
   );
 
-  // Price changes search again from the first page, once typing pauses.
+  // Any filter change searches again from the first page, once typing or clicking pauses.
   useEffect(() => {
-    if (minPrice === applied.min && maxPrice === applied.max) return undefined;
+    const wanted = { min: minPrice, max: maxPrice, metals, size };
+    if (sameFilter(wanted, applied)) return undefined;
     const timer = setTimeout(() => {
-      const range = { min: minPrice, max: maxPrice };
-      setApplied(range);
-      fetchProducts({ replace: true, offset: 0, range });
+      setApplied(wanted);
+      fetchProducts({ replace: true, offset: 0, range: wanted });
     }, FILTER_DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [minPrice, maxPrice, applied, fetchProducts]);
+  }, [minPrice, maxPrice, metals, size, applied, fetchProducts]);
 
   const loadMore = () => fetchProducts({ replace: false, offset: products.length, range: applied });
   // After a failure: redo the search if nothing is on screen, otherwise fetch the next page again.
@@ -115,7 +120,13 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   const filtering = loading === "filter";
   const loadingMore = loading === "more";
   const hasMore = products.length < total;
-  const hasFilter = applied.min !== "" || applied.max !== "";
+  const hasFilter = !sameFilter(applied, NO_FILTER);
+  const clearFilters = () => {
+    setMetals([]);
+    setSize("");
+    setMinPrice("");
+    setMaxPrice("");
+  };
   const GRID = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-10 sm:pt-12";
   const RETRY_BUTTON =
     "mt-4 border border-[#ef9822] text-[#ef9822] hover:bg-[#ef9822] hover:text-white px-6 py-2 text-xs font-semibold tracking-wide uppercase rounded-md transition-colors";
@@ -173,31 +184,35 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
         >
           <div className="overflow-hidden">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12 pt-4 pb-8">
+        {filterOptions.metals.length > 0 && (
         <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
           <h3 className="text-sm font-semibold text-[#333333] mb-5">Metal Color</h3>
-          <div className="flex flex-wrap justify-center sm:justify-start gap-4">
-            {METALS.map((metal) => {
-              const active = metals.includes(metal.code);
+          <div className="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-3">
+            {filterOptions.metals.map((value) => {
+              const active = metals.includes(value);
               return (
                 <button
-                  key={metal.code}
+                  key={value}
                   type="button"
+                  title={value}
+                  aria-label={value}
                   aria-pressed={active}
-                  onClick={() => toggleMetal(metal.code)}
-                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                  onClick={() => toggleMetal(value)}
+                  className="flex flex-col items-center gap-2 cursor-pointer group max-w-[4.5rem]"
                 >
                   <span
-                    style={{ backgroundColor: metal.color }}
+                    style={{ backgroundColor: metalColor(value) || OTHER_METAL_COLOR }}
                     className={`w-5 h-5 rounded-full ring-1 ring-offset-2 transition-all ${
                       active ? "ring-[#ef9822]" : "ring-transparent group-hover:ring-gray-300"
                     }`}
                   />
-                  <span className="text-[11px] font-medium">{metal.code}</span>
+                  <span aria-hidden="true" className="text-[11px] font-medium leading-tight">{metalLabel(value)}</span>
                 </button>
               );
             })}
           </div>
         </div>
+        )}
 
         <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
           <h3 className="text-sm font-semibold text-[#333333] mb-5">Price</h3>
@@ -234,10 +249,11 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
           </div>
         </div>
 
+        {filterOptions.sizes.length > 0 && (
         <fieldset className="flex flex-col items-center sm:items-start text-center sm:text-left sm:col-span-2 lg:col-span-1">
           <legend className="text-sm font-semibold text-[#333333] mb-5">Band Size</legend>
           <div className="grid grid-cols-6 gap-y-3 gap-x-4 sm:gap-x-6 text-sm w-full max-w-lg">
-            {BAND_SIZES.map((value) => (
+            {filterOptions.sizes.map((value) => (
               <label key={value} className="flex items-center gap-2 cursor-pointer group">
                 <input
                   type="radio"
@@ -245,6 +261,8 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                   value={value}
                   checked={size === value}
                   onChange={() => setSize(value)}
+                  // A radio can't be unticked by itself, so clicking the chosen size again clears it.
+                  onClick={() => size === value && setSize("")}
                   className="custom-radio"
                 />
                 <span className="text-[#555555] group-hover:text-[#ef9822] transition-colors">{value}</span>
@@ -252,7 +270,19 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
             ))}
           </div>
         </fieldset>
+        )}
             </div>
+            {activeFilterCount > 0 && (
+              <div className="pb-6 text-center sm:text-left">
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs font-semibold uppercase tracking-wide text-[#ef9822] underline underline-offset-4 hover:text-[#d4850f] cursor-pointer"
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </section>

@@ -29,8 +29,18 @@ the admin catalog (`products`, `product_media`, `product_variants`).
   button into **Try again**. If nothing is on screen it offers Try again too.
 - Products already shown are never added twice, even if the catalog changes
   between clicks.
-- **Metal color** and **band size** are selectable but don't filter yet; products
-  don't carry that data.
+- The **Filters** heading collapses the whole filter area (closed by default) and
+  shows a badge with how many filters are set; **Clear all filters** resets them.
+- **Metal color** and **band size** are built from the catalog, not a fixed list:
+  `listStorefrontFilterOptions()` collects every value of a product option named
+  like *color/metal* or *size* on ACTIVE products in the listing (the category and
+  its sub-categories on a collection page, the whole shop otherwise). Values that
+  differ only by case count once, sizes sort numerically, and a group with no
+  values is hidden. Swatches come from `metals.js` (`metalColor`, `metalLabel`);
+  an unrecognized metal (cobalt, titanium, ...) gets a neutral swatch and keeps
+  its full name.
+- Choosing metals (any of them) and/or a band size searches on the server like the
+  price boxes do, from page one. Clicking the chosen size again clears it.
 
 ## Endpoint
 
@@ -41,9 +51,11 @@ the admin catalog (`products`, `product_media`, `product_variants`).
 | `limit` | Page size, 1–48 (default 12) |
 | `offset` | Products to skip, 0–100000 (default 0) |
 | `minPrice`, `maxPrice` | Optional price bounds (zero or more); blank means unbounded |
+| `metal` | Repeatable. A color/metal option value (e.g. `Platinum`); products with any of them match. Case-insensitive |
+| `size` | A size option value (e.g. `7`) |
 
 Returns `{ success: true, data: { products, total, hasMore } }`, where `total`
-counts every ACTIVE product matching the price range. A bad parameter is a `400`
+counts every ACTIVE product matching the filters. A bad parameter is a `400`
 with `{ success: false, error }`; a database failure is a `500`.
 
 Products are ordered `created_at DESC, id`. The `id` tiebreaker keeps the order
