@@ -57,7 +57,13 @@ There is no checkout table. The cart still lives in the visitor's browser (see
      Matching ignores case and extra spaces, and a verified state or city is
      rewritten to the list's spelling ("surat" becomes "Surat"). The street
      address itself is only checked for being present — there is no
-     address-verification service.
+     address-verification service. The **Shipping Address** block folds away behind
+     its heading row (title, a rule, and a chevron at the right end; the whole row is the button): it starts folded while *Same as billing address* is on,
+     since its fields are only a greyed-out copy, and open when it is off. The checkbox
+     stays in view either way and a folded block shows a one-line "Ships to" summary.
+     Opening or folding it by hand sticks until the checkbox is toggled again, and any
+     problem found in the shipping fields (when saving) opens it and focuses the field.
+     The fields are hidden, not removed, so nothing typed is lost by folding.
   3. **Payment** – the methods switched on in *Settings → Payment* (card,
      PayPal, Razorpay, cash on delivery). Cash on delivery is disabled below its
      minimum order amount.
