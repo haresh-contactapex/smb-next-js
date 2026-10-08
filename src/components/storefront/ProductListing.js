@@ -42,6 +42,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   const priceInputStyle = symbolAfter
     ? { paddingLeft: "0.5rem", paddingRight: price.style["--sign-pad"] }
     : { paddingLeft: price.style["--sign-pad"] };
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [metals, setMetals] = useState([]);
   const [size, setSize] = useState("");
   const [minPrice, setMinPrice] = useState("");
@@ -108,6 +109,9 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   const toggleMetal = (code) =>
     setMetals((current) => (current.includes(code) ? current.filter((c) => c !== code) : [...current, code]));
 
+  // Collapsed by default; the badge on the header shows how many filters are set.
+  const activeFilterCount = metals.length + (size ? 1 : 0) + (minPrice !== "" || maxPrice !== "" ? 1 : 0);
+
   const filtering = loading === "filter";
   const loadingMore = loading === "more";
   const hasMore = products.length < total;
@@ -124,10 +128,51 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
 
   return (
     <>
-      <section
-        aria-label="Filters"
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12 border-t border-b border-gray-200 mt-10 sm:mt-12 py-8 fade-in-up delay-300"
-      >
+      <section aria-label="Filters" className="border-t border-b border-gray-200 mt-10 sm:mt-12 fade-in-up delay-300">
+        <h2 className="m-0">
+          <button
+            type="button"
+            id="filters-toggle"
+            aria-expanded={filtersOpen}
+            aria-controls="filters-panel"
+            onClick={() => setFiltersOpen((open) => !open)}
+            className="flex w-full items-center justify-between gap-3 py-4 text-left cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822] rounded-md"
+          >
+            <span className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-[#333333] group-hover:text-[#ef9822] transition-colors">
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M4 6h16M7 12h10M10 18h4" />
+              </svg>
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-[#ef9822] text-white text-[11px] font-semibold normal-case tracking-normal">
+                  {activeFilterCount}
+                  <span className="sr-only"> active</span>
+                </span>
+              )}
+            </span>
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+              className={`w-5 h-5 shrink-0 transition-transform duration-300 ${filtersOpen ? "rotate-180" : ""}`}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+        </h2>
+
+        <div
+          id="filters-panel"
+          role="region"
+          aria-labelledby="filters-toggle"
+          className={`grid transition-[grid-template-rows] duration-300 ease-out ${filtersOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr] invisible"}`}
+        >
+          <div className="overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-12 pt-4 pb-8">
         <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
           <h3 className="text-sm font-semibold text-[#333333] mb-5">Metal Color</h3>
           <div className="flex flex-wrap justify-center sm:justify-start gap-4">
@@ -207,6 +252,9 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
             ))}
           </div>
         </fieldset>
+            </div>
+          </div>
+        </div>
       </section>
 
       {filtering ? (
