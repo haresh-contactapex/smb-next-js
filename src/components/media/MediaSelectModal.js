@@ -28,6 +28,7 @@ export default function MediaSelectModal({
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [loadError, setLoadError] = useState("");
   const [picked, setPicked] = useState([]);
   const [search, setSearch] = useState("");
   const [dragOver, setDragOver] = useState(false);
@@ -44,6 +45,7 @@ export default function MediaSelectModal({
     setPicked([]);
     setSearch("");
     setError("");
+    setLoadError("");
     setLoading(true);
 
     fetch("/api/media")
@@ -55,7 +57,13 @@ export default function MediaSelectModal({
         setItems(images);
         if (images.length === 0) setTab("upload");
       })
-      .catch((err) => !cancelled && setError(err.message))
+      .catch((err) => {
+        if (cancelled) return;
+        // e.g. a staff member allowed to upload but not to browse the library:
+        // keep the message on the Library tab and open Upload instead.
+        setLoadError(err.message);
+        setTab("upload");
+      })
       .finally(() => !cancelled && setLoading(false));
 
     dialogRef.current?.focus();
@@ -213,6 +221,19 @@ export default function MediaSelectModal({
             </div>
           ) : loading ? (
             <p className="py-16 text-center text-sm text-slate-400">Loading the Media library…</p>
+          ) : loadError ? (
+            <div className="py-16 text-center">
+              <p role="alert" className="text-sm text-error">
+                {loadError}
+              </p>
+              <button
+                type="button"
+                onClick={() => setTab("upload")}
+                className="mt-3 text-sm font-semibold text-primary-600 underline dark:text-accent-400"
+              >
+                Upload files
+              </button>
+            </div>
           ) : items.length === 0 ? (
             <div className="py-16 text-center">
               <Icon name="image" className="mx-auto mb-2 h-8 w-8 text-slate-300" />

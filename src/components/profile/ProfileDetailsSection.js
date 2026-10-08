@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef } from "react";
+import { useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import MediaSelectModal from "@/components/media/MediaSelectModal";
 import { formatUsPhone } from "@/lib/phone";
 
 export default function ProfileDetailsSection({
@@ -16,18 +17,13 @@ export default function ProfileDetailsSection({
   firstNameError,
   lastNameError,
   onAvatarPicked,
+  onAvatarLibraryPicked,
   onAvatarRemoved,
   onFieldChange,
   registerRef,
   onEnter,
 }) {
-  const fileInputRef = useRef(null);
-
-  function handleFileChange(e) {
-    const file = e.target.files?.[0];
-    if (file) onAvatarPicked(file);
-    e.target.value = "";
-  }
+  const [pickerOpen, setPickerOpen] = useState(false);
 
   function handleKeyDown(e) {
     if (e.key !== "Enter") return;
@@ -58,18 +54,19 @@ export default function ProfileDetailsSection({
           role="button"
           tabIndex={0}
           aria-label="Change profile photo"
-          onClick={() => fileInputRef.current?.click()}
+          aria-haspopup="dialog"
+          onClick={() => setPickerOpen(true)}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              fileInputRef.current?.click();
+              setPickerOpen(true);
             }
           }}
           className="relative w-24 h-24 rounded-full border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary-400 dark:hover:border-accent-500/50 bg-slate-50 dark:bg-darksurface2/50 flex flex-col items-center justify-center cursor-pointer transition-colors group shrink-0 overflow-hidden"
         >
           {avatarUrl ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element -- uploaded avatar served from /uploads, not optimizable by next/image */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- stored Blob URL, not optimizable by next/image */}
               <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
               <button
                 type="button"
@@ -89,15 +86,18 @@ export default function ProfileDetailsSection({
               className="w-8 h-8 text-slate-400 group-hover:text-primary-500 dark:group-hover:text-accent-400 transition-colors"
             />
           )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            aria-hidden="true"
-            onChange={handleFileChange}
-          />
         </div>
+        <MediaSelectModal
+          open={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          onSelectItems={(items) => items[0] && onAvatarLibraryPicked(items[0])}
+          onUploadFiles={(files) => onAvatarPicked(files[0])}
+          selectedUrls={avatarUrl ? [avatarUrl] : []}
+          multiple={false}
+          title="Profile photo"
+          confirmLabel="Use as profile photo"
+          uploadHint="JPG, PNG, WEBP, or GIF, up to 10MB"
+        />
 
         <div className="flex-1 w-full space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

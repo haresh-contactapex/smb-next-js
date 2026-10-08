@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Icon from "@/components/admin-panel/Icon";
+import { uploadLibraryImage } from "@/components/media/helpers";
 import { EMPTY_PROFILE, toFormState, validateProfileForm } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import ProfileDetailsSection from "./ProfileDetailsSection";
@@ -80,19 +81,16 @@ export default function ProfileForm() {
     setErrors((prev) => (prev[field] ? { ...prev, [field]: undefined } : prev));
   }
 
+  // purpose=avatar lets any staff member upload their own photo without media
+  // rights. A failure rejects so the picker dialog can show it.
   async function handleAvatarPicked(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-    // Lets any staff member upload their own avatar without media rights.
-    formData.append("purpose", "avatar");
-    try {
-      const res = await fetch("/api/media", { method: "POST", body: formData });
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || "Failed to upload photo");
-      setField("avatarUrl", json.data.url);
-    } catch (error) {
-      showToast(error.message, "error");
-    }
+    const item = await uploadLibraryImage(file, "avatar");
+    setField("avatarUrl", item.url);
+  }
+
+  // Already stored in the Media library, so nothing to upload.
+  function handleAvatarLibraryPicked(item) {
+    setField("avatarUrl", item.url);
   }
 
   function handleAvatarRemoved() {
@@ -192,6 +190,7 @@ export default function ProfileForm() {
             lastNameError={errors.lastName}
             bio={profile.bio}
             onAvatarPicked={handleAvatarPicked}
+            onAvatarLibraryPicked={handleAvatarLibraryPicked}
             onAvatarRemoved={handleAvatarRemoved}
             onFieldChange={setField}
             registerRef={registerRef}
