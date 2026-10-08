@@ -294,3 +294,39 @@ export async function deleteStaffUser(id, actor, actorRole) {
     return { id };
   });
 }
+
+// Bulk delete for the Users list. The same rules as a single delete apply to
+// every selected user, and the batch is all-or-nothing: if any one of them is
+// the signed-in user or a Super Admin the actor can't manage, nothing is
+// deleted. Ids that no longer exist are skipped. Returns { deleted, users }.
+export async function deleteStaffUsers(ids, actor, actorRole) {
+  const uniqueIds = [...new Set(ids)];
+  if (uniqueIds.length === 0 || uniqueIds.some((id) => !isUuid(id))) {
+    throw new StaffUserError("Invalid user selection.", 400);
+  }
+
+  return run(async () => {
+    const rows = await sql`
+      SELECT u.id, u.first_name, u.last_name, r.full_access AS role_full_access
+      FROM users u
+      LEFT JOIN admin_roles r ON r.slug = u.role
+      WHERE u.id = ANY(${uniqueIds}::uuid[])
+    `;
+    if (rows.some((row) => row.id === actor?.id)) {
+      throw new StaffUserError("You can't delete your own account. Unselect it and try again.", 400);
+    }
+    const protectedRow = rows.find((row) => row.role_full_access && !actorRole?.fullAccess);
+    if (protectedRow) {
+      throw new StaffUserError(
+        `Only a Super Admin can delete ${protectedRow.first_name} ${protectedRow.last_name}. Unselect them and try again.`,
+        403
+      );
+    }
+
+    const deleted = await sql`DELETE FROM users WHERE id = ANY(${rows.map((row) => row.id)}::uuid[]) RETURNING id, first_name, last_name`;
+    return {
+      deleted: deleted.length,
+      users: deleted.map((row) => ({ id: row.id, firstName: row.first_name, lastName: row.last_name })),
+    };
+  });
+}

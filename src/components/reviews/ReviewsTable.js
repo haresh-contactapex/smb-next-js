@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
+import { SelectCheckbox, pageSelectionState } from "@/components/admin-panel/BulkSelection";
 import StarRating from "./StarRating";
 import { STATUS_BADGE_CLASSES, STATUS_LABELS, formatReviewDate } from "./reviewHelpers";
 
@@ -25,7 +26,10 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
 const ACTION_BUTTON =
   "w-7 h-7 grid place-items-center rounded-lg text-slate-400 disabled:cursor-not-allowed disabled:opacity-40";
 
-export default function ReviewsTable({ reviews, onSetStatus, onDelete, busyId, sort, onSortChange }) {
+export default function ReviewsTable({ reviews, onSetStatus, onDelete, busyId, sort, onSortChange, selection, onTogglePage }) {
+  // `selection` (from useBulkSelection) is only passed when the viewer may delete.
+  const selectable = Boolean(selection);
+  const pageState = selectable ? pageSelectionState(selection, reviews.map((x) => x.id)) : null;
   if (reviews.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No reviews match your filters.</div>;
   }
@@ -35,6 +39,16 @@ export default function ReviewsTable({ reviews, onSetStatus, onDelete, busyId, s
       <table className="w-full text-sm min-w-[1040px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th scope="col" className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={pageState.all}
+                  indeterminate={pageState.some}
+                  onChange={() => onTogglePage(reviews.map((x) => x.id), !pageState.all)}
+                  label="Select all reviews on this page"
+                />
+              </th>
+            )}
             <SortableHeader label="Rating" sortKey="rating" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Review</th>
             <SortableHeader label="Product" sortKey="productTitle" sort={sort} onSortChange={onSortChange} />
@@ -48,7 +62,19 @@ export default function ReviewsTable({ reviews, onSetStatus, onDelete, busyId, s
           {reviews.map((review) => {
             const isBusy = review.id === busyId;
             return (
-              <tr key={review.id} className="table-row transition-colors align-top">
+              <tr
+                key={review.id}
+                className={`table-row transition-colors align-top${selectable && selection.has(review.id) ? " bg-primary-50/60 dark:bg-white/5" : ""}`}
+              >
+                {selectable && (
+                  <td className="py-3 pl-3 pr-1">
+                    <SelectCheckbox
+                      checked={selection.has(review.id)}
+                      onChange={() => selection.toggle(review.id)}
+                      label={`Select ${review.title}`}
+                    />
+                  </td>
+                )}
                 <td className="py-3 px-1 whitespace-nowrap">
                   <StarRating rating={review.rating} />
                 </td>

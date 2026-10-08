@@ -246,6 +246,17 @@ export async function deleteBlogPost(id) {
   }
 }
 
+// Bulk delete from the posts list. Returns the removed posts; ids that no
+// longer exist are skipped.
+export async function deleteBlogPosts(ids) {
+  try {
+    const rows = await sql`DELETE FROM blog_posts WHERE id = ANY(${ids}::uuid[]) RETURNING id, slug, title, category_slug`;
+    return rows.map((row) => ({ id: row.id, slug: row.slug, title: row.title, categorySlug: row.category_slug }));
+  } catch (error) {
+    throw translateError(error);
+  }
+}
+
 export async function listBlogRevisions(postId) {
   if (!isUuid(postId)) return [];
   try {

@@ -9,6 +9,7 @@ import {
 } from "./couponHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
+import { SelectCheckbox, pageSelectionState } from "@/components/admin-panel/BulkSelection";
 
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
   const active = sort?.key === sortKey;
@@ -28,7 +29,10 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
   );
 }
 
-export default function CouponsTable({ coupons, onDelete, deletingId, sort, onSortChange }) {
+export default function CouponsTable({ coupons, onDelete, deletingId, sort, onSortChange, selection, onTogglePage }) {
+  // `selection` (from useBulkSelection) is only passed when the viewer may delete.
+  const selectable = Boolean(selection);
+  const pageState = selectable ? pageSelectionState(selection, coupons.map((x) => x.id)) : null;
   const { formatMoney } = useGeneralSettings();
 
   if (coupons.length === 0) {
@@ -40,6 +44,16 @@ export default function CouponsTable({ coupons, onDelete, deletingId, sort, onSo
       <table className="w-full text-sm min-w-[860px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th scope="col" className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={pageState.all}
+                  indeterminate={pageState.some}
+                  onChange={() => onTogglePage(coupons.map((x) => x.id), !pageState.all)}
+                  label="Select all coupons on this page"
+                />
+              </th>
+            )}
             <SortableHeader label="Coupon" sortKey="code" sort={sort} onSortChange={onSortChange} />
             <th className="py-3 px-1 font-semibold">Discount</th>
             <th className="py-3 px-1 font-semibold">Min. Purchase</th>
@@ -53,7 +67,19 @@ export default function CouponsTable({ coupons, onDelete, deletingId, sort, onSo
           {coupons.map((coupon) => {
             const isDeleting = coupon.id === deletingId;
             return (
-            <tr key={coupon.id} className="table-row transition-colors">
+            <tr
+              key={coupon.id}
+              className={`table-row transition-colors${selectable && selection.has(coupon.id) ? " bg-primary-50/60 dark:bg-white/5" : ""}`}
+            >
+              {selectable && (
+                <td className="py-3 pl-3 pr-1">
+                  <SelectCheckbox
+                    checked={selection.has(coupon.id)}
+                    onChange={() => selection.toggle(coupon.id)}
+                    label={`Select ${coupon.code}`}
+                  />
+                </td>
+              )}
               <td className="py-3 px-1">
                 <div className="flex items-center gap-3">
                   <span className="w-10 h-10 rounded-xl grid place-items-center shrink-0 bg-accent-500/10 text-accent-600 dark:text-accent-400">

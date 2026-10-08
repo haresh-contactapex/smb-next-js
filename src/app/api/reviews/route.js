@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
-import { listReviews, createReview, parseReviewBody } from "@/lib/reviews";
+import { listReviews, createReview, parseReviewBody, deleteReviews } from "@/lib/reviews";
+import { readBulkIds } from "@/lib/bulkIds";
 import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
@@ -36,6 +37,32 @@ export async function POST(request) {
       severity: "success",
     });
     return NextResponse.json({ success: true, data: { id } }, { status: 201 });
+  } catch (error) {
+    return errorResponse(error);
+  }
+}
+
+// Bulk delete: body `{ ids: [reviewId, ...] }`.
+export async function DELETE(request) {
+  const auth = await requireStaffPermission("reviews.delete");
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
+  const { ids, error } = await readBulkIds(request, "review");
+  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+
+  try {
+    const deleted = await deleteReviews(ids);
+    if (deleted > 0) {
+      await logAdminActivity({
+        actor: auth.user,
+        action: "review.deleted",
+        entityType: "review",
+        entityId: null,
+        title: `${deleted} review${deleted === 1 ? "" : "s"} deleted`,
+        severity: "warning",
+      });
+    }
+    return NextResponse.json({ success: true, data: { deleted } });
   } catch (error) {
     return errorResponse(error);
   }

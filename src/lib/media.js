@@ -39,3 +39,10 @@ export async function deleteMedia(id) {
   const [deleted] = await sql`DELETE FROM media WHERE id = ${id} RETURNING url`;
   return deleted ? deleted.url : null;
 }
+
+// Bulk delete from the media library. Returns the removed files' URLs so the
+// caller can delete the stored files too.
+export async function deleteMediaItems(ids) {
+  const rows = await sql`DELETE FROM media WHERE id = ANY(${ids}::uuid[]) RETURNING url`;
+  return rows.map((row) => row.url);
+}

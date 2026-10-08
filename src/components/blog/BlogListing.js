@@ -6,6 +6,8 @@ import BlogFilters from "./BlogFilters";
 import BlogTable from "./BlogTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
+import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "@/components/add-product/Toast";
 import { blogPostPath, todayIso } from "@/lib/blogRules";
 import { displayStatus } from "./helpers";
@@ -14,6 +16,9 @@ const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function BlogListing({ posts: initialPosts }) {
   const router = useRouter();
+  const canDelete = useCan()("blog.delete");
+  const selection = useBulkSelection();
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [posts, setPosts] = useState(initialPosts);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -40,12 +45,32 @@ export default function BlogListing({ posts: initialPosts }) {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "The post couldn't be deleted.");
       setPosts((prev) => prev.filter((p) => p.id !== post.id));
+      selection.remove([post.id]);
       showToast(`"${post.title}" was removed.`);
       router.refresh();
     } catch (error) {
       showToast(error.message, "error");
     } finally {
       setDeletingPost(null);
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = [...selection.ids];
+    if (ids.length === 0 || bulkDeleting) return;
+    if (!confirmBulkDelete(ids.length, "post", "posts", "Their addresses will stop working.")) return;
+    setBulkDeleting(true);
+    try {
+      const { deleted } = await requestBulkDelete("/api/blog/posts", ids, "Failed to delete posts");
+      const removed = new Set(ids);
+      setPosts((prev) => prev.filter((x) => !removed.has(x.id)));
+      selection.clear();
+      showToast(`${deleted} post${deleted === 1 ? "" : "s"} removed.`);
+      router.refresh();
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -95,6 +120,7 @@ export default function BlogListing({ posts: initialPosts }) {
     return (value) => {
       setter(value);
       setPage(1);
+      selection.clear();
     };
   }
 
@@ -122,7 +148,21 @@ export default function BlogListing({ posts: initialPosts }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        {canDelete && (
+          <BulkSelectionBar
+            count={selection.size}
+            matchingCount={sorted.length}
+            noun="posts"
+            filtered={Boolean(search || status || activeCategory)}
+            onSelectAll={() => selection.replace(sorted.map((x) => x.id))}
+            onClear={selection.clear}
+            onDelete={handleBulkDelete}
+            deleting={bulkDeleting}
+          />
+        )}
         <BlogTable
+          selection={canDelete ? selection : null}
+          onTogglePage={selection.setMany}
           posts={pageItems}
           emptyMessage={posts.length === 0 ? "No posts yet." : "No posts match your filters."}
           onDelete={handleDelete}
@@ -140,7 +180,11 @@ export default function BlogListing({ posts: initialPosts }) {
         />
       </section>
 
-      <DeleteOverlay active={deletingPost != null} title="Deleting post…" itemLabel={deletingPost?.title || ""} />
+      <DeleteOverlay
+        active={deletingPost != null || bulkDeleting}
+        title={bulkDeleting ? "Deleting posts…" : "Deleting post…"}
+        itemLabel={bulkDeleting ? `${selection.size} selected` : deletingPost?.title || ""}
+      />
       <Toast
         visible={toast.visible}
         message={toast.message}

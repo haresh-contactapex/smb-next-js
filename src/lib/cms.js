@@ -242,6 +242,17 @@ export async function deleteCmsPage(id) {
   }
 }
 
+// Bulk delete from the pages list. Returns the removed pages; ids that no
+// longer exist are skipped.
+export async function deleteCmsPages(ids) {
+  try {
+    const rows = await sql`DELETE FROM cms_pages WHERE id = ANY(${ids}::uuid[]) RETURNING id, slug, title`;
+    return rows.map((row) => ({ id: row.id, slug: row.slug, title: row.title }));
+  } catch (error) {
+    throw translateError(error);
+  }
+}
+
 export async function listCmsRevisions(pageId) {
   if (!isUuid(pageId)) return [];
   try {

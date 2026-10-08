@@ -9,6 +9,23 @@ export async function deleteUser(user) {
   return json.data;
 }
 
+export async function deleteUsers(ids) {
+  const res = await fetch("/api/users", {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ids }),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.success) throw new Error(json.error || "Failed to delete users");
+  return json.data;
+}
+
+export function confirmBulkDelete(count) {
+  return window.confirm(
+    `Delete ${count} selected user${count === 1 ? "" : "s"}? They'll lose access to the admin panel immediately. This can't be undone.`
+  );
+}
+
 export function confirmDelete(user) {
   return window.confirm(
     `Delete ${fullName(user)} (${user.email})? They'll lose access to the admin panel immediately. This can't be undone.`

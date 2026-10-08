@@ -190,3 +190,9 @@ export async function updateCoupon(id, payload) {
 export async function deleteCoupon(id) {
   await sql`DELETE FROM coupons WHERE id = ${id}`;
 }
+
+// Bulk delete from the coupons list. Returns how many rows were removed.
+export async function deleteCoupons(ids) {
+  const rows = await sql`DELETE FROM coupons WHERE id = ANY(${ids}::uuid[]) RETURNING id`;
+  return rows.length;
+}

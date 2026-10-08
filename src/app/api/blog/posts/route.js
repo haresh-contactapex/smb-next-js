@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
 import { logAdminActivity } from "@/lib/notifications";
-import { createBlogPost, getBlogPostById, listBlogPosts } from "@/lib/blog";
+import { createBlogPost, deleteBlogPosts, getBlogPostById, listBlogPosts } from "@/lib/blog";
+import { readBulkIds } from "@/lib/bulkIds";
 import { blogFailure, invalidRequest, readJsonObject } from "@/lib/blogApi";
 import { blogPostPath } from "@/lib/blogRules";
 
@@ -40,6 +41,33 @@ export async function POST(request) {
       severity: "success",
     });
     return NextResponse.json({ success: true, data: post }, { status: 201 });
+  } catch (error) {
+    return blogFailure(error);
+  }
+}
+
+// Bulk delete: body `{ ids: [postId, ...] }`.
+export async function DELETE(request) {
+  const auth = await requireStaffPermission("blog.delete");
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
+  const { ids, error } = await readBulkIds(request, "post");
+  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+
+  try {
+    const removed = await deleteBlogPosts(ids);
+    if (removed.length > 0) {
+      await logAdminActivity({
+        actor: auth.user,
+        action: "blog.deleted",
+        entityType: "blog",
+        entityId: null,
+        title: `${removed.length} blog post${removed.length === 1 ? "" : "s"} deleted`,
+        description: `removed ${removed.map((post) => blogPostPath(post.categorySlug, post.slug)).join(", ")}.`.slice(0, 500),
+        severity: "warning",
+      });
+    }
+    return NextResponse.json({ success: true, data: { deleted: removed.length } });
   } catch (error) {
     return blogFailure(error);
   }

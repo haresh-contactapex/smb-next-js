@@ -1,22 +1,38 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import OrdersFilters from "./OrdersFilters";
 import OrdersTable from "./OrdersTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import { downloadOrderInvoice } from "./downloadInvoice";
 import Toast from "@/components/add-product/Toast";
+import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import { BulkSelectionBar, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
+import { useCan } from "@/components/providers/StaffPermissionsProvider";
+import { BULK_CANCELLABLE_STATUSES } from "./orderHelpers";
 
 const TOAST_AUTO_DISMISS_MS = 10000;
+
+// POST /api/orders/cancel with { ids }; resolves with { cancelled, skipped, paid }.
+function requestBulkCancel(ids) {
+  return requestBulkDelete("/api/orders/cancel", ids, "Failed to cancel orders", "POST");
+}
 
 function orderNumberValue(orderNumber) {
   const match = String(orderNumber || "").match(/(\d+)\s*$/);
   return match ? Number(match[1]) : 0;
 }
 
-export default function OrdersListing({ orders, fixedStatus }) {
+export default function OrdersListing({ orders: initialOrders, fixedStatus }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const [orders, setOrders] = useState(initialOrders);
+  // Bulk cancel is offered where cancellable orders can appear (not on the
+  // Completed / Cancelled pages), to staff with Cancel Order.
+  const canCancel = useCan()("orders.cancel") && (!fixedStatus || BULK_CANCELLABLE_STATUSES.includes(fixedStatus));
+  const selection = useBulkSelection();
+  const [cancelling, setCancelling] = useState(false);
   const [search, setSearch] = useState(() => searchParams.get("q") || "");
   const [status, setStatus] = useState(fixedStatus ?? "");
   const [payment, setPayment] = useState("");
@@ -36,6 +52,48 @@ export default function OrdersListing({ orders, fixedStatus }) {
   function dismissToast() {
     clearTimeout(toastTimerRef.current);
     setToast((t) => ({ ...t, visible: false }));
+  }
+
+  // Server data changes after router.refresh(); keep local state in step.
+  useEffect(() => setOrders(initialOrders), [initialOrders]);
+
+  async function handleBulkCancel() {
+    const ids = [...selection.ids];
+    if (ids.length === 0 || cancelling) return;
+    const chosen = orders.filter((order) => selection.has(order.orderId));
+    const paid = chosen.filter((order) => order.payment === "Paid").length;
+    const message = [
+      `Cancel ${ids.length} selected order${ids.length === 1 ? "" : "s"}?`,
+      "Each customer is emailed that their order was cancelled (if cancellation emails are on in Settings → Email).",
+      paid > 0
+        ? `${paid} of them ${paid === 1 ? "is" : "are"} paid: payments aren't refunded automatically, so refund ${paid === 1 ? "it" : "them"} by hand.`
+        : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+    if (!window.confirm(message)) return;
+
+    setCancelling(true);
+    try {
+      const { cancelled, skipped } = await requestBulkCancel(ids);
+      const done = new Set(ids);
+      setOrders((prev) =>
+        prev.map((order) =>
+          done.has(order.orderId) && BULK_CANCELLABLE_STATUSES.includes(order.status)
+            ? { ...order, status: "Cancelled", statusColor: "error" }
+            : order
+        )
+      );
+      selection.clear();
+      showToast(
+        `${cancelled} order${cancelled === 1 ? "" : "s"} cancelled${skipped ? ` · ${skipped} skipped (no longer pending or processing)` : ""}.`
+      );
+      router.refresh();
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setCancelling(false);
+    }
   }
 
   async function handleDownloadInvoice(order) {
@@ -83,10 +141,12 @@ export default function OrdersListing({ orders, fixedStatus }) {
     return (value) => {
       setter(value);
       setPage(1);
+      selection.clear();
     };
   }
 
   function handleClear() {
+    selection.clear();
     setSearch("");
     setStatus(fixedStatus ?? "");
     setPayment("");
@@ -107,6 +167,10 @@ export default function OrdersListing({ orders, fixedStatus }) {
   }
 
   const hasActiveFilters = Boolean(search || (!fixedStatus && status) || payment);
+  const cancellableMatching = useMemo(
+    () => sorted.filter((order) => BULK_CANCELLABLE_STATUSES.includes(order.status)),
+    [sorted]
+  );
 
   return (
     <>
@@ -124,7 +188,24 @@ export default function OrdersListing({ orders, fixedStatus }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        {canCancel && (
+          <BulkSelectionBar
+            count={selection.size}
+            matchingCount={cancellableMatching.length}
+            noun="cancellable orders"
+            filtered={hasActiveFilters}
+            onSelectAll={() => selection.replace(cancellableMatching.map((order) => order.orderId))}
+            onClear={selection.clear}
+            onDelete={handleBulkCancel}
+            deleting={cancelling}
+            actionLabel="Cancel selected"
+            busyLabel="Cancelling…"
+            actionIcon="x-circle"
+          />
+        )}
         <OrdersTable
+          selection={canCancel ? selection : null}
+          onTogglePage={selection.setMany}
           orders={pageItems}
           sort={sort}
           onSortChange={handleSortChange}
@@ -141,6 +222,7 @@ export default function OrdersListing({ orders, fixedStatus }) {
         />
       </section>
 
+      <DeleteOverlay active={cancelling} title="Cancelling orders…" itemLabel={`${selection.size} selected`} />
       <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );

@@ -8,6 +8,8 @@ import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import ReviewsStats from "./ReviewsStats";
 import { STATUS_LABELS, computeReviewStats } from "./reviewHelpers";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
+import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "@/components/add-product/Toast";
 
 // Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
@@ -16,6 +18,9 @@ const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function ReviewsListing({ reviews: initialReviews }) {
   const router = useRouter();
+  const canDelete = useCan()("reviews.delete");
+  const selection = useBulkSelection();
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [reviews, setReviews] = useState(initialReviews);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -81,10 +86,30 @@ export default function ReviewsListing({ reviews: initialReviews }) {
       const json = await request(review, { method: "DELETE" });
       if (!json) return;
       setReviews((prev) => prev.filter((r) => r.id !== review.id));
+      selection.remove([review.id]);
       showToast(`"${review.title}" was removed.`);
       router.refresh();
     } finally {
       setDeletingReview(null);
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = [...selection.ids];
+    if (ids.length === 0 || bulkDeleting) return;
+    if (!confirmBulkDelete(ids.length, "review", "reviews", "They'll disappear from the storefront.")) return;
+    setBulkDeleting(true);
+    try {
+      const { deleted } = await requestBulkDelete("/api/reviews", ids, "Failed to delete reviews");
+      const removed = new Set(ids);
+      setReviews((prev) => prev.filter((x) => !removed.has(x.id)));
+      selection.clear();
+      showToast(`${deleted} review${deleted === 1 ? "" : "s"} removed.`);
+      router.refresh();
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -125,10 +150,12 @@ export default function ReviewsListing({ reviews: initialReviews }) {
     return (value) => {
       setter(value);
       setPage(1);
+      selection.clear();
     };
   }
 
   function handleClear() {
+    selection.clear();
     setSearch("");
     setStatus("");
     setRating("");
@@ -167,7 +194,21 @@ export default function ReviewsListing({ reviews: initialReviews }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        {canDelete && (
+          <BulkSelectionBar
+            count={selection.size}
+            matchingCount={sorted.length}
+            noun="reviews"
+            filtered={hasActiveFilters}
+            onSelectAll={() => selection.replace(sorted.map((x) => x.id))}
+            onClear={selection.clear}
+            onDelete={handleBulkDelete}
+            deleting={bulkDeleting}
+          />
+        )}
         <ReviewsTable
+          selection={canDelete ? selection : null}
+          onTogglePage={selection.setMany}
           reviews={pageItems}
           onSetStatus={handleSetStatus}
           onDelete={handleDelete}
@@ -184,7 +225,11 @@ export default function ReviewsListing({ reviews: initialReviews }) {
           onPageSizeChange={handlePageSizeChange}
         />
       </section>
-      <DeleteOverlay active={deletingReview != null} title="Deleting review…" itemLabel={deletingReview?.title || ""} />
+      <DeleteOverlay
+        active={deletingReview != null || bulkDeleting}
+        title={bulkDeleting ? "Deleting reviews…" : "Deleting review…"}
+        itemLabel={bulkDeleting ? `${selection.size} selected` : deletingReview?.title || ""}
+      />
       <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
     </>
   );

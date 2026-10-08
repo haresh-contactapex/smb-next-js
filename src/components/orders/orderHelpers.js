@@ -10,3 +10,7 @@ export function computeOrderStats(orders) {
 
 export const STATUS_OPTIONS = ["Pending", "Processing", "Completed", "Cancelled"];
 export const PAYMENT_OPTIONS = ["Paid", "Unpaid", "Refunded", "Failed"];
+
+// Keep in sync with BULK_CANCELLABLE_STATUSES in src/lib/orders.js: only these
+// orders can be picked for a bulk cancel on the orders list.
+export const BULK_CANCELLABLE_STATUSES = ["Pending", "Processing"];

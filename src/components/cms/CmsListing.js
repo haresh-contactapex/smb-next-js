@@ -5,12 +5,17 @@ import { useRouter } from "next/navigation";
 import CmsFilters from "./CmsFilters";
 import CmsTable from "./CmsTable";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
+import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "@/components/add-product/Toast";
 
 const TOAST_AUTO_DISMISS_MS = 10000;
 
 export default function CmsListing({ pages: initialPages }) {
   const router = useRouter();
+  const canDelete = useCan()("content.delete");
+  const selection = useBulkSelection();
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [pages, setPages] = useState(initialPages);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -33,12 +38,32 @@ export default function CmsListing({ pages: initialPages }) {
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "The page couldn't be deleted.");
       setPages((prev) => prev.filter((p) => p.id !== page.id));
+      selection.remove([page.id]);
       showToast(`"${page.title}" was removed.`);
       router.refresh();
     } catch (error) {
       showToast(error.message, "error");
     } finally {
       setDeletingPage(null);
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = [...selection.ids];
+    if (ids.length === 0 || bulkDeleting) return;
+    if (!confirmBulkDelete(ids.length, "page", "pages", "Their addresses will stop working.")) return;
+    setBulkDeleting(true);
+    try {
+      const { deleted } = await requestBulkDelete("/api/cms/pages", ids, "Failed to delete pages");
+      const removed = new Set(ids);
+      setPages((prev) => prev.filter((x) => !removed.has(x.id)));
+      selection.clear();
+      showToast(`${deleted} page${deleted === 1 ? "" : "s"} removed.`);
+      router.refresh();
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -57,19 +82,50 @@ export default function CmsListing({ pages: initialPages }) {
     <>
       <CmsFilters
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(value) => {
+          setSearch(value);
+          selection.clear();
+        }}
         status={status}
-        onStatusChange={setStatus}
+        onStatusChange={(value) => {
+          setStatus(value);
+          selection.clear();
+        }}
         group={group}
-        onGroupChange={setGroup}
+        onGroupChange={(value) => {
+          setGroup(value);
+          selection.clear();
+        }}
         resultCount={filtered.length}
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
-        <CmsTable pages={filtered} onDelete={handleDelete} deletingId={deletingPage?.id} />
+        {canDelete && (
+          <BulkSelectionBar
+            count={selection.size}
+            matchingCount={filtered.length}
+            noun="pages"
+            filtered={Boolean(search || status || group)}
+            onSelectAll={() => selection.replace(filtered.map((x) => x.id))}
+            onClear={selection.clear}
+            onDelete={handleBulkDelete}
+            deleting={bulkDeleting}
+          />
+        )}
+        <CmsTable
+          selection={canDelete ? selection : null}
+          onTogglePage={selection.setMany}
+          pages={filtered}
+          onDelete={handleDelete}
+          deletingId={deletingPage?.id}
+        />
       </section>
 
-      <DeleteOverlay active={deletingPage != null} title="Deleting page…" itemLabel={deletingPage?.title || ""} />
+      <DeleteOverlay
+        active={deletingPage != null || bulkDeleting}
+        title={bulkDeleting ? "Deleting pages…" : "Deleting page…"}
+        itemLabel={bulkDeleting ? `${selection.size} selected` : deletingPage?.title || ""}
+      />
       <Toast
         visible={toast.visible}
         message={toast.message}

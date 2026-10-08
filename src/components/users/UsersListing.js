@@ -12,7 +12,7 @@ import Toast from "./Toast";
 import DeleteToast from "./DeleteToast";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import { fullName, isLocked } from "./helpers";
-import { confirmDelete, deleteUser } from "./userActions";
+import { confirmBulkDelete, confirmDelete, deleteBlockedReason, deleteUser, deleteUsers } from "./userActions";
 
 // Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast.
 const TOAST_AUTO_DISMISS_MS = 10000;
@@ -45,6 +45,8 @@ export default function UsersListing({
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [sort, setSort] = useState({ key: "name", direction: "asc" });
   const [deletingUser, setDeletingUser] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
   const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
   const busyRef = useRef(false);
@@ -90,6 +92,11 @@ export default function UsersListing({
     try {
       await deleteUser(user);
       setUsers((prev) => prev.filter((u) => u.id !== user.id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(user.id);
+        return next;
+      });
       setDeleteToast({ visible: true, message: `"${fullName(user)}" was removed.` });
       router.refresh();
     } catch (error) {
@@ -97,6 +104,26 @@ export default function UsersListing({
     } finally {
       busyRef.current = false;
       setDeletingUser(null);
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = [...selectedIds];
+    if (ids.length === 0 || busyRef.current || !confirmBulkDelete(ids.length)) return;
+    busyRef.current = true;
+    setBulkDeleting(true);
+    try {
+      const { deleted } = await deleteUsers(ids);
+      const removed = new Set(ids);
+      setUsers((prev) => prev.filter((u) => !removed.has(u.id)));
+      setSelectedIds(new Set());
+      setDeleteToast({ visible: true, message: `${deleted} user${deleted === 1 ? "" : "s"} removed.` });
+      router.refresh();
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      busyRef.current = false;
+      setBulkDeleting(false);
     }
   }
 
@@ -130,12 +157,41 @@ export default function UsersListing({
   const currentPage = Math.min(page, pageCount);
   const pageItems = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
+  // Selection is tied to what the filters show, so changing them starts afresh.
   function updateFilter(setter) {
     return (value) => {
       setter(value);
       setPage(1);
+      setSelectedIds(new Set());
     };
   }
+
+  function handleToggleSelect(id) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleTogglePage(ids, select) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (select) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  // Your own account and Super Admins you can't manage are never selectable.
+  const selectableMatching = useMemo(
+    () => sorted.filter((u) => !deleteBlockedReason(u, context)),
+    [sorted, context]
+  );
+  const hasActiveFilters = Boolean(search || role || status);
 
   function handleSortChange(key) {
     setSort((prev) => ({
@@ -177,16 +233,50 @@ export default function UsersListing({
         status={status}
         onStatusChange={updateFilter(setStatus)}
         resultCount={sorted.length}
-        hasActiveFilters={Boolean(search || role || status)}
+        hasActiveFilters={hasActiveFilters}
         onClear={() => {
           setSearch("");
           setRole("");
           setStatus("");
           setPage(1);
+          setSelectedIds(new Set());
         }}
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        {selectedIds.size > 0 && permissions.canDelete && (
+          <div
+            role="status"
+            className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 px-4 py-2.5 rounded-xl bg-primary-50 dark:bg-white/5 border border-primary-100 dark:border-white/10 text-sm"
+          >
+            <span className="font-semibold text-slate-700 dark:text-slate-200">{selectedIds.size} selected</span>
+            {selectedIds.size < selectableMatching.length && (
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set(selectableMatching.map((u) => u.id)))}
+                className="text-xs font-semibold text-primary-600 dark:text-accent-400 hover:underline"
+              >
+                Select all {selectableMatching.length} {hasActiveFilters ? "matching " : ""}users
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setSelectedIds(new Set())}
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:underline"
+            >
+              Clear selection
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              disabled={bulkDeleting}
+              className="ml-auto inline-flex items-center gap-2 px-3.5 h-9 rounded-lg bg-error hover:opacity-90 text-white text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+            >
+              <Icon name="trash-2" className="w-4 h-4" />
+              {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.size})`}
+            </button>
+          </div>
+        )}
         <UsersTable
           users={pageItems}
           busyId={deletingUser?.id}
@@ -195,6 +285,9 @@ export default function UsersListing({
           onDelete={handleDelete}
           sort={sort}
           onSortChange={handleSortChange}
+          selectedIds={selectedIds}
+          onToggleSelect={handleToggleSelect}
+          onTogglePage={handleTogglePage}
         />
         <Pagination
           page={currentPage}
@@ -208,9 +301,9 @@ export default function UsersListing({
 
       <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
       <DeleteOverlay
-        active={deletingUser != null}
-        title="Deleting user…"
-        itemLabel={deletingUser ? fullName(deletingUser) : ""}
+        active={deletingUser != null || bulkDeleting}
+        title={bulkDeleting ? "Deleting users…" : "Deleting user…"}
+        itemLabel={bulkDeleting ? `${selectedIds.size} selected` : deletingUser ? fullName(deletingUser) : ""}
       />
       <DeleteToast
         visible={deleteToast.visible}

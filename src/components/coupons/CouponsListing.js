@@ -6,10 +6,15 @@ import CouponsFilters from "./CouponsFilters";
 import CouponsTable from "./CouponsTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
+import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "./Toast";
 
 export default function CouponsListing({ coupons: initialCoupons }) {
   const router = useRouter();
+  const canDelete = useCan()("coupons.delete");
+  const selection = useBulkSelection();
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [coupons, setCoupons] = useState(initialCoupons);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -28,12 +33,32 @@ export default function CouponsListing({ coupons: initialCoupons }) {
       const json = await res.json();
       if (!json.success) throw new Error(json.error || "Failed to delete coupon");
       setCoupons((prev) => prev.filter((c) => c.id !== coupon.id));
+      selection.remove([coupon.id]);
       setDeleteToast({ visible: true, message: `"${coupon.code}" was removed.` });
       router.refresh();
     } catch (error) {
       window.alert(error.message);
     } finally {
       setDeletingCoupon(null);
+    }
+  }
+
+  async function handleBulkDelete() {
+    const ids = [...selection.ids];
+    if (ids.length === 0 || bulkDeleting) return;
+    if (!confirmBulkDelete(ids.length, "coupon", "coupons")) return;
+    setBulkDeleting(true);
+    try {
+      const { deleted } = await requestBulkDelete("/api/coupons", ids, "Failed to delete coupons");
+      const removed = new Set(ids);
+      setCoupons((prev) => prev.filter((x) => !removed.has(x.id)));
+      selection.clear();
+      setDeleteToast({ visible: true, message: `${deleted} coupon${deleted === 1 ? "" : "s"} removed.` });
+      router.refresh();
+    } catch (error) {
+      window.alert(error.message);
+    } finally {
+      setBulkDeleting(false);
     }
   }
 
@@ -65,10 +90,12 @@ export default function CouponsListing({ coupons: initialCoupons }) {
     return (value) => {
       setter(value);
       setPage(1);
+      selection.clear();
     };
   }
 
   function handleClear() {
+    selection.clear();
     setSearch("");
     setStatus("");
     setType("");
@@ -105,7 +132,21 @@ export default function CouponsListing({ coupons: initialCoupons }) {
       />
 
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6">
+        {canDelete && (
+          <BulkSelectionBar
+            count={selection.size}
+            matchingCount={sorted.length}
+            noun="coupons"
+            filtered={hasActiveFilters}
+            onSelectAll={() => selection.replace(sorted.map((x) => x.id))}
+            onClear={selection.clear}
+            onDelete={handleBulkDelete}
+            deleting={bulkDeleting}
+          />
+        )}
         <CouponsTable
+          selection={canDelete ? selection : null}
+          onTogglePage={selection.setMany}
           coupons={pageItems}
           onDelete={handleDelete}
           deletingId={deletingCoupon?.id}
@@ -122,9 +163,9 @@ export default function CouponsListing({ coupons: initialCoupons }) {
         />
       </section>
       <DeleteOverlay
-        active={deletingCoupon != null}
-        title="Deleting coupon…"
-        itemLabel={deletingCoupon?.code || ""}
+        active={deletingCoupon != null || bulkDeleting}
+        title={bulkDeleting ? "Deleting coupons…" : "Deleting coupon…"}
+        itemLabel={bulkDeleting ? `${selection.size} selected` : deletingCoupon?.code || ""}
       />
       <Toast
         visible={deleteToast.visible}

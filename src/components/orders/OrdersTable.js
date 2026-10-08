@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES, BADGE_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
+import { SelectCheckbox, pageSelectionState } from "@/components/admin-panel/BulkSelection";
+import { BULK_CANCELLABLE_STATUSES } from "./orderHelpers";
 
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
   const active = sort?.key === sortKey;
@@ -20,7 +22,15 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
   );
 }
 
-export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvoice, downloadingId }) {
+export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvoice, downloadingId, selection, onTogglePage }) {
+  // `selection` (from useBulkSelection) is only passed when the viewer may cancel
+  // orders; only Pending and Processing orders can be ticked.
+  const selectable = Boolean(selection);
+  const cancellableIds = selectable
+    ? orders.filter((order) => BULK_CANCELLABLE_STATUSES.includes(order.status)).map((order) => order.orderId)
+    : [];
+  const pageState = selectable ? pageSelectionState(selection, cancellableIds) : null;
+
   if (orders.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No orders match your filters.</div>;
   }
@@ -30,6 +40,17 @@ export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvo
       <table className="w-full text-sm min-w-[860px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th scope="col" className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={pageState.all}
+                  indeterminate={pageState.some}
+                  disabled={cancellableIds.length === 0}
+                  onChange={() => onTogglePage(cancellableIds, !pageState.all)}
+                  label="Select all cancellable orders on this page"
+                />
+              </th>
+            )}
             <SortableHeader label="Order ID" sortKey="id" sort={sort} onSortChange={onSortChange} />
             <SortableHeader label="Customer" sortKey="customer" sort={sort} onSortChange={onSortChange} />
             <SortableHeader label="Date" sortKey="date" sort={sort} onSortChange={onSortChange} />
@@ -41,8 +62,25 @@ export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvo
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-          {orders.map((order) => (
-            <tr key={order.id} className="table-row transition-colors">
+          {orders.map((order) => {
+            const cancellable = BULK_CANCELLABLE_STATUSES.includes(order.status);
+            const isSelected = selectable && selection.has(order.orderId);
+            return (
+            <tr
+              key={order.id}
+              className={`table-row transition-colors${isSelected ? " bg-primary-50/60 dark:bg-white/5" : ""}`}
+            >
+              {selectable && (
+                <td className="py-3 pl-3 pr-1">
+                  <SelectCheckbox
+                    checked={isSelected}
+                    disabled={!cancellable}
+                    title={cancellable ? undefined : `${order.status} orders can't be cancelled from the list`}
+                    onChange={() => selection.toggle(order.orderId)}
+                    label={cancellable ? `Select order ${order.id}` : `Order ${order.id} can't be selected: it's ${order.status.toLowerCase()}`}
+                  />
+                </td>
+              )}
               <td className="py-3 px-1 font-semibold text-primary-700 dark:text-accent-400">{order.id}</td>
               <td className="py-3 px-1">
                 <div className="flex items-center gap-2.5">
@@ -99,7 +137,8 @@ export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvo
                 </div>
               </td>
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

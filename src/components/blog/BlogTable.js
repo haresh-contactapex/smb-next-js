@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
+import { SelectCheckbox, pageSelectionState } from "@/components/admin-panel/BulkSelection";
 import { blogPostPath, formatBlogDate, todayIso } from "@/lib/blogRules";
 import { STATUS_BADGE_CLASSES, STATUS_LABELS, displayStatus } from "./helpers";
 
@@ -22,7 +23,10 @@ function SortableHeader({ label, sortKey, sort, onSortChange }) {
   );
 }
 
-export default function BlogTable({ posts, emptyMessage = "No posts match your filters.", onDelete, deletingId, sort, onSortChange }) {
+export default function BlogTable({ posts, emptyMessage = "No posts match your filters.", onDelete, deletingId, sort, onSortChange, selection, onTogglePage }) {
+  // `selection` (from useBulkSelection) is only passed when the viewer may delete.
+  const selectable = Boolean(selection);
+  const pageState = selectable ? pageSelectionState(selection, posts.map((x) => x.id)) : null;
   if (posts.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">{emptyMessage}</div>;
   }
@@ -34,6 +38,16 @@ export default function BlogTable({ posts, emptyMessage = "No posts match your f
       <table className="w-full text-sm min-w-[900px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th scope="col" className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={pageState.all}
+                  indeterminate={pageState.some}
+                  onChange={() => onTogglePage(posts.map((x) => x.id), !pageState.all)}
+                  label="Select all posts on this page"
+                />
+              </th>
+            )}
             <SortableHeader label="Post" sortKey="title" sort={sort} onSortChange={onSortChange} />
             <SortableHeader label="Category" sortKey="category" sort={sort} onSortChange={onSortChange} />
             <SortableHeader label="Author" sortKey="author" sort={sort} onSortChange={onSortChange} />
@@ -48,7 +62,19 @@ export default function BlogTable({ posts, emptyMessage = "No posts match your f
             const status = displayStatus(post, today);
             const path = blogPostPath(post.categorySlug, post.slug);
             return (
-              <tr key={post.id} className="table-row transition-colors">
+              <tr
+                key={post.id}
+                className={`table-row transition-colors${selectable && selection.has(post.id) ? " bg-primary-50/60 dark:bg-white/5" : ""}`}
+              >
+                {selectable && (
+                  <td className="py-3 pl-3 pr-1">
+                    <SelectCheckbox
+                      checked={selection.has(post.id)}
+                      onChange={() => selection.toggle(post.id)}
+                      label={`Select ${post.title}`}
+                    />
+                  </td>
+                )}
                 <td className="py-3 px-1">
                   <div className="flex items-center gap-3">
                     {post.featuredImageUrl ? (

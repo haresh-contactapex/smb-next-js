@@ -6,6 +6,23 @@ import { deleteBlockedReason, editBlockedReason } from "./userActions";
 const ICON_BUTTON =
   "w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none";
 
+function SelectCheckbox({ checked, indeterminate = false, disabled = false, onChange, label, title }) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      disabled={disabled}
+      onChange={onChange}
+      aria-label={label}
+      title={title}
+      ref={(el) => {
+        if (el) el.indeterminate = indeterminate;
+      }}
+      className="w-4 h-4 rounded cursor-pointer accent-primary-500 dark:accent-accent-500 disabled:cursor-not-allowed disabled:opacity-40"
+    />
+  );
+}
+
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
   const active = sort?.key === sortKey;
   const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
@@ -42,16 +59,44 @@ function RoleBadge({ user }) {
   );
 }
 
-export default function UsersTable({ users, busyId, permissions, context, onDelete, sort, onSortChange }) {
+export default function UsersTable({
+  users,
+  busyId,
+  permissions,
+  context,
+  onDelete,
+  sort,
+  onSortChange,
+  selectedIds,
+  onToggleSelect,
+  onTogglePage,
+}) {
+  // Only rows the signed-in user could delete one by one are selectable.
+  const selectable = permissions.canDelete && Boolean(selectedIds);
+  const selectableOnPage = selectable ? users.filter((u) => !deleteBlockedReason(u, context)) : [];
+  const selectedOnPage = selectableOnPage.filter((u) => selectedIds.has(u.id)).length;
+  const allOnPageSelected = selectableOnPage.length > 0 && selectedOnPage === selectableOnPage.length;
+
   if (users.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No users match your filters.</div>;
   }
 
   return (
     <div className="overflow-x-auto custom-scroll -mx-1">
-      <table className="w-full text-sm min-w-[960px]">
+      <table className={`w-full text-sm ${selectable ? "min-w-[1000px]" : "min-w-[960px]"}`}>
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th scope="col" className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={allOnPageSelected}
+                  indeterminate={selectedOnPage > 0 && !allOnPageSelected}
+                  disabled={selectableOnPage.length === 0}
+                  onChange={() => onTogglePage(selectableOnPage.map((u) => u.id), !allOnPageSelected)}
+                  label="Select all users on this page"
+                />
+              </th>
+            )}
             <SortableHeader label="User" sortKey="name" sort={sort} onSortChange={onSortChange} />
             <th scope="col" className="py-3 px-2 font-semibold">Phone</th>
             <SortableHeader label="Role" sortKey="role" sort={sort} onSortChange={onSortChange} />
@@ -70,8 +115,24 @@ export default function UsersTable({ users, busyId, permissions, context, onDele
             const editBlocked = editBlockedReason(user, context);
             const deleteBlocked = deleteBlockedReason(user, context);
             const isSelf = user.id === context.currentUserId;
+            const isSelected = selectable && selectedIds.has(user.id);
             return (
-              <tr key={user.id} className="table-row transition-colors" aria-busy={busy}>
+              <tr
+                key={user.id}
+                className={`table-row transition-colors ${isSelected ? "bg-primary-50/60 dark:bg-white/5" : ""}`}
+                aria-busy={busy}
+              >
+                {selectable && (
+                  <td className="py-3 pl-3 pr-1">
+                    <SelectCheckbox
+                      checked={isSelected}
+                      disabled={Boolean(deleteBlocked)}
+                      title={deleteBlocked || undefined}
+                      onChange={() => onToggleSelect(user.id)}
+                      label={deleteBlocked ? `${name} can't be selected: ${deleteBlocked}` : `Select ${name}`}
+                    />
+                  </td>
+                )}
                 <td className="py-3 px-2">
                   <div className="flex items-center gap-3">
                     {user.avatarUrl ? (

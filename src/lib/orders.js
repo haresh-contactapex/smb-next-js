@@ -296,6 +296,27 @@ export async function updateOrderStatus(id, { status, paymentStatus }) {
   return row ? mapOrder(row, 0, await loadMoneyFormat()) : null;
 }
 
+// Order statuses a bulk cancel from the orders list applies to. Completed and
+// already-cancelled orders are left alone (the edit screen can still change
+// any status one order at a time).
+export const BULK_CANCELLABLE_STATUSES = ["Pending", "Processing"];
+
+// Bulk cancel: same effect as choosing Cancelled on one order (payment status
+// is kept, so a paid order still needs refunding by hand). Returns the orders
+// that were actually cancelled; ids that are missing or not cancellable are
+// skipped.
+export async function cancelOrders(ids) {
+  const rows = await sql`
+    UPDATE orders SET
+      status = 'Cancelled',
+      cancelled_at = COALESCE(cancelled_at, now()),
+      updated_at = now()
+    WHERE id = ANY(${ids}::uuid[]) AND status = ANY(${BULK_CANCELLABLE_STATUSES}::text[])
+    RETURNING id, order_number, payment_status
+  `;
+  return rows.map((row) => ({ id: row.id, orderNumber: row.order_number, paymentStatus: row.payment_status }));
+}
+
 // Lightweight lookup for the header's order search dropdown — order number
 // or customer name match, same row shape as listOrders() so the dropdown can
 // reuse its status/payment color mapping.

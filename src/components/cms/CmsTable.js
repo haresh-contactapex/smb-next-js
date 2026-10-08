@@ -1,9 +1,13 @@
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
+import { SelectCheckbox, pageSelectionState } from "@/components/admin-panel/BulkSelection";
 import { STATUS_BADGE_CLASSES, STATUS_LABELS, footerGroupLabel, formatDateTime, publicPath } from "./helpers";
 
-export default function CmsTable({ pages, onDelete, deletingId }) {
+export default function CmsTable({ pages, onDelete, deletingId, selection, onTogglePage }) {
+  // `selection` (from useBulkSelection) is only passed when the viewer may delete.
+  const selectable = Boolean(selection);
+  const pageState = selectable ? pageSelectionState(selection, pages.map((x) => x.id)) : null;
   if (pages.length === 0) {
     return <div className="py-16 text-center text-sm text-slate-400">No pages match your filters.</div>;
   }
@@ -13,6 +17,16 @@ export default function CmsTable({ pages, onDelete, deletingId }) {
       <table className="w-full text-sm min-w-[820px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
+            {selectable && (
+              <th scope="col" className="py-3 pl-3 pr-1 w-[44px]">
+                <SelectCheckbox
+                  checked={pageState.all}
+                  indeterminate={pageState.some}
+                  onChange={() => onTogglePage(pages.map((x) => x.id), !pageState.all)}
+                  label="Select all pages on this page"
+                />
+              </th>
+            )}
             <th className="py-3 px-1 font-semibold">Page</th>
             <th className="py-3 px-1 font-semibold">Status</th>
             <th className="py-3 px-1 font-semibold">Footer column</th>
@@ -24,7 +38,19 @@ export default function CmsTable({ pages, onDelete, deletingId }) {
           {pages.map((page) => {
             const isDeleting = page.id === deletingId;
             return (
-              <tr key={page.id} className="table-row transition-colors">
+              <tr
+                key={page.id}
+                className={`table-row transition-colors${selectable && selection.has(page.id) ? " bg-primary-50/60 dark:bg-white/5" : ""}`}
+              >
+                {selectable && (
+                  <td className="py-3 pl-3 pr-1">
+                    <SelectCheckbox
+                      checked={selection.has(page.id)}
+                      onChange={() => selection.toggle(page.id)}
+                      label={`Select ${page.title}`}
+                    />
+                  </td>
+                )}
                 <td className="py-3 px-1">
                   <div className="flex items-center gap-3">
                     <span className="w-10 h-10 rounded-xl grid place-items-center shrink-0 bg-primary-50 text-primary-600 dark:bg-white/5 dark:text-accent-400">

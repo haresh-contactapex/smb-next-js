@@ -347,3 +347,9 @@ export async function deleteReview(id) {
   if (!deleted) throw new ReviewError("Review not found.", 404);
   return deleted.id;
 }
+
+// Bulk delete from the reviews list. Ids that no longer exist are skipped.
+export async function deleteReviews(ids) {
+  const rows = await sql`DELETE FROM product_reviews WHERE id = ANY(${ids}::uuid[]) RETURNING id`;
+  return rows.length;
+}

@@ -1,8 +1,9 @@
 import { randomUUID } from "crypto";
 import { extname } from "path";
-import { put } from "@vercel/blob";
+import { put, del } from "@vercel/blob";
 import { NextResponse } from "next/server";
-import { listMedia, createMedia } from "@/lib/media";
+import { listMedia, createMedia, deleteMediaItems } from "@/lib/media";
+import { readBulkIds } from "@/lib/bulkIds";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
@@ -187,6 +188,24 @@ export async function POST(request) {
     });
 
     return NextResponse.json({ success: true, data: created }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+// Bulk delete: body `{ ids: [mediaId, ...] }`. Like the single delete, the
+// stored files are removed best-effort after their rows are gone.
+export async function DELETE(request) {
+  const auth = await requireStaffPermission("media.delete");
+  if (!auth.ok) return permissionDeniedResponse(auth);
+
+  const { ids, error } = await readBulkIds(request, "file");
+  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+
+  try {
+    const urls = await deleteMediaItems(ids);
+    if (urls.length > 0) await del(urls).catch(() => {});
+    return NextResponse.json({ success: true, data: { deleted: urls.length } });
   } catch (error) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
