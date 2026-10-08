@@ -45,8 +45,8 @@ Indexes: `UNIQUE (token_hash)`, `INDEX (customer_id)`, `INDEX (expires_at)`
 
 ## Design notes
 
-- `customers` (identity, `email`, `password_hash`, the partial
-  `UNIQUE (email) WHERE is_guest = false` index) is owned by
+- `customers` (identity, `email`, `password_hash`, the
+  `UNIQUE (lower(email))` index) is owned by
   `orders-database-schema.md`, not redefined here — Login and Register both
   authenticate against that same table, matching how this repo's other
   cross-cutting docs (e.g. vouchers-coupons's `coupon_redemptions.customer_id`)

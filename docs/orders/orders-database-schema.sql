@@ -44,7 +44,7 @@ COMMENT ON COLUMN customers.password_hash IS 'NULL for a guest-checkout row.';
 COMMENT ON COLUMN customers.customer_group IS 'Mirrors customers_settings.default_customer_group.';
 COMMENT ON COLUMN customers.is_guest IS 'true for a one-off row created because customers_settings.allow_guest_checkout is on.';
 
-CREATE UNIQUE INDEX customers_email_key ON customers (email) WHERE is_guest = false;
+CREATE UNIQUE INDEX customers_email_key ON customers (lower(email));
 CREATE INDEX customers_email_idx ON customers (email);
 
 -- =========================================================================

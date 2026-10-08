@@ -70,8 +70,11 @@ schema, which models the store's own admin/staff login. See Design notes.
 | `created_at`          | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`                                        |                                                                      |
 | `updated_at`          | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`                                        |                                                                      |
 
-Indexes: `UNIQUE (email) WHERE is_guest = false` (guest rows may reuse an
-email address a registered account already holds), `INDEX (email)`.
+Indexes: `UNIQUE (lower(email))` (one row per email, guest or registered),
+`INDEX (email)`. A guest checkout reuses the row already holding its email
+instead of adding one, and registering with a guest row's email turns that
+row into the account (its old orders are unlinked first, since registration
+doesn't verify the email).
 
 ### `order_addresses`
 

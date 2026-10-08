@@ -15,6 +15,7 @@
     "db:migrate:reviews": "node scripts/migrate.mjs docs/reviews/reviews-table-only.sql",
     "db:migrate:reviews-half-stars": "node scripts/migrate.mjs docs/reviews/reviews-half-star-ratings-only.sql",
     "db:migrate:customers": "node scripts/migrate.mjs docs/auth/customers-table-only.sql",
+    "db:migrate:customers-unique-email": "node scripts/migrate.mjs docs/auth/customers-unique-email-only.sql",
     "db:migrate:orders": "node scripts/migrate.mjs docs/orders/orders-table-only.sql",
     "db:migrate:order-details": "node scripts/migrate.mjs docs/orders/order-details-tables-only.sql",
     "db:migrate:cms": "node scripts/migrate.mjs docs/cms/cms-pages-table-only.sql",

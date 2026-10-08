@@ -1,5 +1,6 @@
 import { randomUUID, timingSafeEqual } from "crypto";
 import { sql, sqlTransaction } from "./db";
+import { findCustomerIdByEmail } from "./customers";
 import { getOrdersSettings } from "./ordersSettings";
 import { isGuestCheckoutAllowed } from "./checkoutSettings";
 import { getPaymentSettings } from "./paymentSettings";
@@ -27,6 +28,10 @@ function isOrderNumberCollision(error) {
   return error?.code === "23505" && /order_number/.test(`${error.constraint || ""} ${error.message || ""}`);
 }
 
+function isCustomerEmailCollision(error) {
+  return error?.code === "23505" && /customers_email/.test(`${error.constraint || ""} ${error.message || ""}`);
+}
+
 // Neon reports a missing table as 42P01; the detail tables come from the order-details migration.
 function isMissingTable(error) {
   return error?.code === "42P01";
@@ -45,10 +50,15 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
   const phone = contact.phoneE164;
   const billingId = randomUUID();
   const shippingId = randomUUID();
-  const guestId = customer ? null : randomUUID();
+  const guestEmail = String(contact.email || "").trim().toLowerCase();
   const itemCount = lines.reduce((total, line) => total + line.quantity, 0);
 
   for (let attempt = 1; attempt <= MAX_ORDER_NUMBER_ATTEMPTS; attempt += 1) {
+    // One customer row per email: a guest whose email is already on file (a returning
+    // guest, or someone with an account) places the order on that row instead of a new one.
+    // Looked up on every attempt so a retry after a lost race picks up the row that won.
+    const existingId = customer ? null : await findCustomerIdByEmail(guestEmail);
+    const guestId = customer || existingId ? null : randomUUID();
     try {
       let orderIndex = 0;
       const results = await sqlTransaction((tx) => {
@@ -56,7 +66,7 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
         if (guestId) {
           statements.push(tx`
             INSERT INTO customers (id, first_name, last_name, email, phone, is_guest)
-            VALUES (${guestId}, ${contact.firstName}, ${contact.lastName}, ${contact.email}, ${phone}, true)
+            VALUES (${guestId}, ${contact.firstName}, ${contact.lastName}, ${guestEmail}, ${phone}, true)
           `);
         }
         for (const [id, type, address] of [[billingId, "BILLING", billing], [shippingId, "SHIPPING", shipping]]) {
@@ -76,7 +86,7 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
           VALUES (
             ${orderId},
             (SELECT ${prefix}::text || GREATEST(${startingNumber}::bigint, COALESCE(MAX(NULLIF(regexp_replace(order_number, '[^0-9]', '', 'g'), '')::bigint), 0) + 1)::text FROM orders),
-            ${customer?.id || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
+            ${customer?.id || existingId || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
             ${priced.total}, ${priced.currency}, ${status}, 'Unpaid', ${priced.subtotal}, ${priced.discount}, ${priced.shippingAmount}, ${priced.tax}, ${priced.couponCode}
           )
           RETURNING order_number
@@ -114,6 +124,8 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
     } catch (error) {
       // Two checkouts picked the same number at once: nothing was written, so try again.
       if (isOrderNumberCollision(error) && attempt < MAX_ORDER_NUMBER_ATTEMPTS) continue;
+      // Two checkouts for a new email at once: nothing was written, and the retry finds the winner's row.
+      if (isCustomerEmailCollision(error) && attempt < MAX_ORDER_NUMBER_ATTEMPTS) continue;
       if (isMissingTable(error)) console.error("Order tables are missing. Run `npm run db:migrate:order-details`.", error.message);
       throw error;
     }

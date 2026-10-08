@@ -28,5 +28,7 @@ COMMENT ON COLUMN customers.customer_group IS 'Mirrors customers_settings.defaul
 COMMENT ON COLUMN customers.is_guest IS 'true for a one-off row created because customers_settings.allow_guest_checkout is on.';
 COMMENT ON COLUMN customers.terms_accepted_at IS 'Set when Register''s "I agree to the Terms of Service and Privacy Policy" checkbox is submitted; flagged as a follow-up in auth-database-schema.md.';
 
-CREATE UNIQUE INDEX IF NOT EXISTS customers_email_key ON customers (email) WHERE is_guest = false;
+-- One row per email, guest or registered. A database created before this was unique only for
+-- registered rows; npm run db:migrate:customers-unique-email upgrades it (and merges duplicates).
+CREATE UNIQUE INDEX IF NOT EXISTS customers_email_key ON customers (lower(email));
 CREATE INDEX IF NOT EXISTS customers_email_idx ON customers (email);

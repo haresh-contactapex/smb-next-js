@@ -30,8 +30,45 @@ export async function getCustomerById(id) {
   return toPublicCustomer(row);
 }
 
+// Email is unique across every customer row (guest or registered), compared
+// case-insensitively. Returns the id of the row holding it, preferring a
+// registered account over a guest row.
+export async function findCustomerIdByEmail(email) {
+  const [row] = await sql`
+    SELECT id FROM customers
+    WHERE lower(email) = ${String(email).trim().toLowerCase()}
+    ORDER BY is_guest, created_at
+    LIMIT 1
+  `;
+  return row?.id || null;
+}
+
 export async function createCustomer({ firstName, lastName, email, phone, passwordHash, acceptsMarketing, agreedToTerms }) {
   const termsAcceptedAt = agreedToTerms ? new Date() : null;
+
+  // A guest checkout leaves a customer row behind. Registering with the same
+  // email turns that row into the account instead of adding a second one. Registration
+  // doesn't verify the email, so the guest's past orders are unlinked first: the
+  // new account must not inherit orders (and addresses) placed by whoever used the email.
+  const [guest] = await sql`
+    SELECT id FROM customers
+    WHERE lower(email) = ${email.trim().toLowerCase()} AND is_guest = true
+    ORDER BY created_at
+    LIMIT 1
+  `;
+  if (guest) {
+    await sql`UPDATE orders SET customer_id = NULL WHERE customer_id = ${guest.id}`;
+    const [claimed] = await sql`
+      UPDATE customers SET
+        first_name = ${firstName.trim()}, last_name = ${lastName.trim()}, email = ${email.trim().toLowerCase()},
+        phone = ${phone || null}, password_hash = ${passwordHash}, accepts_marketing = ${acceptsMarketing ?? false},
+        terms_accepted_at = ${termsAcceptedAt}, is_guest = false, updated_at = now()
+      WHERE id = ${guest.id}
+      RETURNING *
+    `;
+    return toPublicCustomer(claimed);
+  }
+
   const [created] = await sql`
     INSERT INTO customers (
       first_name, last_name, email, phone, password_hash, accepts_marketing, terms_accepted_at
@@ -107,8 +144,18 @@ function customerRecordValues(payload) {
   return { firstName, lastName, email, phone, customerGroup, loyaltyPoints, acceptsMarketing };
 }
 
+// Checked in code as well as by the unique index so the error is clear and a
+// guest row's email is covered even before the index has been upgraded.
+async function assertEmailAvailable(email, excludeId = null) {
+  const rows = excludeId
+    ? await sql`SELECT id FROM customers WHERE lower(email) = ${email} AND id <> ${excludeId} LIMIT 1`
+    : await sql`SELECT id FROM customers WHERE lower(email) = ${email} LIMIT 1`;
+  if (rows.length) throw new Error(`A customer with the email "${email}" already exists.`);
+}
+
 export async function createCustomerRecord(payload) {
   const v = customerRecordValues(payload);
+  await assertEmailAvailable(v.email);
   try {
     const [created] = await sql`
       INSERT INTO customers (
@@ -129,6 +176,7 @@ export async function createCustomerRecord(payload) {
 
 export async function updateCustomerRecord(id, payload) {
   const v = customerRecordValues(payload);
+  await assertEmailAvailable(v.email, id);
   try {
     await sql`
       UPDATE customers SET
