@@ -1,12 +1,11 @@
 "use client";
 
 import Icon from "@/components/admin-panel/Icon";
-import { getCountryNames, getStateNames, getCityNames } from "@/data/locationData";
+import { getCountryNames, LOCATIONS } from "@/data/locationData";
 import { formatUsPhone } from "@/lib/phone";
 
 export default function AddressFields({ idPrefix, address, onFieldChange, errors = {}, registerRef, onEnter }) {
-  const states = getStateNames(address.country);
-  const cities = getCityNames(address.country, address.state);
+  const postalLabel = LOCATIONS[address.country]?.postalLabel || "ZIP / Postal Code";
 
   // `!`-prefixed (important) because .field-input's own border/background
   // rules tie in specificity with plain Tailwind utilities and win on source
@@ -128,27 +127,18 @@ export default function AddressFields({ idPrefix, address, onFieldChange, errors
           <label className="field-label" htmlFor={`${idPrefix}-state`}>
             State / Province
           </label>
-          <div className="relative">
-            <select
-              id={`${idPrefix}-state`}
-              ref={refFor("state")}
-              value={address.state}
-              onChange={(e) => onFieldChange("state", e.target.value)}
-              onKeyDown={handleKeyDown}
-              aria-label="State or province"
-              className={fieldClass("state", "appearance-none pr-8 cursor-pointer")}
-            >
-              <option value="">Select a state</option>
-              {states.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">
-              <Icon name="chevron-down" className="w-4 h-4" />
-            </span>
-          </div>
+          <input
+            id={`${idPrefix}-state`}
+            ref={refFor("state")}
+            type="text"
+            value={address.state}
+            onChange={(e) => onFieldChange("state", e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="California"
+            aria-label="State or province"
+            maxLength={80}
+            className={fieldClass("state")}
+          />
           {errors.state && <p className="text-xs text-error mt-1">{errors.state}</p>}
         </div>
       </div>
@@ -158,33 +148,23 @@ export default function AddressFields({ idPrefix, address, onFieldChange, errors
           <label className="field-label" htmlFor={`${idPrefix}-city`}>
             City
           </label>
-          <div className="relative">
-            <select
-              id={`${idPrefix}-city`}
-              ref={refFor("city")}
-              value={address.city}
-              onChange={(e) => onFieldChange("city", e.target.value)}
-              onKeyDown={handleKeyDown}
-              aria-label="City"
-              disabled={!address.state}
-              className={fieldClass("city", "appearance-none pr-8 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed")}
-            >
-              <option value="">{address.state ? "Select a city" : "Select a state first"}</option>
-              {cities.map((name) => (
-                <option key={name} value={name}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none">
-              <Icon name="chevron-down" className="w-4 h-4" />
-            </span>
-          </div>
+          <input
+            id={`${idPrefix}-city`}
+            ref={refFor("city")}
+            type="text"
+            value={address.city}
+            onChange={(e) => onFieldChange("city", e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Los Angeles"
+            aria-label="City"
+            maxLength={80}
+            className={fieldClass("city")}
+          />
           {errors.city && <p className="text-xs text-error mt-1">{errors.city}</p>}
         </div>
         <div>
           <label className="field-label" htmlFor={`${idPrefix}-zip`}>
-            ZIP / Postal Code
+            {postalLabel}
           </label>
           <input
             id={`${idPrefix}-zip`}

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { getAddressesByUserId, upsertAddress, deleteAddress } from "@/lib/addresses";
-import { validateLocationHierarchy } from "@/lib/validateAddress";
+import { validateTypedLocation } from "@/lib/validateAddress";
+import { validateUsLocation } from "@/lib/usAddress";
 import { isValidUsPhone } from "@/lib/phone";
 
 const VALID_TYPES = new Set(["billing", "shipping"]);
@@ -60,14 +61,40 @@ export async function PUT(request) {
       );
     }
 
-    const hierarchyResult = validateLocationHierarchy({
-      country: address.country,
-      state: address.state,
-      city: address.city,
-      postalCode: address.zip,
-    });
-    if (!hierarchyResult.valid) {
-      return NextResponse.json({ success: false, error: hierarchyResult.message }, { status: 400 });
+    if (!address.country) {
+      return NextResponse.json({ success: false, error: "Select a country.", field: "country" }, { status: 400 });
+    }
+    if (!address.state || !address.city) {
+      return NextResponse.json(
+        { success: false, error: "State and city are required.", field: !address.state ? "state" : "city" },
+        { status: 400 }
+      );
+    }
+
+    // Only a United States address is checked (state, city and ZIP must agree and the
+    // ZIP must exist), the same rules as the storefront checkout. Other countries are
+    // stored as typed.
+    if (address.country === "United States") {
+      const location = validateTypedLocation({
+        country: address.country,
+        state: address.state,
+        city: address.city,
+        postalCode: address.zip,
+      });
+      if (!location.valid) {
+        return NextResponse.json({ success: false, error: location.message, field: location.field }, { status: 400 });
+      }
+      const usLocation = validateUsLocation({
+        country: address.country,
+        state: location.state,
+        city: location.city,
+        postalCode: address.zip,
+      });
+      if (!usLocation.valid) {
+        return NextResponse.json({ success: false, error: usLocation.message, field: usLocation.field }, { status: 400 });
+      }
+      address.state = location.state;
+      address.city = usLocation.city || location.city;
     }
 
     const saved = await upsertAddress(staffUser.id, type, address);

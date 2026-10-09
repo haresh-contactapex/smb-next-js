@@ -139,12 +139,21 @@ export default function AddressForm() {
 
     setSaving(true);
     try {
-      await saveOne("billing", state.billing, false);
+      // The server returns state and city spelled canonically ("surat" -> "Surat").
+      const savedBilling = await saveOne("billing", state.billing, false);
       setHasSavedBilling(true);
 
       const shippingToSave = state.shippingSameAsBilling ? state.billing : state.shipping;
-      await saveOne("shipping", shippingToSave, state.shippingSameAsBilling);
+      const savedShipping = await saveOne("shipping", shippingToSave, state.shippingSameAsBilling);
       setHasSavedShipping(true);
+
+      setState((prev) => ({
+        ...prev,
+        billing: { ...prev.billing, state: savedBilling.state, city: savedBilling.city },
+        shipping: state.shippingSameAsBilling
+          ? prev.shipping
+          : { ...prev.shipping, state: savedShipping.state, city: savedShipping.city },
+      }));
 
       showToast("Address saved");
     } catch (error) {

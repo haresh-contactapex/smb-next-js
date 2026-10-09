@@ -1,5 +1,4 @@
-import { getStateNames, getCityNames } from "@/data/locationData";
-import { validateLocationHierarchy } from "@/lib/validateAddress";
+import { validateTypedLocation } from "@/lib/validateAddress";
 import { isValidUsPhone } from "@/lib/phone";
 
 export function emptyAddress() {
@@ -34,16 +33,14 @@ export const DEFAULT_ADDRESS_STATE = {
   deliveryInstructions: "",
 };
 
-// Changing country/state must reset the fields that depend on it so the
-// form can never hold a state/city that no longer belongs to the selection.
+// State, city and postal code are typed, so a new country only clears them:
+// what was typed for one country says nothing about another.
 export function updateAddressField(address, field, value) {
   const next = { ...address, [field]: value };
   if (field === "country") {
     next.state = "";
     next.city = "";
-  } else if (field === "state") {
-    const cities = getCityNames(next.country, value);
-    next.city = cities.length === 1 ? cities[0] : "";
+    next.zip = "";
   }
   return next;
 }
@@ -76,19 +73,19 @@ export function validateAddressForm(address) {
 
   if (!address.fullName.trim()) errors.fullName = "Enter a full name.";
   if (!address.addressLine1.trim()) errors.addressLine1 = "Enter a street address.";
-  if (!address.state.trim()) errors.state = "Select a state.";
-  if (!address.city.trim()) errors.city = "Select a city.";
+  if (!address.state.trim()) errors.state = "Enter a state or province.";
+  if (!address.city.trim()) errors.city = "Enter a city.";
 
-  if (!errors.state && !errors.city) {
-    const hierarchy = validateLocationHierarchy({
+  // Only a United States address has its state, city and ZIP checked against
+  // each other, like the storefront checkout; other countries are taken as typed.
+  if (address.country === "United States" && !errors.state && !errors.city) {
+    const location = validateTypedLocation({
       country: address.country,
       state: address.state,
       city: address.city,
       postalCode: address.zip,
     });
-    if (!hierarchy.valid) {
-      errors[hierarchy.field || "zip"] = hierarchy.message;
-    }
+    if (!location.valid) errors[location.field || "zip"] = location.message;
   }
 
   if (!isValidUsPhone(address.phone)) {
@@ -103,6 +100,3 @@ export function validateAddressForm(address) {
     message: firstErrorField ? errors[firstErrorField] : "",
   };
 }
-
-// Re-exported for convenience so components only need to import from ./helpers.
-export { getStateNames, getCityNames };
