@@ -253,7 +253,7 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
             <ToggleField
               icon="shield"
               label="Two-Factor Authentication"
-              description="Marks this account as using 2FA at sign-in."
+              description="Require a verification code emailed at sign-in, in addition to the password."
               checked={form.twoFactorEnabled}
               onChange={(value) => setField("twoFactorEnabled", value)}
               disabled={busy}

@@ -26,6 +26,7 @@
     "db:migrate:orders-payment-status": "node scripts/migrate.mjs docs/orders/orders-payment-status-failed-only.sql",
     "db:migrate:auth": "node scripts/migrate.mjs docs/auth/auth-database-schema.sql",
     "db:migrate:staff-users": "node scripts/migrate.mjs docs/my-account/users-table-only.sql",
+    "db:migrate:staff-login-otp": "node scripts/migrate.mjs docs/my-account/staff-login-otp-table-only.sql",
     "db:migrate:currency-tax": "node scripts/migrate.mjs docs/settings/currency-tax-table-only.sql",
     "db:migrate:shipping": "node scripts/migrate.mjs docs/settings/shipping-table-only.sql",
     "db:migrate:payment": "node scripts/migrate.mjs docs/settings/payment-table-only.sql",

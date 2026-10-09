@@ -10,6 +10,7 @@ import PasswordField from "@/components/auth/PasswordField";
 import Toast from "@/components/auth/Toast";
 import Recaptcha from "@/components/auth/Recaptcha";
 import AdminAuthLayout from "./AdminAuthLayout";
+import AdminOtpForm from "./AdminOtpForm";
 
 export default function AdminLoginForm() {
   const { enableRecaptcha } = useGeneralSettings();
@@ -21,6 +22,10 @@ export default function AdminLoginForm() {
   const [recaptchaKey, setRecaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  // Set once /api/admin-auth/login answers with twoFactorRequired: the
+  // credentials are correct but a code must be verified before there's a
+  // session. { maskedEmail, expiresInSeconds } while pending, else null.
+  const [otpChallenge, setOtpChallenge] = useState(null);
 
   const toastTimerRef = useRef(null);
 
@@ -51,6 +56,17 @@ export default function AdminLoginForm() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
+  // Shared by a direct sign-in and a sign-in completed via the OTP step.
+  function redirectAfterSignIn() {
+    showToast("Signed in successfully");
+    // The toast unmounts the instant this page navigates away, so give it a
+    // beat to actually be seen instead of redirecting immediately.
+    setTimeout(() => {
+      router.push("/admin");
+      router.refresh();
+    }, 900);
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -78,22 +94,40 @@ export default function AdminLoginForm() {
       if (!res.ok || !result.success) {
         throw new Error(result.error || "Unable to sign in.");
       }
-      showToast("Signed in successfully");
-      // The toast unmounts the instant this page navigates away, so give it
-      // a beat to actually be seen instead of redirecting immediately. Leave
-      // the button disabled (submitting stays true) through the redirect
-      // rather than resetting it in a `finally`, so it can't be re-submitted
-      // during that window.
-      setTimeout(() => {
-        router.push("/admin");
-        router.refresh();
-      }, 900);
+
+      if (result.data?.twoFactorRequired) {
+        // Leave `submitting` true (same as the direct-login redirect below):
+        // the credentials form stays disabled, but it's about to be swapped
+        // for the OTP step rather than navigated away from.
+        setOtpChallenge({ maskedEmail: result.data.maskedEmail, expiresInSeconds: result.data.expiresInSeconds });
+        return;
+      }
+
+      redirectAfterSignIn();
     } catch (error) {
       showToast(error.message, "error");
       setRecaptchaToken("");
       setRecaptchaKey((k) => k + 1);
       setSubmitting(false);
     }
+  }
+
+  if (otpChallenge) {
+    return (
+      <AdminAuthLayout title="Verify it's you" subtitle="Enter the code we sent to continue.">
+        <AdminOtpForm
+          maskedEmail={otpChallenge.maskedEmail}
+          expiresInSeconds={otpChallenge.expiresInSeconds}
+          onVerified={redirectAfterSignIn}
+          onCancel={() => {
+            setOtpChallenge(null);
+            setSubmitting(false);
+            setForm((prev) => ({ ...prev, password: "" }));
+          }}
+        />
+        <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
+      </AdminAuthLayout>
+    );
   }
 
   return (

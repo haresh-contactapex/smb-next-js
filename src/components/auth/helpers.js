@@ -18,6 +18,14 @@ export function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 }
 
+// "jane@shop.com" -> "j***@shop.com": enough to recognise, never the full
+// address. Used in activity logs and non-enumerating error copy.
+export function maskEmail(email) {
+  const [name, domain] = String(email || "").split("@");
+  if (!name || !domain) return "***";
+  return `${name.slice(0, 1)}***@${domain}`;
+}
+
 const MIN_PASSWORD_LENGTH = 8;
 const SPECIAL_CHAR_REGEX = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?~`]/;
 

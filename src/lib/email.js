@@ -4,7 +4,7 @@ import { getGeneralSettings } from "./generalSettings";
 import { readFile } from "fs/promises";
 import path from "path";
 import { buildNewOrderAlertEmail, buildOrderConfirmationEmail, buildOrderStatusEmail, buildRefundRequestAlertEmail } from "./orderEmail";
-import { buildCustomerWelcomeEmail, buildNewCustomerAlertEmail, buildPasswordResetEmail, buildProductQuestionAlertEmail, buildProductQuestionConfirmationEmail, buildStaffWelcomeEmail } from "./notificationEmail";
+import { buildCustomerWelcomeEmail, buildLoginOtpEmail, buildNewCustomerAlertEmail, buildPasswordResetEmail, buildProductQuestionAlertEmail, buildProductQuestionConfirmationEmail, buildStaffWelcomeEmail } from "./notificationEmail";
 import { buildContactMessageAlertEmail, buildContactMessageConfirmationEmail } from "./notificationEmail";
 import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 
@@ -171,6 +171,16 @@ export async function sendNewCustomerAdminNotification({ to, customer, storeName
 // it (it reuses the staff reset-password flow).
 export async function sendStaffWelcomeEmail({ to, firstName, storeName, temporaryPassword, setPasswordLink, loginLink, linkExpiresInHours }) {
   return sendBrandedEmail(to, buildStaffWelcomeEmail, { to, firstName, storeName, temporaryPassword, setPasswordLink, loginLink, linkExpiresInHours });
+}
+
+// Sent after a staff member's password is verified but before their session
+// is created (src/lib/auth/loginOtp.js) — the 2FA step for Settings ->
+// Security's "Require Two-Factor Auth" and the per-user toggle on Users /
+// Profile. Best-effort like every other email here, but the login route
+// still treats a failed send as the request failing — a code nobody receives
+// is a dead end, not a degraded experience.
+export async function sendLoginOtpEmail({ to, firstName, code, expiresInSeconds }) {
+  return sendBrandedEmail(to, buildLoginOtpEmail, { firstName, code, expiresInSeconds });
 }
 
 // Sent to the store when a shopper uses "Ask a question" on a product page.

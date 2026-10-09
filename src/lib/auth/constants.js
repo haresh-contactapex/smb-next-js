@@ -7,6 +7,12 @@ export const STAFF_SESSION_COOKIE = "smb_staff_session";
 export const CUSTOMER_SESSION_SCOPE = "customer";
 export const STAFF_SESSION_SCOPE = "staff";
 
+// A staff member who passed the password check but still owes a 2FA code
+// holds this instead of a real staff session — a distinct cookie and scope
+// so it can never be read as, or upgraded into, STAFF_SESSION_COOKIE.
+export const STAFF_2FA_CHALLENGE_COOKIE = "smb_staff_2fa_challenge";
+export const STAFF_2FA_CHALLENGE_SCOPE = "staff-2fa-challenge";
+
 // Short-lived ticket for the notifications WebSocket handshake; distinct from
 // the session scopes so it can never act as a staff or customer session.
 export const NOTIFICATIONS_WS_SCOPE = "notifications-ws";

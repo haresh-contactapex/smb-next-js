@@ -1,4 +1,4 @@
-import Icon from "@/components/admin-panel/Icon";
+import ToggleField from "@/components/settings-shared/ToggleField";
 
 function formatDateTime(value) {
   if (!value) return "—";
@@ -31,18 +31,13 @@ export default function AccountStatusSidebar({ twoFactorEnabled, createdAt, last
       </div>
 
       <div className="border-t border-slate-100 dark:border-white/5 mt-4 pt-4">
-        <label className="flex items-center justify-between cursor-pointer">
-          <span className="flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-            <Icon name="shield" className="w-4 h-4 text-slate-400" /> Two-Factor Authentication
-          </span>
-          <input
-            type="checkbox"
-            className="w-4 h-4 rounded accent-primary-500 dark:accent-accent-500"
-            checked={twoFactorEnabled}
-            onChange={(e) => onFieldChange("twoFactorEnabled", e.target.checked)}
-            aria-label="Enable two-factor authentication"
-          />
-        </label>
+        <ToggleField
+          icon="shield"
+          label="Two-Factor Authentication"
+          description="Require a verification code emailed at sign-in, in addition to your password."
+          checked={twoFactorEnabled}
+          onChange={(value) => onFieldChange("twoFactorEnabled", value)}
+        />
       </div>
     </section>
   );

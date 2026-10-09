@@ -52,6 +52,13 @@ export async function getStaffById(id) {
   return toPublicStaffUser(row);
 }
 
+// The raw row (not the public-mapped shape) for callers that need
+// first_name/last_name to finalize a login — see finalizeStaffLogin.js.
+export async function getStaffRowById(id) {
+  const [row] = await sql`SELECT * FROM users WHERE id = ${id}`;
+  return row || null;
+}
+
 export async function touchStaffLastLogin(id) {
   await sql`UPDATE users SET last_login_at = now() WHERE id = ${id}`;
 }
