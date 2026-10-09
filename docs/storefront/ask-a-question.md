@@ -35,8 +35,14 @@ migration.
 ## What the visitor sees
 
 - All four fields are required: **name**, **email**, **phone**, **question**.
-  Limits: name 100, email 254, phone 30 (7-15 digits, `+ ( ) . -` and spaces
-  allowed), question 2000 characters.
+  Limits: name 100, email 254, question 2000 characters.
+- The **phone** must be a US number, the same rule as the Contact form: ten
+  digits, and the area code and the exchange (the next three digits) can't start
+  with 0 or 1. It is laid out as `(212) 555-0123` while it is typed (digits past
+  the tenth are ignored), and a pasted `+1 212 555 0123` or `1-212-555-0123` is
+  reformatted the same way. The server applies the same rule and stores the
+  canonical `(212) 555-0123` layout in the emails; a number with too many digits
+  is rejected, not cut down to ten. Other countries' numbers aren't accepted.
 - Invalid fields get the register form's pink fill and red border, a message
   under the field, and the first one is focused. Each field has a visible
   `<label>` and its message is linked with `aria-describedby`.

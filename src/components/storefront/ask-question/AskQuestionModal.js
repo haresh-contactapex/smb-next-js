@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Icon from "@/components/admin-panel/Icon";
-import { EMPTY_QUESTION, QUESTION_FIELDS, QUESTION_LIMITS, normalizeQuestion, validateQuestion } from "./helpers";
+import { EMPTY_QUESTION, QUESTION_FIELDS, QUESTION_LIMITS, formatUsPhone, normalizeQuestion, validateQuestion } from "./helpers";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -121,7 +121,8 @@ export default function AskQuestionModal({ product, priceLabel, supportEmail = "
   }, [formError]);
 
   function update(name, value) {
-    setValues((current) => ({ ...current, [name]: value }));
+    // The phone number is laid out as (212) 555-0123 while it is typed.
+    setValues((current) => ({ ...current, [name]: name === "phone" ? formatUsPhone(value) : value }));
     // Clear a field's message as soon as the visitor starts fixing it.
     if (errors[name]) setErrors((current) => ({ ...current, [name]: undefined }));
   }
@@ -246,7 +247,7 @@ export default function AskQuestionModal({ product, priceLabel, supportEmail = "
             </Field>
             <Field id={fieldId("phone")} label="Phone Number" error={errors.phone}>
               <IconField icon="phone">
-                <input type="tel" inputMode="tel" autoComplete="tel" placeholder="+1 213 290 9999" {...fieldProps("phone", "pl-10")} />
+                <input type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(212) 555-0123" {...fieldProps("phone", "pl-10")} />
               </IconField>
             </Field>
             <Field id={fieldId("question")} label="Your Question" error={errors.question}>
