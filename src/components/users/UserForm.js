@@ -17,7 +17,6 @@ import UsersPageHeader, { DANGER_BUTTON_CLASSES, PRIMARY_BUTTON_CLASSES, SECONDA
 import { BIO_MAX, formatDate, fullName, isLocked, toFormUser, toSavePayload, validateUserForm } from "./helpers";
 import { confirmDelete, deleteBlockedReason, deleteUser } from "./userActions";
 import { formatUsPhone } from "@/lib/phone";
-import { LANGUAGES, TIMEZONES } from "@/data/accountData";
 
 // Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast.
 const TOAST_AUTO_DISMISS_MS = 10000;
@@ -318,25 +317,6 @@ export default function UserForm({ user = null, roles, currentUserId, actorFullA
         </div>
 
         <div className="space-y-6">
-          <SectionCard title="Preferences">
-            <SelectField
-              id="f-user-language"
-              label="Language"
-              value={form.language}
-              options={LANGUAGES}
-              onChange={(value) => setField("language", value)}
-              disabled={busy}
-            />
-            <SelectField
-              id="f-user-timezone"
-              label="Timezone"
-              value={form.timezone}
-              options={TIMEZONES}
-              onChange={(value) => setField("timezone", value)}
-              disabled={busy}
-            />
-          </SectionCard>
-
           {isEdit && (
             <SectionCard title="Account">
               <dl className="grid grid-cols-2 gap-3 text-sm">
