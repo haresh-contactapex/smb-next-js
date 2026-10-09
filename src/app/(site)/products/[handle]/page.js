@@ -10,6 +10,7 @@ import VariantImageProvider from "@/components/storefront/VariantImageProvider";
 import { orderedVariantImages } from "@/components/storefront/galleryImages";
 import { defaultVariant } from "@/components/storefront/wishlist/wishlistHelpers";
 import { getStorefrontProductByHandle } from "@/lib/products";
+import { mergeDuplicateVariantImages } from "@/lib/duplicateVariantImages";
 import { getPublicReviewsForProduct } from "@/lib/reviews";
 import { getStoreSettings } from "@/lib/storeSettings";
 import { getProductsSettings } from "@/lib/productsSettings";
@@ -28,7 +29,8 @@ const loadProduct = cache(async (handle, preview = false) => {
     // ?preview=1 lets signed-in staff with product access see DRAFT products;
     // everyone else only ever gets ACTIVE ones.
     const includeDraft = preview && (await requireStaffPermission("products.view")).ok;
-    return { product: await getStorefrontProductByHandle(handle, { includeDraft }), failed: false };
+    const product = await getStorefrontProductByHandle(handle, { includeDraft });
+    return { product: product ? await mergeDuplicateVariantImages(product) : null, failed: false };
   } catch (error) {
     console.error("Storefront product failed to load", error);
     return { product: null, failed: true };
