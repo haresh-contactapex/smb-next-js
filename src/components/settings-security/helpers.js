@@ -1,5 +1,6 @@
 export const DEFAULT_SECURITY_SETTINGS = {
   requireTwoFactorAuth: false,
+  requireCustomerTwoFactor: false,
   sessionTimeoutMinutes: "30",
   passwordExpiryDays: "90",
   maxLoginAttempts: "5",
@@ -39,6 +40,7 @@ export function toFormSettings(data) {
   if (!data) return DEFAULT_SECURITY_SETTINGS;
   return {
     requireTwoFactorAuth: Boolean(data.requireTwoFactorAuth),
+    requireCustomerTwoFactor: Boolean(data.requireCustomerTwoFactor),
     sessionTimeoutMinutes: data.sessionTimeoutMinutes != null ? String(data.sessionTimeoutMinutes) : "30",
     passwordExpiryDays: data.passwordExpiryDays != null ? String(data.passwordExpiryDays) : "90",
     maxLoginAttempts: data.maxLoginAttempts != null ? String(data.maxLoginAttempts) : "5",
@@ -50,6 +52,7 @@ export function toFormSettings(data) {
 export function toSavePayload(settings) {
   return {
     requireTwoFactorAuth: settings.requireTwoFactorAuth,
+    requireCustomerTwoFactor: settings.requireCustomerTwoFactor,
     sessionTimeoutMinutes: settings.sessionTimeoutMinutes,
     passwordExpiryDays: settings.passwordExpiryDays,
     maxLoginAttempts: settings.maxLoginAttempts,

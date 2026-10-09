@@ -43,6 +43,33 @@ Backs the Forgot Password flow: one row per "Send Reset Link" click.
 Indexes: `UNIQUE (token_hash)`, `INDEX (customer_id)`, `INDEX (expires_at)`
 (for a cleanup job pruning expired/unused rows).
 
+### `customer_login_otps`
+
+Backs customer sign-in two-factor authentication (migration:
+`npm run db:migrate:customer-2fa`, `customer-two-factor-only.sql`). One row per
+emailed 6-digit code, mirroring the staff `staff_login_otps` table
+(`my-account/staff-login-otp-table-only.sql`) but kept separate so a customer
+code can never be redeemed against a staff account.
+
+| Column            | Type           | Constraints                                       | Notes                                                                 |
+| ----------------- | -------------- | ------------------------------------------------- | --------------------------------------------------------------------- |
+| `id`              | `UUID`         | PK, default `gen_random_uuid()`                   |                                                                       |
+| `customer_id`     | `UUID`         | NOT NULL, FK → `customers.id` ON DELETE CASCADE   | The account signing in                                                |
+| `code_hash`       | `VARCHAR(255)` | NOT NULL                                          | Bcrypt hash of the code; the raw code is emailed once and never stored |
+| `requested_email` | `VARCHAR(255)` | NOT NULL                                          | Snapshot of `customers.email` at send time                            |
+| `expires_at`      | `TIMESTAMPTZ`  | NOT NULL                                          | Short-lived (120 seconds)                                             |
+| `consumed_at`     | `TIMESTAMPTZ`  | NULL                                              | Set when used to finish signing in, or superseded by a resend; NULL = the live code |
+| `attempts`        | `SMALLINT`     | NOT NULL, DEFAULT `0`                             | Wrong guesses; past the cap the code is locked and a resend is needed |
+| `created_at`      | `TIMESTAMPTZ`  | NOT NULL, DEFAULT `now()`                         | Also drives the resend cooldown and per-window cap                    |
+
+Indexes: `INDEX (customer_id)`, `INDEX (expires_at)`.
+
+Two switches decide whether a customer owes a code at sign-in:
+`customers.two_factor_enabled` (the customer's own opt-in, Account → Profile &
+security) and `security_settings.require_customer_two_factor` (Settings →
+Security, applies to everyone and stops customers turning it off). Either one is
+enough.
+
 ## Design notes
 
 - `customers` (identity, `email`, `password_hash`, the

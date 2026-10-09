@@ -14,8 +14,27 @@ function toPublicCustomer(row) {
     customerGroup: row.customer_group,
     loyaltyPoints: Number(row.loyalty_points) || 0,
     acceptsMarketing: row.accepts_marketing,
+    // Opt-in from Account -> Profile & security; a store-wide setting can also
+    // require a code for everyone (see the login route).
+    twoFactorEnabled: Boolean(row.two_factor_enabled),
     createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
   };
+}
+
+// The raw row (with password_hash), for the sign-in 2FA step that has to send
+// the code to the account's email and then finish the login.
+export async function getCustomerRowById(id) {
+  const [row] = await sql`SELECT * FROM customers WHERE id = ${id} AND is_guest = false`;
+  return row || null;
+}
+
+export async function setCustomerTwoFactor(id, enabled) {
+  const [row] = await sql`
+    UPDATE customers SET two_factor_enabled = ${Boolean(enabled)}, updated_at = now()
+    WHERE id = ${id} AND is_guest = false
+    RETURNING *
+  `;
+  return toPublicCustomer(row);
 }
 
 export async function findCustomerByEmail(email) {

@@ -179,8 +179,8 @@ export async function sendStaffWelcomeEmail({ to, firstName, storeName, temporar
 // Profile. Best-effort like every other email here, but the login route
 // still treats a failed send as the request failing — a code nobody receives
 // is a dead end, not a degraded experience.
-export async function sendLoginOtpEmail({ to, firstName, code, expiresInSeconds }) {
-  return sendBrandedEmail(to, buildLoginOtpEmail, { firstName, code, expiresInSeconds });
+export async function sendLoginOtpEmail({ to, firstName, code, expiresInSeconds, audience = "staff" }) {
+  return sendBrandedEmail(to, buildLoginOtpEmail, { firstName, code, expiresInSeconds, audience });
 }
 
 // Sent to the store when a shopper uses "Ask a question" on a product page.

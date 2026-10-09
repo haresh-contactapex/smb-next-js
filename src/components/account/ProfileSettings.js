@@ -4,6 +4,7 @@ import AccountPageHeader from "./AccountPageHeader";
 import DeleteAccountSection from "./DeleteAccountSection";
 import EmailForm from "./EmailForm";
 import PasswordForm from "./PasswordForm";
+import TwoFactorCard from "./TwoFactorCard";
 import ProfileDetailsForm from "./ProfileDetailsForm";
 import { NoticeRegion, useNotice } from "./Notice";
 import { CARD } from "./accountStyles";
@@ -11,7 +12,7 @@ import { formatMonthYear, tierLabel } from "./accountHelpers";
 
 // Profile & security: read-only membership facts up top, then one card per
 // thing a customer can change. They share one toast.
-export default function ProfileSettings({ customer }) {
+export default function ProfileSettings({ customer, twoFactorRequired = false }) {
   const [notice, notify] = useNotice();
 
   return (
@@ -37,6 +38,7 @@ export default function ProfileSettings({ customer }) {
         <ProfileDetailsForm customer={customer} notify={notify} />
         <EmailForm customer={customer} notify={notify} />
         <PasswordForm notify={notify} />
+        <TwoFactorCard customer={customer} required={twoFactorRequired} notify={notify} />
         <DeleteAccountSection notify={notify} />
       </div>
 

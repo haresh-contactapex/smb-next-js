@@ -1,6 +1,7 @@
 import { sql } from "./db";
 import { AccountError, cleanText } from "./accountError";
-import { toPublicCustomer } from "./customers";
+import { toPublicCustomer, setCustomerTwoFactor } from "./customers";
+import { getSecuritySettings } from "./securitySettings";
 import { hashPassword, verifyPassword } from "./auth/password";
 import { createRateLimiter } from "./rateLimit";
 import { isValidPassword, isValidEmail } from "@/components/auth/helpers";
@@ -89,6 +90,26 @@ export async function changeCustomerPassword(id, body) {
   }
 
   await sql`UPDATE customers SET password_hash = ${await hashPassword(newPassword)}, updated_at = now() WHERE id = ${id}`;
+}
+
+// Turns the emailed sign-in code on or off for this customer. Both directions
+// re-check the current password, so a hijacked session can't quietly switch off
+// the protection. When the store requires a code from everyone, it can't be
+// turned off here.
+export async function changeCustomerTwoFactor(id, body) {
+  const input = body && typeof body === "object" ? body : {};
+  if (typeof input.enabled !== "boolean") throw new AccountError("Choose whether to turn two-factor authentication on or off.", 400);
+
+  const row = await getCustomerRow(id);
+  if (!input.enabled) {
+    const settings = await getSecuritySettings().catch(() => null);
+    if (settings?.requireCustomerTwoFactor) {
+      throw new AccountError("This store requires a sign-in code for every customer, so it can't be turned off.", 403);
+    }
+  }
+  await assertCurrentPassword(row, input.currentPassword);
+
+  return setCustomerTwoFactor(id, input.enabled);
 }
 
 // Permanent. Orders stay (they keep the name they were placed under) but lose

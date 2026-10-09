@@ -3,6 +3,7 @@ import { sql } from "./db";
 function toPublicSettings(row) {
   return {
     requireTwoFactorAuth: row.require_two_factor_auth,
+    requireCustomerTwoFactor: Boolean(row.require_customer_two_factor),
     sessionTimeoutMinutes: row.session_timeout_minutes,
     passwordExpiryDays: row.password_expiry_days,
     maxLoginAttempts: row.max_login_attempts,
@@ -20,6 +21,7 @@ export async function updateSecuritySettings(settings) {
   const [row] = await sql`
     UPDATE security_settings SET
       require_two_factor_auth = ${settings.requireTwoFactorAuth},
+      require_customer_two_factor = ${settings.requireCustomerTwoFactor},
       session_timeout_minutes = ${settings.sessionTimeoutMinutes},
       password_expiry_days = ${settings.passwordExpiryDays},
       max_login_attempts = ${settings.maxLoginAttempts},

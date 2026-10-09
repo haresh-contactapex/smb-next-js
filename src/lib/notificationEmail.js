@@ -6,7 +6,7 @@
 //   buildCustomerWelcomeEmail(data)             customer: their account was created
 //   buildNewCustomerAlertEmail(data)            store: someone registered
 //   buildStaffWelcomeEmail(data)                staff: an admin account was created for them
-//   buildLoginOtpEmail(data)                    staff: their sign-in verification code
+//   buildLoginOtpEmail(data)                    staff or customer: their sign-in verification code
 //   buildProductQuestionAlertEmail(data)        store: a shopper asked about a product
 //   buildProductQuestionConfirmationEmail(data) shopper: we got your question
 //   buildContactMessageAlertEmail(data)        store: a visitor used the Contact form
@@ -83,19 +83,29 @@ export function buildStaffWelcomeEmail({ to, firstName, temporaryPassword, setPa
   });
 }
 
-export function buildLoginOtpEmail({ firstName, code, expiresInSeconds, ...data }) {
+// `audience` is "staff" (default) or "customer": same code email, different
+// wording for where they're signing in and who to turn to if it wasn't them.
+export function buildLoginOtpEmail({ firstName, code, expiresInSeconds, audience = "staff", ...data }) {
   const { storeName } = data;
+  const isCustomer = audience === "customer";
   return render(data, {
     subject: `${code} is your ${storeName} sign-in code`,
     heading: `Hi ${firstName}, here's your code.`,
-    intro: "Use this code to finish signing in to the admin panel.",
+    intro: isCustomer
+      ? `Use this code to finish signing in to your ${storeName} account.`
+      : "Use this code to finish signing in to the admin panel.",
     facts: [["Your verification code", code]],
     stepsTitle: "Good to know",
     steps: [
       ["It expires fast.", `This code works for ${expiresInSeconds} seconds and can only be used once.`],
       ["Need another?", "If it expires, request a new one from the sign-in page."],
     ],
-    note: { lead: "Didn't try to sign in?", html: "Someone may have your password — change it and contact your store administrator." },
+    note: {
+      lead: "Didn't try to sign in?",
+      html: isCustomer
+        ? "Someone may have your password — change it from your account and contact us if you need help."
+        : "Someone may have your password — change it and contact your store administrator.",
+    },
   });
 }
 

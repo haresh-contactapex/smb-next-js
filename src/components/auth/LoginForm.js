@@ -11,6 +11,7 @@ import PasswordField from "./PasswordField";
 import AuthLayout from "./AuthLayout";
 import Toast from "./Toast";
 import Recaptcha from "./Recaptcha";
+import OtpForm from "./OtpForm";
 
 // `next` is where to go after signing in: the page the visitor was trying to
 // reach (already checked by the login page) or their account.
@@ -24,6 +25,9 @@ export default function LoginForm({ next = "/account" }) {
   const [recaptchaKey, setRecaptchaKey] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  // Set once /api/auth/login answers with twoFactorRequired: { maskedEmail,
+  // expiresInSeconds } while a code is pending, else null.
+  const [otpChallenge, setOtpChallenge] = useState(null);
 
   const toastTimerRef = useRef(null);
 
@@ -40,6 +44,15 @@ export default function LoginForm({ next = "/account" }) {
 
   function setField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  // Shared by a direct sign-in and one completed via the code step.
+  async function finishSignIn() {
+    // Items saved as a guest move into the account's wishlist now that there is one.
+    await mergeGuestWishlist();
+    showToast("Signed in successfully");
+    router.replace(next);
+    router.refresh(); // server components re-read the session cookie
   }
 
   async function handleSubmit(e) {
@@ -74,11 +87,15 @@ export default function LoginForm({ next = "/account" }) {
       if (!res.ok || !result.success) {
         throw new Error(result.error || "Unable to sign in.");
       }
-      // Items saved as a guest move into the account's wishlist now that there is one.
-      await mergeGuestWishlist();
-      showToast("Signed in successfully");
-      router.replace(next);
-      router.refresh(); // server components re-read the session cookie
+
+      if (result.data?.twoFactorRequired) {
+        // The password was right but a code must be verified before there's a
+        // session: swap the form for the code step.
+        setOtpChallenge({ maskedEmail: result.data.maskedEmail, expiresInSeconds: result.data.expiresInSeconds });
+        return;
+      }
+
+      await finishSignIn();
     } catch (error) {
       showToast(error.message, "error");
       // The token is single-use, and a failed submit likely means it's
@@ -88,6 +105,28 @@ export default function LoginForm({ next = "/account" }) {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (otpChallenge) {
+    return (
+      <AuthLayout title="Verify it's you" subtitle="Enter the code we emailed you to continue.">
+        <OtpForm
+          apiBase="/api/auth"
+          idPrefix="login"
+          maskedEmail={otpChallenge.maskedEmail}
+          expiresInSeconds={otpChallenge.expiresInSeconds}
+          onVerified={finishSignIn}
+          onCancel={() => {
+            setOtpChallenge(null);
+            setForm((prev) => ({ ...prev, password: "" }));
+            // The reCAPTCHA token was spent on the password step.
+            setRecaptchaToken("");
+            setRecaptchaKey((k) => k + 1);
+          }}
+        />
+        <Toast message={toast.message} visible={toast.visible} variant={toast.variant} onDismiss={dismissToast} />
+      </AuthLayout>
+    );
   }
 
   return (

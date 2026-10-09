@@ -31,6 +31,7 @@ export async function PUT(request) {
 
     const settings = {
       requireTwoFactorAuth: Boolean(payload.requireTwoFactorAuth),
+      requireCustomerTwoFactor: Boolean(payload.requireCustomerTwoFactor),
       sessionTimeoutMinutes: String(payload.sessionTimeoutMinutes || "").trim(),
       passwordExpiryDays: String(payload.passwordExpiryDays || "").trim(),
       maxLoginAttempts: String(payload.maxLoginAttempts || "").trim(),

@@ -6,6 +6,7 @@
 CREATE TABLE IF NOT EXISTS security_settings (
     id                       SMALLINT PRIMARY KEY CHECK (id = 1),
     require_two_factor_auth BOOLEAN     NOT NULL DEFAULT false,
+    require_customer_two_factor BOOLEAN NOT NULL DEFAULT false,
     session_timeout_minutes SMALLINT    NOT NULL DEFAULT 30  CHECK (session_timeout_minutes >= 1),
     password_expiry_days    SMALLINT    NOT NULL DEFAULT 90  CHECK (password_expiry_days >= 1),
     max_login_attempts      SMALLINT    NOT NULL DEFAULT 5   CHECK (max_login_attempts >= 1),
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS security_settings (
 );
 COMMENT ON TABLE security_settings IS 'Backs the Settings -> Security page. Singleton row (id = 1).';
 COMMENT ON COLUMN security_settings.require_two_factor_auth IS 'Store-wide 2FA requirement; distinct from the per-user users.two_factor_enabled toggle.';
+COMMENT ON COLUMN security_settings.require_customer_two_factor IS 'Store-wide customer 2FA requirement; distinct from require_two_factor_auth (staff) and the per-customer customers.two_factor_enabled opt-in.';
 COMMENT ON COLUMN security_settings.session_timeout_minutes IS 'Required in the UI. Minutes of inactivity before an admin session expires.';
 COMMENT ON COLUMN security_settings.password_expiry_days IS 'Required in the UI. Days before an admin password must be changed.';
 COMMENT ON COLUMN security_settings.max_login_attempts IS 'Required in the UI. Failed sign-in attempts allowed before lockout.';

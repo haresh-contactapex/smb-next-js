@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS customers (
     accepts_marketing   BOOLEAN NOT NULL DEFAULT false,
     is_guest            BOOLEAN NOT NULL DEFAULT false,
     terms_accepted_at   TIMESTAMPTZ NULL,
+    two_factor_enabled  BOOLEAN NOT NULL DEFAULT false,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );

@@ -124,6 +124,13 @@ export default function SecuritySettingsForm() {
               onChange={(value) => setField("requireTwoFactorAuth", value)}
               disabled={loading}
             />
+            <ToggleField
+              label="Require two-factor authentication for all customers"
+              description="Customers must enter a code emailed to them when they sign in. Turn this off to let each customer choose in their account."
+              checked={settings.requireCustomerTwoFactor}
+              onChange={(value) => setField("requireCustomerTwoFactor", value)}
+              disabled={loading}
+            />
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <TextField
                 id="f-session-timeout"
