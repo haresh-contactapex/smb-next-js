@@ -174,8 +174,11 @@ async function getProductStock(currency, moneyFormat, limit = 5) {
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
     LEFT JOIN (
-      SELECT product_id, SUM(inventory_quantity) AS variant_qty FROM product_variants GROUP BY product_id
+      SELECT product_id, SUM(inventory_quantity) FILTER (WHERE inventory_management) AS variant_qty,
+        BOOL_OR(inventory_management) AS tracked
+      FROM product_variants GROUP BY product_id
     ) v ON v.product_id = p.id
+    WHERE v.product_id IS NULL OR v.tracked
     ORDER BY COALESCE(v.variant_qty, p.inventory_quantity, 0) ASC, p.created_at DESC
     LIMIT ${limit}`;
   const iconColors = ["accent", "primary", "success", "info"];

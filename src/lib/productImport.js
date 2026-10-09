@@ -166,7 +166,7 @@ function buildOptionsAndVariants(groupRows, defaultWeightUnit, errors) {
       compare_at_price: variantCompareAtPrice ?? "",
       sku: variantSku,
       inventory_quantity: variantQuantity,
-      inventory_management: true,
+      inventory_management: false,
       weight: variantWeight ?? "",
       weight_unit: variantWeightUnit || defaultWeightUnit,
       image: variantImageUrl ? { url: variantImageUrl, name: null } : null,

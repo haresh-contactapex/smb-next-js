@@ -1,4 +1,5 @@
 export function getStockInfo(inventory) {
+  if (inventory === null) return { label: "Not tracked", level: "ok" };
   if (inventory <= 0) return { label: "Out of stock", level: "out" };
   if (inventory <= 10) return { label: `${inventory} in stock`, level: "low" };
   return { label: `${inventory} in stock`, level: "ok" };

@@ -42,10 +42,13 @@ export async function getInventoryReport() {
       SELECT p.id, COALESCE(v.variant_qty, p.inventory_quantity, 0) AS inventory
       FROM products p
       LEFT JOIN (
-        SELECT product_id, SUM(inventory_quantity) AS variant_qty
+        SELECT product_id, SUM(inventory_quantity) FILTER (WHERE inventory_management) AS variant_qty,
+          BOOL_OR(inventory_management) AS tracked
         FROM product_variants
         GROUP BY product_id
       ) v ON v.product_id = p.id
+      -- Products whose variants are not tracked are always available: not counted.
+      WHERE v.product_id IS NULL OR v.tracked
     ) inv
   `;
   return {

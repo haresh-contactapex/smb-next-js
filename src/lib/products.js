@@ -238,6 +238,7 @@ export async function listProducts() {
       c.name AS category_name,
       COALESCE(ac.names, ARRAY[]::text[]) AS category_names,
       COALESCE(v.variant_qty, p.inventory_quantity, 0) AS inventory,
+      (v.product_id IS NOT NULL AND NOT v.tracked) AS untracked,
       m.url AS thumbnail
     FROM products p
     LEFT JOIN categories c ON c.id = p.category_id
@@ -258,7 +259,8 @@ export async function listProducts() {
       LIMIT 1
     ) m ON true
     LEFT JOIN (
-      SELECT product_id, SUM(inventory_quantity) AS variant_qty
+      SELECT product_id, SUM(inventory_quantity) FILTER (WHERE inventory_management) AS variant_qty,
+        BOOL_OR(inventory_management) AS tracked
       FROM product_variants
       GROUP BY product_id
     ) v ON v.product_id = p.id
@@ -274,7 +276,8 @@ export async function listProducts() {
     categories: row.category_names?.length ? row.category_names : ["Uncategorized"],
     price: Number(row.price) || 0,
     compareAtPrice: row.compare_at_price ? Number(row.compare_at_price) : null,
-    inventory: Number(row.inventory) || 0,
+    // null: stock is not tracked, so the product is always available.
+    inventory: row.untracked ? null : Number(row.inventory) || 0,
     status: row.status.charAt(0) + row.status.slice(1).toLowerCase(),
     thumbnail: row.thumbnail || null,
   }));
@@ -598,7 +601,7 @@ async function writeProductRow(id, payload, categoryId) {
     compare_at_price: payload.pricing?.compare_at_price || null,
     cost_per_item: payload.pricing?.cost_per_item || null,
     charge_tax: payload.pricing?.charge_tax ?? true,
-    track_quantity: payload.inventory?.track_quantity ?? true,
+    track_quantity: payload.inventory?.track_quantity ?? false,
     sku: payload.inventory?.sku || null,
     barcode: payload.inventory?.barcode || null,
     is_physical_product: payload.shipping?.physical_product ?? true,
