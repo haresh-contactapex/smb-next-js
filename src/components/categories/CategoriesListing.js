@@ -6,6 +6,7 @@ import CategoriesFilters from "./CategoriesFilters";
 import CategoriesTable from "./CategoriesTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import Toast from "./Toast";
 
 export default function CategoriesListing({ categories: initialCategories }) {
@@ -18,6 +19,15 @@ export default function CategoriesListing({ categories: initialCategories }) {
   const [sort, setSort] = useState({ key: "name", direction: "asc" });
   const [deletingCategory, setDeletingCategory] = useState(null);
   const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
+
+  // Clicking "Categories" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setShowHiddenOnly(false);
+    setPage(1);
+    setPageSize(PAGE_SIZE_OPTIONS[0]);
+    setSort({ key: "name", direction: "asc" });
+  });
 
   async function handleDelete(category) {
     if (!window.confirm(`Delete "${category.name}"? This can't be undone.`)) return;

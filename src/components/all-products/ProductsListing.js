@@ -7,6 +7,7 @@ import ProductsTable from "./ProductsTable";
 import Pagination, { PaginationSummary, RowsPerPageSelect, PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import Icon from "@/components/admin-panel/Icon";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "./Toast";
 
@@ -31,6 +32,17 @@ export default function ProductsListing({ products: initialProducts }) {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
   const can = useCan();
+
+  // Clicking "All Products" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setStatus("");
+    setCategory("");
+    setPage(1);
+    setPageSize(PAGE_SIZE_OPTIONS[0]);
+    setSort({ key: "title", direction: "asc" });
+    setSelectedIds(new Set());
+  });
 
   async function handleDelete(product) {
     if (!window.confirm(`Delete "${product.title}"? This can't be undone.`)) return;

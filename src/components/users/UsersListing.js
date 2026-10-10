@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import UsersPageHeader, { PRIMARY_BUTTON_CLASSES } from "./UsersPageHeader";
 import UsersFilters from "./UsersFilters";
 import UsersTable from "./UsersTable";
@@ -84,6 +85,17 @@ export default function UsersListing({
 
   // Server data changes after router.refresh(); keep local state in step.
   useEffect(() => setUsers(initialUsers), [initialUsers]);
+
+  // Clicking "Users" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setRole("");
+    setStatus("");
+    setPage(1);
+    setPageSize(PAGE_SIZE_OPTIONS[0]);
+    setSort({ key: "name", direction: "asc" });
+    setSelectedIds(new Set());
+  });
 
   async function handleDelete(user) {
     if (busyRef.current || !confirmDelete(user)) return;

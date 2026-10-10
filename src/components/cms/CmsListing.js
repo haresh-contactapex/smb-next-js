@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import CmsFilters from "./CmsFilters";
 import CmsTable from "./CmsTable";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "@/components/add-product/Toast";
@@ -23,6 +24,14 @@ export default function CmsListing({ pages: initialPages }) {
   const [deletingPage, setDeletingPage] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: "", variant: "success" });
   const toastTimerRef = useRef(null);
+
+  // Clicking "All Pages" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setStatus("");
+    setGroup("");
+    selection.clear();
+  });
 
   function showToast(message, variant = "success") {
     setToast({ visible: true, message, variant });

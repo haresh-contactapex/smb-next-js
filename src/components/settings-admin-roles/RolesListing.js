@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import RolesPageHeader, { PRIMARY_BUTTON_CLASSES } from "./RolesPageHeader";
 import RolesFilters from "./RolesFilters";
 import RolesTable from "./RolesTable";
@@ -24,6 +25,12 @@ export default function RolesListing({ roles: initialRoles }) {
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
   const busyRef = useRef(false);
   const toastTimerRef = useRef(null);
+
+  // Clicking "Admin & Roles" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setStatus("");
+  });
 
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });

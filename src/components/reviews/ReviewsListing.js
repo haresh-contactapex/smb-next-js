@@ -8,6 +8,7 @@ import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import ReviewsStats from "./ReviewsStats";
 import { STATUS_LABELS, computeReviewStats } from "./reviewHelpers";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "@/components/add-product/Toast";
@@ -37,6 +38,17 @@ export default function ReviewsListing({ reviews: initialReviews }) {
   const busyRef = useRef(false);
 
   useEffect(() => () => clearTimeout(toastTimerRef.current), []);
+
+  // Clicking "All Reviews" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setStatus("");
+    setRating("");
+    setPage(1);
+    setPageSize(PAGE_SIZE_OPTIONS[0]);
+    setSort({ key: "createdAt", direction: "desc" });
+    selection.clear();
+  });
 
   function showToast(message, variant = "success") {
     setToast({ message, visible: true, variant });

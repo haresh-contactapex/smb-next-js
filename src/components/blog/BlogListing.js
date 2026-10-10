@@ -6,6 +6,7 @@ import BlogFilters from "./BlogFilters";
 import BlogTable from "./BlogTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "@/components/add-product/Toast";
@@ -30,6 +31,17 @@ export default function BlogListing({ posts: initialPosts }) {
   const [deletingPost, setDeletingPost] = useState(null);
   const [toast, setToast] = useState({ visible: false, message: "", variant: "success" });
   const toastTimerRef = useRef(null);
+
+  // Clicking "All Posts" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setStatus("");
+    setCategory("");
+    setPage(1);
+    setPageSize(PAGE_SIZE_OPTIONS[0]);
+    setSort({ key: "date", direction: "desc" });
+    selection.clear();
+  });
 
   function showToast(message, variant = "success") {
     setToast({ visible: true, message, variant });

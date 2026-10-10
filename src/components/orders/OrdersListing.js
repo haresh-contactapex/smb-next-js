@@ -8,6 +8,7 @@ import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import { downloadOrderInvoice } from "./downloadInvoice";
 import Toast from "@/components/add-product/Toast";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { BulkSelectionBar, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import { BULK_CANCELLABLE_STATUSES } from "./orderHelpers";
@@ -56,6 +57,17 @@ export default function OrdersListing({ orders: initialOrders, fixedStatus }) {
 
   // Server data changes after router.refresh(); keep local state in step.
   useEffect(() => setOrders(initialOrders), [initialOrders]);
+
+  // Clicking this orders page in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setStatus(fixedStatus ?? "");
+    setPayment("");
+    setPage(1);
+    setPageSize(PAGE_SIZE_OPTIONS[0]);
+    setSort({ key: "date", direction: "desc" });
+    selection.clear();
+  });
 
   async function handleBulkCancel() {
     const ids = [...selection.ids];

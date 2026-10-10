@@ -6,6 +6,7 @@ import CouponsFilters from "./CouponsFilters";
 import CouponsTable from "./CouponsTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { BulkSelectionBar, confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "./Toast";
@@ -24,6 +25,17 @@ export default function CouponsListing({ coupons: initialCoupons }) {
   const [sort, setSort] = useState({ key: "code", direction: "asc" });
   const [deletingCoupon, setDeletingCoupon] = useState(null);
   const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
+
+  // Clicking "All Coupons" in the sidebar while already here starts the list over, like a fresh visit.
+  useNavReselect(() => {
+    setSearch("");
+    setStatus("");
+    setType("");
+    setPage(1);
+    setPageSize(PAGE_SIZE_OPTIONS[0]);
+    setSort({ key: "code", direction: "asc" });
+    selection.clear();
+  });
 
   async function handleDelete(coupon) {
     if (!window.confirm(`Delete coupon "${coupon.code}"? This can't be undone.`)) return;

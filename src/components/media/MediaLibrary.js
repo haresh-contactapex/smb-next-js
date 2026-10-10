@@ -6,6 +6,7 @@ import MediaUploaderDropzone from "./MediaUploaderDropzone";
 import MediaGrid from "./MediaGrid";
 import MediaDetailsModal from "./MediaDetailsModal";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { Can, useCan } from "@/components/providers/StaffPermissionsProvider";
 import { confirmBulkDelete, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
 
@@ -20,6 +21,13 @@ export default function MediaLibrary({ initialItems }) {
   const selection = useBulkSelection();
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [deletedNotice, setDeletedNotice] = useState("");
+
+  // Clicking "Media" in the sidebar while already here starts over, like a fresh visit.
+  useNavReselect(() => {
+    selection.clear();
+    setUploadError("");
+    setDeletedNotice("");
+  });
 
   async function handleUpload(fileList) {
     setUploadError("");
