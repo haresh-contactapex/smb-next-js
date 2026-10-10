@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "./Icon";
-import { closeSidebar, toggleCollapse, toggleSubmenu } from "./adminPanelActions";
+import { NAV_RESELECT_EVENT, closeSidebar, toggleCollapse, toggleSubmenu } from "./adminPanelActions";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 /**
@@ -42,8 +42,11 @@ export default function Sidebar({ brand, navItems }) {
     setCollapseIcon(document.body.classList.contains("sidebar-collapsed") ? "chevron-right" : "chevron-left");
   }, []);
 
-  function handleNavClick() {
+  function handleNavClick(href) {
     if (window.innerWidth < 1024) closeSidebar();
+    if (href && href === pathname) {
+      window.dispatchEvent(new CustomEvent(NAV_RESELECT_EVENT, { detail: { href } }));
+    }
   }
 
   function handleCollapseClick() {
@@ -127,7 +130,7 @@ export default function Sidebar({ brand, navItems }) {
                       <li key={sub.id}>
                         <Link
                           href={sub.href || "#"}
-                          onClick={handleNavClick}
+                          onClick={() => handleNavClick(sub.href)}
                           className={`nav-link flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-[13px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5${
                             isActiveHref(sub.href) ? " active" : ""
                           }`}
@@ -150,7 +153,7 @@ export default function Sidebar({ brand, navItems }) {
               <Link
                 key={item.id}
                 href={item.href || "#"}
-                onClick={handleNavClick}
+                onClick={() => handleNavClick(item.href)}
                 className={`nav-link nav-row flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors${
                   isActiveHref(item.href) ? " active" : ""
                 }`}

@@ -7,6 +7,10 @@
 export const THEME_STORAGE_KEY = "smb-theme";
 export const SIDEBAR_COLLAPSED_STORAGE_KEY = "smb-sidebar-collapsed";
 
+// Fired when a sidebar link is clicked for the page already open. Next keeps that page mounted,
+// so a list can listen for this to drop its filters, sort and page as a fresh visit would.
+export const NAV_RESELECT_EVENT = "adminpanel:nav-reselect";
+
 export function openSidebar() {
   document.body.classList.add("sidebar-open");
 }

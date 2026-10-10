@@ -1,11 +1,12 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import CustomersFilters from "./CustomersFilters";
 import CustomersTable from "./CustomersTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
+import { NAV_RESELECT_EVENT } from "@/components/admin-panel/adminPanelActions";
 import Icon from "@/components/admin-panel/Icon";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "./Toast";
@@ -30,6 +31,21 @@ export default function CustomersListing({ customers: initialCustomers }) {
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
   const can = useCan();
+
+  // Clicking "All Customers" in the sidebar while already here starts the list over, like a fresh visit.
+  useEffect(() => {
+    function resetView() {
+      setSearch("");
+      setGroup("");
+      setType("");
+      setPage(1);
+      setPageSize(PAGE_SIZE_OPTIONS[0]);
+      setSort({ key: "name", direction: "asc" });
+      setSelectedIds(new Set());
+    }
+    window.addEventListener(NAV_RESELECT_EVENT, resetView);
+    return () => window.removeEventListener(NAV_RESELECT_EVENT, resetView);
+  }, []);
 
   async function handleDelete(customer) {
     if (!window.confirm(`Delete customer "${customer.firstName} ${customer.lastName}"? This can't be undone.`)) return;
