@@ -96,7 +96,10 @@ async function loadOrderDetailRows(id) {
       () => sql`
         SELECT li.id, li.product_id, li.title, li.sku, li.unit_price, li.quantity, li.line_total,
                (SELECT pm.url FROM product_media pm
-                 WHERE pm.product_id = li.product_id AND pm.type = 'image' AND pm.url NOT LIKE 'blob:%'
+                 WHERE pm.product_id = COALESCE(li.product_id, (SELECT p2.id FROM products p2
+                          WHERE p2.title IN (li.title, regexp_replace(li.title, '[[:space:]]*[(][^()]*[)][[:space:]]*$', ''))
+                          ORDER BY (p2.title = li.title) DESC, p2.created_at LIMIT 1))
+               AND pm.type = 'image' AND pm.url NOT LIKE 'blob:%'
                  ORDER BY pm.position LIMIT 1) AS image
         FROM order_line_items li
         WHERE li.order_id = ${row.id}
