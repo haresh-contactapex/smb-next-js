@@ -53,6 +53,14 @@ export default function OtpForm({ apiBase, idPrefix, maskedEmail, expiresInSecon
   }, []);
 
   const expired = secondsLeft <= 0;
+  const urgent = !expired && secondsLeft <= 30;
+
+  // The moment the code runs out, say so loudly — the small inline note was
+  // easy to miss. A resend resets the clock, so this can fire again later.
+  useEffect(() => {
+    if (expired) showToast("This code has expired. Request a new one to continue.", "error");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [expired]);
 
   function handleCodeChange(value) {
     setCode(value.replace(/\D/g, "").slice(0, 6));
@@ -132,6 +140,23 @@ export default function OtpForm({ apiBase, idPrefix, maskedEmail, expiresInSecon
         </p>
       </div>
 
+      <div
+        role="timer"
+        className={`flex items-center justify-between rounded-xl border px-3.5 py-2.5 transition-colors ${
+          expired
+            ? "bg-red-50 border-red-200 text-red-700 dark:bg-red-500/10 dark:border-red-500/30 dark:text-red-300"
+            : urgent
+              ? "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-300"
+              : "bg-slate-50 border-slate-200 text-slate-700 dark:bg-white/5 dark:border-white/10 dark:text-slate-200"
+        }`}
+      >
+        <span className="flex items-center gap-2 text-sm font-semibold">
+          <Icon name="clock" className="w-4 h-4" />
+          {expired ? "Code expired" : "Code expires in"}
+        </span>
+        <span className="text-xl font-bold tabular-nums">{formatSeconds(secondsLeft)}</span>
+      </div>
+
       <form className="space-y-4" onSubmit={handleSubmit} noValidate>
         <div>
           <label className="field-label" htmlFor={`${idPrefix}-otp-code`}>
@@ -154,11 +179,9 @@ export default function OtpForm({ apiBase, idPrefix, maskedEmail, expiresInSecon
                 : ""
             }`}
           />
-          {error ? (
-            <p className="text-xs text-error mt-1">{error}</p>
-          ) : (
-            <p className="text-xs text-slate-400 mt-1">
-              {expired ? "This code has expired." : `Expires in ${formatSeconds(secondsLeft)}`}
+          {(error || expired) && (
+            <p role="alert" className="text-xs font-semibold text-error mt-1">
+              {error || "This code has expired. Request a new one."}
             </p>
           )}
         </div>
@@ -183,7 +206,11 @@ export default function OtpForm({ apiBase, idPrefix, maskedEmail, expiresInSecon
             type="button"
             onClick={handleResend}
             disabled={resending || resendCooldown > 0}
-            className="font-semibold text-primary-600 dark:text-accent-400 hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
+            className={`font-semibold disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed ${
+              expired
+                ? "rounded-lg bg-primary-500 dark:bg-accent-500 text-white px-3 py-1.5 hover:bg-primary-600 dark:hover:bg-accent-600"
+                : "text-primary-600 dark:text-accent-400 hover:underline"
+            }`}
           >
             {resending ? "Sending…" : resendCooldown > 0 ? `Resend code (${resendCooldown}s)` : "Resend code"}
           </button>
