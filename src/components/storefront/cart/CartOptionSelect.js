@@ -8,10 +8,14 @@ const STATE_SUFFIX = { soldout: " (sold out)", unavailable: " (unavailable)" };
 // One editable option of a cart line (Color, Size, ...): an underlined native
 // select, with a metal swatch beside it for color options. `choices` come from
 // optionChoices(); values that can't be switched to are disabled and say why.
-// `inset` gives the whole field a little inner margin on the left: the label,
-// the swatch and the selected value all start at the same x, with the underline
-// and the keyboard focus ring (drawn around the field, not the bare select)
-// reaching slightly past them, so the text never touches either.
+// `inset` keeps the field off the left edge: the swatch (if there is one) gets
+// a left margin so it starts under its label, and the <select> itself - not
+// just a wrapper - gets the matching left padding. The wrapper's own padding
+// only moves the closed-state layout; the select's padding is also what the
+// browser carries into the native option list it draws when the field is
+// opened, so that list gets the same inset instead of sitting flush left.
+// The keyboard focus ring is drawn on the wrapper (has-[:focus-visible]) so it
+// still reaches past the swatch.
 export default function CartOptionSelect({ name, value, choices, swatch = false, disabled = false, inset = false, onChange }) {
   const id = useId();
   const color = swatch ? metalColor(value) : null;
@@ -23,18 +27,23 @@ export default function CartOptionSelect({ name, value, choices, swatch = false,
       </label>
       <div
         className={`relative flex items-center gap-2.5 border-b border-gray-400 transition-colors focus-within:border-[#ef9822] hover:border-[#ef9822] ${
-          inset ? "pl-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#ef9822]" : ""
+          inset ? "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#ef9822]" : ""
         }`}
       >
-        {color && <span aria-hidden="true" style={{ background: color }} className="h-[22px] w-[22px] flex-shrink-0 rounded-full ring-1 ring-gray-300" />}
+        {color && (
+          <span
+            aria-hidden="true"
+            style={{ background: color }}
+            className={`h-[22px] w-[22px] flex-shrink-0 rounded-full ring-1 ring-gray-300 ${inset ? "ml-3" : ""}`}
+          />
+        )}
         <select
           id={id}
           value={value}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
-          className={`cursor-pointer appearance-none bg-transparent py-2 pr-7 text-[13px] font-medium uppercase tracking-wide text-[#333333] focus:outline-none ${
-            // With `inset` the field's 12px margin sits outside the select, so take it off the minimum width to keep the field the same size.
-            inset ? "min-w-[3.75rem]" : "min-w-[4.5rem] focus-visible:ring-2 focus-visible:ring-[#ef9822]"
+          className={`min-w-[4.5rem] cursor-pointer appearance-none bg-transparent py-2 pr-7 ${inset ? "pl-3" : ""} text-[13px] font-medium uppercase tracking-wide text-[#333333] focus:outline-none ${
+            inset ? "" : "focus-visible:ring-2 focus-visible:ring-[#ef9822]"
           } disabled:cursor-default`}
         >
           {choices.map((choice) => (
