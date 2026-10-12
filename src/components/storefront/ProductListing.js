@@ -10,7 +10,9 @@ import { moneyInputWrap } from "@/lib/currency";
 import { DEFAULT_PRODUCT_SORT, PRODUCT_SORTS } from "@/lib/productSort";
 
 const PRICE_INPUT =
-  "w-full bg-gray-50 text-sm pl-7 pr-2 py-2 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-300 transition-shadow";
+  "w-full bg-gray-100 text-sm text-[#333333] text-right placeholder:text-gray-500 pl-7 pr-5 py-3 rounded-full focus:outline-none focus:ring-1 focus:ring-[#ef9822] transition-shadow " +
+  // The up/down spinner would sit on the right edge, where the amount is aligned.
+  "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
 // How long to wait after the last keystroke in a price box before searching.
 const FILTER_DEBOUNCE_MS = 350;
@@ -48,7 +50,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   // The symbol sits inside the price fields, before or after the digits per Settings -> Currency & Tax.
   const price = moneyInputWrap(currency, currencyPosition);
   const symbolAfter = currencyPosition === "after";
-  const symbolClass = `absolute ${symbolAfter ? "right-3" : "left-3"} top-1/2 -translate-y-1/2 text-sm`;
+  const symbolClass = `absolute ${symbolAfter ? "right-5" : "left-4"} top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none`;
   const priceInputStyle = symbolAfter
     ? { paddingLeft: "0.5rem", paddingRight: price.style["--sign-pad"] }
     : { paddingLeft: price.style["--sign-pad"] };
@@ -278,7 +280,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
         <div className="flex flex-col items-center sm:items-start text-center sm:text-left">
           <h3 className="text-sm font-semibold text-[#333333] mb-5">Price</h3>
           <div className="flex items-center justify-center sm:justify-start space-x-3 w-full">
-            <div className="relative w-full max-w-[120px]">
+            <div className="relative w-full max-w-[170px]">
               <span className={symbolClass}>{price.symbol}</span>
               <input
                 style={priceInputStyle}
@@ -292,15 +294,15 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                 className={PRICE_INPUT}
               />
             </div>
-            <span className="text-sm text-gray-400">to</span>
-            <div className="relative w-full max-w-[120px]">
+            <span className="text-sm text-gray-500">to</span>
+            <div className="relative w-full max-w-[170px]">
               <span className={symbolClass}>{price.symbol}</span>
               <input
                 style={priceInputStyle}
                 type="number"
                 min="0"
                 inputMode="numeric"
-                placeholder="15000"
+                placeholder="15,000"
                 aria-label="Maximum price"
                 value={maxPrice}
                 onChange={(event) => setMaxPrice(event.target.value)}
