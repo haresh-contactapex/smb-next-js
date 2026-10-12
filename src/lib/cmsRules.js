@@ -31,7 +31,7 @@ export const CMS_FOOTER_GROUPS = [
 // customer auth pages, /admin, /api and the static folders.
 export const RESERVED_SLUGS = new Set([
   "account", "admin", "api", "blog", "blogs", "cart", "checkout", "collections", "forgot-password", "login",
-  "maintenance", "products", "register", "reset-password", "search", "storefront",
+  "maintenance", "products", "register", "reset-password", "search", "storefront", "thank-you",
   "uploads", "wishlist", "women-wedding-bands",
 ]);
 

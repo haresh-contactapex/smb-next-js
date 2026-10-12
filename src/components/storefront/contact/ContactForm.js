@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Icon from "@/components/admin-panel/Icon";
 import Recaptcha from "@/components/auth/Recaptcha";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
-import { CONTACT_FIELDS, CONTACT_LIMITS, EMPTY_CONTACT, formatUsPhone, normalizeContact, validateContact } from "./helpers";
+import { CONTACT_FIELDS, CONTACT_LIMITS, CONTACT_THANKS_STORAGE_KEY, EMPTY_CONTACT, formatUsPhone, normalizeContact, validateContact } from "./helpers";
 
 const DEFAULT_FALLBACK_EMAIL = "info@shopmyband.com";
 const SEND_FAILED = "We couldn't send your message. Please try again.";
@@ -53,13 +54,14 @@ function Field({ id, name, error, children }) {
 
 // The storefront Contact form: name, email, phone and a message, rendered inline (a CMS page
 // mounts it in its right-hand column). Posts to /api/contact, which emails the store and sends the
-// visitor a confirmation copy. `fallbackEmail` is offered when the problem is on our side.
+// visitor a confirmation copy, then sends the visitor on to /thank-you. `fallbackEmail` is offered
+// when the problem is on our side.
 export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) {
   // The Google reCAPTCHA box shows only when Settings -> Security and Settings -> Integrations both turn it on.
   const { enableRecaptcha } = useGeneralSettings();
+  const router = useRouter();
   const baseId = useId();
   const fieldRefs = useRef({});
-  const doneRef = useRef(null);
   const submitRef = useRef(null);
   const submittingRef = useRef(false);
 
@@ -69,16 +71,10 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
   const [recaptchaKey, setRecaptchaKey] = useState(0); // remounting the widget gives a fresh challenge
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState(null); // { text, offerEmail } | null
-  const [status, setStatus] = useState("idle"); // "idle" | "sending" | "sent"
-  const [sent, setSent] = useState({ firstName: "", email: "", confirmationSent: false });
+  const [status, setStatus] = useState("idle"); // "idle" | "sending"
 
   const fieldId = (name) => `${baseId}-${name}`;
   const sending = status === "sending";
-
-  // The form unmounts on success, so hand focus to the thank-you message.
-  useEffect(() => {
-    if (status === "sent") doneRef.current?.focus();
-  }, [status]);
 
   // The submit button is disabled while sending, which drops focus to the page;
   // put it back beside the error so keyboard and screen-reader users keep their place.
@@ -136,12 +132,19 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
         resetRecaptcha();
         return;
       }
-      setSent({
-        firstName: cleaned.name.split(" ")[0],
-        email: cleaned.email,
-        confirmationSent: Boolean(json.data?.confirmationSent),
-      });
-      setStatus("sent");
+      // Handed off through sessionStorage (never the URL) so /thank-you can personalize its
+      // message; read once there and removed, the same pattern checkout uses for its
+      // confirmation page (see CHECKOUT_STORAGE_KEY).
+      try {
+        window.sessionStorage.setItem(
+          CONTACT_THANKS_STORAGE_KEY,
+          JSON.stringify({ firstName: cleaned.name.split(" ")[0], email: cleaned.email, confirmationSent: Boolean(json.data?.confirmationSent) })
+        );
+      } catch {
+        // Storage blocked: the Thank You page falls back to its generic message.
+      }
+      router.push("/thank-you");
+      return;
     } catch {
       setFormError({ text: SEND_FAILED, offerEmail: true });
       setStatus("idle");
@@ -167,25 +170,6 @@ export default function ContactForm({ fallbackEmail = DEFAULT_FALLBACK_EMAIL }) 
     "aria-describedby": errors[name] ? `${fieldId(name)}-error` : undefined,
     className: `${CONTROL} ${errors[name] ? CONTROL_INVALID : CONTROL_OK} ${extra}`,
   });
-
-  if (status === "sent") {
-    return (
-      <div ref={doneRef} tabIndex={-1} role="status" className="break-words text-[#555555] outline-none">
-        <span className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-green-50 text-success">
-          <Icon name="check-circle" className="h-6 w-6" />
-        </span>
-        <p className="text-base leading-relaxed">
-          Thank you, {sent.firstName}. We&apos;ve received your message and will reply soon.
-          {sent.confirmationSent && (
-            <>
-              {" "}
-              A confirmation has been sent to <span className="font-semibold text-[#333333]">{sent.email}</span>.
-            </>
-          )}
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} noValidate aria-label="Contact us" aria-busy={sending} className="relative w-full min-w-0 text-[#333333]">

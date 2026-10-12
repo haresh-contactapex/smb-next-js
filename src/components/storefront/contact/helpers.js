@@ -34,6 +34,11 @@ export function isValidUsPhone(value) {
 
 export const EMPTY_CONTACT = { name: "", email: "", phone: "", message: "" };
 
+// Set by ContactForm right before it redirects to the Thank You page, read once there to
+// personalize the message, then removed — the same hand-off pattern checkout uses for its
+// confirmation page (see CHECKOUT_STORAGE_KEY in checkoutHelpers.js).
+export const CONTACT_THANKS_STORAGE_KEY = "smb:contact-thanks";
+
 // Order the fields appear in, so the first invalid one gets focus.
 export const CONTACT_FIELDS = ["name", "email", "phone", "message"];
 

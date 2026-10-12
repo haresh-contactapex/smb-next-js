@@ -67,9 +67,13 @@ mounting.
   clears as soon as the visitor edits it.
 - The button shows "Sending..." and is disabled while a request is in flight, and
   a second submit is ignored.
-- On success the form is replaced with "Thank you, <first name>. We've received
-  your message and will reply soon." It adds a line about the confirmation email
-  only if that email was actually sent. Focus moves to that message.
+- On success the visitor is sent to `/thank-you` (`src/app/(site)/thank-you/page.js`,
+  reserved in `src/lib/cmsRules.js` so a CMS page can never take the slug). The first
+  name, email and whether a confirmation copy went out travel through
+  `sessionStorage` (`CONTACT_THANKS_STORAGE_KEY` in `contact/helpers.js`) rather than
+  the URL — `ContactThankYou.js` reads them once and removes them, the same hand-off
+  `CheckoutResult.js` uses for its own confirmation page. A reload or a shared link to
+  `/thank-you` shows the generic "Thank you for getting in touch!" instead.
 - On failure the message is shown above the button, what was typed is kept, and
   (for server or network problems) `fallbackEmail` is offered as a link.
 - A hidden `hp_contact` field is the honeypot (see below). It is hidden from
