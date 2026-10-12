@@ -197,7 +197,7 @@ export default function AskQuestionModal({ product, priceLabel, supportEmail = "
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative m-auto w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
+        className="relative m-auto w-full max-w-[550px] rounded-2xl bg-white p-6 shadow-2xl sm:p-8"
       >
         <button
           type="button"
