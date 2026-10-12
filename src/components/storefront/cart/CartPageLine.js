@@ -106,7 +106,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
           <div aria-hidden="true" className="mt-5 flex flex-wrap gap-x-8 gap-y-4 sm:mt-7">
             {pickers.map((picker) => (
               <div key={picker.name}>
-                <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-[#555555]">{picker.name}</span>
+                <span className="mb-1 block pl-3 text-[11px] font-semibold uppercase tracking-wider text-[#555555]">{picker.name}</span>
                 <div className="shimmer h-[37px] w-36 rounded" />
               </div>
             ))}
@@ -122,6 +122,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
                   choices={picker.choices}
                   swatch={picker.swatch}
                   disabled={!editable}
+                  inset
                   onChange={(value) => {
                     const choice = picker.choices.find((candidate) => candidate.value === value);
                     if (choice?.variant) onVariantChange(item, choice.variant);
