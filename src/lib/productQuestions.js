@@ -6,8 +6,8 @@ import { isEmailConfigured, sendProductQuestionAdminEmail, sendProductQuestionCo
 import { normalizeQuestion, validateQuestion } from "@/components/storefront/ask-question/helpers";
 
 // Server side of the product page's "Ask a question" form. Nothing is stored:
-// the question is emailed to the store (Settings -> Store support email, else
-// Settings -> General store email) and the shopper gets a confirmation copy.
+// the question is emailed to the store (Settings -> General store email, else
+// Settings -> Store support email) and the shopper gets a confirmation copy.
 
 // Thrown for problems the visitor can understand; the route turns `status` into the HTTP status.
 export class ProductQuestionError extends Error {
@@ -30,7 +30,7 @@ async function loadStoreContact() {
   const [general, store] = await Promise.all([getGeneralSettings().catch(() => null), getStoreSettings().catch(() => null)]);
   return {
     storeName: general?.storeName || "Shop My Band",
-    recipient: store?.supportEmail || general?.storeEmail || "",
+    recipient: general?.storeEmail || store?.supportEmail || "",
   };
 }
 

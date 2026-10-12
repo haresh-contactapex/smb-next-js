@@ -63,7 +63,7 @@ variables in `.env.local`) and get the same footer.
 
 | Email | To | Reply-To | Contents |
 | --- | --- | --- | --- |
-| Store notification | **Settings -> Store support email**, else **Settings -> General store email** | the shopper | name, email, phone, product (linked) and SKU, the question |
+| Store notification | **Settings -> General store email**, else **Settings -> Store support email** | the shopper | name, email, phone, product (linked) and SKU, the question |
 | Confirmation | the shopper | the store address above | thanks, the product, a copy of their question |
 
 Replying to the store notification answers the shopper directly. Product title
