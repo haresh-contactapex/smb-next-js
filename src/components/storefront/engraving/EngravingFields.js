@@ -7,6 +7,7 @@ import {
   invalidCharactersMessage,
   normalizeEngravingText,
 } from "@/lib/engravingRules";
+import StoreIcon from "../icons";
 import EngravingFontLoader from "./EngravingFontLoader";
 import { readEngravingValue } from "./engravingHelpers";
 
@@ -50,7 +51,11 @@ export default function EngravingFields({ config, value, onChange, showHelp = tr
   const hintId = `${baseId}-hint`;
   const errorId = `${baseId}-error`;
   const fontsLabelId = `${baseId}-fonts-label`;
+  const fontsPanelId = `${baseId}-fonts-panel`;
   const [stripped, setStripped] = useState(false);
+  // Collapsed by default: the font grid is the tallest part of the form, and the current choice
+  // already shows on the closed toggle, so it doesn't need to stay open to be seen.
+  const [fontsOpen, setFontsOpen] = useState(false);
 
   const { settings, fonts } = config;
   const { result, font } = readEngravingValue(value, config);
@@ -110,11 +115,33 @@ export default function EngravingFields({ config, value, onChange, showHelp = tr
         {message}
       </p>
 
-      <div role="radiogroup" aria-labelledby={fontsLabelId} className="mt-4">
-        <p id={fontsLabelId} className={LABEL}>
-          Font: <span className="font-normal text-gray-500">{font?.name}</span>
-        </p>
-        <div className="mt-2 grid max-h-[236px] grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={() => setFontsOpen((open) => !open)}
+          aria-expanded={fontsOpen}
+          aria-controls={fontsPanelId}
+          className="flex w-full items-center justify-between gap-3 rounded border border-gray-300 px-3 py-2.5 text-left transition-colors hover:border-[#ef9822] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ef9822]"
+        >
+          <span id={fontsLabelId} className={LABEL}>
+            Font: <span className="font-normal text-gray-500">{font?.name}</span>
+          </span>
+          <StoreIcon name={fontsOpen ? "chevronUp" : "chevronDown"} className="h-4 w-4 flex-shrink-0 text-gray-400" />
+        </button>
+        <div
+          id={fontsPanelId}
+          role="radiogroup"
+          aria-labelledby={fontsLabelId}
+          // Tailwind's `grid` utility and the `hidden` attribute both have the same CSS
+          // specificity, and `grid` is declared later in the stylesheet, so pairing `hidden`
+          // with a `grid` class here would leave the panel visible. Swap the whole class list
+          // instead of mixing the attribute with a display utility.
+          className={
+            fontsOpen
+              ? "mt-2 grid max-h-[236px] grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3"
+              : "hidden"
+          }
+        >
           {fonts.map((option) => {
             const checked = font?.id === option.id;
             return (
