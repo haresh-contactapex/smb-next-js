@@ -29,14 +29,15 @@ const UPLOAD_PERMISSIONS = ["media.create", settingsPermission("general", "edit"
 
 // The CMS page editor and the Blog post editor (purpose=cms) insert images from the
 // library, upload new ones (recorded in the library like any image) and upload PDFs to
-// link to, such as a printable ring sizer. PDFs are stored and referenced from the
-// page alone.
+// link to, such as a printable ring sizer. Those PDFs are stored and referenced from
+// the page alone. The Media page itself (no purpose) also takes PDFs and does record
+// them in the library.
 const CMS_UPLOAD_PERMISSIONS = ["content.create", "content.edit", "blog.create", "blog.edit"];
 const CMS_MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024;
 
 // The product editor (purpose=product) also uploads videos and 3D models.
-// Only images are recorded in the Media library, which is image-only; the
-// rest are stored and referenced from product_media alone.
+// Only images are recorded in the Media library from there; the rest are
+// stored and referenced from product_media alone.
 const PRODUCT_UPLOAD_PERMISSIONS = ["products.create", "products.edit", "media.create"];
 
 // The category editor (purpose=category) uploads a single image, handled like
@@ -68,7 +69,14 @@ function productContentType(file, kind) {
   return "application/octet-stream";
 }
 
-async function handleCmsPdfUpload(file) {
+// Some browsers/OSes report an empty type for a .pdf, so the extension counts too;
+// pdfProblem() then checks the real content.
+function isPdfFile(file) {
+  return file.type === "application/pdf" || (!file.type && (file.name || "").toLowerCase().endsWith(".pdf"));
+}
+
+// Returns an error response for an unacceptable PDF, or null when it's fine.
+async function pdfProblem(file) {
   if (file.size > CMS_MAX_PDF_SIZE_BYTES) {
     return NextResponse.json({ success: false, error: "The PDF exceeds the 10MB limit" }, { status: 400 });
   }
@@ -77,11 +85,31 @@ async function handleCmsPdfUpload(file) {
   if (String.fromCharCode(...header) !== "%PDF-") {
     return NextResponse.json({ success: false, error: "That file is not a valid PDF" }, { status: 400 });
   }
+  return null;
+}
+
+async function handleCmsPdfUpload(file) {
+  const problem = await pdfProblem(file);
+  if (problem) return problem;
   const blob = await put(`${randomUUID()}.pdf`, file, { access: "public", contentType: "application/pdf" });
   return NextResponse.json(
     { success: true, data: { id: null, fileName: file.name, url: blob.url, mimeType: "application/pdf", kind: "pdf" } },
     { status: 201 }
   );
+}
+
+// A PDF uploaded on the Media page is recorded in the library like an image.
+async function handleLibraryPdfUpload(file) {
+  const problem = await pdfProblem(file);
+  if (problem) return problem;
+  const blob = await put(`${randomUUID()}.pdf`, file, { access: "public", contentType: "application/pdf" });
+  const created = await createMedia({
+    fileName: file.name || "document.pdf",
+    url: blob.url,
+    mimeType: "application/pdf",
+    sizeBytes: file.size,
+  });
+  return NextResponse.json({ success: true, data: created }, { status: 201 });
 }
 
 async function handleProductUpload(file) {
@@ -164,9 +192,17 @@ export async function POST(request) {
     }
     if (purpose === "product") return handleProductUpload(file);
     if (purpose === "cms" && file.type === "application/pdf") return handleCmsPdfUpload(file);
+    // Only the Media page (no purpose) stores PDFs in the library; the other
+    // purposes (avatar, category, settings logo/favicon) are image-only.
+    if (!purpose && isPdfFile(file)) return handleLibraryPdfUpload(file);
     if (!ALLOWED_TYPES.has(file.type)) {
       return NextResponse.json(
-        { success: false, error: "Only JPEG, PNG, WEBP, or GIF images are allowed" },
+        {
+          success: false,
+          error: purpose
+            ? "Only JPEG, PNG, WEBP, or GIF images are allowed"
+            : "Only JPEG, PNG, WEBP, or GIF images, or PDF files, are allowed",
+        },
         { status: 400 }
       );
     }

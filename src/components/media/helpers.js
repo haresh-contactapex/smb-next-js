@@ -1,3 +1,9 @@
+// True for a library item that is a PDF rather than an image (the Media page
+// stores both). Older rows may have no mime type, so the URL counts too.
+export function isPdfItem(item) {
+  return item.mimeType === "application/pdf" || /\.pdf($|\?)/i.test(item.url || "");
+}
+
 // Alt text for a library item: its saved description, else a readable form of
 // the file name ("gold-band_01.jpg" -> "gold band 01").
 export function altTextFor(item) {

@@ -33,7 +33,7 @@ export default function MediaUploaderDropzone({ onFilesPicked, uploading, error 
       <div
         tabIndex={0}
         role="button"
-        aria-label="Upload images to the media library"
+        aria-label="Upload images or PDF files to the media library"
         onClick={() => !uploading && fileInputRef.current?.click()}
         onKeyDown={(e) => {
           if ((e.key === "Enter" || e.key === " ") && !uploading) {
@@ -51,17 +51,17 @@ export default function MediaUploaderDropzone({ onFilesPicked, uploading, error 
       >
         <Icon name="upload-cloud" className="w-10 h-10 text-slate-400 mb-2" />
         <p className="text-sm font-medium text-slate-600 dark:text-slate-300">
-          {uploading ? "Uploading…" : "Drag and drop images to upload"}
+          {uploading ? "Uploading…" : "Drag and drop images or PDF files to upload"}
         </p>
         <p className="text-xs text-slate-400 mt-1">
           or <span className="text-primary-600 dark:text-accent-400 font-semibold underline">browse files</span> —
-          JPEG, PNG, WEBP, or GIF, up to 10MB
+          JPEG, PNG, WEBP, GIF, or PDF, up to 10MB
         </p>
         <input
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/jpeg,image/png,image/webp,image/gif"
+          accept="image/jpeg,image/png,image/webp,image/gif,application/pdf"
           className="hidden"
           aria-hidden="true"
           disabled={uploading}

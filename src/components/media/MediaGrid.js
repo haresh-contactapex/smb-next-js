@@ -2,6 +2,7 @@
 
 import Icon from "@/components/admin-panel/Icon";
 import { BulkSelectionBar, SelectCheckbox, pageSelectionState } from "@/components/admin-panel/BulkSelection";
+import { isPdfItem } from "./helpers";
 
 // `selection` (from useBulkSelection) is only passed when the viewer may
 // delete media; each tile then gets a corner checkbox, separate from the tile
@@ -11,7 +12,7 @@ export default function MediaGrid({ items, onSelect, deletingId, selection, onBu
     return (
       <section className="bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-8 text-center">
         <Icon name="image" className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-        <p className="text-sm text-slate-400">No media yet. Uploaded images will appear here for reuse.</p>
+        <p className="text-sm text-slate-400">No media yet. Uploaded images and PDFs will appear here.</p>
       </section>
     );
   }
@@ -66,11 +67,23 @@ export default function MediaGrid({ items, onSelect, deletingId, selection, onBu
                 aria-label={`Open ${item.fileName}`}
                 className="block w-full h-full disabled:cursor-not-allowed"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- served from public/uploads, arbitrary runtime paths */}
-                <img src={item.url} alt={item.altText || item.fileName} className="w-full h-full object-cover" />
-                <span className="absolute inset-x-0 bottom-0 bg-slate-900/70 text-white text-[10px] px-1.5 py-1 truncate opacity-0 group-hover:opacity-100 transition">
-                  {item.fileName}
-                </span>
+                {isPdfItem(item) ? (
+                  <span className="flex h-full w-full flex-col items-center justify-center gap-1.5 p-2 text-center">
+                    <Icon name="file-text" className="w-9 h-9 text-slate-400 dark:text-slate-500" />
+                    <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-white/10 dark:text-slate-300">
+                      PDF
+                    </span>
+                    <span className="w-full truncate text-[11px] text-slate-500 dark:text-slate-400">{item.fileName}</span>
+                  </span>
+                ) : (
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element -- stored Blob URLs, not optimizable by next/image */}
+                    <img src={item.url} alt={item.altText || item.fileName} className="w-full h-full object-cover" />
+                    <span className="absolute inset-x-0 bottom-0 bg-slate-900/70 text-white text-[10px] px-1.5 py-1 truncate opacity-0 group-hover:opacity-100 transition">
+                      {item.fileName}
+                    </span>
+                  </>
+                )}
               </button>
               {selectable && (
                 <span
