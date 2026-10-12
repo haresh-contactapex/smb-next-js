@@ -237,14 +237,17 @@ export default function AskQuestionModal({ product, priceLabel, supportEmail = "
           </div>
         ) : (
           <form onSubmit={handleSubmit} noValidate className="mt-6 space-y-4">
-            <Field id={fieldId("name")} label="Name" error={errors.name}>
-              <input type="text" autoComplete="name" autoCapitalize="words" placeholder="Jane Doe" {...fieldProps("name")} />
-            </Field>
-            <Field id={fieldId("email")} label="Email Address" error={errors.email}>
-              <IconField icon="mail">
-                <input type="email" autoComplete="email" autoCapitalize="off" autoCorrect="off" placeholder="you@example.com" {...fieldProps("email", "pl-10")} />
-              </IconField>
-            </Field>
+            {/* Name and email share a line from tablet width up; on a phone they stack. */}
+            <div className="grid items-start gap-4 sm:grid-cols-2">
+              <Field id={fieldId("name")} label="Name" error={errors.name}>
+                <input type="text" autoComplete="name" autoCapitalize="words" placeholder="Jane Doe" {...fieldProps("name")} />
+              </Field>
+              <Field id={fieldId("email")} label="Email Address" error={errors.email}>
+                <IconField icon="mail">
+                  <input type="email" autoComplete="email" autoCapitalize="off" autoCorrect="off" placeholder="you@example.com" {...fieldProps("email", "pl-10")} />
+                </IconField>
+              </Field>
+            </div>
             <Field id={fieldId("phone")} label="Phone Number" error={errors.phone}>
               <IconField icon="phone">
                 <input type="tel" inputMode="tel" autoComplete="tel-national" placeholder="(212) 555-0123" {...fieldProps("phone", "pl-10")} />
