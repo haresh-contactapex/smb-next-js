@@ -38,8 +38,14 @@ export default function SiteHeaderBar({ navLinks }) {
   return (
     <header
       ref={headerRef}
-      className={`sticky top-0 z-[22] bg-white border-b border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.05)] transition-[border-radius] duration-150 ${
-        stuck ? "mt-0 rounded-t-none" : "-mt-[70px] sm:-mt-[107px] rounded-t-[32px] sm:rounded-t-[50px]"
+      // The negative margin stays constant regardless of `stuck`: it only ever
+      // affects the *natural* (pre-stuck) flow position, which is what decides when
+      // sticky engages. Toggling it here would move that threshold every time
+      // `stuck` flips, feeding back into the very measurement that sets it and
+      // making the header (and the whole page) judder at the scroll boundary.
+      // Only the border radius — which doesn't affect layout — needs to toggle.
+      className={`sticky top-0 -mt-[70px] sm:-mt-[107px] z-[22] bg-white border-b border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.05)] transition-[border-radius] duration-150 ${
+        stuck ? "rounded-t-none" : "rounded-t-[32px] sm:rounded-t-[50px]"
       }`}
     >
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-3 lg:gap-4 xl:gap-8">
