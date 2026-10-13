@@ -32,7 +32,7 @@ export default async function SiteHeader() {
   const iconButton = "hover:text-[#ef9822] transition-colors hover:scale-110 transform duration-300";
 
   return (
-    <header className="sticky top-0 z-30 bg-white border-b border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
+    <header className="sticky top-0 -mt-[70px] sm:-mt-[107px] z-[22] rounded-t-[32px] sm:rounded-t-[50px] bg-white border-b border-gray-200 shadow-[0_2px_12px_rgba(0,0,0,0.05)]">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between gap-3 lg:gap-4 xl:gap-8">
         <MobileMenu />
 
