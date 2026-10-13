@@ -2,7 +2,7 @@ import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { BADGE_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 
-const CARD = "bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6";
+export const CARD = "bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6";
 
 const PROVIDER_LABELS = { stripe: "Stripe", paypal: "PayPal", razorpay: "Razorpay", cod: "Cash on delivery" };
 const PAYMENT_STATUS_COLORS = { succeeded: "success", pending: "warning", failed: "error", refunded: "info" };

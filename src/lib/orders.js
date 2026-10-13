@@ -156,6 +156,7 @@ export async function getOrderDetails(id) {
   const money = (amount) => (amount === null ? null : formatCurrency(amount, row.currency, moneyFormat));
   return {
     ...mapOrder(row, 0, moneyFormat),
+    cancelledDate: row.cancelled_at ? formatOrderDate(row.cancelled_at) : null,
     customerDetails: {
       name: row.customer_name,
       email: customer?.email || "",

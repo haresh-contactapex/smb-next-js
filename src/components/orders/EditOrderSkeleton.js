@@ -10,7 +10,7 @@ import { Skeleton, SkeletonCard, SkeletonPage } from "@/components/admin-panel/S
 // the order arrives.
 
 // One text line: a bar centred in a box of the line's height.
-function Line({ box = "h-5", bar = "h-3.5 w-32", className = "" }) {
+export function Line({ box = "h-5", bar = "h-3.5 w-32", className = "" }) {
   return (
     <div className={`${box} flex items-center ${className}`}>
       <Skeleton className={bar} />
@@ -18,11 +18,11 @@ function Line({ box = "h-5", bar = "h-3.5 w-32", className = "" }) {
   );
 }
 
-function CardTitle({ width = "w-32" }) {
+export function CardTitle({ width = "w-32" }) {
   return <Line box="h-5" bar={`h-4 ${width}`} className="mb-4" />;
 }
 
-function ProductRow() {
+export function ProductRow() {
   return (
     <div className="flex items-center gap-4 py-3">
       <Skeleton className="w-14 h-14 rounded-xl shrink-0" />
@@ -36,7 +36,7 @@ function ProductRow() {
   );
 }
 
-function SummaryRow({ note = false, strong = false }) {
+export function SummaryRow({ note = false, strong = false }) {
   return (
     <div className={`flex items-start justify-between gap-4 ${strong ? "pt-3 mt-1 border-t border-slate-100 dark:border-white/5" : ""}`}>
       <div>
@@ -58,7 +58,7 @@ function FieldSkeleton() {
   );
 }
 
-function DetailSkeleton({ value = "w-44" }) {
+export function DetailSkeleton({ value = "w-44" }) {
   return (
     <div>
       <Line box="h-4" bar="h-2.5 w-14" />
@@ -67,7 +67,7 @@ function DetailSkeleton({ value = "w-44" }) {
   );
 }
 
-function AddressCardSkeleton() {
+export function AddressCardSkeleton() {
   return (
     <SkeletonCard className="p-5 md:p-6">
       <CardTitle width="w-28" />
