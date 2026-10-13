@@ -200,6 +200,8 @@ export async function getCustomerOrder(customerId, orderNumber) {
     // Paid: cancelling it asks the store for a refund, which it arranges by hand.
     awaitingRefund: row.payment_status === "Paid",
     customerName: row.customer_name,
+    // What the customer wrote in the cart's order note ("" when there is none).
+    note: row.customer_note || "",
     updatedAt: new Date(row.updated_at).toISOString(),
     items,
     // The orders table stores one total; when line items add up to less, the

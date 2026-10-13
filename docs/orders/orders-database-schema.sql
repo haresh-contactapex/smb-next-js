@@ -85,6 +85,7 @@ CREATE TABLE orders (
     currency               VARCHAR(3) NOT NULL DEFAULT 'INR',
     placed_at              TIMESTAMPTZ NOT NULL DEFAULT now(),
     cancelled_at           TIMESTAMPTZ NULL,
+    customer_note          TEXT NULL,
     created_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at             TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -98,6 +99,7 @@ COMMENT ON COLUMN orders.status IS 'Default mirrors orders_settings.default_orde
 COMMENT ON COLUMN orders.payment_status IS 'Denormalized summary of this order''s payments rows.';
 COMMENT ON COLUMN orders.total_amount IS 'Matches the listing''s Amount column; no stored subtotal/discount/shipping/tax breakdown today.';
 COMMENT ON COLUMN orders.currency IS 'Defaults to INR to match the currency already used in the mock order data.';
+COMMENT ON COLUMN orders.customer_note IS 'The note the customer wrote in the cart (special instructions, gift message, ring size), at most 500 characters; NULL when there is none. Plain text, never HTML.';
 
 CREATE INDEX orders_customer_id_idx ON orders (customer_id);
 CREATE INDEX orders_status_idx ON orders (status);

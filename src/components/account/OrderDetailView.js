@@ -141,6 +141,13 @@ export default function OrderDetailView({ order, moneyFormat }) {
           <AddressPanel title="Shipping address" address={order.shippingAddress} />
           <AddressPanel title="Billing address" address={order.billingAddress} />
 
+          {order.note && (
+            <Panel title="Order note">
+              {/* Plain text, so React escapes it; the line breaks they typed are kept. */}
+              <p className="whitespace-pre-wrap break-words leading-relaxed">{order.note}</p>
+            </Panel>
+          )}
+
           <Panel title="Payment">
             {order.payments.length > 0 ? (
               <ul className="space-y-3">

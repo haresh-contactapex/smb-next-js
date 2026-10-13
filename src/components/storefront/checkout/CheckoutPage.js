@@ -58,7 +58,7 @@ function readSaved() {
 // guest. It only supplies starting values (see startingCheckout) and the Billing
 // step's address pickers; everything is still validated as if it had been typed.
 export default function CheckoutPage({ settings, account = null }) {
-  const { items, hydrated, totals, coupon, shipping: cartShipping, countries } = useCart();
+  const { items, note, hydrated, totals, coupon, shipping: cartShipping, countries } = useCart();
   const [contact, setContact] = useState(EMPTY_CONTACT);
   const [billingAddress, setBillingAddress] = useState(EMPTY_ADDRESS);
   const [shippingAddress, setShippingAddress] = useState(EMPTY_ADDRESS);
@@ -148,6 +148,8 @@ export default function CheckoutPage({ settings, account = null }) {
       engraving: engraving ? { text: engraving.text, fontId: engraving.fontId } : null,
     })),
     couponCode: coupon?.code || null,
+    // The cart's "Order note" (special instructions, gift message, ring size); the server cleans it.
+    note,
     shippingRateId: cartShipping?.selectedRateId || "standard",
     expectedTotal: checkout.total,
     contact: {

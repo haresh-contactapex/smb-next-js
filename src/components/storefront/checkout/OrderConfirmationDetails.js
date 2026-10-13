@@ -207,6 +207,15 @@ export default function OrderConfirmationDetails({ orderNumber, total, currency,
               <AddressCard id="confirmation-billing-title" title="Billing address" address={details.billingAddress} />
             </>
           )}
+          {details.note && (
+            <Card id="confirmation-note-title" title="Order note" className="!p-6">
+              <div className="mt-4 flex items-start gap-3">
+                <IconBadge name="note" />
+                {/* The customer's own words, as plain text: React escapes it, and the line breaks they typed are kept. */}
+                <p className="min-w-0 flex-1 self-center whitespace-pre-wrap break-words text-[15px] leading-relaxed text-[#555555]">{details.note}</p>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

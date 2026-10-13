@@ -6,6 +6,7 @@ import {
   AddressCard,
   CustomerCard,
   OrderItemsCard,
+  OrderNoteCard,
   OrderSummaryCard,
   PaymentsCard,
 } from "@/components/orders/OrderDetailsSections";
@@ -54,7 +55,10 @@ export default async function ViewOrderPage({ params }) {
       <OrderTimelineCard order={order} />
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] items-start">
-        <OrderItemsCard items={order.items} />
+        <div className="space-y-6">
+          <OrderItemsCard items={order.items} />
+          <OrderNoteCard note={order.note} />
+        </div>
 
         <div className="space-y-6">
           <OrderSummaryCard pricing={order.pricing} />

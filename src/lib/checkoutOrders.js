@@ -76,19 +76,40 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
         }
 
         orderIndex = statements.length;
-        statements.push(tx`
-          INSERT INTO orders (
-            id, order_number, customer_id, customer_name, billing_address_id, shipping_address_id, item_count,
-            total_amount, currency, status, payment_status, subtotal_amount, discount_amount, shipping_amount, tax_amount, coupon_code
-          )
-          VALUES (
-            ${orderId},
-            (SELECT ${prefix}::text || GREATEST(${startingNumber}::bigint, COALESCE(MAX(NULLIF(regexp_replace(order_number, '[^0-9]', '', 'g'), '')::bigint), 0) + 1)::text FROM orders),
-            ${customer?.id || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
-            ${priced.total}, ${priced.currency}, ${status}, 'Unpaid', ${priced.subtotal}, ${priced.discount}, ${priced.shippingAmount}, ${priced.tax}, ${priced.couponCode}
-          )
-          RETURNING order_number
-        `);
+        // An order the customer left a note on also records it (already cleaned by checkoutPricing.js).
+        // An order without one keeps the original insert, which still works before the order-note
+        // migration has been run.
+        statements.push(
+          priced.note
+            ? tx`
+                INSERT INTO orders (
+                  id, order_number, customer_id, customer_name, billing_address_id, shipping_address_id, item_count,
+                  total_amount, currency, status, payment_status, subtotal_amount, discount_amount, shipping_amount, tax_amount, coupon_code,
+                  customer_note
+                )
+                VALUES (
+                  ${orderId},
+                  (SELECT ${prefix}::text || GREATEST(${startingNumber}::bigint, COALESCE(MAX(NULLIF(regexp_replace(order_number, '[^0-9]', '', 'g'), '')::bigint), 0) + 1)::text FROM orders),
+                  ${customer?.id || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
+                  ${priced.total}, ${priced.currency}, ${status}, 'Unpaid', ${priced.subtotal}, ${priced.discount}, ${priced.shippingAmount}, ${priced.tax}, ${priced.couponCode},
+                  ${priced.note}
+                )
+                RETURNING order_number
+              `
+            : tx`
+                INSERT INTO orders (
+                  id, order_number, customer_id, customer_name, billing_address_id, shipping_address_id, item_count,
+                  total_amount, currency, status, payment_status, subtotal_amount, discount_amount, shipping_amount, tax_amount, coupon_code
+                )
+                VALUES (
+                  ${orderId},
+                  (SELECT ${prefix}::text || GREATEST(${startingNumber}::bigint, COALESCE(MAX(NULLIF(regexp_replace(order_number, '[^0-9]', '', 'g'), '')::bigint), 0) + 1)::text FROM orders),
+                  ${customer?.id || guestId}, ${fullName}, ${billingId}, ${shippingId}, ${itemCount},
+                  ${priced.total}, ${priced.currency}, ${status}, 'Unpaid', ${priced.subtotal}, ${priced.discount}, ${priced.shippingAmount}, ${priced.tax}, ${priced.couponCode}
+                )
+                RETURNING order_number
+              `
+        );
         for (const line of lines) {
           // A line the customer engraved also records what they asked for (already checked and
           // cleaned by checkoutPricing.js; the font name is the store's own, not the request's).

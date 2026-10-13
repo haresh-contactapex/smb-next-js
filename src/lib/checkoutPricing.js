@@ -9,7 +9,7 @@ import { sanitizeLineEngraving } from "./engravingRules";
 // validation. Both are shared with the browser on purpose: the server must reach the
 // same totals the customer was shown, and prices and discounts are never taken from
 // the request.
-import { cartTotals, lineKey, round2 } from "@/components/storefront/cart/cartHelpers";
+import { NOTE_MAX_LENGTH, cartTotals, lineKey, round2 } from "@/components/storefront/cart/cartHelpers";
 import { PHONE_COUNTRIES, checkoutTotals, phoneCountryOf, validateAddress, validateContact } from "@/components/storefront/checkout/checkoutHelpers";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -30,6 +30,11 @@ export class CheckoutError extends Error {
 }
 
 const text = (value, max) => (typeof value === "string" ? value.trim().slice(0, max) : "");
+
+// The cart's order note: plain text with its line breaks kept, capped at what the cart
+// allows. Control characters go (a NUL byte would make the database refuse the row).
+const orderNote = (value) =>
+  typeof value === "string" ? value.replace(/\r\n?/g, "\n").replace(/[^\P{Cc}\n\t]/gu, "").trim().slice(0, NOTE_MAX_LENGTH) : "";
 
 // The engraving the customer asked for on one line: { text, fontId } or nothing. This only gives
 // it a safe shape (so the line key is stable); whether the text is allowed, the product offers
@@ -245,6 +250,8 @@ export async function priceCheckout(input) {
     sameAsBilling: Boolean(input?.sameAsBilling),
     lines,
     couponCode: totals.effect.applies ? coupon.code : null,
+    // What the customer wrote in the cart's "Order note" box, or "" for none.
+    note: orderNote(input?.note),
     subtotal: totals.subtotal,
     discount: totals.discount,
     shippingAmount: totals.selectedRate.price,

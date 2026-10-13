@@ -86,6 +86,20 @@ export function OrderItemsCard({ items }) {
   );
 }
 
+// What the customer wrote in the cart's "Order note" box (special instructions, gift
+// message, ring size). Staff have to act on it, so the card is tinted to stand out and
+// is left out entirely when there is no note. Plain text: React escapes it, and the line
+// breaks the customer typed are kept.
+export function OrderNoteCard({ note }) {
+  if (!note) return null;
+  return (
+    <section className={`${CARD} !border-accent-500/40`}>
+      <CardTitle icon="message-square">Customer note</CardTitle>
+      <p className="text-sm leading-relaxed text-slate-700 dark:text-slate-200 whitespace-pre-wrap break-words">{note}</p>
+    </section>
+  );
+}
+
 function SummaryRow({ label, value, note, strong }) {
   return (
     <div className={`flex items-start justify-between gap-4 text-sm ${strong ? "pt-3 mt-1 border-t border-slate-100 dark:border-white/5" : ""}`}>

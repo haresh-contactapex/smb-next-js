@@ -157,6 +157,8 @@ export async function getOrderDetails(id) {
   return {
     ...mapOrder(row, 0, moneyFormat),
     cancelledDate: row.cancelled_at ? formatOrderDate(row.cancelled_at) : null,
+    // The customer's note from the cart ("" when there is none, or before the column existed).
+    note: row.customer_note || "",
     customerDetails: {
       name: row.customer_name,
       email: customer?.email || "",
@@ -256,6 +258,7 @@ export async function getOrderConfirmation(id) {
     placedAt: new Date(row.placed_at).toISOString(),
     status: row.status,
     paymentStatus: row.payment_status,
+    note: row.customer_note || "",
     customer: {
       name: row.customer_name,
       // The customer row can be gone (a deleted guest); the checkout's phone is on its addresses too.

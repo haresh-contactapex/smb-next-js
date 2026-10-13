@@ -313,6 +313,17 @@ confirmation page, the account, the admin order, the emails and the invoice. Sto
 across all of its lines, since engraved copies of one variant share its stock. Details in
 [engraving](../engraving/engraving.md).
 
+## Order note
+
+The cart's "Order note" box (*Special instructions, gift message or ring size*, up to 500
+characters, `NOTE_MAX_LENGTH` in `cartHelpers.js`) is kept with the cart. Place Order sends it as
+`note`; `priceCheckout()` trims and caps it as plain text and `insertOrder()` stores it in
+`orders.customer_note` (migration: `npm run db:migrate:order-note`, see
+[orders-database-schema.md](../orders/orders-database-schema.md)). It is shown, as escaped plain text with line
+breaks kept, on the confirmation page, the account's order page and the admin View/Edit Order pages.
+Not yet in the order emails or the invoice. An order placed before the column existed, or without a
+note, has `NULL` and simply shows no note.
+
 ## Order emails
 
 Six emails, all in one design (`src/lib/orderEmail.js`, sent by `src/lib/email.js`, triggered by

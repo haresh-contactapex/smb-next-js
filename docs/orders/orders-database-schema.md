@@ -116,6 +116,7 @@ Backs the All Orders / Pending / Processing / Completed / Cancelled listings.
 | `currency`              | `VARCHAR(3)`    | NOT NULL, DEFAULT `'INR'`                                               | See Design notes on the default                                            |
 | `placed_at`             | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                               | Matches the listing's "Date" column                                         |
 | `cancelled_at`          | `TIMESTAMPTZ`   | NULL                                                                    | Set when `status` transitions to `Cancelled`                               |
+| `customer_note`         | `TEXT`          | NULL                                                                    | The cart's order note (special instructions, gift message, ring size), at most 500 characters of plain text; see Design notes |
 | `created_at`            | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                               |                                                                               |
 | `updated_at`            | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                               |                                                                               |
 
@@ -234,3 +235,9 @@ Indexes: `INDEX (order_id)`.
   `tax_amount` and `coupon_code` to `orders`, so the single `total_amount` can
   be explained. `item_count` is the total quantity across the line items. See
   [storefront/checkout.md](../storefront/checkout.md#card-payments-stripe).
+- `orders.customer_note` holds what the customer typed in the cart's "Order note"
+  box. It is added to an existing database by
+  `docs/orders/order-note-column-only.sql` (`npm run db:migrate:order-note`),
+  is nullable (`NULL` for orders without a note or placed before the column
+  existed) and is always rendered as plain text. It is the *customer's* note;
+  there is no staff-side internal note on an order yet.

@@ -7,7 +7,7 @@ import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 import Icon from "@/components/admin-panel/Icon";
 import { AVATAR_COLOR_CLASSES } from "@/components/dashboard/colorClasses";
 import { STATUS_OPTIONS, PAYMENT_OPTIONS } from "./orderHelpers";
-import { OrderItemsCard, OrderSummaryCard, PaymentsCard, CustomerCard, AddressCard } from "./OrderDetailsSections";
+import { OrderItemsCard, OrderNoteCard, OrderSummaryCard, PaymentsCard, CustomerCard, AddressCard } from "./OrderDetailsSections";
 import EditOrderSkeleton from "./EditOrderSkeleton";
 import { downloadOrderInvoice } from "./downloadInvoice";
 import Toast from "@/components/add-product/Toast";
@@ -135,6 +135,7 @@ export default function EditOrderForm({ orderId }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
           <OrderItemsCard items={order.items} />
+          <OrderNoteCard note={order.note} />
           <OrderSummaryCard pricing={order.pricing} />
           <PaymentsCard payments={order.payments} />
         </div>
