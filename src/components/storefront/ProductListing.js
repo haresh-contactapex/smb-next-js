@@ -10,7 +10,7 @@ import { moneyInputWrap } from "@/lib/currency";
 import { DEFAULT_PRODUCT_SORT, PRODUCT_SORTS } from "@/lib/productSort";
 
 const PRICE_INPUT =
-  "w-full bg-gray-100 text-sm text-[#333333] text-right placeholder:text-gray-500 pl-7 pr-5 py-3 rounded-full focus:outline-none focus:ring-1 focus:ring-[#ef9822] transition-shadow " +
+  "w-full bg-gray-100 text-sm text-[#333333] text-right placeholder:text-gray-500 pl-7 pr-6 py-3 rounded-full focus:outline-none focus:ring-1 focus:ring-[#ef9822] transition-shadow " +
   // The up/down spinner would sit on the right edge, where the amount is aligned.
   "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
@@ -50,10 +50,12 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   // The symbol sits inside the price fields, before or after the digits per Settings -> Currency & Tax.
   const price = moneyInputWrap(currency, currencyPosition);
   const symbolAfter = currencyPosition === "after";
-  const symbolClass = `absolute ${symbolAfter ? "right-5" : "left-4"} top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none`;
+  // The symbol sits 1.5rem in from the pill's curved edge; the amount's padding clears it.
+  const symbolClass = `absolute ${symbolAfter ? "right-6" : "left-6"} top-1/2 -translate-y-1/2 text-sm text-gray-500 pointer-events-none`;
+  const symbolClearance = `calc(${price.style["--sign-pad"]} + 0.75rem)`;
   const priceInputStyle = symbolAfter
-    ? { paddingLeft: "0.5rem", paddingRight: price.style["--sign-pad"] }
-    : { paddingLeft: price.style["--sign-pad"] };
+    ? { paddingLeft: "0.5rem", paddingRight: symbolClearance }
+    : { paddingLeft: symbolClearance };
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [metals, setMetals] = useState([]);
   const [size, setSize] = useState("");
