@@ -28,9 +28,11 @@ export default async function WomenWeddingBandsPage() {
 
   return (
     <>
-      {/* Hero banner */}
+      {/* Hero banner. Rounded top corners (matching the header's own curve into the
+          announcement bar) read as the page's white background curving down into
+          the photo, since nothing else overlaps the header/banner seam. */}
       <div className="w-full fade-in-up delay-100">
-        <div className="w-full h-[250px] sm:h-[300px] md:h-[400px] bg-gray-200 overflow-hidden relative">
+        <div className="w-full h-[250px] sm:h-[300px] md:h-[400px] rounded-t-[32px] sm:rounded-t-[50px] bg-gray-200 overflow-hidden relative">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/storefront/wwb_top_banner.jpg"

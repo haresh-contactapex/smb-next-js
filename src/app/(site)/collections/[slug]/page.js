@@ -57,7 +57,9 @@ export default async function CollectionPage({ params }) {
     <>
       {heroImage && (
         <div className="w-full fade-in-up delay-100">
-          <div className="w-full h-[250px] sm:h-[300px] md:h-[400px] bg-gray-200 overflow-hidden relative">
+          {/* Rounded top corners (matching the header's own curve into the announcement
+              bar) read as the page's white background curving down into the photo. */}
+          <div className="w-full h-[250px] sm:h-[300px] md:h-[400px] rounded-t-[32px] sm:rounded-t-[50px] bg-gray-200 overflow-hidden relative">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={heroImage}
