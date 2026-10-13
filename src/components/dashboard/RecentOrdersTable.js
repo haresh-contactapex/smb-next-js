@@ -60,8 +60,9 @@ export default function RecentOrdersTable({ orders, viewAllHref = "#" }) {
                 <td className="py-3 px-1 text-right">
                   <div className="inline-flex items-center gap-1">
                     <Link
-                      href={`/admin/edit-order/${order.orderId}`}
+                      href={`/admin/orders/${order.orderId}`}
                       title="View order"
+                      aria-label={`View order ${order.id}`}
                       className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                     >
                       <Icon name="eye" className="w-4 h-4" />
@@ -69,6 +70,7 @@ export default function RecentOrdersTable({ orders, viewAllHref = "#" }) {
                     <Link
                       href={`/admin/edit-order/${order.orderId}`}
                       title="Edit order"
+                      aria-label={`Edit order ${order.id}`}
                       className="w-7 h-7 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
                     >
                       <Icon name="edit-2" className="w-4 h-4" />
