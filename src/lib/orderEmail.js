@@ -11,7 +11,7 @@
 //
 // Shared `data`: { storeName, supportEmail, shopUrl, logoSrc, orderNumber, placedAt, total,
 //   items: [{ title, quantity, lineTotal, imageUrl, engraving: { text, fontName } | null }], amounts: { subtotal, discount, couponCode,
-//   shipping, tax }, shippingAddress: string[], billingAddress: string[], viewUrl }.
+//   shipping, tax }, shippingAddress: string[], billingAddress: string[], note (the customer's cart note, "" for none), viewUrl }.
 // Customer emails add { firstName, paymentLabel, cod, processingDays, paid }; the store alert adds
 // { customer: { name, email, phone }, paymentLabel, cod, adminUrl }; the refund alert adds
 // paymentReference (the gateway's payment id, to find the payment there).
@@ -117,6 +117,13 @@ function addressesSection(data) {
   return `<tr><td style="padding:8px 32px 0;">${body}</td></tr>`;
 }
 
+// The customer's own order note (special instructions, gift message, ring size), set apart in the note style.
+// Only shown when there is one; it is escaped, with the line breaks they typed kept.
+function noteSection(data, title) {
+  if (!data.note) return "";
+  return `<tr><td style="padding:22px 32px 0;">${heading(title)}${quoteBlock(data.note)}</td></tr>`;
+}
+
 // An orange button that works everywhere. Outlook's renderer can't paint padding on a link, so it gets a
 // VML rounded rectangle (fully clickable, anchored); every other client gets a table cell with the link in it.
 function bulletproofButton(label, url) {
@@ -165,6 +172,7 @@ export function render(data, spec) {
   </td></tr>
   ${spec.showItems ? itemsSection(data) : ""}
   ${spec.showAddresses ? addressesSection(data) : ""}
+  ${spec.showAddresses ? noteSection(data, spec.noteTitle || "Your order note") : ""}
   ${spec.steps?.length ? `<tr><td style="padding:26px 32px 0;"><div style="font-size:14px;font-weight:bold;color:${NAVY};margin:0 0 10px;">${escapeHtml(spec.stepsTitle || "What happens next")}</div>${spec.steps.map(step).join("")}</td></tr>` : ""}
   <tr><td style="padding:17px 32px 30px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="mso-table-lspace:0pt;mso-table-rspace:0pt;border-collapse:collapse;"><tr><td width="4" bgcolor="${ORANGE}" style="width:4px;background:${ORANGE};font-size:0;line-height:0;">&nbsp;</td><td bgcolor="#F3F4F6" style="background:#F3F4F6;padding:13px 16px;font-size:13px;color:#444444;line-height:20px;mso-line-height-rule:exactly;"><b style="color:#222222;">${escapeHtml(spec.note.lead)}</b> ${spec.note.html.replace("{contact}", contact)}</td></tr></table></td></tr>
   <tr><td bgcolor="#243A66" style="background:#243A66;padding:20px 32px;font-size:12px;line-height:19px;mso-line-height-rule:exactly;color:#DCE3F0;"><div style="font-weight:bold;color:#ffffff;margin-bottom:3px;">${escapeHtml(storeName)}</div>${footerLinks}</td></tr>
@@ -202,6 +210,7 @@ export function render(data, spec) {
           "",
         ]
       : []),
+    ...(spec.showAddresses && data.note ? [`${spec.noteTitle || "Your order note"}:`, ...data.note.split(/\r?\n/), ""] : []),
     ...(spec.steps?.length ? [spec.stepsTitle || "What happens next", ...spec.steps.map(([lead, body]) => `- ${lead} ${body}`), ""] : []),
     `${spec.note.lead} ${spec.note.html.replace("{contact}", "contact us").replace(/<[^>]+>/g, "")}`,
     "",
@@ -335,6 +344,7 @@ export function buildNewOrderAlertEmail(data) {
     button: { label: "View order", url: data.adminUrl },
     showItems: true,
     showAddresses: true,
+    noteTitle: "Customer's order note",
     stepsTitle: "Next step",
     steps: [["Review and process it.", "Open the order and mark it Processing when you start on it. The customer is emailed at each stage."]],
     note: { lead: "Automatic alert.", html: "You're getting this because new order emails are on in Settings, Email." },

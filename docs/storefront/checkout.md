@@ -321,8 +321,11 @@ characters, `NOTE_MAX_LENGTH` in `cartHelpers.js`) is kept with the cart. Place 
 `orders.customer_note` (migration: `npm run db:migrate:order-note`, see
 [orders-database-schema.md](../orders/orders-database-schema.md)). It is shown, as escaped plain text with line
 breaks kept, on the confirmation page, the account's order page and the admin View/Edit Order pages.
-Not yet in the order emails or the invoice. An order placed before the column existed, or without a
-note, has `NULL` and simply shows no note.
+The order emails that list an order's details also carry it, after the addresses (`noteSection()` in
+`orderEmail.js`, HTML and plain text, escaped): the customer's confirmation, processing and completed
+emails ("Your order note") and the store's new-order alert ("Customer's order note"). The cancelled,
+failed and refund emails leave it out. Not yet on the invoice. An order placed before the column
+existed, or without a note, has `NULL` and simply shows no note.
 
 ## Order emails
 

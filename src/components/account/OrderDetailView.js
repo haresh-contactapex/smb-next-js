@@ -74,6 +74,7 @@ export default function OrderDetailView({ order, moneyFormat }) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="flex min-w-0 flex-col gap-6">
         <section aria-labelledby="order-items-title" className={`${CARD} p-5 sm:p-6`}>
           <h2 id="order-items-title" className="text-[17px] font-semibold text-[#333333]">
             Items <span className="font-normal text-gray-500">({pluralize(order.itemCount || order.items.length, "item")})</span>
@@ -116,6 +117,14 @@ export default function OrderDetailView({ order, moneyFormat }) {
           )}
         </section>
 
+        {order.note && (
+          <Panel title="Order note">
+            {/* Plain text, so React escapes it; the line breaks they typed are kept. */}
+            <p className="whitespace-pre-wrap break-words leading-relaxed">{order.note}</p>
+          </Panel>
+        )}
+        </div>
+
         <div className="flex flex-col gap-6">
           <Panel title="Order summary">
             <dl className="space-y-2">
@@ -140,13 +149,6 @@ export default function OrderDetailView({ order, moneyFormat }) {
 
           <AddressPanel title="Shipping address" address={order.shippingAddress} />
           <AddressPanel title="Billing address" address={order.billingAddress} />
-
-          {order.note && (
-            <Panel title="Order note">
-              {/* Plain text, so React escapes it; the line breaks they typed are kept. */}
-              <p className="whitespace-pre-wrap break-words leading-relaxed">{order.note}</p>
-            </Panel>
-          )}
 
           <Panel title="Payment">
             {order.payments.length > 0 ? (

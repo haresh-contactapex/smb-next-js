@@ -76,6 +76,8 @@ async function loadOrderEmail(orderId, origin, { needsCustomerEmail = true } = {
       orderNumber: order.order_number,
       placedAt: new Date(details.placedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       total: money(amounts.total),
+      // The customer's cart note ("" for none); shown in the emails that list the order's details.
+      note: details.note || "",
       // engraving: what the customer asked to have engraved, { text, fontName } or null (see orderEmail.js)
       items: details.items.map((item) => ({
         title: item.title,
