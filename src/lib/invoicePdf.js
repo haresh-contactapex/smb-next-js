@@ -22,6 +22,7 @@ const COLORS = {
   ink: hex("#1f2937"),
   muted: hex("#6b7280"),
   line: hex("#e5e7eb"),
+  tint: hex("#f3f4f6"),
   red: hex("#dc2626"),
   white: rgb(1, 1, 1),
 };
@@ -319,7 +320,16 @@ export async function buildInvoicePdf(invoice) {
   if (amounts.taxMode === "added") rows.push([amounts.taxRate ? `Tax (${amounts.taxRate}%)` : "Tax", money(amounts.tax)]);
   if (amounts.taxMode === "included") rows.push(["Tax", "Included in prices"]);
 
-  const totalsHeight = rows.length * 17 + 100;
+  // The customer's cart note sits in a box to the left of the totals, on the same rows, so a long
+  // one doesn't push the totals down. Its line breaks are kept; the width stops short of the totals.
+  const NOTE_WIDTH = 270;
+  const NOTE_LEADING = 12.3;
+  const noteLines = invoice.note
+    ? invoice.note.split("\n").flatMap((line) => (line.trim() ? wrap(clean(line), regular, 8.5, NOTE_WIDTH - 28) : [""]))
+    : [];
+  const noteHeight = noteLines.length ? 38 + noteLines.length * NOTE_LEADING : 0;
+
+  const totalsHeight = Math.max(rows.length * 17 + 100, noteHeight);
   if (cursor + totalsHeight > TOTALS_LIMIT) {
     addPage();
     cursor = 70;
@@ -327,6 +337,7 @@ export async function buildInvoicePdf(invoice) {
 
   const labelX = 336;
   cursor += 14;
+  const sectionTop = cursor;
   for (const [label, value] of rows) {
     text(label, labelX, cursor, { size: 9, color: COLORS.muted });
     text(value, RIGHT - 10, cursor, { size: 9, align: "right" });
@@ -346,6 +357,15 @@ export async function buildInvoicePdf(invoice) {
   rect(labelX - 8, cursor - 6, 3, 24, COLORS.gold);
   text("Amount Due", labelX, cursor, { size: 11, font: bold, color: COLORS.navy });
   text(money(due), RIGHT - 10, cursor, { size: 11, font: bold, color: COLORS.navy, align: "right" });
+
+  if (noteLines.length) {
+    rect(MARGIN, sectionTop - 6, NOTE_WIDTH, noteHeight - 8, COLORS.tint);
+    rect(MARGIN, sectionTop - 6, 3, noteHeight - 8, COLORS.gold);
+    text("CUSTOMER NOTE", MARGIN + 14, sectionTop + 3, { size: 7.5, font: bold, color: COLORS.navy });
+    noteLines.forEach((line, index) => {
+      if (line) text(line, MARGIN + 14, sectionTop + 19 + index * NOTE_LEADING, { size: 8.5 });
+    });
+  }
 
   // --- Footer: notes / payment / questions ----------------------------------------
   rect(MARGIN, FOOTER_TOP - 10, CONTENT_WIDTH, 0.75, COLORS.line);

@@ -218,6 +218,8 @@ export async function getOrderInvoice(id) {
     paymentStatus: row.payment_status,
     currency: row.currency,
     moneyFormat,
+    // The customer's cart note ("" for none), printed beside the totals.
+    note: row.customer_note || "",
     customer: {
       name: row.customer_name,
       email: customer?.email || "",

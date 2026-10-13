@@ -324,8 +324,9 @@ breaks kept, on the confirmation page, the account's order page and the admin Vi
 The order emails that list an order's details also carry it, after the addresses (`noteSection()` in
 `orderEmail.js`, HTML and plain text, escaped): the customer's confirmation, processing and completed
 emails ("Your order note") and the store's new-order alert ("Customer's order note"). The cancelled,
-failed and refund emails leave it out. Not yet on the invoice. An order placed before the column
-existed, or without a note, has `NULL` and simply shows no note.
+failed and refund emails leave it out. The invoice PDF prints it in a "Customer note" box beside the
+totals (`invoicePdf.js`; line breaks kept, text the PDF font can't draw becomes `?`). An order placed
+before the column existed, or without a note, has `NULL` and simply shows no note.
 
 ## Order emails
 
