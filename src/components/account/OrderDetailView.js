@@ -39,9 +39,11 @@ function AddressPanel({ title, address }) {
   );
 }
 
-// One order in full: progress, items, totals, the addresses it used and its payments.
-// `order` is getCustomerOrder()'s result. The line items, addresses and payments
-// come from tables a store may not have yet, so each part tolerates being empty.
+// One order in full: progress, items (with its note and the addresses it used) on the left,
+// the price breakdown and payments on the right. `order` is getCustomerOrder()'s result. The
+// line items, addresses and payments come from tables a store may not have yet, so each part
+// tolerates being empty. The price breakdown shows discount/shipping/tax separately when the
+// order has that detail (checked out after those columns existed), else one combined row.
 export default function OrderDetailView({ order, moneyFormat }) {
   const hasItems = order.items.length > 0;
   const money = (amount) => formatCurrency(amount, order.currency, moneyFormat);
@@ -123,6 +125,11 @@ export default function OrderDetailView({ order, moneyFormat }) {
             <p className="whitespace-pre-wrap break-words leading-relaxed">{order.note}</p>
           </Panel>
         )}
+
+        <div className="grid gap-6 sm:grid-cols-2">
+          <AddressPanel title="Shipping address" address={order.shippingAddress} />
+          <AddressPanel title="Billing address" address={order.billingAddress} />
+        </div>
         </div>
 
         <div className="flex flex-col gap-6">
@@ -132,6 +139,24 @@ export default function OrderDetailView({ order, moneyFormat }) {
                 <div className="flex justify-between gap-4">
                   <dt>Items subtotal</dt>
                   <dd className="text-[#333333]">{money(order.itemsSubtotal)}</dd>
+                </div>
+              )}
+              {hasItems && order.discount > 0 && (
+                <div className="flex justify-between gap-4">
+                  <dt>Discount{order.couponCode ? ` (${order.couponCode})` : ""}</dt>
+                  <dd className="text-[#333333]">-{money(order.discount)}</dd>
+                </div>
+              )}
+              {hasItems && order.shipping !== null && (
+                <div className="flex justify-between gap-4">
+                  <dt>Shipping</dt>
+                  <dd className="text-[#333333]">{order.shipping > 0 ? money(order.shipping) : "Free"}</dd>
+                </div>
+              )}
+              {hasItems && order.tax > 0 && (
+                <div className="flex justify-between gap-4">
+                  <dt>Tax</dt>
+                  <dd className="text-[#333333]">{money(order.tax)}</dd>
                 </div>
               )}
               {hasItems && order.adjustments !== 0 && (
@@ -146,9 +171,6 @@ export default function OrderDetailView({ order, moneyFormat }) {
               </div>
             </dl>
           </Panel>
-
-          <AddressPanel title="Shipping address" address={order.shippingAddress} />
-          <AddressPanel title="Billing address" address={order.billingAddress} />
 
           <Panel title="Payment">
             {order.payments.length > 0 ? (

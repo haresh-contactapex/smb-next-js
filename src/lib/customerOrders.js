@@ -195,6 +195,11 @@ export async function getCustomerOrder(customerId, orderNumber) {
   const itemsSubtotal = items.reduce((sum, line) => sum + line.lineTotal, 0);
   const summary = toOrderSummary(row);
 
+  // The orders table keeps the actual breakdown taken at checkout (checkoutOrders.js); an order
+  // placed before that table had these columns falls back to the one combined "adjustments" row.
+  const toAmount = (value) => (value === null || value === undefined ? null : Number(value));
+  const hasBreakdown = row.subtotal_amount !== null && row.subtotal_amount !== undefined;
+
   return {
     ...summary,
     // Paid: cancelling it asks the store for a refund, which it arranges by hand.
@@ -204,10 +209,14 @@ export async function getCustomerOrder(customerId, orderNumber) {
     note: row.customer_note || "",
     updatedAt: new Date(row.updated_at).toISOString(),
     items,
-    // The orders table stores one total; when line items add up to less, the
-    // remainder is shipping, tax and any discount, shown as a single row.
     itemsSubtotal,
-    adjustments: items.length ? Math.round((summary.total - itemsSubtotal + Number.EPSILON) * 100) / 100 : 0,
+    discount: toAmount(row.discount_amount),
+    couponCode: row.coupon_code || null,
+    shipping: toAmount(row.shipping_amount),
+    tax: toAmount(row.tax_amount),
+    // The remainder between the items subtotal and the total, when the order has no price
+    // breakdown to show shipping/tax/discount separately.
+    adjustments: !hasBreakdown && items.length ? Math.round((summary.total - itemsSubtotal + Number.EPSILON) * 100) / 100 : 0,
     shippingAddress: toOrderAddress(addressRows.find((address) => address.id === row.shipping_address_id)),
     billingAddress: toOrderAddress(addressRows.find((address) => address.id === row.billing_address_id)),
     payments: paymentRows.map(toPayment),
