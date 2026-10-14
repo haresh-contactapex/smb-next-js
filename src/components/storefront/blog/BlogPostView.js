@@ -47,12 +47,12 @@ export default function BlogPostView({ post, origin = "" }) {
     <div className="w-full bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
 
-      {/* Breadcrumb band. Rounded top corners match the header's curve into the
-          announcement bar; matching top and bottom padding centers the trail in
-          the band (it's otherwise much shorter than the heading bands elsewhere
-          that use the same radius, which anchor a title above their breadcrumb
-          instead). */}
-      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] py-16 sm:py-24">
+      {/* Breadcrumb band, half the height of the heading bands elsewhere that use the
+          same rounded-corner curve (those anchor a title above their breadcrumb; this
+          is the trail alone). The bottom padding is taller than the top by exactly the
+          amount the white panel's negative margin pulls it up by (see below), so the
+          trail still sits centered once that overlap is accounted for. */}
+      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] pt-4 pb-12 sm:pt-6 sm:pb-[74px]">
         <Breadcrumb
           centered
           className="max-w-[1000px] text-[14px] sm:text-[15px]"
