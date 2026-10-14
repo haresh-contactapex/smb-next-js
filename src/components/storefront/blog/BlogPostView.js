@@ -31,8 +31,11 @@ export default function BlogPostView({ post, origin = "" }) {
     <div className="w-full bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
 
-      {/* Breadcrumb band */}
-      <div className="bg-[#faf7f2]">
+      {/* Breadcrumb band. Rounded top corners match the header's curve into the
+          announcement bar; extra bottom padding keeps the strip tall enough that
+          the curve doesn't swallow the whole band (it's otherwise much shorter
+          than the heading bands elsewhere that use the same radius). */}
+      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] pb-16 sm:pb-24">
         <Breadcrumb
           className="max-w-[1000px] text-[14px] sm:text-[15px]"
           items={[
@@ -44,66 +47,72 @@ export default function BlogPostView({ post, origin = "" }) {
         />
       </div>
 
-      <article className="mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14">
-        <header>
-          <h1 className="text-[28px] sm:text-[36px] font-normal leading-tight text-[#333333]">{post.title}</h1>
-          <p className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[#555555]">
-            {date && (
-              <span className="inline-flex items-center gap-1.5">
-                <StoreIcon name="calendar" className="h-4 w-4" />
-                <time dateTime={post.publishedOn}>{date}</time>
-              </span>
-            )}
-            {date && post.author && <span aria-hidden="true">|</span>}
-            {post.author && (
-              <span className="inline-flex items-center gap-1.5">
-                <StoreIcon name="user" className="h-4 w-4" />
-                By {post.author}
-              </span>
-            )}
-          </p>
-          <Link
-            href={blogCategoryPath(post.categorySlug)}
-            className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wide text-[#ef9822] hover:underline"
-          >
-            <StoreIcon name="tag" className="h-4 w-4" />
-            {post.category}
-          </Link>
-        </header>
-
-        {post.featuredImageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element -- a picture from the library or an upload, not optimizable by next/image
-          <img
-            src={post.featuredImageUrl}
-            alt={post.featuredImageAlt || post.title}
-            width={1200}
-            height={800}
-            fetchPriority="high"
-            className="mt-6 h-auto w-full rounded-md"
-          />
-        )}
-
-        {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
-        <div className="cms-content blog-body mt-8" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
-
-        {(post.tags.length > 0 || origin) && (
-          <div className="mt-10 flex flex-col gap-4 rounded border border-[#e5e7eb] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-            {post.tags.length > 0 ? (
-              <p className="flex items-start gap-2 text-[15px] text-[#555555]">
-                <StoreIcon name="tag" className="mt-1 h-4 w-4 shrink-0 text-[#333333]" filled />
-                <span>
-                  <span className="text-[#333333]">Tags:</span> {post.tags.join(", ")}
+      {/* The article rises up into the band with rounded top corners instead of the
+          band rounding its own bottom corners (see the CMS page template for why:
+          rounding the band itself puts the curve on the wrong side). The padding
+          cancels the negative margin so the article's own spacing is unchanged. */}
+      <div className="relative z-10 -mt-[32px] sm:-mt-[50px] pt-[32px] sm:pt-[50px] rounded-t-[32px] sm:rounded-t-[50px] bg-white">
+        <article className="mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14">
+          <header>
+            <h1 className="text-[28px] sm:text-[36px] font-normal leading-tight text-[#333333]">{post.title}</h1>
+            <p className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[14px] text-[#555555]">
+              {date && (
+                <span className="inline-flex items-center gap-1.5">
+                  <StoreIcon name="calendar" className="h-4 w-4" />
+                  <time dateTime={post.publishedOn}>{date}</time>
                 </span>
-              </p>
-            ) : (
-              <span />
-            )}
-            {origin && <BlogShare url={`${origin}${path}`} title={post.title} image={post.featuredImageUrl ? absolute(post.featuredImageUrl) : ""} />}
-          </div>
-        )}
+              )}
+              {date && post.author && <span aria-hidden="true">|</span>}
+              {post.author && (
+                <span className="inline-flex items-center gap-1.5">
+                  <StoreIcon name="user" className="h-4 w-4" />
+                  By {post.author}
+                </span>
+              )}
+            </p>
+            <Link
+              href={blogCategoryPath(post.categorySlug)}
+              className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wide text-[#ef9822] hover:underline"
+            >
+              <StoreIcon name="tag" className="h-4 w-4" />
+              {post.category}
+            </Link>
+          </header>
 
-        <BlogPostNav previous={post.previous} next={post.next} />
-      </article>
+          {post.featuredImageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- a picture from the library or an upload, not optimizable by next/image
+            <img
+              src={post.featuredImageUrl}
+              alt={post.featuredImageAlt || post.title}
+              width={1200}
+              height={800}
+              fetchPriority="high"
+              className="mt-6 h-auto w-full rounded-md"
+            />
+          )}
+
+          {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
+          <div className="cms-content blog-body mt-8" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
+
+          {(post.tags.length > 0 || origin) && (
+            <div className="mt-10 flex flex-col gap-4 rounded border border-[#e5e7eb] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              {post.tags.length > 0 ? (
+                <p className="flex items-start gap-2 text-[15px] text-[#555555]">
+                  <StoreIcon name="tag" className="mt-1 h-4 w-4 shrink-0 text-[#333333]" filled />
+                  <span>
+                    <span className="text-[#333333]">Tags:</span> {post.tags.join(", ")}
+                  </span>
+                </p>
+              ) : (
+                <span />
+              )}
+              {origin && <BlogShare url={`${origin}${path}`} title={post.title} image={post.featuredImageUrl ? absolute(post.featuredImageUrl) : ""} />}
+            </div>
+          )}
+
+          <BlogPostNav previous={post.previous} next={post.next} />
+        </article>
+      </div>
     </div>
   );
 }
