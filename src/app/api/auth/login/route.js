@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { findCustomerByEmail } from "@/lib/customers";
-import { verifyPassword } from "@/lib/auth/password";
+import { burnPasswordCheck, verifyPassword } from "@/lib/auth/password";
+import { isCustomerLocked, registerFailedCustomerLogin, resetCustomerLoginAttempts } from "@/lib/auth/customerLockout";
+import { clientIpOf, createRateLimiter } from "@/lib/rateLimit";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidEmail, maskEmail } from "@/components/auth/helpers";
@@ -13,9 +15,21 @@ import { OTP_TTL_MS } from "@/lib/auth/loginOtp";
 import { sendLoginOtpEmail } from "@/lib/email";
 
 const INVALID_CREDENTIALS_ERROR = "Incorrect email or password.";
+const LOCKED_ACCOUNT_ERROR = "Too many failed attempts. This account is temporarily locked — try again later.";
+
+// Per-instance, so it only slows a script on one server; the per-account lockout is the hard cap.
+const allowLoginAttempt = createRateLimiter({ limit: 20, windowMs: 15 * 60 * 1000 });
 
 export async function POST(request) {
   try {
+    const ip = clientIpOf(request);
+    if (ip && !allowLoginAttempt(ip)) {
+      return NextResponse.json(
+        { success: false, error: "Too many sign-in attempts. Please wait a few minutes and try again." },
+        { status: 429 }
+      );
+    }
+
     const maintenance = await checkMaintenanceMode();
     if (maintenance.active) {
       return NextResponse.json({ success: false, error: maintenance.message }, { status: 503 });
@@ -38,10 +52,23 @@ export async function POST(request) {
     }
 
     const customer = await findCustomerByEmail(email);
-    const passwordMatches = customer && (await verifyPassword(password, customer.password_hash));
+
+    if (customer && isCustomerLocked(customer)) {
+      return NextResponse.json({ success: false, error: LOCKED_ACCOUNT_ERROR }, { status: 423 });
+    }
+
+    const passwordMatches = customer
+      ? await verifyPassword(password, customer.password_hash)
+      : await burnPasswordCheck(password);
     if (!passwordMatches) {
+      if (customer) {
+        const settings = await getSecuritySettings().catch(() => null);
+        await registerFailedCustomerLogin(customer.id, settings?.maxLoginAttempts);
+      }
       return NextResponse.json({ success: false, error: INVALID_CREDENTIALS_ERROR }, { status: 401 });
     }
+
+    await resetCustomerLoginAttempts(customer);
 
     const rememberMe = Boolean(payload.rememberMe);
 

@@ -7,6 +7,13 @@
 // ever needs a hard cap.
 const MAX_TRACKED_KEYS = 5000;
 
+// The caller's address as set by the hosting proxy, or "" when there is none (local
+// dev), in which case callers should skip limiting rather than lump everyone together.
+export function clientIpOf(request) {
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
+  return forwarded || request.headers.get("x-real-ip") || "";
+}
+
 export function createRateLimiter({ limit, windowMs }) {
   const hits = new Map(); // key -> timestamps (ms) of recent attempts
 

@@ -6,7 +6,8 @@ import {
   registerFailedLogin,
   resetLoginAttempts,
 } from "@/lib/staff";
-import { verifyPassword } from "@/lib/auth/password";
+import { burnPasswordCheck, verifyPassword } from "@/lib/auth/password";
+import { clientIpOf, createRateLimiter } from "@/lib/rateLimit";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { isValidEmail, maskEmail } from "@/components/auth/helpers";
 import { getSecuritySettings } from "@/lib/securitySettings";
@@ -19,8 +20,19 @@ import { sendLoginOtpEmail } from "@/lib/email";
 const INVALID_CREDENTIALS_ERROR = "Incorrect email or password.";
 const LOCKED_ACCOUNT_ERROR = "Too many failed attempts. This account is temporarily locked — try again later.";
 
+// Per-instance, so it only slows a script on one server; the per-account lockout is the hard cap.
+const allowLoginAttempt = createRateLimiter({ limit: 20, windowMs: 15 * 60 * 1000 });
+
 export async function POST(request) {
   try {
+    const ip = clientIpOf(request);
+    if (ip && !allowLoginAttempt(ip)) {
+      return NextResponse.json(
+        { success: false, error: "Too many sign-in attempts. Please wait a few minutes and try again." },
+        { status: 429 }
+      );
+    }
+
     const payload = await request.json();
     const email = String(payload.email || "").trim();
     const password = String(payload.password || "");
@@ -57,7 +69,9 @@ export async function POST(request) {
     // the request (same fallback used throughout for settings reads).
     const settings = staffUser ? await getSecuritySettings().catch(() => null) : null;
 
-    const passwordMatches = staffUser && (await verifyPassword(password, staffUser.password_hash));
+    const passwordMatches = staffUser
+      ? await verifyPassword(password, staffUser.password_hash)
+      : await burnPasswordCheck(password);
     if (!passwordMatches) {
       await logAdminActivity({
         action: "auth.login_failed",

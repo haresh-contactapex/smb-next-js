@@ -20,7 +20,9 @@ CREATE TABLE IF NOT EXISTS customers (
     is_guest            BOOLEAN NOT NULL DEFAULT false,
     terms_accepted_at   TIMESTAMPTZ NULL,
     two_factor_enabled  BOOLEAN NOT NULL DEFAULT false,
-    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    failed_login_attempts SMALLINT NOT NULL DEFAULT 0,
+    locked_until        TIMESTAMPTZ NULL,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE customers IS 'The person an order is placed by; distinct from users (My Account schema), which models store admin/staff logins.';

@@ -35,3 +35,13 @@ export async function verifyPassword(plainPassword, passwordHash) {
   if (!passwordHash) return false;
   return bcrypt.compare(plainPassword, passwordHash);
 }
+
+let dummyHash;
+
+// Spends the same time as a real check so an unknown email can't be told apart from
+// a wrong password by how fast the response comes back.
+export async function burnPasswordCheck(plainPassword) {
+  dummyHash ||= hashPassword(randomInt(2 ** 31).toString(36));
+  await bcrypt.compare(plainPassword, await dummyHash);
+  return false;
+}

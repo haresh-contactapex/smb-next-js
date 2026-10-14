@@ -70,6 +70,17 @@ security) and `security_settings.require_customer_two_factor` (Settings →
 Security, applies to everyone and stops customers turning it off). Either one is
 enough.
 
+### Customer sign-in lockout (`customers.failed_login_attempts`, `customers.locked_until`)
+
+Added by `npm run db:migrate:customer-lockout` (`customer-login-lockout-only.sql`),
+the same columns the staff `users` table has. Consecutive wrong passwords are
+counted per customer; reaching Settings → Security's "Max Login Attempts Before
+Lockout" (10 when that is 0) locks the account for 15 minutes, and a correct
+password resets the counter. Until the migration is applied the login still
+works, just without lockout. `/api/auth/login` and `/api/admin-auth/login` also
+limit each IP to 20 attempts per 15 minutes, but that counter lives in the server
+process, so the per-account lockout is the real cap.
+
 ## Design notes
 
 - `customers` (identity, `email`, `password_hash`, the
