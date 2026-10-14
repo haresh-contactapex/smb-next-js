@@ -51,10 +51,9 @@ export default async function CmsContentPage({ params }) {
 
   return (
     <div className="w-full bg-white">
-      {/* Heading band: the title with the breadcrumb under it. Rounded top and bottom
-          corners match the curve the header and hero banner use elsewhere on the
-          storefront, reading as the white page background curving around the band. */}
-      <div className="bg-[#faf7f2] rounded-[32px] sm:rounded-[50px] px-4 pt-10 sm:pt-14 pb-2">
+      {/* Heading band: the title with the breadcrumb under it. The rounded top
+          corners match the curve the header uses into the announcement bar. */}
+      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] px-4 pt-10 sm:pt-14 pb-16 sm:pb-24">
         <h1
           className="mx-auto max-w-4xl text-center text-[30px] sm:text-[40px] font-normal text-[#333333] leading-tight"
           style={{ fontFamily: "var(--font-playfair), serif" }}
@@ -68,10 +67,18 @@ export default async function CmsContentPage({ params }) {
         />
       </div>
 
-      {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
-      <article id="cms-article" className="cms-content mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14" dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
-      {/* A page can hold a placeholder for an interactive part (the contact form); only those pages load the code for it. */}
-      {embeds}
+      {/* The content rises up into the band with rounded top corners instead of the
+          band rounding its own bottom corners: the same trick the hero banner uses
+          elsewhere, and the mirror image of the band rounding itself (which reads
+          backwards — the curve has to belong to the element coming up from below,
+          not the one it's rising into). The padding added here cancels the negative
+          margin so the article's own spacing underneath is unchanged. */}
+      <div className="relative z-10 -mt-[32px] sm:-mt-[50px] pt-[32px] sm:pt-[50px] rounded-t-[32px] sm:rounded-t-[50px] bg-white">
+        {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
+        <article id="cms-article" className="cms-content mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14" dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
+        {/* A page can hold a placeholder for an interactive part (the contact form); only those pages load the code for it. */}
+        {embeds}
+      </div>
     </div>
   );
 }
