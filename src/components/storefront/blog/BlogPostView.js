@@ -1,18 +1,34 @@
+"use client";
+
 import Link from "next/link";
 import Breadcrumb from "../Breadcrumb";
 import StoreIcon from "../icons";
 import BlogShare from "./BlogShare";
 import BlogPostNav from "./BlogPostNav";
+import BlogPostSkeleton from "./BlogPostSkeleton";
+import useBlogNavigation from "./useBlogNavigation";
 import { BLOG_INDEX_PATH, blogCategoryPath, blogPostPath, formatBlogDate } from "@/lib/blogRules";
 
-// A blog post as the storefront shows it: breadcrumb, title, date, author and category,
-// the featured picture, the body, the tags with share links, and links to the posts
-// either side. `post` is what getPublishedBlogPost returns. `origin` is the store's public
-// address (empty when unknown), which the share links and the article data need.
+/**
+ * A blog post as the storefront shows it: breadcrumb, title, date, author and category,
+ * the featured picture, the body, the tags with share links, and links to the posts
+ * either side. `post` is what getPublishedBlogPost returns. `origin` is the store's public
+ * address (empty when unknown), which the share links and the article data need.
+ *
+ * "Previous post" and "Next post" only change the URL's last segment, which Next.js
+ * re-renders in place without unmounting the page, so loading.js never gets a chance
+ * to show its fallback there — this owns a `useTransition` instead and swaps the
+ * whole post for a skeleton itself while the server renders the next one. The
+ * breadcrumb's and the category tag's links go to a different page (the blog index or
+ * a category listing), so Next's own loading.js already covers those.
+ */
 export default function BlogPostView({ post, origin = "" }) {
+  const { isPending, handleClick } = useBlogNavigation();
   const path = blogPostPath(post.categorySlug, post.slug);
   const date = formatBlogDate(post.publishedOn);
   const absolute = (value) => (origin && value.startsWith("/") ? `${origin}${value}` : value);
+
+  if (isPending) return <BlogPostSkeleton />;
 
   // Search engines read this to show the post as an article. `<` is escaped so the body can never close the script tag.
   const structuredData = JSON.stringify({
@@ -110,7 +126,7 @@ export default function BlogPostView({ post, origin = "" }) {
             </div>
           )}
 
-          <BlogPostNav previous={post.previous} next={post.next} />
+          <BlogPostNav previous={post.previous} next={post.next} onNavigate={handleClick} />
         </article>
       </div>
     </div>

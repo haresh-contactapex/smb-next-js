@@ -1,21 +1,13 @@
 "use client";
 
-import { useTransition } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import BlogCard from "./BlogCard";
 import BlogPagination from "./BlogPagination";
 import { BlogPostsBrowserSkeleton } from "./BlogListingSkeleton";
+import useBlogNavigation from "./useBlogNavigation";
 import { BLOG_INDEX_PATH, blogCategoryPath } from "@/lib/blogRules";
 
 const CHIP = "rounded-full border px-4 py-1.5 text-[14px] transition-colors";
-
-// A plain left click (no modifier key, not already handled) is taken over for a
-// client-side transition; a new-tab click, a middle click and the like are left to
-// the browser, exactly as a plain <Link> would.
-function isPlainClick(event) {
-  return !event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
-}
 
 /**
  * The category filter, the post grid and the page links: the part of the blog
@@ -27,18 +19,7 @@ function isPlainClick(event) {
  * (the same pattern DashboardContent.js uses for the dashboard's date range).
  */
 export default function BlogPostsBrowser({ categories, activeSlug, basePath, result }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  // Returns the onClick handler for a link to `href` (BlogPagination passes this as
-  // `onNavigate`, called once per link to make its own handler).
-  function handleClick(href) {
-    return (event) => {
-      if (!isPlainClick(event)) return;
-      event.preventDefault();
-      startTransition(() => router.push(href));
-    };
-  }
+  const { isPending, handleClick } = useBlogNavigation();
 
   if (isPending) {
     return <BlogPostsBrowserSkeleton cards={result.pageSize} categoryChips={categories.length > 1 ? categories.length + 1 : 0} />;
