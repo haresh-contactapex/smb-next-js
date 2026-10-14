@@ -6,6 +6,7 @@ import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { isValidEmail } from "@/components/auth/helpers";
 import { isEmailConfigured, sendPasswordResetEmail } from "@/lib/email";
+import { getTrustedOrigin } from "@/lib/siteUrl";
 
 // Tells the requester when no customer account matches the email, so they
 // aren't told a reset link was sent when nothing was. This does reveal which
@@ -32,6 +33,15 @@ export async function POST(request) {
       );
     }
 
+    const origin = getTrustedOrigin(request);
+    if (!origin) {
+      console.error("[forgot-password] SITE_URL is not set; refusing to build a reset link from the request host");
+      return NextResponse.json(
+        { success: false, error: "Password reset isn't available right now. Please try again later." },
+        { status: 503 }
+      );
+    }
+
     const customer = await findCustomerByEmail(email);
     if (!customer) {
       return NextResponse.json(
@@ -48,7 +58,7 @@ export async function POST(request) {
       expiresAt,
     });
 
-    const resetLink = `${new URL(request.url).origin}/reset-password?token=${rawToken}`;
+    const resetLink = `${origin}/reset-password?token=${rawToken}`;
 
     if (await isEmailConfigured()) {
       const sent = await sendPasswordResetEmail({ to: email, resetLink });
@@ -59,9 +69,11 @@ export async function POST(request) {
           { status: 502 }
         );
       }
-    } else {
+    } else if (process.env.NODE_ENV !== "production") {
       // No SMTP configured — log the link so the flow stays testable locally.
       console.log(`[forgot-password] reset link for ${email}: ${resetLink}`);
+    } else {
+      console.error("[forgot-password] email is not configured; no reset link was sent");
     }
 
     return NextResponse.json({ success: true });

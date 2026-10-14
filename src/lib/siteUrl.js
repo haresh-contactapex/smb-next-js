@@ -20,6 +20,20 @@ export async function getSiteOrigin() {
   }
 }
 
+// Origin for security-sensitive links (password resets). Never derived from the request's
+// Host header in production, since an attacker controls that header. Returns "" in
+// production when no trusted address is configured; callers must not send the link then.
+export function getTrustedOrigin(request) {
+  const configured = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
+  if (configured) return configured.replace(/\/+$/, "");
+
+  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercelHost) return `https://${vercelHost}`;
+
+  if (process.env.NODE_ENV !== "production") return new URL(request.url).origin;
+  return "";
+}
+
 // Whether the address is reachable from outside this machine. A product photo or a
 // link to localhost would be broken in the customer's inbox.
 export function isPublicOrigin(origin) {
