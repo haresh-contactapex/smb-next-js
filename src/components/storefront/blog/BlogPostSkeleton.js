@@ -13,9 +13,9 @@ export default function BlogPostSkeleton() {
     <div role="status" aria-busy="true" aria-live="polite" className="w-full bg-white">
       <span className="sr-only">Loading post…</span>
 
-      {/* Breadcrumb band */}
-      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] pb-16 sm:pb-24">
-        <div className="mx-auto max-w-[1000px] px-4 py-6 sm:px-8">
+      {/* Breadcrumb band, centered the same way the real one is */}
+      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] py-16 sm:py-24">
+        <div className="mx-auto flex max-w-[1000px] justify-center px-4 py-6 sm:px-8">
           <Bar className="h-4 w-56 max-w-full" />
         </div>
       </div>

@@ -48,11 +48,13 @@ export default function BlogPostView({ post, origin = "" }) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
 
       {/* Breadcrumb band. Rounded top corners match the header's curve into the
-          announcement bar; extra bottom padding keeps the strip tall enough that
-          the curve doesn't swallow the whole band (it's otherwise much shorter
-          than the heading bands elsewhere that use the same radius). */}
-      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] pb-16 sm:pb-24">
+          announcement bar; matching top and bottom padding centers the trail in
+          the band (it's otherwise much shorter than the heading bands elsewhere
+          that use the same radius, which anchor a title above their breadcrumb
+          instead). */}
+      <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] py-16 sm:py-24">
         <Breadcrumb
+          centered
           className="max-w-[1000px] text-[14px] sm:text-[15px]"
           items={[
             { label: "Home", href: "/" },
