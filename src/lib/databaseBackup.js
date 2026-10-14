@@ -8,6 +8,16 @@ import { sqlQuery } from "./db";
 
 const BATCH_ROWS = 500;
 
+// One-time reset links and sign-in codes: they expire within hours, a restore has no use
+// for them, and a stolen file would otherwise carry live account-takeover material. Their
+// tables are still created, just left empty.
+const SKIP_DATA_TABLES = new Set([
+  "password_reset_tokens",
+  "staff_password_reset_tokens",
+  "customer_login_otps",
+  "staff_login_otps",
+]);
+
 const ident = (name) => `"${String(name).replace(/"/g, '""')}"`;
 const qualified = (name) => `public.${ident(name)}`;
 
@@ -96,7 +106,7 @@ export async function* generateDatabaseBackup({ isCancelled = () => false } = {}
       return { count, columns, constraints, indexes };
     })
   );
-  const counts = meta.map((m) => m.count);
+  const counts = meta.map((m, t) => (SKIP_DATA_TABLES.has(tables[t]) ? 0 : m.count));
   const totalRows = counts.reduce((sum, n) => sum + n, 0);
   let bytes = 0;
   const chunk = (sql) => {

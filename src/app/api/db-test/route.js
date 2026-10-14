@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { sql } from '@/lib/db';
+import { publicErrorMessage } from "@/lib/publicError";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("system-maintenance", "view"));
@@ -12,7 +13,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data: result[0] });
   } catch (error) {
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: publicErrorMessage(error) },
       { status: 500 }
     );
   }

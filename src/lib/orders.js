@@ -3,6 +3,7 @@ import { formatCurrency } from "./currency";
 import { loadMoneyFormat } from "./moneyFormat";
 import { isUuid, optionalQuery } from "./accountError";
 import { loadOrderLineEngravings } from "./engraving";
+import { releaseCouponClaim } from "./couponClaims";
 
 const STATUS_COLORS = { Pending: "warning", Processing: "info", Completed: "success", Cancelled: "error" };
 const PAYMENT_COLORS = { Paid: "success", Unpaid: "warning", Refunded: "info", Failed: "error" };
@@ -302,6 +303,8 @@ export async function updateOrderStatus(id, { status, paymentStatus }) {
     WHERE id = ${id}
     RETURNING *
   `;
+  // An order cancelled before it was paid gives its coupon use back.
+  if (row && status === "Cancelled" && paymentStatus !== "Paid") await releaseCouponClaim(row.id);
   return row ? mapOrder(row, 0, await loadMoneyFormat()) : null;
 }
 
@@ -323,6 +326,9 @@ export async function cancelOrders(ids) {
     WHERE id = ANY(${ids}::uuid[]) AND status = ANY(${BULK_CANCELLABLE_STATUSES}::text[])
     RETURNING id, order_number, payment_status
   `;
+  for (const row of rows) {
+    if (row.payment_status !== "Paid") await releaseCouponClaim(row.id);
+  }
   return rows.map((row) => ({ id: row.id, orderNumber: row.order_number, paymentStatus: row.payment_status }));
 }
 

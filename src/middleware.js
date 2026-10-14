@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyJwt } from "@/lib/auth/jwt";
 import { CUSTOMER_SESSION_COOKIE, CUSTOMER_SESSION_SCOPE, STAFF_SESSION_COOKIE, STAFF_SESSION_SCOPE } from "@/lib/auth/constants";
-import { getStaffSecurityPolicy, isSessionTimedOut, isPasswordExpired } from "@/lib/auth/sessionPolicy";
+import { getStaffSecurityPolicy, isSessionTimedOut, isPasswordExpired, isTokenRevoked } from "@/lib/auth/sessionPolicy";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
 import { getAdminRoleForUser } from "@/lib/adminRoles";
 import { roleHasPermission } from "@/lib/permissions";
@@ -90,6 +90,8 @@ export async function middleware(request) {
         if (isSessionTimedOut(payload.iat, policy.sessionTimeoutMinutes)) {
           isAuthenticated = false;
           timedOut = true;
+        } else if (isTokenRevoked(payload.iat, policy.passwordChangedAt, policy.sessionsValidAfter)) {
+          isAuthenticated = false;
         } else if (isPasswordExpired(policy.passwordChangedAt, policy.passwordExpiryDays)) {
           passwordExpired = true;
         }

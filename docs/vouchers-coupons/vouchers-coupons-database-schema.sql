@@ -68,11 +68,17 @@ CREATE TABLE coupon_redemptions (
     order_id         UUID NOT NULL REFERENCES orders (id) ON DELETE CASCADE,
     customer_id      UUID NULL REFERENCES customers (id) ON DELETE SET NULL,
     discount_amount  DECIMAL(12, 2) NOT NULL,
+    one_per_customer BOOLEAN NOT NULL DEFAULT false,
     redeemed_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 COMMENT ON TABLE coupon_redemptions IS 'One row per successful use of a coupon on an order. Enforces usage_limit / one_per_customer at checkout and audits discount_amount granted.';
 COMMENT ON COLUMN coupon_redemptions.discount_amount IS 'Currency amount actually deducted from that order at redemption time.';
 
+COMMENT ON COLUMN coupon_redemptions.one_per_customer IS 'Copy of coupons.one_per_customer at redemption time; only rows with it set take part in the per-customer unique index below.';
+
+CREATE UNIQUE INDEX coupon_redemptions_order_coupon_key ON coupon_redemptions (order_id, coupon_id);
+CREATE UNIQUE INDEX coupon_redemptions_one_per_customer_key
+    ON coupon_redemptions (coupon_id, customer_id) WHERE one_per_customer AND customer_id IS NOT NULL;
 CREATE INDEX coupon_redemptions_coupon_id_idx ON coupon_redemptions (coupon_id);
 CREATE INDEX coupon_redemptions_coupon_id_customer_id_idx ON coupon_redemptions (coupon_id, customer_id);
 

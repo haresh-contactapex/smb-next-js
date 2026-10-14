@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS customers (
     two_factor_enabled  BOOLEAN NOT NULL DEFAULT false,
     failed_login_attempts SMALLINT NOT NULL DEFAULT 0,
     locked_until        TIMESTAMPTZ NULL,
+    sessions_valid_after TIMESTAMPTZ NULL,
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );

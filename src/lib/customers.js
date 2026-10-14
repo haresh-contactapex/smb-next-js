@@ -1,5 +1,6 @@
 import { sql } from "./db";
 import { isValidUsPhone } from "./phone";
+import { revokeCustomerSessions } from "./auth/sessionRevocation";
 
 // Never include password_hash in anything handed back to a route handler's
 // JSON response or a JWT payload.
@@ -47,6 +48,14 @@ export async function findCustomerByEmail(email) {
 export async function getCustomerById(id) {
   const [row] = await sql`SELECT * FROM customers WHERE id = ${id} AND is_guest = false`;
   return toPublicCustomer(row);
+}
+
+// The customer plus the moment before which their sessions no longer count (null until
+// the sessions_valid_after column exists or the first password change/logout sets it).
+export async function getCustomerForSession(id) {
+  const [row] = await sql`SELECT * FROM customers WHERE id = ${id} AND is_guest = false`;
+  if (!row) return null;
+  return { customer: toPublicCustomer(row), sessionsValidAfter: row.sessions_valid_after || null };
 }
 
 // Email is unique across every customer row (guest or registered), compared
@@ -101,6 +110,7 @@ export async function createCustomer({ firstName, lastName, email, phone, passwo
 
 export async function updateCustomerPassword(id, passwordHash) {
   await sql`UPDATE customers SET password_hash = ${passwordHash}, updated_at = now() WHERE id = ${id}`;
+  await revokeCustomerSessions(id);
 }
 
 export { toPublicCustomer };

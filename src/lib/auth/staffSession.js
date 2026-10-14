@@ -3,7 +3,7 @@ import { setAuthCookie, getAuthCookie, clearAuthCookie } from "./cookies";
 import { STAFF_SESSION_COOKIE, STAFF_SESSION_SCOPE } from "./constants";
 import { getStaffById } from "../staff";
 import { getSecuritySettings } from "../securitySettings";
-import { getStaffSecurityPolicy, isSessionTimedOut } from "./sessionPolicy";
+import { getStaffSecurityPolicy, isSessionTimedOut, isTokenRevoked } from "./sessionPolicy";
 
 // Fallback TTL used only when Settings -> Security's session timeout can't be
 // read (e.g. the table isn't migrated yet) — never blocks a login.
@@ -32,16 +32,25 @@ export async function getCurrentStaffUser() {
 
   // Re-checked against the *current* setting (not just the token's own
   // expiry) so lowering Session Timeout logs an already-open session out
-  // without waiting for a fresh login. Middleware protects page navigation;
-  // this covers API routes and server components, which middleware doesn't.
+  // without waiting for a fresh login, and a token issued before the last
+  // password change or logout stops working. Middleware protects page
+  // navigation; this covers API routes and server components, which
+  // middleware doesn't.
+  let rejected = false;
   try {
     const policy = await getStaffSecurityPolicy(payload.sub);
-    if (policy && isSessionTimedOut(payload.iat, policy.sessionTimeoutMinutes)) {
-      await clearStaffSession();
-      return null;
-    }
+    rejected = Boolean(
+      policy &&
+        (isSessionTimedOut(payload.iat, policy.sessionTimeoutMinutes) ||
+          isTokenRevoked(payload.iat, policy.passwordChangedAt, policy.sessionsValidAfter))
+    );
   } catch (error) {
     console.error("getCurrentStaffUser: failed to check session timeout", error);
+  }
+  if (rejected) {
+    // Server components can't change cookies; the token is refused either way.
+    await clearStaffSession().catch(() => {});
+    return null;
   }
 
   try {

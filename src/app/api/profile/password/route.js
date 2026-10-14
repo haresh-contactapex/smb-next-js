@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
-import { getStaffPasswordHash, updateStaffPassword } from "@/lib/staff";
-import { verifyPassword, hashPassword } from "@/lib/auth/password";
+import { createStaffSession, getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { updateStaffPassword } from "@/lib/staff";
+import { hashPassword } from "@/lib/auth/password";
+import { checkStaffCurrentPassword } from "@/lib/auth/staffReauth";
 import { getPasswordErrorMessage, isValidPassword } from "@/components/auth/helpers";
 
 export async function PUT(request) {
@@ -30,14 +31,16 @@ export async function PUT(request) {
       );
     }
 
-    const currentHash = await getStaffPasswordHash(staffUser.id);
-    const matches = await verifyPassword(currentPassword, currentHash);
-    if (!matches) {
-      return NextResponse.json({ success: false, error: "Current password is incorrect." }, { status: 401 });
+    const rejection = await checkStaffCurrentPassword(staffUser.id, currentPassword);
+    if (rejection) {
+      return NextResponse.json({ success: false, error: rejection.error, field: rejection.field }, { status: rejection.status });
     }
 
     const newHash = await hashPassword(newPassword);
     await updateStaffPassword(staffUser.id, newHash);
+    // The change signs out every session issued before it (including this one), so give this
+    // device a fresh one; any other device has to sign in again with the new password.
+    await createStaffSession(staffUser.id);
 
     return NextResponse.json({ success: true });
   } catch (error) {

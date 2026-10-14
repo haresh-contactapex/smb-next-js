@@ -44,7 +44,9 @@ export const PROFILE_FIELD_ORDER = [
 ];
 
 // Returns { valid, errors: { [field]: message }, firstErrorField, message }.
-export function validateProfileForm(profile) {
+// `requireCurrentPassword` is set when the email or two-factor setting is being changed, which
+// needs the current password even if the password itself is staying the same.
+export function validateProfileForm(profile, { requireCurrentPassword = false } = {}) {
   const errors = {};
 
   if (!profile.firstName.trim()) errors.firstName = "Enter your first name.";
@@ -52,7 +54,10 @@ export function validateProfileForm(profile) {
   if (!isValidEmail(profile.email)) errors.email = "Enter a valid email address.";
   if (!isValidUsPhone(profile.phone)) errors.phone = "Enter a valid 10-digit US phone number.";
 
-  const changingPassword = Boolean(profile.currentPassword || profile.newPassword || profile.confirmPassword);
+  const changingPassword = Boolean(profile.newPassword || profile.confirmPassword);
+  if (requireCurrentPassword && !profile.currentPassword) {
+    errors.currentPassword = "Enter your current password to change your email address or two-factor setting.";
+  }
   if (changingPassword) {
     if (!profile.currentPassword) errors.currentPassword = "Enter your current password.";
     if (!isValidPassword(profile.newPassword)) {

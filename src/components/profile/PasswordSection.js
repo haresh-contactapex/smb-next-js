@@ -32,7 +32,10 @@ export default function PasswordSection({
       <h2 className="text-sm font-bold text-slate-800 dark:text-white mb-1 flex items-center gap-1.5">
         <Icon name="shield" className="w-4 h-4 text-slate-400" /> Password
       </h2>
-      <p className="text-xs text-slate-400 mb-4">Leave these fields blank to keep your current password.</p>
+      <p className="text-xs text-slate-400 mb-4">
+        Leave these fields blank to keep your current password. Changing your email address or two-factor setting also
+        needs your current password.
+      </p>
 
       <div className="space-y-4">
         <PasswordField

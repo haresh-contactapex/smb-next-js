@@ -15,8 +15,15 @@ import Toast from "@/components/add-product/Toast";
 // also drives the progress-bar animation for both success and error messages.
 const TOAST_AUTO_DISMISS_MS = 10000;
 
+// What is stored for the two settings that need the current password to change.
+const savedSecurityOf = (state) => ({
+  email: String(state.email || "").trim().toLowerCase(),
+  twoFactorEnabled: Boolean(state.twoFactorEnabled),
+});
+
 export default function ProfileForm() {
   const [profile, setProfile] = useState(EMPTY_PROFILE);
+  const [saved, setSaved] = useState(() => savedSecurityOf(EMPTY_PROFILE));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
@@ -63,7 +70,9 @@ export default function ProfileForm() {
       const res = await fetch("/api/profile");
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Failed to load profile");
-      setProfile(toFormState(json.data));
+      const loaded = toFormState(json.data);
+      setProfile(loaded);
+      setSaved(savedSecurityOf(loaded));
     } catch (error) {
       showToast(error.message, "error");
     } finally {
@@ -98,7 +107,9 @@ export default function ProfileForm() {
   }
 
   async function handleSave() {
-    const result = validateProfileForm(profile);
+    const requireCurrentPassword =
+      profile.email.trim().toLowerCase() !== saved.email || Boolean(profile.twoFactorEnabled) !== saved.twoFactorEnabled;
+    const result = validateProfileForm(profile, { requireCurrentPassword });
     setErrors(result.errors);
 
     if (!result.valid) {
@@ -122,6 +133,7 @@ export default function ProfileForm() {
           language: profile.language,
           timezone: profile.timezone,
           twoFactorEnabled: profile.twoFactorEnabled,
+          currentPassword: profile.currentPassword,
         }),
       });
       const json = await res.json();
@@ -143,7 +155,9 @@ export default function ProfileForm() {
         }
       }
 
-      setProfile(toFormState(json.data));
+      const next = toFormState(json.data);
+      setProfile(next);
+      setSaved(savedSecurityOf(next));
       if (profile.newPassword) setPasswordExpiredNotice(false);
       showToast("Profile saved");
     } catch (error) {

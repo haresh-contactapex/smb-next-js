@@ -1,6 +1,7 @@
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
-import { settingsPermission } from "@/lib/permissions";
+import { BACKUP_PERMISSION } from "@/lib/permissions";
+import { publicErrorMessage } from "@/lib/publicError";
 import { generateDatabaseBackup } from "@/lib/databaseBackup";
 
 export const dynamic = "force-dynamic";
@@ -11,10 +12,21 @@ export const maxDuration = 60;
 // assemble the .sql file in the browser. Nothing is written to the server's
 // disk — the file lands in the admin's browser download folder.
 export async function POST() {
-  // The dump contains every table (customers, password hashes, credentials),
-  // so it needs the same permission as changing these settings.
-  const auth = await requireStaffPermission(settingsPermission("system-maintenance", "edit"));
+  // The dump contains every table (customers, password hashes, credentials), so it has its
+  // own permission, held by full-access roles and granted to others deliberately.
+  const auth = await requireStaffPermission(BACKUP_PERMISSION);
   if (!auth.ok) return permissionDeniedResponse(auth);
+
+  // Logged before any data is sent: a download that is cut short still exposed what was streamed.
+  await logAdminActivity({
+    actor: auth.user,
+    action: "database.backup_started",
+    entityType: "system",
+    entityId: "database",
+    title: "Database backup started",
+    description: `${auth.user.firstName} ${auth.user.lastName} started a database backup download.`,
+    severity: "warning",
+  });
 
   const encoder = new TextEncoder();
   let cancelled = false;
@@ -41,7 +53,7 @@ export async function POST() {
         }
       } catch (error) {
         console.error("database backup failed", error);
-        if (!cancelled) send({ type: "error", message: error.message || "Backup failed" });
+        if (!cancelled) send({ type: "error", message: publicErrorMessage(error) || "Backup failed" });
       } finally {
         if (!cancelled) controller.close();
       }

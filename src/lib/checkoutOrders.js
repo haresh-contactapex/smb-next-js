@@ -11,6 +11,7 @@ import { getOrderConfirmation } from "./orders";
 import { CheckoutError, countryCode, priceCheckout } from "./checkoutPricing";
 import { cancelPaymentIntent, createPaymentIntent, loadStripeConfig, retrievePaymentIntent } from "./stripe";
 import { sendNewOrderAlert, sendOrderConfirmation, sendOrderStatusEmail } from "./orderEmails";
+import { releaseStaleCouponClaims } from "./couponClaims";
 
 // Placing an order and recording what Stripe says about its payment.
 //
@@ -37,9 +38,32 @@ function isMissingTable(error) {
   return error?.code === "42P01";
 }
 
+// Same shape the checkout page already handles for a code that stopped being valid: it drops the
+// code and shows the message.
+function couponUnavailableError(priced, reason) {
+  return new CheckoutError(`${reason} The discount code was removed from your order.`, 409, {
+    reason: "coupon_invalid",
+    details: { couponCode: priced.couponCode },
+  });
+}
+
+// Frees coupon uses held by abandoned card orders (see releaseStaleCouponClaims) and cancels
+// their still-open Stripe payments so they can't be paid afterwards. Best effort.
+async function freeStaleCouponClaims(priced, customer) {
+  if (!priced.couponCode) return;
+  const intentIds = await releaseStaleCouponClaims({ customerId: customer?.id || null, code: priced.couponCode });
+  if (intentIds.length === 0) return;
+  const stripe = await loadStripeConfig().catch(() => null);
+  if (!stripe?.hasKeys) return;
+  await Promise.all(intentIds.map((id) => cancelPaymentIntent(stripe.secretKey, id).catch(() => {})));
+}
+
 // The next order number: the store's prefix and the next free number after the
 // highest one used so far (never below the configured starting number).
 async function insertOrder({ orderId, priced, customer, provider = "stripe", intentId = null }) {
+  // Until docs/vouchers-coupons/coupon-redemptions-only.sql is applied the use is still counted
+  // (coupons.usage_count) but not recorded per customer or order.
+  let recordRedemption = true;
   const settings = await getOrdersSettings();
   const prefix = settings.orderNumberPrefix || "";
   const startingNumber = Number(settings.startingOrderNumber) || 10000;
@@ -110,6 +134,34 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
                 RETURNING order_number
               `
         );
+        // Claims one use of the coupon in the same transaction as the order, so the order and the
+        // use stand or fall together and concurrent checkouts can't both take the last use. When
+        // no use is left the claim updates nothing and the division fails, rolling everything back.
+        if (priced.couponCode) {
+          statements.push(
+            recordRedemption
+              ? tx`
+                  WITH claim AS (
+                    UPDATE coupons SET usage_count = usage_count + 1, updated_at = now()
+                    WHERE code = ${priced.couponCode} AND (usage_limit IS NULL OR usage_count < usage_limit)
+                    RETURNING id, one_per_customer
+                  ), recorded AS (
+                    INSERT INTO coupon_redemptions (coupon_id, order_id, customer_id, discount_amount, one_per_customer)
+                    SELECT id, ${orderId}::uuid, ${customer?.id || guestId}::uuid, ${priced.discount}::numeric, one_per_customer FROM claim
+                    RETURNING 1
+                  )
+                  SELECT 1 / (SELECT count(*) FROM claim) AS claimed
+                `
+              : tx`
+                  WITH claim AS (
+                    UPDATE coupons SET usage_count = usage_count + 1, updated_at = now()
+                    WHERE code = ${priced.couponCode} AND (usage_limit IS NULL OR usage_count < usage_limit)
+                    RETURNING id
+                  )
+                  SELECT 1 / (SELECT count(*) FROM claim) AS claimed
+                `
+          );
+        }
         for (const line of lines) {
           // A line the customer engraved also records what they asked for (already checked and
           // cleaned by checkoutPricing.js; the font name is the store's own, not the request's).
@@ -143,6 +195,17 @@ async function insertOrder({ orderId, priced, customer, provider = "stripe", int
     } catch (error) {
       // Two checkouts picked the same number at once: nothing was written, so try again.
       if (isOrderNumberCollision(error) && attempt < MAX_ORDER_NUMBER_ATTEMPTS) continue;
+      // The coupon's table hasn't been created yet: place the order with the simple claim instead.
+      if (recordRedemption && error?.code === "42P01" && /coupon_redemptions/.test(error.message || "")) {
+        recordRedemption = false;
+        continue;
+      }
+      // The last use of the coupon went to someone else a moment ago (nothing was written).
+      if (error?.code === "22012") throw couponUnavailableError(priced, "That discount code has reached its usage limit.");
+      // A one-per-customer code this customer already used on another order.
+      if (error?.code === "23505" && /coupon_redemptions_one_per_customer_key/.test(`${error.constraint || ""} ${error.message || ""}`)) {
+        throw couponUnavailableError(priced, "You've already used that discount code.");
+      }
       // Another guest checkout took this email a moment ago: nothing was written.
       if (isCustomerEmailCollision(error)) throw emailInUseError({ isGuest: true });
       if (isMissingTable(error)) console.error("Order tables are missing. Run `npm run db:migrate:order-details`.", error.message);
@@ -208,6 +271,7 @@ export async function placeCodOrder(input, customer) {
   const orderId = randomUUID();
   let orderNumber;
   try {
+    await freeStaleCouponClaims(priced, customer);
     orderNumber = await insertOrder({ orderId, priced, customer, provider: "cod" });
   } catch (error) {
     if (error instanceof CheckoutError) throw error;
@@ -277,6 +341,7 @@ export async function startCardPayment(input, customer) {
   }
 
   try {
+    await freeStaleCouponClaims(priced, customer);
     const orderNumber = await insertOrder({ orderId, priced, customer, intentId: intent.id });
     return { orderNumber, clientSecret: intent.client_secret, amount: priced.total, currency: priced.currency };
   } catch (error) {

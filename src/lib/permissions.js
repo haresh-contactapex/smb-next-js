@@ -45,6 +45,7 @@ export const ACTIONS = {
   refund: { label: "Refund", noun: "singular", danger: true },
   approve: { label: "Approve", noun: "plural" },
   publish: { label: "Publish", noun: "singular" },
+  backup: { label: "Download Database Backup", danger: true },
   manage_roles: { label: "Manage Roles", danger: true },
   manage_permissions: { label: "Manage Permissions", danger: true },
 };
@@ -127,6 +128,17 @@ export const KNOWN_MODULES = {
   },
 };
 
+// The database backup holds every customer, every password hash and the stored gateway and
+// email credentials, so it is its own permission rather than part of editing a settings page.
+KNOWN_MODULES.system = {
+  label: "System",
+  singular: "System",
+  plural: "System",
+  actions: ["backup"],
+  alwaysInclude: true,
+};
+
+export const BACKUP_PERMISSION = "system.backup";
 export const MANAGE_ROLES_PERMISSION = "users.manage_roles";
 export const MANAGE_PERMISSIONS_PERMISSION = "users.manage_permissions";
 

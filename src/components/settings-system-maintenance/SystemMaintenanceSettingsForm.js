@@ -19,7 +19,7 @@ import {
   validateSystemMaintenanceSettingsForm,
 } from "./helpers";
 
-export default function SystemMaintenanceSettingsForm() {
+export default function SystemMaintenanceSettingsForm({ canBackup = false }) {
   const [settings, setSettings] = useState(DEFAULT_SYSTEM_MAINTENANCE_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -251,7 +251,8 @@ export default function SystemMaintenanceSettingsForm() {
               <button
                 type="button"
                 onClick={handleBackUpNow}
-                disabled={backup.running}
+                disabled={backup.running || !canBackup}
+                title={canBackup ? undefined : "Your role doesn't include the Download Database Backup permission."}
                 className="px-4 h-9 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {backup.running ? `Backing up… ${backup.percent}%` : "Back Up Now"}

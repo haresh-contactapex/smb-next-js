@@ -4,6 +4,7 @@ import { toPublicCustomer, setCustomerTwoFactor } from "./customers";
 import { getSecuritySettings } from "./securitySettings";
 import { hashPassword, verifyPassword } from "./auth/password";
 import { createRateLimiter } from "./rateLimit";
+import { revokeCustomerSessions } from "./auth/sessionRevocation";
 import { isValidPassword, isValidEmail } from "@/components/auth/helpers";
 import { formatUsPhone, isValidUsPhone } from "./phone";
 
@@ -90,6 +91,8 @@ export async function changeCustomerPassword(id, body) {
   }
 
   await sql`UPDATE customers SET password_hash = ${await hashPassword(newPassword)}, updated_at = now() WHERE id = ${id}`;
+  // Every other signed-in device is signed out; the route gives this one a fresh session.
+  await revokeCustomerSessions(id);
 }
 
 // Turns the emailed sign-in code on or off for this customer. Both directions

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
-import { getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { createStaffSession, getCurrentStaffUser } from "@/lib/auth/staffSession";
+import { checkStaffCurrentPassword } from "@/lib/auth/staffReauth";
+import { revokeStaffSessions } from "@/lib/auth/sessionRevocation";
 import { updateStaffProfile } from "@/lib/staff";
 import { isValidEmail } from "@/components/auth/helpers";
 import { isValidUsPhone } from "@/lib/phone";
@@ -39,6 +41,20 @@ export async function PUT(request) {
       );
     }
 
+    // The email decides where reset links go and two-factor is the second lock on the account,
+    // so changing either needs the current password: a stolen session cookie alone must not be
+    // enough to take the account over for good.
+    const twoFactorEnabled = Boolean(payload.twoFactorEnabled);
+    const emailChanged = email.toLowerCase() !== String(staffUser.email || "").toLowerCase();
+    const twoFactorChanged = twoFactorEnabled !== Boolean(staffUser.twoFactorEnabled);
+    const sensitiveChange = emailChanged || twoFactorChanged;
+    if (sensitiveChange) {
+      const rejection = await checkStaffCurrentPassword(staffUser.id, payload.currentPassword);
+      if (rejection) {
+        return NextResponse.json({ success: false, error: rejection.error, field: rejection.field }, { status: rejection.status });
+      }
+    }
+
     const updated = await updateStaffProfile(staffUser.id, {
       firstName,
       lastName,
@@ -48,8 +64,14 @@ export async function PUT(request) {
       avatarUrl: payload.avatarUrl || null,
       language: payload.language || "en",
       timezone: payload.timezone || "UTC+00:00",
-      twoFactorEnabled: Boolean(payload.twoFactorEnabled),
+      twoFactorEnabled,
     });
+
+    if (sensitiveChange) {
+      // Any other session (a stolen cookie, an old browser) is signed out; this one gets a fresh token.
+      await revokeStaffSessions(staffUser.id);
+      await createStaffSession(staffUser.id);
+    }
 
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {

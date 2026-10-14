@@ -65,10 +65,16 @@ enforceable if individual redemptions are recorded somewhere.
 | `order_id`         | `UUID`          | NOT NULL, FK → `orders.id` ON DELETE CASCADE                   | Orders module — see Design notes                                |
 | `customer_id`      | `UUID`          | NULL, FK → `customers.id` ON DELETE SET NULL                   | Customer/account module — see Design notes                     |
 | `discount_amount`  | `DECIMAL(12,2)` | NOT NULL                                                       | ₹ actually deducted from that order at redemption time          |
+| `one_per_customer` | `BOOLEAN`       | NOT NULL, DEFAULT `false`                                      | Copy of `coupons.one_per_customer`; rows with it set share the unique index below |
 | `redeemed_at`      | `TIMESTAMPTZ`   | NOT NULL, DEFAULT `now()`                                      |                                                                  |
 
-Indexes: `INDEX (coupon_id)`, `INDEX (coupon_id, customer_id)` (used to check
-`one_per_customer` before accepting a new redemption).
+Indexes: `UNIQUE (order_id, coupon_id)`, `INDEX (coupon_id)`, `INDEX (coupon_id, customer_id)`, and the
+partial `UNIQUE (coupon_id, customer_id) WHERE one_per_customer AND customer_id IS NOT NULL`, which is what
+stops a one-per-customer code being used twice, even by two orders placed at the same moment.
+
+Created by `npm run db:migrate:coupon-redemptions` (`coupon-redemptions-only.sql`), which
+`coupons-table-only.sql` does not create. Until it is applied checkout still counts uses in
+`coupons.usage_count` but records nothing per customer.
 
 ### `coupon_settings`
 
@@ -106,12 +112,12 @@ Coupons page.
   `coupon_redemptions` row, and can be reconciled against
   `SELECT COUNT(*) FROM coupon_redemptions WHERE coupon_id = …` if it ever
   drifts.
-- `one_per_customer` cannot be enforced with a single blanket `UNIQUE`
-  constraint on `coupon_redemptions`, since the flag is per-coupon (some
-  coupons explicitly allow repeat use). Enforcement is an application-level
-  check — look up existing rows in `coupon_redemptions` for
-  `(coupon_id, customer_id)` before accepting a new redemption — backed by
-  the `INDEX (coupon_id, customer_id)` above.
+- `one_per_customer` cannot be a blanket `UNIQUE` constraint, since the flag is per-coupon, so each
+  redemption row carries a copy of the flag and a partial unique index covers only the rows where it is set.
+- Checkout claims a use inside the order's own transaction (`src/lib/checkoutOrders.js`): `usage_count` is
+  incremented only while it is below `usage_limit` and the `coupon_redemptions` row is inserted; if no use is
+  left the order is rolled back. Cancelling an unpaid order releases the use (`src/lib/couponClaims.js`), and
+  a card order left unpaid for a day, or superseded by the same customer's next attempt, is released too.
 - `orders` and `customers` are referenced by `coupon_redemptions` but not
   defined in this doc; they belong to modules not yet formalized in `docs/`.
   A real migration would add those FKs once those tables exist.

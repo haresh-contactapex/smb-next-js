@@ -8,6 +8,7 @@ import { sendOrderStatusEmail, sendRefundRequestAlert } from "./orderEmails";
 import { getWishlistProducts } from "./wishlist";
 import { getProductEngraving, loadOrderLineEngravings } from "./engraving";
 import { validateEngravingText } from "./engravingRules";
+import { releaseCouponClaim } from "./couponClaims";
 
 // Server side of the account's order history (/account/orders). The customer
 // only ever sees their own orders: every query filters on customer_id, and an
@@ -252,7 +253,10 @@ export async function cancelCustomerOrder(customer, orderNumber) {
   if (!claimed) throw new AccountError("This order has just changed. Please refresh the page and try again.", 409);
 
   const wasPaid = order.payment_status === "Paid";
-  if (!wasPaid) await closeOpenCardPayment(order);
+  if (!wasPaid) {
+    await closeOpenCardPayment(order);
+    await releaseCouponClaim(order.id);
+  }
 
   const refundText = wasPaid ? `. It was paid, so ${formatCurrency(order.total_amount, order.currency, await loadMoneyFormat())} needs to be refunded to the customer through the payment gateway` : "";
   await logAdminActivity({
