@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { WishlistError } from "@/lib/wishlist";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
 
@@ -8,7 +9,7 @@ export const ok = (data) => NextResponse.json({ success: true, data });
 // logged and reported generically.
 export function failure(error, fallbackMessage) {
   if (error instanceof WishlistError) {
-    return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
   }
   console.error("Wishlist request failed", error);
   return NextResponse.json({ success: false, error: fallbackMessage }, { status: 500 });

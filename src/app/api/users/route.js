@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { listStaffUsers, createStaffUser, deleteStaffUsers, StaffUserError } from "@/lib/staffUsers";
 
 const MAX_BULK_DELETE = 500;
 import { logAdminActivity } from "@/lib/notifications";
+import { getTrustedOrigin } from "@/lib/siteUrl";
 
 function errorResponse(error) {
   if (error instanceof StaffUserError) {
-    return NextResponse.json({ success: false, error: error.message, field: error.field }, { status: error.status });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field }, { status: error.status });
   }
   console.error("Users API error", error);
   return NextResponse.json({ success: false, error: "Something went wrong. Try again." }, { status: 500 });
@@ -36,7 +38,7 @@ export async function POST(request) {
   try {
     const payload = await request.json().catch(() => null);
     if (!payload) return NextResponse.json({ success: false, error: "Invalid request body." }, { status: 400 });
-    const { user, welcomeEmailSent } = await createStaffUser(payload, auth.role, { origin: new URL(request.url).origin });
+    const { user, welcomeEmailSent } = await createStaffUser(payload, auth.role, { origin: getTrustedOrigin(request) });
     await logAdminActivity({
       actor: auth.user,
       action: "user.created",

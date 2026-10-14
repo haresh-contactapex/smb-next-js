@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { getStaffUserById, updateStaffUser, deleteStaffUser, StaffUserError } from "@/lib/staffUsers";
 import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof StaffUserError) {
-    return NextResponse.json({ success: false, error: error.message, field: error.field }, { status: error.status });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field }, { status: error.status });
   }
   console.error("Users API error", error);
   return NextResponse.json({ success: false, error: "Something went wrong. Try again." }, { status: 500 });

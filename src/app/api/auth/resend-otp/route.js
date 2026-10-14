@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getCustomerTwoFactorChallenge } from "@/lib/auth/customer2faChallenge";
 import { checkCustomerOtpRateLimit, issueCustomerLoginOtp } from "@/lib/auth/customerLoginOtp";
 import { OTP_TTL_MS } from "@/lib/auth/loginOtp";
@@ -55,6 +56,6 @@ export async function POST() {
 
     return NextResponse.json({ success: true, data: { expiresInSeconds: OTP_TTL_MS / 1000 } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

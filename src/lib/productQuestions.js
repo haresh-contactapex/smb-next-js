@@ -60,7 +60,7 @@ export async function submitProductQuestion({ payload, clientKey, origin }) {
   const product = {
     title: found.title,
     sku: found.sku || "",
-    url: `${origin}/products/${encodeURIComponent(found.handle)}`,
+    url: origin ? `${origin}/products/${encodeURIComponent(found.handle)}` : "",
   };
 
   const { storeName, recipient } = await loadStoreContact();

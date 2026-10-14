@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getStaffTwoFactorChallengeUserId } from "@/lib/auth/staff2faChallenge";
 import { checkOtpRateLimit, issueLoginOtp, OTP_TTL_MS } from "@/lib/auth/loginOtp";
 import { getStaffRowById } from "@/lib/staff";
@@ -57,6 +58,6 @@ export async function POST() {
 
     return NextResponse.json({ success: true, data: { expiresInSeconds: OTP_TTL_MS / 1000 } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

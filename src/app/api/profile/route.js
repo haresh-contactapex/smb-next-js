@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { updateStaffProfile } from "@/lib/staff";
 import { isValidEmail } from "@/components/auth/helpers";
@@ -58,6 +59,6 @@ export async function PUT(request) {
         { status: 409 }
       );
     }
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

@@ -1,5 +1,6 @@
 import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { deleteMedia } from "@/lib/media";
 
@@ -17,6 +18,6 @@ export async function DELETE(request, { params }) {
 
     return NextResponse.json({ success: true, data: { id: params.id } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

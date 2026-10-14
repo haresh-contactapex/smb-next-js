@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
 import { importReviews } from "@/lib/reviewImport";
@@ -15,7 +16,7 @@ const MAX_BODY_BYTES = MAX_IMPORT_FILE_BYTES + 512 * 1024;
 
 function errorResponse(error) {
   if (error instanceof ReviewImportError) {
-    return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
   }
   console.error("Review import failed", error);
   return NextResponse.json(

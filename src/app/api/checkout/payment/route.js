@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
 import { placeCodOrder, startCardPayment } from "@/lib/checkoutOrders";
 import { CheckoutError } from "@/lib/checkoutPricing";
@@ -36,7 +37,7 @@ export async function POST(request) {
   } catch (error) {
     if (error instanceof CheckoutError) {
       return NextResponse.json(
-        { success: false, error: error.message, reason: error.reason || undefined, details: error.details || undefined },
+        { success: false, error: publicErrorMessage(error), reason: error.reason || undefined, details: error.details || undefined },
         { status: error.status }
       );
     }

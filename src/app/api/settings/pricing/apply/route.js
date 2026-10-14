@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission, settingsPermission } from "@/lib/permissions";
 import { applyPriceAdjustmentToAllProducts } from "@/lib/pricing";
@@ -39,6 +40,6 @@ export async function POST(request) {
     const result = await applyPriceAdjustmentToAllProducts({ adjustmentValue, adjustmentType, adjustmentDirection });
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

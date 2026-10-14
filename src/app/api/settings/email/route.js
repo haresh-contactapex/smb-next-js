@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
@@ -14,7 +15,7 @@ export async function GET() {
     const data = await getEmailSettings();
     return NextResponse.json({ success: true, data: { ...data, activeSmtpSource: await getActiveSmtpSource() } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -76,6 +77,6 @@ export async function PUT(request) {
       data: { ...updated, activeSmtpSource: await getActiveSmtpSource() },
     });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

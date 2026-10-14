@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { ContactMessageError, submitContactMessage } from "@/lib/contactMessages";
 
 // A message is a few short fields; anything near this size is not one.
@@ -34,7 +35,7 @@ export async function POST(request) {
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     if (error instanceof ContactMessageError) {
-      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+      return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
     }
     console.error("Contact message request failed", error);
     return NextResponse.json({ success: false, error: "We couldn't send your message. Please try again." }, { status: 500 });

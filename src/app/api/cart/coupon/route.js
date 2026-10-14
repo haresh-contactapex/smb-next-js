@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { CartError, lookupCartCoupon } from "@/lib/storefrontCart";
 
 // Public: the cart drawer checks a discount code for the visitor's cart.
@@ -11,7 +12,7 @@ export async function POST(request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     if (error instanceof CartError) {
-      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+      return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
     }
     console.error("Cart coupon lookup failed", error);
     return NextResponse.json({ success: false, error: "We couldn't check that code right now. Please try again." }, { status: 500 });

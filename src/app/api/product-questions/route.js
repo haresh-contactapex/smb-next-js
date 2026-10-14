@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { ProductQuestionError, submitProductQuestion } from "@/lib/productQuestions";
+import { getTrustedOrigin } from "@/lib/siteUrl";
 
 // A question is a few short fields; anything near this size is not one.
 const MAX_BODY_BYTES = 20_000;
@@ -27,12 +29,12 @@ export async function POST(request) {
     const data = await submitProductQuestion({
       payload,
       clientKey: clientKey(request),
-      origin: new URL(request.url).origin,
+      origin: getTrustedOrigin(request),
     });
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     if (error instanceof ProductQuestionError) {
-      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+      return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
     }
     console.error("Product question request failed", error);
     return NextResponse.json({ success: false, error: "We couldn't send your question. Please try again." }, { status: 500 });

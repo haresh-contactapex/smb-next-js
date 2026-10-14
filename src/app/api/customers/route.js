@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listCustomers, createCustomerRecord, deleteCustomerRecords } from "@/lib/customers";
 import { logAdminActivity } from "@/lib/notifications";
@@ -14,7 +15,7 @@ export async function GET() {
     const data = await listCustomers();
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -35,7 +36,7 @@ export async function POST(request) {
     });
     return NextResponse.json({ success: true, data: { id } }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 400 });
   }
 }
 
@@ -71,6 +72,6 @@ export async function DELETE(request) {
     });
     return NextResponse.json({ success: true, data: { deleted } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

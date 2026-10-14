@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
 import { getReviewById, updateReview, setReviewStatus, deleteReview, parseReviewBody } from "@/lib/reviews";
@@ -6,7 +7,7 @@ import { STATUS_LABELS } from "@/lib/reviewFields";
 import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
-  return NextResponse.json({ success: false, error: error.message }, { status: error.status || 500 });
+  return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status || 500 });
 }
 
 export async function GET(request, { params }) {

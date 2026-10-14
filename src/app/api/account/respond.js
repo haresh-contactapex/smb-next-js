@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { AccountError } from "@/lib/accountError";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
 
@@ -12,7 +13,7 @@ export const ok = (data) => NextResponse.json({ success: true, data });
 export function failure(error, fallbackMessage) {
   if (error instanceof AccountError) {
     return NextResponse.json(
-      { success: false, error: error.message, ...(error.field ? { field: error.field } : {}) },
+      { success: false, error: publicErrorMessage(error), ...(error.field ? { field: error.field } : {}) },
       { status: error.status }
     );
   }

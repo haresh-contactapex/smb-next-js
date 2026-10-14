@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getCustomerTwoFactorChallenge, clearCustomerTwoFactorChallenge } from "@/lib/auth/customer2faChallenge";
 import { verifyCustomerLoginOtp } from "@/lib/auth/customerLoginOtp";
 import { LoginOtpError } from "@/lib/auth/loginOtp";
@@ -30,7 +31,7 @@ export async function POST(request) {
       await verifyCustomerLoginOtp(challenge.customerId, code);
     } catch (error) {
       if (error instanceof LoginOtpError) {
-        return NextResponse.json({ success: false, error: error.message, code: error.code }, { status: error.status });
+        return NextResponse.json({ success: false, error: publicErrorMessage(error), code: error.code }, { status: error.status });
       }
       throw error;
     }
@@ -44,6 +45,6 @@ export async function POST(request) {
     const data = await finalizeCustomerLogin(customer, { rememberMe: challenge.rememberMe });
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { findStaffByEmail } from "@/lib/staff";
 import { insertStaffResetToken } from "@/lib/passwordResetTokens";
 import { createResetToken } from "@/lib/auth/resetToken";
@@ -59,6 +60,6 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

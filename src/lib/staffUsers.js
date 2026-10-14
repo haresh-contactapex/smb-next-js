@@ -204,6 +204,10 @@ async function storeName() {
 // Best-effort: the account already exists, so a delivery failure is reported
 // back instead of thrown.
 async function sendWelcome(user, temporaryPassword, origin) {
+  if (!origin) {
+    console.error("createStaffUser: SITE_URL is not set; not emailing set-password links built from the request host");
+    return false;
+  }
   try {
     const { rawToken, tokenHash, expiresAt } = createResetToken(WELCOME_TOKEN_TTL_MS);
     await insertStaffResetToken({ userId: user.id, tokenHash, requestedEmail: user.email, expiresAt });

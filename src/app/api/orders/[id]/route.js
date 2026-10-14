@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getOrderById, getOrderDetails, updateOrderStatus } from "@/lib/orders";
 import { logAdminActivity } from "@/lib/notifications";
@@ -16,7 +17,7 @@ export async function GET(request, { params }) {
     if (!order) return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
     return NextResponse.json({ success: true, data: order });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -49,6 +50,6 @@ export async function PATCH(request, { params }) {
     }
     return NextResponse.json({ success: true, data: order });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 400 });
   }
 }

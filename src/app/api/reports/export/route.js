@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { exportReportsToCsv } from "@/lib/reportsExport";
 
@@ -11,6 +12,6 @@ export async function GET() {
     const filename = `reports-export-${new Date().toISOString().slice(0, 10)}.csv`;
     return NextResponse.json({ success: true, data: { csv, filename } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

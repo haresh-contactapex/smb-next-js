@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { CartError, lookupShippingRules } from "@/lib/storefrontCart";
 
 // Public: the cart drawer's shipping estimator. Returns the store's shipping
@@ -10,7 +11,7 @@ export async function POST(request) {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     if (error instanceof CartError) {
-      return NextResponse.json({ success: false, error: error.message, field: error.field || undefined }, { status: error.status });
+      return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field || undefined }, { status: error.status });
     }
     console.error("Cart shipping estimate failed", error);
     return NextResponse.json({ success: false, error: "We couldn't estimate shipping right now. Please try again." }, { status: 500 });

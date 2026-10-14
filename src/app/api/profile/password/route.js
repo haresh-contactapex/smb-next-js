@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { getStaffPasswordHash, updateStaffPassword } from "@/lib/staff";
 import { verifyPassword, hashPassword } from "@/lib/auth/password";
@@ -40,6 +41,6 @@ export async function PUT(request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
@@ -11,7 +12,7 @@ import { EngravingError, getEngravingAdminConfig, saveEngravingAdminConfig } fro
 
 function failure(error) {
   if (error instanceof EngravingError) {
-    return NextResponse.json({ success: false, error: error.message, field: error.field || undefined }, { status: error.status });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field || undefined }, { status: error.status });
   }
   console.error("Engraving settings request failed", error);
   return NextResponse.json({ success: false, error: "Engraving settings could not be saved right now." }, { status: 500 });

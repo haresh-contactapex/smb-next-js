@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { duplicateAdminRole, AdminRoleError } from "@/lib/adminRoles";
 import { MANAGE_ROLES_PERMISSION } from "@/lib/permissions";
@@ -22,6 +23,6 @@ export async function POST(request, { params }) {
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     const status = error instanceof AdminRoleError ? error.status : 500;
-    return NextResponse.json({ success: false, error: error.message }, { status });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status });
   }
 }

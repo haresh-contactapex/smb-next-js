@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { getAddressesByUserId, upsertAddress, deleteAddress } from "@/lib/addresses";
 import { validateTypedLocation } from "@/lib/validateAddress";
@@ -17,7 +18,7 @@ export async function GET() {
     const data = await getAddressesByUserId(staffUser.id);
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -100,7 +101,7 @@ export async function PUT(request) {
     const saved = await upsertAddress(staffUser.id, type, address);
     return NextResponse.json({ success: true, data: saved });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -119,6 +120,6 @@ export async function DELETE(request) {
     await deleteAddress(staffUser.id, type);
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

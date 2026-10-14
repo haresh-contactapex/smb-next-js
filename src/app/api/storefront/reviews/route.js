@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { ReviewError, submitStorefrontReview } from "@/lib/reviews";
 
 // A review is a few short fields plus up to 5,000 characters of text (a
@@ -31,7 +32,7 @@ export async function POST(request) {
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     if (error instanceof ReviewError) {
-      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+      return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
     }
     console.error("Storefront review failed", error);
     return NextResponse.json({ success: false, error: "We couldn't save your review. Please try again." }, { status: 500 });

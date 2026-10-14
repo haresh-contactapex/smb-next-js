@@ -115,7 +115,7 @@ export function buildProductQuestionAlertEmail({ question, product, ...data }) {
     ["Name", escapeHtml(question.name)],
     ["Email", link(`mailto:${question.email}`, question.email)],
     ["Phone", escapeHtml(question.phone)],
-    ["Product", link(product.url, product.title)],
+    ["Product", product.url ? link(product.url, product.title) : escapeHtml(product.title)],
     product.sku ? ["SKU", escapeHtml(product.sku)] : null,
   ])}<div style="font-size:14px;font-weight:bold;color:#1F3A6B;margin:20px 0 8px;">Question</div>${quoteBlock(question.question)}`;
   return render(data, {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { getStaffTwoFactorChallengeUserId, clearStaffTwoFactorChallenge } from "@/lib/auth/staff2faChallenge";
 import { verifyLoginOtp, LoginOtpError } from "@/lib/auth/loginOtp";
 import { getStaffRowById } from "@/lib/staff";
@@ -23,7 +24,7 @@ export async function POST(request) {
       await verifyLoginOtp(userId, code);
     } catch (error) {
       if (error instanceof LoginOtpError) {
-        return NextResponse.json({ success: false, error: error.message, code: error.code }, { status: error.status });
+        return NextResponse.json({ success: false, error: publicErrorMessage(error), code: error.code }, { status: error.status });
       }
       throw error;
     }
@@ -37,6 +38,6 @@ export async function POST(request) {
     const data = await finalizeStaffLogin(staffUser);
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import {
   getAdminRoleById,
@@ -12,9 +13,9 @@ import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof AdminRoleError) {
-    return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
   }
-  return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
 }
 
 async function authorize() {

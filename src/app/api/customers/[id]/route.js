@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getCustomerRecordById, updateCustomerRecord, deleteCustomerRecord } from "@/lib/customers";
 import { logAdminActivity } from "@/lib/notifications";
@@ -14,7 +15,7 @@ export async function GET(request, { params }) {
     }
     return NextResponse.json({ success: true, data: customer });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -34,7 +35,7 @@ export async function PUT(request, { params }) {
     });
     return NextResponse.json({ success: true, data: { id } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 400 });
   }
 }
 
@@ -54,6 +55,6 @@ export async function DELETE(request, { params }) {
     });
     return NextResponse.json({ success: true, data: { id: params.id } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }

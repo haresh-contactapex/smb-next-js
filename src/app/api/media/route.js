@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { extname } from "path";
 import { put, del } from "@vercel/blob";
 import { NextResponse } from "next/server";
+import { publicErrorMessage } from "@/lib/publicError";
 import { listMedia, createMedia, deleteMediaItems } from "@/lib/media";
 import { readBulkIds } from "@/lib/bulkIds";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
@@ -154,7 +155,7 @@ export async function GET() {
     const data = await listMedia();
     return NextResponse.json({ success: true, data });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -225,7 +226,7 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true, data: created }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
 
@@ -243,6 +244,6 @@ export async function DELETE(request) {
     if (urls.length > 0) await del(urls).catch(() => {});
     return NextResponse.json({ success: true, data: { deleted: urls.length } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
   }
 }
