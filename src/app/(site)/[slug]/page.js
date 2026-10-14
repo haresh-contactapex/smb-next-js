@@ -51,8 +51,10 @@ export default async function CmsContentPage({ params }) {
 
   return (
     <div className="w-full bg-white">
-      {/* Heading band: the title with the breadcrumb under it */}
-      <div className="bg-[#faf7f2] px-4 pt-10 sm:pt-14 pb-2">
+      {/* Heading band: the title with the breadcrumb under it. Rounded top and bottom
+          corners match the curve the header and hero banner use elsewhere on the
+          storefront, reading as the white page background curving around the band. */}
+      <div className="bg-[#faf7f2] rounded-[32px] sm:rounded-[50px] px-4 pt-10 sm:pt-14 pb-2">
         <h1
           className="mx-auto max-w-4xl text-center text-[30px] sm:text-[40px] font-normal text-[#333333] leading-tight"
           style={{ fontFamily: "var(--font-playfair), serif" }}
