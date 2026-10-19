@@ -44,7 +44,12 @@ async function uploadProductFile(file) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("purpose", "product");
-  const res = await fetch("/api/media", { method: "POST", body: formData });
+  let res;
+  try {
+    res = await fetch("/api/media", { method: "POST", body: formData });
+  } catch {
+    throw new Error(`Could not reach the server while uploading ${file.name} — check your connection and try again`);
+  }
   const json = await res.json().catch(() => ({}));
   if (!res.ok || !json.success) throw new Error(json.error || `Failed to upload ${file.name}`);
   return json.data.url;
@@ -58,14 +63,19 @@ async function uploadPendingFiles(product) {
     const url = await uploadProductFile(item.file);
     return { type: item.type, url, name: item.name };
   };
-  const media = await Promise.all(product.media.map(upload));
-  const variants = await Promise.all(
-    product.variants.map(async (v) => {
-      if (!isPendingUpload(v.image)) return v;
-      const uploaded = await upload(v.image);
-      return { ...v, image: { url: uploaded.url, name: uploaded.name } };
-    })
-  );
+  // One at a time: dozens of simultaneous multipart uploads can overwhelm the server
+  // and surface in the browser as a bare "Failed to fetch".
+  const media = [];
+  for (const item of product.media) media.push(await upload(item));
+  const variants = [];
+  for (const v of product.variants) {
+    if (!isPendingUpload(v.image)) {
+      variants.push(v);
+      continue;
+    }
+    const uploaded = await upload(v.image);
+    variants.push({ ...v, image: { url: uploaded.url, name: uploaded.name } });
+  }
   // Only once every upload succeeded — a partial failure keeps the local previews.
   [...product.media, ...product.variants.map((v) => v.image)]
     .filter(isPendingUpload)
@@ -268,6 +278,17 @@ export default function AddProductForm({ productId }) {
 
   function handleRemoveMedia(index) {
     setProduct((prev) => ({ ...prev, media: prev.media.filter((_, i) => i !== index) }));
+  }
+
+  // The saved order is the array order (product_media.position), which the storefront follows.
+  function handleReorderMedia(from, to) {
+    setProduct((prev) => {
+      if (from === to || from < 0 || to < 0 || from >= prev.media.length || to >= prev.media.length) return prev;
+      const media = prev.media.slice();
+      const [moved] = media.splice(from, 1);
+      media.splice(to, 0, moved);
+      return { ...prev, media };
+    });
   }
 
   function handleAddAttribute() {
@@ -548,6 +569,7 @@ export default function AddProductForm({ productId }) {
             onAddFiles={handleAddFiles}
             onAddLibraryItems={handleAddLibraryItems}
             onRemoveMedia={handleRemoveMedia}
+            onReorderMedia={handleReorderMedia}
           />
 
           <PricingSection

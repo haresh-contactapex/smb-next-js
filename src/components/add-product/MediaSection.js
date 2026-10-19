@@ -7,9 +7,17 @@ import { isMissingUpload } from "./helpers";
 
 const ACCEPT = "image/jpeg,image/png,image/webp,video/*,.glb,.usdz";
 
-export default function MediaSection({ media, mediaError, sectionRef, onAddFiles, onAddLibraryItems, onRemoveMedia }) {
+export default function MediaSection({ media, mediaError, sectionRef, onAddFiles, onAddLibraryItems, onRemoveMedia, onReorderMedia }) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  // Tile being dragged to a new position, and the tile it is currently hovering over.
+  const [dragIndex, setDragIndex] = useState(null);
+  const [overIndex, setOverIndex] = useState(null);
+
+  function endReorder() {
+    setDragIndex(null);
+    setOverIndex(null);
+  }
 
   function closePicker() {
     setPickerOpen(false);
@@ -84,11 +92,41 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
         uploadHint="Images (.jpg, .jpeg, .png, .webp, up to 5MB), video, .glb, .usdz"
       />
 
+      {media.length > 1 && (
+        <p className="text-xs text-slate-400 mt-3">
+          Drag images to reorder them. The first one is the main image, and the storefront shows them in this order.
+        </p>
+      )}
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 mt-4">
         {media.map((m, i) => (
           <div
             key={`${m.name}-${i}`}
-            className="relative group border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden aspect-square bg-slate-100 dark:bg-darksurface2/60 flex items-center justify-center"
+            draggable={media.length > 1}
+            onDragStart={(e) => {
+              setDragIndex(i);
+              e.dataTransfer.effectAllowed = "move";
+              e.dataTransfer.setData("text/plain", String(i));
+            }}
+            onDragOver={(e) => {
+              if (dragIndex === null) return;
+              e.preventDefault();
+              e.dataTransfer.dropEffect = "move";
+              if (overIndex !== i) setOverIndex(i);
+            }}
+            onDrop={(e) => {
+              if (dragIndex === null) return;
+              e.preventDefault();
+              onReorderMedia(dragIndex, i);
+              endReorder();
+            }}
+            onDragEnd={endReorder}
+            className={`relative group border rounded-xl overflow-hidden aspect-square bg-slate-100 dark:bg-darksurface2/60 flex items-center justify-center${
+              media.length > 1 ? " cursor-grab active:cursor-grabbing" : ""
+            }${dragIndex === i ? " opacity-40" : ""}${
+              overIndex === i && dragIndex !== null && dragIndex !== i
+                ? " border-primary-500 ring-2 ring-primary-400"
+                : " border-slate-200 dark:border-white/10"
+            }`}
           >
             {isMissingUpload(m) ? (
               <div className="flex flex-col items-center justify-center gap-1 p-2 text-center">
@@ -103,6 +141,7 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
               <img
                 src={m.url}
                 alt={m.name || ""}
+                draggable={false}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   e.currentTarget.style.opacity = 0.15;
@@ -110,7 +149,7 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
               />
             ) : m.type === "video" ? (
               <>
-                <video src={m.url} className="w-full h-full object-cover" muted />
+                <video src={m.url} draggable={false} className="w-full h-full object-cover" muted />
                 <span className="absolute bottom-1.5 left-1.5 w-6 h-6 rounded-full bg-slate-900/70 text-white flex items-center justify-center">
                   <Icon name="film" className="w-3.5 h-3.5" />
                 </span>
@@ -133,6 +172,33 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
             >
               &times;
             </button>
+            {i === 0 && media.length > 1 && (
+              <span className="absolute top-1 left-1 px-1.5 py-0.5 rounded-md bg-slate-900/70 text-white text-[10px] font-semibold">
+                Main
+              </span>
+            )}
+            {media.length > 1 && (
+              <div className="absolute bottom-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition">
+                <button
+                  type="button"
+                  aria-label={`Move ${m.name || "media"} earlier`}
+                  disabled={i === 0}
+                  onClick={() => onReorderMedia(i, i - 1)}
+                  className="w-6 h-6 rounded-full bg-slate-900/70 text-white text-xs disabled:opacity-30 flex items-center justify-center"
+                >
+                  &larr;
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Move ${m.name || "media"} later`}
+                  disabled={i === media.length - 1}
+                  onClick={() => onReorderMedia(i, i + 1)}
+                  className="w-6 h-6 rounded-full bg-slate-900/70 text-white text-xs disabled:opacity-30 flex items-center justify-center"
+                >
+                  &rarr;
+                </button>
+              </div>
+            )}
           </div>
         ))}
       </div>
