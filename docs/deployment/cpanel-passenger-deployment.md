@@ -79,11 +79,17 @@ Payment gateway keys, shipping, tax and email templates live in the database (Se
   served at `/uploads/YYYY/MM/<uuid>.<ext>` by the app (`src/app/uploads/[...path]/route.js`; `next start` does not
   serve files added after startup). The folder is created on first upload and must stay writable by the cPanel user.
   Back it up (it is not in Git) and keep it out of any "clean" deploy step.
-  Media uploaded **before** the move still has absolute `*.public.blob.vercel-storage.com` URLs in the database.
-  Those keep working only while the Vercel Blob store exists, so do **not** delete the Vercel project/store until
-  those images are migrated (download them, save them into `public/uploads/…`, update the `media.url`,
-  `product_media`, category and CMS references) or you accept the dependency. Deleting such an item in the admin
-  removes only its database row; the old Blob file is not deleted.
+  **Migration of the old Vercel Blob images (done 2026-10-19):** all 1,543 existing images/PDFs were downloaded
+  (101 MB), stored as `public/uploads/2026/09` (25) and `2026/10` (1,518) (folder = month of the original upload),
+  and the database was rewritten from `https://<store>.public.blob.vercel-storage.com/<file>` to
+  `/uploads/YYYY/MM/<file>` in `media.url`, `product_media.url`, `product_variants.image_url`,
+  `categories.image_url`, `cms_pages.content_html`, `cms_page_revisions.content_html`,
+  `general_settings.logo_url`/`favicon_url` and `users.avatar_url` (2,348 rows, one transaction, backup kept).
+  No Blob URL remains in the database, so the Vercel Blob store is no longer needed by this site. The old Vercel
+  deployment shares the same database, so its images no longer load; it does not have these files.
+  To roll back, run `restore.mjs` from the migration backup (it maps `/uploads/…` back to the Blob URLs, keeping any
+  later edits); the Blob files themselves were not deleted. Deleting media in the admin removes the file from
+  `public/uploads`.
 * **`SITE_URL`**: required, see §3.
 * **No edge/serverless limits**: long requests are fine, but the process is one long-lived Node process under
   Passenger. Memory-heavy tasks share that process.
@@ -302,7 +308,7 @@ NEXT_PUBLIC_RECAPTCHA_SITE_KEY=<your site key>
    possible (temporary hosts-file entry), otherwise right after.
 4. Update `SITE_URL` to the production `https://` URL and restart the app (§9).
 5. Lower the DNS TTL a day ahead, then point the A record to the cPanel server IP (and remove/replace the Vercel
-   `CNAME`). Keep the Vercel project until the old Blob-hosted images are migrated (§4) or you accept the dependency.
+   `CNAME`). The Blob-hosted images are already migrated (§4), so the Vercel project is no longer needed for media.
 6. Update external callbacks: Stripe webhook URL, reCAPTCHA allowed domains, any Google/Meta integrations.
 7. Watch `logs/` in cPanel and the admin panel for the first day.
 
