@@ -1,8 +1,8 @@
-import { del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { deleteMedia } from "@/lib/media";
+import { removeStoredFiles } from "@/lib/mediaStorage";
 
 export async function DELETE(request, { params }) {
   const auth = await requireStaffPermission("media.delete");
@@ -14,7 +14,7 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    await del(url).catch(() => {});
+    await removeStoredFiles([url]);
 
     return NextResponse.json({ success: true, data: { id: params.id } });
   } catch (error) {

@@ -1,9 +1,8 @@
-import { randomUUID } from "crypto";
 import { extname } from "path";
-import { put, del } from "@vercel/blob";
 import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { listMedia, createMedia, deleteMediaItems } from "@/lib/media";
+import { saveUpload, removeStoredFiles } from "@/lib/mediaStorage";
 import { readBulkIds } from "@/lib/bulkIds";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -49,11 +48,24 @@ const PRODUCT_MODEL_EXTENSIONS = new Set([".glb", ".usdz"]);
 const PRODUCT_MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const PRODUCT_MAX_OTHER_SIZE_BYTES = 50 * 1024 * 1024;
 
+// Files are stored on this server's disk and served by their extension, so the extension
+// is never taken from the visitor's file name unless it is one we serve.
+const STORED_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".webm", ".ogg", ".mov", ".glb", ".usdz"]);
+const EXTENSION_BY_MIME = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/ogg": ".ogg",
+  "video/quicktime": ".mov",
+};
+
 function extensionFor(file) {
   const fromName = extname(file.name || "").toLowerCase();
-  if (fromName) return fromName;
-  const byMime = { "image/jpeg": ".jpg", "image/png": ".png", "image/webp": ".webp", "image/gif": ".gif" };
-  return byMime[file.type] || "";
+  if (STORED_EXTENSIONS.has(fromName)) return fromName;
+  return EXTENSION_BY_MIME[file.type] || "";
 }
 
 // Returns "image" | "video" | "model" for an acceptable product upload, or null.
@@ -92,9 +104,9 @@ async function pdfProblem(file) {
 async function handleCmsPdfUpload(file) {
   const problem = await pdfProblem(file);
   if (problem) return problem;
-  const blob = await put(`${randomUUID()}.pdf`, file, { access: "public", contentType: "application/pdf" });
+  const { url } = await saveUpload(file, ".pdf");
   return NextResponse.json(
-    { success: true, data: { id: null, fileName: file.name, url: blob.url, mimeType: "application/pdf", kind: "pdf" } },
+    { success: true, data: { id: null, fileName: file.name, url, mimeType: "application/pdf", kind: "pdf" } },
     { status: 201 }
   );
 }
@@ -103,10 +115,10 @@ async function handleCmsPdfUpload(file) {
 async function handleLibraryPdfUpload(file) {
   const problem = await pdfProblem(file);
   if (problem) return problem;
-  const blob = await put(`${randomUUID()}.pdf`, file, { access: "public", contentType: "application/pdf" });
+  const { url } = await saveUpload(file, ".pdf");
   const created = await createMedia({
     fileName: file.name || "document.pdf",
-    url: blob.url,
+    url,
     mimeType: "application/pdf",
     sizeBytes: file.size,
   });
@@ -130,17 +142,21 @@ async function handleProductUpload(file) {
   }
 
   const contentType = productContentType(file, kind);
-  const blob = await put(`${randomUUID()}${extensionFor(file)}`, file, { access: "public", contentType });
+  const extension = extensionFor(file);
+  if (!extension) {
+    return NextResponse.json({ success: false, error: "That file type could not be identified" }, { status: 400 });
+  }
+  const { url } = await saveUpload(file, extension);
 
   if (kind !== "image") {
     return NextResponse.json(
-      { success: true, data: { id: null, fileName: file.name, url: blob.url, mimeType: contentType, kind } },
+      { success: true, data: { id: null, fileName: file.name, url, mimeType: contentType, kind } },
       { status: 201 }
     );
   }
   const created = await createMedia({
     fileName: file.name,
-    url: blob.url,
+    url,
     mimeType: file.type,
     sizeBytes: file.size,
   });
@@ -211,15 +227,11 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "File exceeds the 10MB limit" }, { status: 400 });
     }
 
-    const uniqueName = `${randomUUID()}${extensionFor(file)}`;
-    const blob = await put(uniqueName, file, {
-      access: "public",
-      contentType: file.type,
-    });
+    const { url } = await saveUpload(file, extensionFor(file));
 
     const created = await createMedia({
-      fileName: file.name || uniqueName,
-      url: blob.url,
+      fileName: file.name || url.split("/").pop(),
+      url,
       mimeType: file.type,
       sizeBytes: file.size,
     });
@@ -241,7 +253,7 @@ export async function DELETE(request) {
 
   try {
     const urls = await deleteMediaItems(ids);
-    if (urls.length > 0) await del(urls).catch(() => {});
+    if (urls.length > 0) await removeStoredFiles(urls);
     return NextResponse.json({ success: true, data: { deleted: urls.length } });
   } catch (error) {
     return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });

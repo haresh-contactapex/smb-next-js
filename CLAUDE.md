@@ -19,7 +19,7 @@
 | `src/config/admin-panel.config.js` | Store branding, navigation, header data, and shell configuration. |
 | `docs/` | Feature workflows and the SQL schema files consumed by migrations. |
 | `scripts/` | Database migration runner and admin-user seeding script. |
-| `public/uploads/` | Runtime media-upload location; keep `.gitkeep`, not uploaded media. |
+| `public/uploads/` | Runtime media-upload location, stored as `public/uploads/YYYY/MM/<uuid>.<ext>` and served by `src/app/uploads/[...path]/route.js` (`next start` does not serve files added after startup). Helpers in `src/lib/mediaStorage.js`. Keep `.gitkeep`, not uploaded media. |
 
 ## Commands
 
