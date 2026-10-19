@@ -2,6 +2,7 @@ import { connection } from "next/server";
 import SiteHeaderBar from "./SiteHeaderBar";
 import { STORE_MENU_SLUGS, STORE_NAV_LINKS, withMenuDescriptions } from "./navLinks";
 import { listCategoryDescriptions } from "@/lib/categories";
+import { currentCustomer } from "@/lib/auth/customerPage";
 
 // The nav links with each mega menu item's description taken from its
 // category (the text at the top of the category page). A failed lookup just leaves
@@ -22,7 +23,7 @@ export default async function SiteHeader() {
   // Read per request so an edited category description shows up straight away,
   // even on pages that would otherwise be prerendered.
   await connection();
-  const navLinks = await loadNavLinks();
+  const [navLinks, customer] = await Promise.all([loadNavLinks(), currentCustomer()]);
 
-  return <SiteHeaderBar navLinks={navLinks} />;
+  return <SiteHeaderBar navLinks={navLinks} customer={customer} />;
 }

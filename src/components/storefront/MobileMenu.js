@@ -9,10 +9,21 @@ import { STORE_NAV_LINKS, isCurrentLink, isCurrentPath } from "./navLinks";
 import { useSearch } from "./search/SearchProvider";
 
 // Hamburger button + slide-in drawer for < lg screens.
-export default function MobileMenu() {
+export default function MobileMenu({ customer }) {
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const { openSearch } = useSearch();
   const pathname = usePathname();
+
+  async function signOut() {
+    setSigningOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } finally {
+      // A full navigation, so the cart/wishlist providers drop the account's state.
+      window.location.assign("/");
+    }
+  }
 
   useEffect(() => {
     if (!open) return undefined;
@@ -106,9 +117,25 @@ export default function MobileMenu() {
           >
             <StoreIcon name="search" /> Search
           </button>
-          <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
-            <StoreIcon name="user" /> Account
-          </Link>
+          {customer ? (
+            <>
+              <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
+                <StoreIcon name="user" /> My Account
+              </Link>
+              <button
+                type="button"
+                onClick={signOut}
+                disabled={signingOut}
+                className="hover:text-red-600 flex items-center gap-3 transition-colors text-left disabled:opacity-50"
+              >
+                <StoreIcon name="logout" /> {signingOut ? "Logging out…" : "Logout"}
+              </button>
+            </>
+          ) : (
+            <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
+              <StoreIcon name="user" /> Account
+            </Link>
+          )}
         </nav>
       </div>
     </>

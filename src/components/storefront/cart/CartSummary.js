@@ -28,7 +28,10 @@ export default function CartSummary({ pricesIncludeTax = null }) {
   const { effect, selectedRate } = totals;
 
   return (
-    <aside aria-label="Order summary" className="rounded bg-[#F8F8F8] p-6 sm:p-8 lg:sticky lg:top-28">
+    <aside
+      aria-label="Order summary"
+      className="rounded bg-[#F8F8F8] p-6 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.18)] sm:p-8 lg:sticky lg:top-28"
+    >
       <ul className="space-y-3">
         {items.map((item) => (
           <li key={item.key} className="flex items-baseline justify-between gap-4 text-[13px] uppercase text-[#555555]">
