@@ -7,9 +7,12 @@ export function orderedVariantImages(product) {
   return [...new Set(variantsInOptionOrder(product).map((variant) => variant.imageUrl).filter(Boolean))];
 }
 
-// The photos the gallery offers: the product media first, then each variant
-// photo that isn't already among them (variant photos are usually never added to
-// the product media), without repeats.
+// The photos the gallery offers: the product media, in the order the admin set,
+// without repeats. Variant photos are often other copies of the same pictures
+// (for example the originals from an import), so appending them showed the same
+// shot twice; they only fill the gallery when the product has no media of its own.
+// A selected variant's photo is still shown as the main image either way.
 export function galleryPhotos(mediaImages, variantImages) {
-  return [...new Set([...mediaImages, ...variantImages])];
+  const media = [...new Set(mediaImages)];
+  return media.length ? media : [...new Set(variantImages)];
 }
