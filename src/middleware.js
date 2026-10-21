@@ -160,5 +160,8 @@ export async function middleware(request) {
 // it's displayed. Any path ending in a file extension (storefront images,
 // fonts) is likewise static and skipped.
 export const config = {
+  // Node.js runtime: the session/maintenance checks above query PostgreSQL through
+  // `pg`, which needs Node APIs and cannot be bundled for the Edge runtime.
+  runtime: "nodejs",
   matcher: ["/((?!_next/static|_next/image|favicon.ico|uploads/|api/|.*\\.[a-zA-Z0-9]+$).*)"],
 };
