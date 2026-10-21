@@ -1,7 +1,7 @@
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
-import { neon } from "@neondatabase/serverless";
+import { neon } from "./lib/pg-neon.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

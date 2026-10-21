@@ -22,7 +22,7 @@ import http from "http";
 import crypto from "crypto";
 import { WebSocketServer } from "ws";
 import { jwtVerify } from "jose";
-import { neon } from "@neondatabase/serverless";
+import { neon } from "./lib/pg-neon.mjs";
 import { canViewNotification } from "../src/lib/notificationAudience.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

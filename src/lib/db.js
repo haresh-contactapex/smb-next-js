@@ -1,37 +1,79 @@
-import { neon } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 
-let client;
+// node-postgres over TCP (self-hosted PostgreSQL on cPanel). The exports keep
+// the shape the app already uses (previously the Neon HTTP driver): `sql` and
+// `sqlQuery` resolve to an array of row objects, and `sqlTransaction` resolves
+// to one row array per statement.
 
-function getClient() {
-  if (!client) {
+// Kept on globalThis so `next dev` hot reloads reuse one pool instead of
+// opening a new set of connections on every module re-evaluation.
+function getPool() {
+  if (!globalThis.__smbPgPool) {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not set. Add it to your .env.local file.');
     }
-    client = neon(process.env.DATABASE_URL);
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: Number(process.env.DATABASE_POOL_MAX) || 10,
+      idleTimeoutMillis: 30_000,
+    });
+    // An idle client can error (server restart); without a listener that would
+    // crash the process. The pool discards the client and reconnects on demand.
+    pool.on('error', (err) => console.error('PostgreSQL pool error:', err.message));
+    globalThis.__smbPgPool = pool;
   }
-  return client;
+  return globalThis.__smbPgPool;
+}
+
+// Turns a tagged template into { text, values } with $1, $2, ... placeholders.
+function toQuery(strings, values) {
+  let text = strings[0];
+  for (let i = 0; i < values.length; i += 1) text += `$${i + 1}${strings[i + 1]}`;
+  return { text, values };
 }
 
 // Wrapped so the DATABASE_URL check runs when a query actually executes,
 // not at import time — Next.js evaluates route modules while collecting
 // page data during `next build`, which would fail the build if the env
-// var isn't set yet (e.g. before it's added in the Vercel dashboard).
-export function sql(strings, ...values) {
-  return getClient()(strings, ...values);
+// var isn't set yet.
+export async function sql(strings, ...values) {
+  const { text, values: params } = toQuery(strings, values);
+  const result = await getPool().query(text, params);
+  return result.rows;
 }
 
-// Several statements applied together or not at all (over HTTP, so the
-// statements can't read each other's results). `build` receives a tagged
-// template and returns the statements in order:
+// Several statements applied together or not at all, in one database
+// transaction. `build` receives a tagged template and returns the statements
+// in order:
 //   await sqlTransaction((tx) => [tx`UPDATE ...`, tx`UPDATE ...`]);
 // Statements run in the order given, which matters for partial unique indexes
 // (clear the old row before setting the new one).
-export function sqlTransaction(build) {
-  return getClient().transaction(build);
+export async function sqlTransaction(build) {
+  const statements = build((strings, ...values) => toQuery(strings, values));
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const results = [];
+    for (const { text, values } of statements) {
+      results.push((await client.query(text, values)).rows);
+    }
+    await client.query('COMMIT');
+    return results;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // The connection is already broken; the original error is the useful one.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 // Raw parameterized query ($1, $2, ...) for cases the tagged-template form
 // can't express, such as a dynamically-sized multi-row INSERT.
-export function sqlQuery(text, params) {
-  return getClient().query(text, params);
+export async function sqlQuery(text, params) {
+  const result = await getPool().query(text, params);
+  return result.rows;
 }
