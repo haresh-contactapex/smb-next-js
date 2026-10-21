@@ -4,7 +4,7 @@
 
 - Next.js 15 App Router application, written in JavaScript (not TypeScript).
 - React 18, Tailwind CSS 3, and Chart.js power the admin interface.
-- PostgreSQL is accessed through Neon using `@neondatabase/serverless`.
+- PostgreSQL is accessed with node-postgres (`pg`) through `src/lib/db.js`. Production runs a user-level PostgreSQL on the cPanel host (see `docs/deployment/cpanel-passenger-deployment.md` §11); the app was on Neon until 2026-10-21. `pg` needs Node APIs, so `src/middleware.js` runs on the Node.js runtime (`runtime: "nodejs"`), not Edge.
 - This is an authenticated Shop My Band admin panel. The former static prototype remains in `legacy-static/` as reference only; do not add production features there.
 
 ## Repository map

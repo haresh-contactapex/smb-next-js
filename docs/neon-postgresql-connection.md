@@ -1,5 +1,9 @@
 # Connecting Next.js to Neon PostgreSQL
 
+> **Superseded (2026-10-21):** the app now uses node-postgres (`pg`) against a PostgreSQL server on the cPanel host.
+> See `docs/deployment/cpanel-passenger-deployment.md` §11. This page describes the previous Neon setup and applies
+> only if you point `DATABASE_URL` at a Neon database again (it works over TCP, port 5432, with `sslmode=require`).
+
 This guide documents how this project is wired up to Neon (serverless PostgreSQL), and the steps to set it up yourself.
 
 ## 1. Create a Neon account and project

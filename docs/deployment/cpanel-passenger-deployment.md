@@ -13,7 +13,7 @@ No secrets are stored in this file. Where a secret is needed, the step says wher
 
 ```
 Browser ──> Apache ──> Phusion Passenger ──> app.js ──> Next.js (production build in .next/)
-                                                  └──> Neon PostgreSQL (DATABASE_URL)
+                                                  └──> PostgreSQL on 127.0.0.1:5433 (user-level, see §11)
 ```
 
 * The whole repository is cloned into `/home/<user>/public_html` (the domain's document root).
@@ -21,7 +21,9 @@ Browser ──> Apache ──> Phusion Passenger ──> app.js ──> Next.js 
   it runs `next build` once and shows a "being built" page while it does.
 * Passenger runs the app with **Node 22** (`PassengerNodejs` in `.htaccess`). The system Node (16.20.2) is too old
   for Next.js 15 and must not be used.
-* Environment variables come from cPanel **Application Manager**, not from `.env` files.
+* Environment variables come from cPanel **Application Manager**, not from `.env` files. The one exception is
+  `DATABASE_URL`, which `app.js` reads from `/home/<user>/.smb-database-url` and which overrides whatever
+  Application Manager holds (see §11.4).
 * Source code, `.git`, `node_modules`, `.next` and config files sit in the web root, so they are explicitly blocked
   (see §6). Passenger currently answers 404 for them, and `.htaccess` adds 403 rules as a second layer.
 
@@ -33,7 +35,7 @@ Browser ──> Apache ──> Phusion Passenger ──> app.js ──> Next.js 
 | Node for the app | `/opt/cpanel/ea-nodejs22/bin/node` (EasyApache 4 package `ea-nodejs22`, v22.23.x) |
 | System Node (do not use) | `/usr/bin/node` v16.20.2 |
 | Application Manager | Present, but has **no Node version selector** (not CloudLinux) |
-| Database | Neon PostgreSQL (external) |
+| Database | PostgreSQL 18 run as the cPanel user (no root), `127.0.0.1:5433`, database `smb` (§11). Neon was used until 2026-10-21. |
 | Media storage | Local disk, `public_html/public/uploads/YYYY/MM/` (see §4) |
 
 ---
@@ -57,7 +59,7 @@ values for the variables below. The app reads exactly these:
 
 | Variable | Needed? | Secret? | Notes |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | Yes | Yes | Neon connection string. Same database the Vercel site uses. |
+| `DATABASE_URL` | Yes | Yes | On cPanel: `postgresql://smb_app:<password>@127.0.0.1:5433/smb`, kept in `~/.smb-database-url` (§11.4). The password must be letters and digits only. Neon (Vercel) used a Neon string here. |
 | `JWT_SECRET` | Yes | Yes | Must match Vercel's value if you want existing sessions to stay valid; a new value logs everyone out. |
 | `BLOB_READ_WRITE_TOKEN` | No | Yes | Only for the old Vercel deployment. Uploads now go to `public/uploads/` on disk (§4). |
 | `NODE_ENV` | Yes | No | `production` |
@@ -144,6 +146,10 @@ const path = require("path");
 const { spawn } = require("child_process");
 const os = require("os");
 
+// DATABASE_URL comes from a private file outside public_html, not from Application Manager (whose edit form
+// fails with `Invalid configuration for the parameter "python"`). It overrides any value Application Manager sets.
+try { const u = fs.readFileSync(path.join(__dirname, "..", ".smb-database-url"), "utf8").trim(); if (u) process.env.DATABASE_URL = u; } catch (e) {}
+
 // This server has an IPv6 address on an interface but no IPv6 route to the internet. nodemailer picks
 // between IPv4 and IPv6 addresses based on os.networkInterfaces(), so hide IPv6 to keep SMTP on IPv4.
 const realNetworkInterfaces = os.networkInterfaces;
@@ -164,7 +170,7 @@ for (const level of ["log", "warn", "error"]) {
   const original = console[level].bind(console);
   console[level] = (...args) => {
     try {
-      const text = args.map((a) => (a instanceof Error ? a.stack || a.message : typeof a === "string" ? a : JSON.stringify(a))).join(" ");
+      const text = args.map((a) => (a instanceof Error ? a.stack || a.message : typeof a === "string" ? a : require("util").inspect(a, { depth: 4 }))).join(" ");
       appLog.write(new Date().toISOString() + " [" + level + "] " + text + "\n");
     } catch (e) {}
     original(...args);
@@ -291,9 +297,13 @@ NEXT_PUBLIC_RECAPTCHA_SITE_KEY=<your site key>
   "must not be readable" URLs after every deploy.
 * Keep `public_html` at `0750` and directories `0755` / files `0644`. `0777` (world-writable) anything is a red flag.
   Zips built on Windows can extract folders as `0777`; fix them in File Manager → *Permissions*.
-* Secrets only in Application Manager variables, never in files under `public_html`.
-* Rotate `JWT_SECRET` and the Neon password if they were ever pasted into a chat, ticket or screenshot (rotating
-  `JWT_SECRET` logs all users out).
+* Secrets only in Application Manager variables, or (for `DATABASE_URL`) in `~/.smb-database-url` with mode `600`;
+  never in files under `public_html`.
+* Rotate `JWT_SECRET` and the database password if they were ever pasted into a chat, ticket or screenshot (rotating
+  `JWT_SECRET` logs all users out). A terminal that echoes a typed password (for example a URL typed as a command
+  instead of at a hidden prompt) counts as exposed.
+* The database listens on `127.0.0.1` only, and its local socket accepts the account's own processes without a
+  password (§11.3). Do not change `listen_addresses`.
 * Run AutoSSL; the account's certificate was self-signed ("Your domain is at risk!").
 * Leave Imunify360 bot protection enabled; whitelist trusted IPs instead (§8).
 
@@ -398,5 +408,122 @@ web root) before each rebuild. To roll back, Trash the bad `.next`, extract the 
 | `public_html/app.log` | Runtime console output (email errors etc.; grows; safe to delete) |
 | `public_html/.env.production.local` | Only if reCAPTCHA is used (§5.8) |
 | `public_html/tmp/restart.txt` | Touched to restart the app |
+| `~/.smb-database-url` | The `DATABASE_URL`, mode `600`, read by `app.js` (§11.4) |
+| `~/opt/mm`, `~/opt/pg` | micromamba and the PostgreSQL install (§11.1) |
+| `~/pgdata`, `~/pgsock` | PostgreSQL data directory and socket directory (§11.2) |
+| `~/bin/pg-keepalive.sh` + a `* * * * *` crontab entry | Starts PostgreSQL if it is not running (§11.5) |
 
 `git status` on the server will list these as untracked, which does not block "Update from Remote".
+
+---
+
+## 11. PostgreSQL on this server (user-level, migrated from Neon on 2026-10-21)
+
+This cPanel account has no PostgreSQL feature (no "PostgreSQL Databases" in cPanel, no root, and the shell is a
+jailed shell, so there is no systemd). PostgreSQL therefore runs as the cPanel user, installed under the home
+directory. Nothing here needs root.
+
+**Constraints that shaped the setup**
+
+* The terminal is a jailed shell. **Processes started from a terminal session die when the session closes**, even
+  with `setsid nohup`. Only a cron job keeps the database up (§11.5).
+* The server **cannot reach Neon on port 5432** (outbound firewall), so `pg_dump` against Neon does not work from
+  here. Export from a machine that can (the app's `src/lib/databaseBackup.js` writes a restorable SQL file; see §11.6).
+* `pg` cannot run in the Edge runtime, so `src/middleware.js` is `runtime: "nodejs"` (Next 15.5). Without it every
+  request fails with `TypeError: f.deprecate is not a function`.
+* Application Manager's edit form fails for this app with `Invalid configuration for the parameter "python"`
+  (a cPanel bug). Environment edits there are unreliable, hence `~/.smb-database-url` (§11.4).
+
+### 11.1 Install (micromamba, no root)
+
+```bash
+mkdir -p ~/opt/mm && cd ~/opt/mm && curl -sL https://micro.mamba.pm/api/micromamba/linux-64/latest | tar -xj bin/micromamba
+~/opt/mm/bin/micromamba create -y -r ~/opt/mm/root -p ~/opt/pg -c conda-forge postgresql
+~/opt/pg/bin/postgres --version
+```
+
+### 11.2 Create the cluster and start it
+
+`initdb` takes the password from a file. Type it at a hidden prompt or put it in a `600` file; never on the command
+line. Use **letters and digits only**: symbols (`@ # ! % ( ;`) break the connection URL unless URL-encoded.
+
+```bash
+~/opt/pg/bin/initdb -D ~/pgdata -U smb_admin --pwfile=<file> --auth=scram-sha-256 -E UTF8
+mkdir -p ~/pgsock
+~/opt/pg/bin/pg_ctl -D ~/pgdata -l ~/pgdata/server.log -o "-p 5433 -k $HOME/pgsock -c listen_addresses=127.0.0.1" start
+```
+
+Then, as `smb_admin` over the socket:
+
+```bash
+~/opt/pg/bin/psql -h $HOME/pgsock -p 5433 -U smb_admin -d postgres \
+  -c "CREATE ROLE smb_app LOGIN;" -c "CREATE DATABASE smb OWNER smb_app ENCODING 'UTF8';"
+```
+
+Set both passwords **inside psql** with `\password smb_app` and `\password smb_admin` (hidden prompt, twice). Typing
+the password as a normal line sends it to the server as SQL and shows it on screen.
+
+### 11.3 Local socket trust
+
+`~/pgdata/pg_hba.conf` has `local all all trust`, so the account's own processes can use `psql -h $HOME/pgsock`
+without a password (the socket directory is only reachable by this cPanel user). TCP on `127.0.0.1` still requires
+the password (`scram-sha-256`). After editing `pg_hba.conf`, reload with `pg_ctl -D ~/pgdata reload` from the same
+session that started the server, or restart it.
+
+### 11.4 How the app gets `DATABASE_URL`
+
+`app.js` (§5.5) reads `/home/<user>/.smb-database-url` (one line, mode `600`, outside `public_html`) and sets
+`process.env.DATABASE_URL` before Next.js starts. It overrides the Application Manager value, which can stay as is.
+
+```bash
+read -rs DBURL            # then paste postgresql://smb_app:<password>@127.0.0.1:5433/smb and press Enter
+printf '%s\n' "$DBURL" > ~/.smb-database-url && chmod 600 ~/.smb-database-url && unset DBURL
+~/opt/pg/bin/psql "$(cat ~/.smb-database-url)" -c "select current_user, current_database();"   # smb_app | smb
+touch ~/public_html/tmp/restart.txt
+```
+
+Do not type the URL as a command. `read -rs` waits silently for the paste.
+
+### 11.5 Keep it running (cron)
+
+`~/bin/pg-keepalive.sh` (mode `700`), run every minute from the account's crontab (`* * * * * $HOME/bin/pg-keepalive.sh`):
+
+```bash
+#!/bin/bash
+PG=$HOME/opt/pg/bin
+if ! $PG/pg_isready -q -h $HOME/pgsock -p 5433; then
+  setsid nohup $PG/postgres -D $HOME/pgdata -p 5433 -k $HOME/pgsock -c listen_addresses=127.0.0.1 >> $HOME/pgdata/server.log 2>&1 < /dev/null &
+fi
+```
+
+If the server is killed it is back within about a minute, after crash recovery (visible in `~/pgdata/server.log`).
+`pg_isready` without `-U` logs a harmless `role "<cpanel user>" does not exist` line each run.
+
+### 11.6 Moving data (how Neon was migrated)
+
+1. On a machine that can reach the old database, run `generateDatabaseBackup()` from `src/lib/databaseBackup.js`
+   to a `.sql` file (it skips the one-time reset/OTP token tables).
+2. Upload the file to the **home directory** (never `public_html`), then
+   `(echo "SET ROLE smb_app;"; cat ~/file.sql) | psql -h $HOME/pgsock -p 5433 -U smb_admin -d smb -v ON_ERROR_STOP=1 -q`
+   into an empty `smb` database (`CREATE EXTENSION pgcrypto` first, as `smb_admin`).
+3. Compare table and row counts with the source, then delete the file from the server and from your computer.
+
+Migrated on 2026-10-21: 55 tables, 46,741 rows (172 products, 32 customers, 82 orders), counts identical to Neon.
+
+### 11.7 Deploy traps seen during this migration
+
+* **Never run `npm install --omit=dev` before a build.** `next build` needs `tailwindcss`, `postcss` and
+  `autoprefixer` (dev dependencies). Use a plain `npm install` or **Ensure dependencies**.
+* If "Update from Remote" says it **could not contact the remote repository**, or `git pull` aborts because
+  `package-lock.json` changed on the server, run
+  `git stash push -m "server package-lock" package-lock.json && git pull --ff-only origin main` in `public_html`.
+* The app log shows `{}` for errors from Next's isolated contexts; `app.js` now uses `util.inspect`, so real
+  messages appear in `app.log`.
+
+### 11.8 Still to do / operate
+
+* **Backups**: nothing backs up this database yet. Add a nightly `pg_dump` (custom format) to a folder outside
+  `public_html`, and copy it off the server.
+* Keep the Neon project for a short rollback window, then delete it. Rolling back needs the previous code
+  (`95b358b`, Neon driver) as well as the old `DATABASE_URL`.
+* PostgreSQL upgrades are manual (`micromamba update -p ~/opt/pg postgresql`, then check release notes).
