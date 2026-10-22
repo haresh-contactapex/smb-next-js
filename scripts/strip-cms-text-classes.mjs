@@ -1,8 +1,7 @@
 // Removes every class (and any inline style, which the CMS turns back into an alignment class) from
-// the headings (h1-h6) and paragraphs of the CMS pages, so the classes can be added by hand afterwards.
-// Tables, links, images and lists are left alone. Paragraphs that stand for something are kept as they
-// are, because without their class they stop working: the contact-form placeholder (cms-embed-*), the
-// contact details (cms-contact*) and the social icons (cms-social*).
+// every HTML tag of the CMS pages, so the classes can be added by hand afterwards. Elements that stand
+// for something are kept as they are, because without their class they stop working: the contact-form
+// placeholder (cms-embed-*), the contact details (cms-contact*) and the social icons (cms-social*).
 //
 // The previous version of every page that changes is saved to cms_page_revisions first, so the page's
 // Version history in the admin can bring it back. It is a dry run unless --apply is given. It writes
@@ -47,16 +46,16 @@ const args = process.argv.slice(2);
 const apply = args.includes("--apply");
 const slugs = args.filter((arg) => !arg.startsWith("--"));
 
-const KEEP_PARAGRAPH = /\bcms-(embed|contact|social)/;
+const KEEP = /\bcms-(embed|contact|social)/;
 const ATTRIBUTE = /\s(?:class|style)\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi;
 
-// An opening <h1>-<h6> or <p> tag; quoted attribute values may contain ">".
-const TAG = /<(h[1-6]|p)((?:\s(?:"[^"]*"|'[^']*'|[^'">])*)?)>/gi;
+// Any opening tag; quoted attribute values may contain ">".
+const TAG = /<([a-zA-Z][a-zA-Z0-9]*)((?:\s(?:"[^"]*"|'[^']*'|[^'">])*)?)>/g;
 
 export function stripTextClasses(html) {
   let changes = 0;
   const result = html.replace(TAG, (whole, name, attributes = "") => {
-    if (name.toLowerCase() === "p" && KEEP_PARAGRAPH.test(attributes)) return whole;
+    if (KEEP.test(attributes)) return whole;
     const stripped = attributes.replace(ATTRIBUTE, "");
     if (stripped === attributes) return whole;
     changes += 1;
@@ -81,7 +80,7 @@ for (const page of pages) {
   if (!changes) continue;
   changedPages += 1;
   changedTags += changes;
-  console.log(`${apply ? "Updated" : "Would update"} ${page.slug}: ${changes} heading/paragraph tag${changes === 1 ? "" : "s"}`);
+  console.log(`${apply ? "Updated" : "Would update"} ${page.slug}: ${changes} tag${changes === 1 ? "" : "s"}`);
   if (!apply) continue;
 
   await sql`
