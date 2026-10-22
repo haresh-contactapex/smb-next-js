@@ -13,9 +13,10 @@ export const dynamic = "force-dynamic";
 
 // A landing page (the Wedding Band pages) runs edge to edge with no heading band, and its first heading becomes the
 // page's <h1>. It is a page that opens with a cms-hero table (a picture and text), or that holds a cms-split table
-// (two colour-blocked halves) after an introduction.
+// (two colour-blocked halves) after an introduction. A page written as its own HTML opts in with a first element
+// of <div class="smb-landing">, and is expected to carry its own <h1>.
 const isLandingPage = (html) =>
-  html.startsWith('<table class="cms-hero">') || html.startsWith('<table class="cms-luxe-hero">') || html.includes('<table class="cms-split">');
+  html.startsWith('<div class="smb-landing') || html.startsWith('<table class="cms-hero">') || html.startsWith('<table class="cms-luxe-hero">') || html.includes('<table class="cms-split">');
 
 // One lookup per request, shared by generateMetadata and the page.
 const loadPage = cache(async (slug) => getPublishedCmsPage(slug));
@@ -39,7 +40,7 @@ export default async function CmsContentPage({ params }) {
 
   if (isLandingPage(page.contentHtml)) {
     // The editor writes headings as h2-h4, so the first heading is promoted here. If the page has none, the title still gets an h1.
-    const html = page.contentHtml.replace(/<h2([ >])/, "<h1$1").replace("</h2>", "</h1>");
+    const html = page.contentHtml.includes("<h1") ? page.contentHtml : page.contentHtml.replace(/<h2([ >])/, "<h1$1").replace("</h2>", "</h1>");
     return (
       <div className="w-full bg-white">
         {!html.includes("<h1") && <h1 className="sr-only">{page.title}</h1>}
