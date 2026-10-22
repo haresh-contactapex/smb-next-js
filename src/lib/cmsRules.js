@@ -21,8 +21,8 @@ export const CMS_STATUSES = [
 
 // The storefront footer columns a page can be listed in.
 export const CMS_FOOTER_GROUPS = [
-  { value: "customer-service", label: "Customer Service" },
-  // `columns`: how many lists the footer lays the links out in (Education is two side by side on the live site).
+  // `columns`: how many lists the footer lays the links out in (both groups are two side by side).
+  { value: "customer-service", label: "Customer Service", columns: 2 },
   { value: "education", label: "Education", columns: 2 },
 ];
 

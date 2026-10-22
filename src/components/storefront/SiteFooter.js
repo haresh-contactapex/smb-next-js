@@ -1,6 +1,7 @@
+import { Children } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
-import { STORE_FOOTER_LINES } from "./navLinks";
+import { STORE_FOOTER_BLURB, STORE_FOOTER_CITIES, STORE_FOOTER_LINES, STORE_NAV_LINKS, STORE_SOCIAL_LINKS } from "./navLinks";
 import { listFooterPages } from "@/lib/cms";
 import { CMS_FOOTER_GROUPS } from "@/lib/cmsRules";
 import { hasPublishedBlogPosts } from "@/lib/blog";
@@ -31,39 +32,144 @@ async function loadFooterColumns() {
   }
 }
 
+// Fixed marks, like the checkout's payment strip: trim them to what the gateway takes.
+const PAYMENT_MARKS = [
+  { label: "Visa", mark: <span className="text-[13px] font-extrabold italic tracking-tight text-[#1A1F71]">VISA</span> },
+  {
+    label: "Mastercard",
+    mark: (
+      <span className="flex items-center">
+        <span className="h-4 w-4 rounded-full bg-[#EB001B]" />
+        <span className="-ml-1.5 h-4 w-4 rounded-full bg-[#F79E1B]/90" />
+      </span>
+    ),
+  },
+  { label: "American Express", mark: <span className="text-[10px] font-extrabold tracking-tight text-white">AMEX</span>, tile: "bg-[#2E77BC]" },
+  { label: "Discover", mark: <span className="text-[9px] font-bold uppercase tracking-tight text-[#231F20]">Discover</span> },
+  {
+    label: "FedEx",
+    mark: (
+      <span className="text-[14px] font-extrabold italic tracking-tighter">
+        <span className="text-[#4D148C]">Fed</span>
+        <span className="text-[#FF6200]">Ex</span>
+      </span>
+    ),
+    tile: "border-transparent bg-transparent",
+  },
+];
 
-// Storefront footer: dark charcoal band with a brand-gold top rule, clearly
-// separate from the white content area above it. `columns` is [{ label, columns, pages: [{ slug, label }] }].
+// A social icon is a white mask of the SVG on a dark circle.
+const maskStyle = (icon) => ({
+  maskImage: `url(${icon})`,
+  WebkitMaskImage: `url(${icon})`,
+  maskSize: "contain",
+  WebkitMaskSize: "contain",
+  maskRepeat: "no-repeat",
+  WebkitMaskRepeat: "no-repeat",
+  maskPosition: "center",
+  WebkitMaskPosition: "center",
+});
+
+// One footer column: an underlined heading over its links. A group set to two lists
+// (Customer Service, Education) flows them side by side from the sm breakpoint up.
+function FooterGroup({ label, columns = 1, children }) {
+  const multi = columns > 1;
+  return (
+    <div>
+      <h2 className="border-b border-white/70 pb-1 text-[13px] sm:text-sm font-medium text-white">{label}</h2>
+      <ul className={`mt-4 space-y-2.5${multi ? " sm:columns-2 sm:gap-x-8 sm:space-y-0 [&>li]:break-inside-avoid [&>li]:pb-2.5" : ""}`}>
+        {Children.map(children, (child) => (child ? <li>{child}</li> : null))}
+      </ul>
+    </div>
+  );
+}
+
+function FooterLink({ href, children }) {
+  return (
+    <Link href={href} className="font-medium text-white transition-colors hover:text-[#ef9822]">
+      {children}
+    </Link>
+  );
+}
+
+// Storefront footer: a rounded photo panel with the logo and link columns, then the store
+// blurb, city links, social icons, payment marks and copyright on white.
+// `columns` is [{ label, columns, pages: [{ slug, label }] }].
 export function SiteFooterView({ columns }) {
   return (
-    <footer className="bg-[#2b2b2b] border-t-4 border-[#ef9822] text-gray-300">
-      {columns.length > 0 && (
-        <nav aria-label="Footer" className="max-w-[1500px] mx-auto px-4 sm:px-8 pt-10 pb-2">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-8 text-sm">
-            {columns.map((column) => {
-              // A column set to two lists (Education) spreads its links side by side, like the live site.
-              const long = column.columns > 1;
-              return (
-              <div key={column.label} className={long ? "sm:col-span-2" : undefined}>
-                <h2 className="text-xs font-semibold uppercase tracking-wider text-white">{column.label}</h2>
-                <ul className={`mt-3 space-y-2${long ? " sm:columns-2 sm:gap-x-8 sm:space-y-0 [&>li]:break-inside-avoid [&>li]:pb-2" : ""}`}>
+    <footer className="bg-white text-[#555555]">
+      <div className="max-w-[1500px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16 pb-10">
+        <div className="relative overflow-hidden rounded-2xl bg-[#6b6b6b]">
+          <img src="/storefront/footer-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover grayscale" />
+          <div aria-hidden="true" className="absolute inset-0 bg-[#4a4a4a]/70" />
+          <div className="relative px-6 pt-8 pb-10 sm:px-12 sm:pt-10 sm:pb-12 lg:px-20">
+            <Link href="/" className="mx-auto block w-fit" aria-label="shopmyband.com home">
+              <img src="/storefront/logo.png" alt="shopmyband.com" className="h-7 sm:h-8 object-contain brightness-0 invert" />
+            </Link>
+            <nav aria-label="Footer" className="mt-8 sm:mt-10 grid gap-8 text-xs sm:text-[13px] md:grid-cols-2 lg:grid-cols-[1fr_1.5fr_1.5fr] lg:gap-10">
+              <FooterGroup label="Wedding Band Collection">
+                {STORE_NAV_LINKS.map((link) => (
+                  <FooterLink key={link.href} href={link.href}>{link.label}</FooterLink>
+                ))}
+              </FooterGroup>
+              {columns.map((column) => (
+                <FooterGroup key={column.label} label={column.label} columns={column.columns}>
                   {column.pages.map((page) => (
-                    <li key={page.slug}>
-                      <Link href={`/${page.slug}`} className="transition-colors hover:text-[#ef9822]">
-                        {page.label}
-                      </Link>
-                    </li>
+                    <FooterLink key={page.slug} href={`/${page.slug}`}>{page.label}</FooterLink>
                   ))}
-                </ul>
-              </div>
-              );
-            })}
+                </FooterGroup>
+              ))}
+            </nav>
           </div>
-        </nav>
-      )}
-      <div className="max-w-[1500px] mx-auto px-4 sm:px-8 py-8 sm:py-10 text-center text-xs sm:text-sm leading-relaxed">
-        <p>{STORE_FOOTER_LINES[0]}</p>
-        <p className="mt-1">{STORE_FOOTER_LINES[1]}</p>
+        </div>
+
+        <div className="mx-auto mt-8 max-w-[900px] space-y-4 text-center text-[11px] sm:text-xs leading-relaxed text-[#333333]">
+          {STORE_FOOTER_BLURB.map((paragraph) => (
+            <p key={paragraph}>{paragraph}</p>
+          ))}
+          <p>
+            {STORE_FOOTER_CITIES.map((city, index) => (
+              <span key={city.slug}>
+                {index > 0 && <span aria-hidden="true"> | </span>}
+                <Link href={`/${city.slug}`} className="transition-colors hover:text-[#ef9822]">{city.label}</Link>
+              </span>
+            ))}
+          </p>
+        </div>
+
+        <ul className="mt-8 flex items-center justify-center gap-3" aria-label="Follow us">
+          {STORE_SOCIAL_LINKS.map((social) => (
+            <li key={social.label}>
+              <a
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={social.label}
+                className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4a4a4a] transition-colors hover:bg-[#ef9822]"
+              >
+                <span aria-hidden="true" className="block h-3.5 w-3.5 bg-white" style={maskStyle(social.icon)} />
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        <ul className="mt-5 flex flex-wrap items-center justify-center gap-1.5" aria-label="Accepted payments and shipping">
+          {PAYMENT_MARKS.map((item) => (
+            <li
+              key={item.label}
+              title={item.label}
+              className={`flex h-6 w-11 items-center justify-center rounded-[3px] border border-[#d9d9d9] ${item.tile || "bg-white"}`}
+            >
+              <span className="sr-only">{item.label}</span>
+              <span aria-hidden="true" className="flex items-center">{item.mark}</span>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-6 text-center text-[11px] sm:text-xs leading-relaxed text-[#333333]">
+          <p>{STORE_FOOTER_LINES[0]}</p>
+          <p>{STORE_FOOTER_LINES[1]}</p>
+        </div>
       </div>
     </footer>
   );

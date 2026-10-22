@@ -105,3 +105,31 @@ export const STORE_FOOTER_LINES = [
   "© 2026 ShopMyBand.com, a division of MyBridalRing.com. All rights reserved.",
   "Los Angeles Web Development by Apex Global Solutions",
 ];
+
+export const STORE_FOOTER_BLURB = [
+  "Shop My Band is a premier online jewelry store that specializes in a wide selection of wedding bands. With a focus on quality and style, we offer a range of options to suit every taste and budget. Whether you're searching for classic diamond wedding bands, unique mens wedding bands, or gold wedding bands for women, Shop My Band has you covered. Our collection includes an array of stunning eternity bands, and more. If you're looking for a touch of luxury, we also offer rose gold wedding bands.",
+  "With Shop My Band, you can find the perfect wedding band to celebrate your special day. Our extensive variety, attention to detail, and commitment to customer satisfaction sets us apart as a top choice in online jewelry stores.",
+];
+
+// City landing pages (CMS pages at /<slug>), linked in a row under the footer blurb.
+export const STORE_FOOTER_CITIES = [
+  { label: "Los Angeles", slug: "los-angeles" },
+  { label: "New York", slug: "new-york" },
+  { label: "Atlanta", slug: "atlanta" },
+  { label: "Chicago", slug: "chicago" },
+  { label: "Texas", slug: "texas" },
+  { label: "Seattle", slug: "seattle" },
+  { label: "San Francisco", slug: "san-francisco" },
+  { label: "Denver", slug: "denver" },
+  { label: "Austin", slug: "austin" },
+  { label: "Arizona", slug: "arizona" },
+  { label: "Portland", slug: "portland" },
+];
+
+// Footer social icons: white masks of the SVGs in public/storefront/contact/icons.
+export const STORE_SOCIAL_LINKS = [
+  { label: "Facebook", href: "https://www.facebook.com/shopmyband/", icon: "/storefront/contact/icons/facebook.svg" },
+  { label: "X", href: "https://x.com/ShopMyBand", icon: "/storefront/contact/icons/x.svg" },
+  { label: "Instagram", href: "https://www.instagram.com/shopmyband/", icon: "/storefront/contact/icons/instagram.svg" },
+  { label: "Pinterest", href: "https://www.pinterest.com/shopmyband/", icon: "/storefront/contact/icons/pinterest.svg" },
+];
