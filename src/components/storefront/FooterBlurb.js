@@ -1,14 +1,14 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { STORE_FOOTER_BLURB, STORE_FOOTER_BLURB_BY_PATH } from "./navLinks";
+import { ALL_PAGES_PATH } from "@/lib/footerTextRules";
 
-// The store text under the footer panel. The main category pages (Wedding Bands,
-// Anniversary, Classic, Eternity, New Arrivals) each have their own; every other page
-// shows the general text. It is a client component only to read the current path, so
-// the footer around it stays a server component.
-export default function FooterBlurb() {
+// The store text under the footer panel. `texts` is { [page path]: [paragraph, ...] }
+// (edited under CMS -> Footer Text): a page with an entry shows it, every other page
+// shows the "*" entry. It is a client component only to read the current path, so the
+// footer around it stays a server component.
+export default function FooterBlurb({ texts }) {
   const pathname = (usePathname() || "").replace(/\/+$/, "") || "/";
-  const paragraphs = STORE_FOOTER_BLURB_BY_PATH[pathname] || STORE_FOOTER_BLURB;
+  const paragraphs = texts[pathname] || texts[ALL_PAGES_PATH] || [];
   return paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>);
 }

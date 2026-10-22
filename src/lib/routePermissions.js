@@ -53,6 +53,7 @@ const ROUTE_RULES = [
   { prefix: "/admin/media", permission: "media.view" },
 
   { path: "/admin/cms/new", permission: "content.create" },
+  { path: "/admin/cms/footer-text", permission: "content.edit" },
   { pattern: /^\/admin\/cms\/[^/]+\/edit$/, permission: "content.edit" },
   { prefix: "/admin/cms", permission: "content.view" },
 

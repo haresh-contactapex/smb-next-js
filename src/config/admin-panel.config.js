@@ -115,6 +115,7 @@ export const adminPanelConfig = {
       items: [
         { id: "all-pages", label: "All Pages", href: "/admin/cms" },
         { id: "add-page", label: "Add Page", href: "/admin/cms/new" },
+        { id: "footer-text", label: "Footer Text", href: "/admin/cms/footer-text" },
       ],
     },
     {

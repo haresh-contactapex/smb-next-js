@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import FooterBlurb from "./FooterBlurb";
 import { STORE_FOOTER_CITIES, STORE_FOOTER_LINES, STORE_NAV_LINKS, STORE_SOCIAL_LINKS } from "./navLinks";
 import { listFooterPages } from "@/lib/cms";
+import { getFooterTextsByPath } from "@/lib/footerTexts";
 import { CMS_FOOTER_GROUPS } from "@/lib/cmsRules";
 import { hasPublishedBlogPosts } from "@/lib/blog";
 import { BLOG_INDEX_PATH } from "@/lib/blogRules";
@@ -95,8 +96,8 @@ function FooterLink({ href, children }) {
 
 // Storefront footer: a rounded photo panel with the logo and link columns, then the store
 // blurb, city links, social icons, payment marks and copyright on white.
-// `columns` is [{ label, columns, pages: [{ slug, label }] }].
-export function SiteFooterView({ columns }) {
+// `columns` is [{ label, columns, pages: [{ slug, label }] }]; `texts` is { [page path]: [paragraph, ...] }.
+export function SiteFooterView({ columns, texts }) {
   return (
     <footer className="bg-white text-[#555555]">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16 pb-10">
@@ -125,7 +126,7 @@ export function SiteFooterView({ columns }) {
         </div>
 
         <div className="mx-auto mt-8 max-w-[900px] space-y-4 text-center text-[11px] sm:text-xs leading-relaxed text-[#333333]">
-          <FooterBlurb />
+          <FooterBlurb texts={texts} />
           <p>
             {STORE_FOOTER_CITIES.map((city, index) => (
               <span key={city.slug}>
@@ -178,5 +179,6 @@ export default async function SiteFooter() {
   // Read per request so a page published in the admin appears here straight away,
   // even on pages that would otherwise be prerendered.
   await connection();
-  return <SiteFooterView columns={await loadFooterColumns()} />;
+  const [columns, texts] = await Promise.all([loadFooterColumns(), getFooterTextsByPath()]);
+  return <SiteFooterView columns={columns} texts={texts} />;
 }
