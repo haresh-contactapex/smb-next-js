@@ -125,7 +125,11 @@ function openingTag(name, rawAttributes, profile) {
     const href = safeHref(attrs.get("href") || "", profile);
     if (!href) return null;
     out.push(` href="${escapeAttribute(href)}"`);
-    if (/^https?:\/\//i.test(href)) out.push(' target="_blank" rel="noopener noreferrer nofollow"');
+    // A link opens in a new tab only when its author asked for one (target="_blank"); without a
+    // target it opens in the same tab. Forcing _blank here would undo an author removing it.
+    if (/^https?:\/\//i.test(href) && (attrs.get("target") || "").toLowerCase() === "_blank") {
+      out.push(' target="_blank" rel="noopener noreferrer nofollow"');
+    }
   } else if (name === "img") {
     const src = profile.extended ? safeImageSrc(attrs.get("src") || "") : null;
     if (!src) return null;
