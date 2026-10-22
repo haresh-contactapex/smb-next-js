@@ -39,7 +39,11 @@ const CmsAlign = Extension.create({
 // sanitizeHtml.js): a table style (cms-plain / cms-striped / cms-cards), a heading style (cms-lg / cms-accent)
 // and "cms-or" on a paragraph (a divider line either side of the word). Kept as an attribute, so editing
 // a page does not drop them.
-const CMS_STYLE_CLASSES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-small", "cms-photo-right", "cms-luxe-hero", "cms-luxe-tiles", "cms-eyebrow", "cms-or", "cms-lg", "cms-accent", "cms-embed-contact-form", "cms-contact", "cms-contact-phone", "cms-contact-mail", "cms-social"];
+// Any class an author wrote in the HTML source is kept too (the server allows plain class names), so
+// `cmsClass` holds the block's whole class list as one space-separated string.
+const SAFE_CLASS_NAME = /^[a-zA-Z_][a-zA-Z0-9_-]{0,63}$/;
+const TABLE_STYLES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-luxe-hero", "cms-luxe-tiles", "cms-contact"];
+const classTokens = (value) => (value || "").split(/\s+/).filter(Boolean);
 const CmsStyleClass = Extension.create({
   name: "cmsStyleClass",
   addGlobalAttributes() {
@@ -49,7 +53,8 @@ const CmsStyleClass = Extension.create({
         attributes: {
           cmsClass: {
             default: null,
-            parseHTML: (element) => CMS_STYLE_CLASSES.find((name) => element.classList.contains(name)) || null,
+            // Alignment classes belong to the `align` attribute above, so they are left out here.
+            parseHTML: (element) => classTokens(element.getAttribute("class")).filter((name) => SAFE_CLASS_NAME.test(name) && !name.startsWith("cms-align-")).join(" ") || null,
             renderHTML: (attributes) => (attributes.cmsClass ? { class: attributes.cmsClass } : {}),
           },
         },
@@ -174,7 +179,7 @@ function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
         blockquote: current.isActive("blockquote"),
         link: current.isActive("link"),
         table: current.isActive("table"),
-        tableStyle: current.getAttributes("table").cmsClass || "",
+        tableStyle: classTokens(current.getAttributes("table").cmsClass).find((name) => TABLE_STYLES.includes(name)) || "",
         heading: [2, 3, 4].find((level) => current.isActive("heading", { level })) || 0,
         align: block,
         canUndo: current.can().undo(),
@@ -335,7 +340,11 @@ function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
             <select
               aria-label="Table style"
               value={state.tableStyle}
-              onChange={(e) => run().updateAttributes("table", { cmsClass: e.target.value || null }).run()}
+              onChange={(e) => {
+                // Swap the style class but keep any custom classes the table already has.
+                const custom = classTokens(editor.getAttributes("table").cmsClass).filter((name) => !TABLE_STYLES.includes(name));
+                run().updateAttributes("table", { cmsClass: [e.target.value, ...custom].filter(Boolean).join(" ") || null }).run();
+              }}
               className="mx-1 h-7 rounded-md border border-slate-200 bg-white px-1.5 text-xs text-slate-700 dark:border-white/10 dark:bg-darksurface dark:text-slate-200"
             >
               <option value="">Default grid</option>

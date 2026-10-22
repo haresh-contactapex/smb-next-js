@@ -55,6 +55,12 @@ const CMS_CLASSES = new Set([
   "cms-contact", "cms-contact-phone", "cms-contact-mail", "cms-social", "cms-social-facebook", "cms-social-x", "cms-social-instagram", "cms-social-pinterest",
 ]);
 
+// Authors may also add their own classes (styled by their own CSS or by classes already compiled
+// into the storefront). A name is kept only if it is plain letters, digits, "-" and "_", so a
+// class can never carry markup or break out of the attribute.
+const SAFE_CLASS_NAME = /^[a-zA-Z_][a-zA-Z0-9_-]{0,63}$/;
+const MAX_CLASSES = 20;
+
 // A profile allows `tags`; `attributes` says whether anything beyond the basic
 // <a href> may be kept.
 const PROFILES = {
@@ -107,7 +113,7 @@ const smallInteger = (value, max) => (/^\d{1,4}$/.test(value) && Number(value) >
 // The allowlisted classes in `class`, plus the alignment an editor writes as
 // style="text-align: center", turned into a class so no style attribute survives.
 function safeClasses(attrs) {
-  const classes = new Set((attrs.get("class") || "").split(/\s+/).filter((token) => CMS_CLASSES.has(token)));
+  const classes = new Set((attrs.get("class") || "").split(/\s+/).filter((token) => CMS_CLASSES.has(token) || SAFE_CLASS_NAME.test(token)).slice(0, MAX_CLASSES));
   const align = /(?:^|;)\s*text-align\s*:\s*(center|right)\b/i.exec(attrs.get("style") || "");
   if (align) {
     classes.delete("cms-align-center");

@@ -79,7 +79,7 @@ Rules shared by the form and the server live in `src/lib/cmsRules.js`: title, UR
 
 ## What the sanitizer keeps
 
-The cms profile keeps paragraphs, headings, text formatting, lists, quotes, links (`https`, `mailto`, `tel`, `/path`, `#anchor`; an `https` link opens in a new tab only if its HTML says `target="_blank"`, otherwise in the same tab), images (`https` or `/path`, with alt and size), tables, rules, figures and code. The only classes kept are the ones `storefront.css` draws, and the editor keeps them when a page is re-saved:
+The cms profile keeps paragraphs, headings, text formatting, lists, quotes, links (`https`, `mailto`, `tel`, `/path`, `#anchor`; an `https` link opens in a new tab only if its HTML says `target="_blank"`, otherwise in the same tab), images (`https` or `/path`, with alt and size), tables, rules, figures and code. Any class whose name is plain letters, digits, `-` or `_` is kept (up to 20 per tag), so authors can add their own classes in the HTML source; one only has an effect if some CSS styles it. The editor keeps them when a page is re-saved. The classes `storefront.css` draws for the editor's own tools are:
 
 | Class | On | Looks like | Set with |
 | --- | --- | --- | --- |
