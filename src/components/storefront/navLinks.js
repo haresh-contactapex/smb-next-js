@@ -106,6 +106,25 @@ export const STORE_FOOTER_LINES = [
   "Los Angeles Web Development by Apex Global Solutions",
 ];
 
+// Footer text of the main category pages, by page path. Any other page shows STORE_FOOTER_BLURB.
+export const STORE_FOOTER_BLURB_BY_PATH = {
+  [WEDDING_BANDS_PAGE_HREF]: [
+    "Wedding bands symbolize love and commitment, suited to personal style and preference. From dazzling diamond wedding bands for that extra sparkle to unique men's wedding bands designed with modernity and elegance, and metal bands, there's an array of options to explore. The choice of metal for a wedding band is pivotal; precious yellow gold, feminine rose gold, contemporary white gold, or durable platinum provide a range of aesthetics. For women, the beauty of women's wedding bands is in their delicate and stylish designs. Comfort fit wedding bands are perfect for those seeking both individuality and ease in wear, symbolizing love sustainably.",
+  ],
+  [ANNIVERSARY_BANDS_PAGE_HREF]: [
+    "Celebrate your enduring love with our stunning wedding anniversary bands. Offer her an elegant and unique diamond anniversary band to symbolize your treasured years together. Whether it's a shimmering white gold anniversary band, a romantic rose gold band, a classic yellow gold band, or a timeless platinum anniversary band, each piece is a poignant reminder of your shared journey. These exquisite bands offer a captivating blend of style and sentiment that truly represent the everlasting bond between two souls.",
+  ],
+  [CLASSIC_BANDS_PAGE_HREF]: [
+    "When it comes to classic bands, there is something timeless about their elegance. Classic wedding bands have long been a symbol of love and commitment between couples. For grooms, classic mens wedding bands perfectly balance style and simplicity, while a gold wedding band adds a touch of sophistication. Many grooms prefer a band that complements their style. Brides can choose from various classic women’s wedding bands in a plethora of designs to match any personality.",
+  ],
+  [collection("eternity-bands")]: [
+    "Eternity bands come in a variety of styles and metals. The white gold eternity ring is a sought-after option, known for its elegance and timeless appeal. Its sleek design makes it versatile, suitable for both casual and formal occasions. Another popular option is the half eternity band, which provides a more understated yet luxurious look. For those looking for classic wedding bands, diamond eternity wedding bands are a good choice, the channel-set diamond eternity band stands out. Unique diamond eternity bands provide a touch of individuality and personal expression, with unconventional designs and cuts. How you wear your eternity ring is a personal choice. Some couples stack them with a wedding band first, followed by engagement and finally, the eternity ring on the third finger. Whatever your choice, you can get your perfect eternity ring on Shop My Band.",
+  ],
+  [collection("new-arrivals")]: [
+    "Our latest trendy collections include modern, classic wedding bands that are perfect for those looking for traditional yet timeless pieces. Our classic mens' wedding bands offer a sophisticated and masculine touch while classic women's wedding bands are perfect for any bride-to-be. Additionally, our selection of eternity bands including women's eternity bands and diamond eternity bands offer a stunning shine to match any engagement ring. Our white gold mens' wedding bands provide a sleek and modern look for grooms, while our women's wedding bands and gold wedding bands for women add a touch of elegance to any attire. Whether you're looking for a special piece for your big day or a timeless gift for an anniversary, Shop My Band's latest collection of wedding and anniversary jewelry offers something for everyone.",
+  ],
+};
+
 export const STORE_FOOTER_BLURB = [
   "Shop My Band is a premier online jewelry store that specializes in a wide selection of wedding bands. With a focus on quality and style, we offer a range of options to suit every taste and budget. Whether you're searching for classic diamond wedding bands, unique mens wedding bands, or gold wedding bands for women, Shop My Band has you covered. Our collection includes an array of stunning eternity bands, and more. If you're looking for a touch of luxury, we also offer rose gold wedding bands.",
   "With Shop My Band, you can find the perfect wedding band to celebrate your special day. Our extensive variety, attention to detail, and commitment to customer satisfaction sets us apart as a top choice in online jewelry stores.",

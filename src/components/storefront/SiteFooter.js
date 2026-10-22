@@ -1,7 +1,8 @@
 import { Children } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
-import { STORE_FOOTER_BLURB, STORE_FOOTER_CITIES, STORE_FOOTER_LINES, STORE_NAV_LINKS, STORE_SOCIAL_LINKS } from "./navLinks";
+import FooterBlurb from "./FooterBlurb";
+import { STORE_FOOTER_CITIES, STORE_FOOTER_LINES, STORE_NAV_LINKS, STORE_SOCIAL_LINKS } from "./navLinks";
 import { listFooterPages } from "@/lib/cms";
 import { CMS_FOOTER_GROUPS } from "@/lib/cmsRules";
 import { hasPublishedBlogPosts } from "@/lib/blog";
@@ -124,9 +125,7 @@ export function SiteFooterView({ columns }) {
         </div>
 
         <div className="mx-auto mt-8 max-w-[900px] space-y-4 text-center text-[11px] sm:text-xs leading-relaxed text-[#333333]">
-          {STORE_FOOTER_BLURB.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
+          <FooterBlurb />
           <p>
             {STORE_FOOTER_CITIES.map((city, index) => (
               <span key={city.slug}>
