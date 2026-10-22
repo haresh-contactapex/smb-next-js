@@ -43,7 +43,7 @@ export default async function CmsContentPage({ params }) {
     return (
       <div className="w-full bg-white">
         {!html.includes("<h1") && <h1 className="sr-only">{page.title}</h1>}
-        <article id="cms-article" className="cms-content cms-wide" dangerouslySetInnerHTML={{ __html: html }} />
+        <article id="cms-article" className="cms-wide" dangerouslySetInnerHTML={{ __html: html }} />
         {embeds}
       </div>
     );
@@ -75,7 +75,7 @@ export default async function CmsContentPage({ params }) {
           margin so the article's own spacing underneath is unchanged. */}
       <div className="relative z-10 -mt-[32px] sm:-mt-[50px] pt-[32px] sm:pt-[50px] rounded-t-[32px] sm:rounded-t-[50px] bg-white">
         {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
-        <article id="cms-article" className="cms-content mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14" dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
+        <article id="cms-article" className="mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14" dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
         {/* A page can hold a placeholder for an interactive part (the contact form); only those pages load the code for it. */}
         {embeds}
       </div>
