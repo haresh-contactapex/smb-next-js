@@ -18,6 +18,12 @@ export const dynamic = "force-dynamic";
 const isLandingPage = (html) =>
   html.startsWith('<div class="smb-landing') || html.startsWith('<table class="cms-hero">') || html.startsWith('<table class="cms-luxe-hero">') || html.includes('<table class="cms-split">');
 
+// CMS bodies carry no default typography class: they are styled by the site's own CSS and the
+// classes written in the HTML. The Contact page is the exception. Its two-panel layout (the
+// cms-contact table in storefront.css) is written under .cms-content, so a page holding it gets
+// that class back.
+const usesContentStyles = (html) => html.includes('<table class="cms-contact"');
+
 // One lookup per request, shared by generateMetadata and the page.
 const loadPage = cache(async (slug) => getPublishedCmsPage(slug));
 
@@ -76,7 +82,7 @@ export default async function CmsContentPage({ params }) {
           margin so the article's own spacing underneath is unchanged. */}
       <div className="relative z-10 -mt-[32px] sm:-mt-[50px] pt-[32px] sm:pt-[50px] rounded-t-[32px] sm:rounded-t-[50px] bg-white">
         {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
-        <article id="cms-article" className="mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14" dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
+        <article id="cms-article" className={`${usesContentStyles(page.contentHtml) ? "cms-content " : ""}mx-auto max-w-[1000px] px-4 sm:px-8 py-10 sm:py-14`} dangerouslySetInnerHTML={{ __html: page.contentHtml }} />
         {/* A page can hold a placeholder for an interactive part (the contact form); only those pages load the code for it. */}
         {embeds}
       </div>
