@@ -101,10 +101,9 @@ export const STORE_ANNOUNCEMENTS = [
   "Free Lifetime Cleaning & Inspection",
 ];
 
-export const STORE_FOOTER_LINES = [
-  "© 2026 ShopMyBand.com, a division of MyBridalRing.com. All rights reserved.",
-  "Los Angeles Web Development by Apex Global Solutions",
-];
+// The two copyright lines under the footer: the sister site and the web developer, each linked.
+export const STORE_PARENT_SITE = { label: "MyBridalRing.com", href: "https://www.mybridalring.com" };
+export const STORE_DEVELOPER = { label: "Los Angeles Web Development", href: "https://www.apexglobalsolutions.com/" };
 
 // City landing pages (CMS pages at /<slug>), linked in a row under the footer blurb.
 export const STORE_FOOTER_CITIES = [

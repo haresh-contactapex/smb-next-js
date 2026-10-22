@@ -2,7 +2,7 @@ import { Children } from "react";
 import Link from "next/link";
 import { connection } from "next/server";
 import FooterBlurb from "./FooterBlurb";
-import { STORE_FOOTER_CITIES, STORE_FOOTER_LINES, STORE_NAV_LINKS, STORE_SOCIAL_LINKS } from "./navLinks";
+import { STORE_DEVELOPER, STORE_FOOTER_CITIES, STORE_NAV_LINKS, STORE_PARENT_SITE, STORE_SOCIAL_LINKS } from "./navLinks";
 import { listFooterPages } from "@/lib/cms";
 import { getFooterTextsByPath } from "@/lib/footerTexts";
 import { CMS_FOOTER_GROUPS } from "@/lib/cmsRules";
@@ -83,6 +83,15 @@ function FooterGroup({ label, columns = 1, children }) {
         {Children.map(children, (child) => (child ? <li>{child}</li> : null))}
       </ul>
     </div>
+  );
+}
+
+// A link to another site, opened in a new tab.
+function ExternalLink({ href, label }) {
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer" className="underline-offset-2 transition-colors hover:text-[#ef9822] hover:underline">
+      {label}
+    </a>
   );
 }
 
@@ -167,8 +176,12 @@ export function SiteFooterView({ columns, texts }) {
         </ul>
 
         <div className="mt-6 text-center text-[11px] sm:text-xs leading-relaxed text-[#333333]">
-          <p>{STORE_FOOTER_LINES[0]}</p>
-          <p>{STORE_FOOTER_LINES[1]}</p>
+          <p>
+            © 2026 ShopMyBand.com, a division of <ExternalLink {...STORE_PARENT_SITE} />. All rights reserved.
+          </p>
+          <p>
+            <ExternalLink {...STORE_DEVELOPER} /> by Apex Global Solutions
+          </p>
         </div>
       </div>
     </footer>
