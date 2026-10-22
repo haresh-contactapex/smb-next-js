@@ -27,3 +27,9 @@ yarn-error.log*
 /public/uploads/*
 !/public/uploads/.gitkeep
 .env*
+
+# draft request to the host (names the server and account), kept local
+/docs/deployment/admin-request-postgresql.txt
+
+# local archive of uploaded media, not committed
+/public/uploads.zip
