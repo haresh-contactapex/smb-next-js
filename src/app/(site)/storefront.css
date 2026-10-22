@@ -317,8 +317,7 @@
 @media (max-width: 560px) {
   .cms-content table.cms-chips tr { grid-template-columns: minmax(0, 1fr); }
 }
-/* The gold-and-navy Wedding Band New design. Hero: a photo that fades into a cream panel (a gold leaf drawing sits on the
-   right), a small gold eyebrow line, a navy serif heading and a solid gold button. */
+/* The gold-and-navy Wedding Band New design. Hero: a photo that fades into a cream panel, a small gold eyebrow line, a navy serif heading and a solid gold button. */
 .cms-content table.cms-luxe-hero,
 .cms-content table.cms-luxe-hero tbody { display: block; width: 100%; margin: 0; }
 .cms-content table.cms-luxe-hero tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background-color: #f8f7f3; }
@@ -327,7 +326,7 @@
 .cms-content table.cms-luxe-hero td:first-child p { margin: 0; }
 .cms-content table.cms-luxe-hero td:first-child img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 .cms-content table.cms-luxe-hero td:first-child::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 24%; background: linear-gradient(to right, rgba(248, 247, 243, 0), #f8f7f3); }
-.cms-content table.cms-luxe-hero td:last-child { display: flex; flex-direction: column; justify-content: center; padding: 2.5rem clamp(6.5rem, 17vw, 12rem) 2.5rem clamp(1.5rem, 3vw, 2.4rem); background: url(/storefront/wedding-band-new/leaf.png) no-repeat right clamp(1rem, 3vw, 2.4rem) center / auto 64%; }
+.cms-content table.cms-luxe-hero td:last-child { display: flex; flex-direction: column; justify-content: center; padding: 2.5rem clamp(1.5rem, 6vw, 5rem) 2.5rem clamp(1.5rem, 3vw, 2.4rem); }
 .cms-content p.cms-eyebrow { margin: 0 0 0.9rem; color: #b8923a; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
 .cms-content table.cms-luxe-hero h1,
 .cms-content table.cms-luxe-hero h2 { margin: 0 0 1.2rem; color: #0f2252; font-family: var(--font-playfair), serif; font-size: clamp(30px, 4.2vw, 46px); font-weight: 400; line-height: 1.08; }
@@ -364,7 +363,7 @@
   .cms-content table.cms-luxe-hero tr { grid-template-columns: minmax(0, 1fr); }
   .cms-content table.cms-luxe-hero td:first-child { aspect-ratio: auto; height: 17rem; min-height: 0; max-height: none; }
   .cms-content table.cms-luxe-hero td:first-child::after { top: auto; left: 0; width: auto; height: 22%; background: linear-gradient(to bottom, rgba(248, 247, 243, 0), #f8f7f3); }
-  .cms-content table.cms-luxe-hero td:last-child { padding-right: 4.5rem; background-size: auto 40%; background-position: right 1rem top 1.6rem; }
+  .cms-content table.cms-luxe-hero td:last-child { padding-right: 1.5rem; }
 }
 @media (max-width: 560px) {
   .cms-content table.cms-luxe-tiles tr,
