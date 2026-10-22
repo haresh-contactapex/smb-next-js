@@ -35,7 +35,7 @@ export function footerTextParagraphs(content) {
 }
 
 /**
- * Checks and cleans a list of `{ path, content }` entries. The first entry must be the
+ * Checks and cleans a list of `{ path, content, hidden }` entries. The first entry must be the
  * all-pages text (path "*"); the rest are pages. Returns { entries, errors } where
  * `errors` is { [index]: { path?, content? } } and `entries` is the cleaned list.
  */
@@ -47,7 +47,7 @@ export function normalizeFooterTextsInput(input) {
   };
 
   const list = Array.isArray(input) ? input : [];
-  if (list.length === 0) return { entries, errors: { 0: { content: "The text for all other pages is required." } } };
+  if (list.length === 0) return { entries, errors: { 0: { content: "Enter the text for all other pages, or hide it." } } };
   if (list.length > FOOTER_TEXT_ENTRIES_MAX) {
     return { entries, errors: { 0: { content: `Up to ${FOOTER_TEXT_ENTRIES_MAX} pages can have their own footer text.` } } };
   }
@@ -66,10 +66,12 @@ export function normalizeFooterTextsInput(input) {
       else seen.set(path, index);
     }
 
-    if (!content) fail(index, "content", isAllPages ? "The text for all other pages is required." : "Enter the footer text for this page.");
+    // A hidden entry shows no text, so it may have none (any text it has is kept for later).
+    const hidden = item?.hidden === true;
+    if (!content && !hidden) fail(index, "content", isAllPages ? "Enter the text for all other pages, or hide it." : "Enter the footer text for this page, or hide it.");
     else if (content.length > FOOTER_TEXT_MAX) fail(index, "content", `Keep it to ${FOOTER_TEXT_MAX} characters or fewer.`);
 
-    entries.push({ path, content });
+    entries.push({ path, content, hidden });
   });
 
   return { entries, errors };
