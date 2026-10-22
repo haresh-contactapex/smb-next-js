@@ -7,7 +7,8 @@
  */
 module.exports = {
   darkMode: "class",
-  content: ["./src/**/*.{js,jsx,mdx}"],
+  // src/cms-html holds copies of CMS page HTML so the Tailwind classes it uses are compiled for the storefront.
+  content: ["./src/**/*.{js,jsx,mdx,html}"],
   theme: {
     extend: {
       fontFamily: {

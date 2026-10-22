@@ -41,9 +41,10 @@ const CmsAlign = Extension.create({
 // a page does not drop them.
 // Any class an author wrote in the HTML source is kept too (the server allows plain class names), so
 // `cmsClass` holds the block's whole class list as one space-separated string.
-const SAFE_CLASS_NAME = /^[a-zA-Z_][a-zA-Z0-9_-]{0,63}$/;
+const SAFE_CLASS_NAME = /^[^\s"'<>`\\\u0000-\u001f]{1,100}$/;
 const TABLE_STYLES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-luxe-hero", "cms-luxe-tiles", "cms-contact"];
-const classTokens = (value) => (value || "").split(/\s+/).filter(Boolean);
+const HAS_DIV = /<div[\s>]/i;
+const classTokens =(value) => (value || "").split(/\s+/).filter(Boolean);
 const CmsStyleClass = Extension.create({
   name: "cmsStyleClass",
   addGlobalAttributes() {
@@ -152,14 +153,17 @@ export default function RichTextEditor({ initialHtml = "", onChange, onNotify, e
   if (!editor) {
     return <div className="min-h-[420px] rounded-xl border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-darksurface2/50" aria-busy="true" />;
   }
-  return <EditorShell editor={editor} onChange={onChange} onNotify={onNotify} error={error} ariaLabel={ariaLabel} />;
+  return <EditorShell editor={editor} initialHtml={initialHtml} onChange={onChange} onNotify={onNotify} error={error} ariaLabel={ariaLabel} />;
 }
 
 // The toolbar and the editing surface. A separate component so useEditorState always gets a real
 // editor: when it is first called with a null editor it never selects once the editor appears.
-function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
-  const [mode, setMode] = useState("visual");
-  const [sourceHtml, setSourceHtml] = useState("");
+function EditorShell({ editor, initialHtml, onChange, onNotify, error, ariaLabel }) {
+  // The visual editor has no <div> and cannot keep a wrapper's classes, so a page built from <div> wrappers opens
+  // in the HTML tab (the saved HTML is shown untouched) and is only loaded into the visual editor if the author confirms.
+  const startsInSource = HAS_DIV.test(initialHtml);
+  const [mode, setMode] = useState(startsInSource ? "source" : "visual");
+  const [sourceHtml, setSourceHtml] = useState(startsInSource ? initialHtml : "");
   const [linkBar, setLinkBar] = useState(null); // { url, style, error } while the link bar is open
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -196,6 +200,7 @@ function EditorShell({ editor, onChange, onNotify, error, ariaLabel }) {
       setSourceHtml(editor.isEmpty ? "" : editor.getHTML());
       setLinkBar(null);
     } else {
+      if (HAS_DIV.test(sourceHtml) && !window.confirm("The visual editor can't keep <div> wrappers or their classes, so switching to it will remove them. Stay in the HTML tab to keep them. Switch to the visual editor anyway?")) return;
       editor.commands.setContent(sourceHtml, { emitUpdate: false });
       onChange?.(editor.isEmpty ? "" : editor.getHTML());
     }

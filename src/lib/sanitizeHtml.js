@@ -55,10 +55,11 @@ const CMS_CLASSES = new Set([
   "cms-contact", "cms-contact-phone", "cms-contact-mail", "cms-social", "cms-social-facebook", "cms-social-x", "cms-social-instagram", "cms-social-pinterest",
 ]);
 
-// Authors may also add their own classes (styled by their own CSS or by classes already compiled
-// into the storefront). A name is kept only if it is plain letters, digits, "-" and "_", so a
-// class can never carry markup or break out of the attribute.
-const SAFE_CLASS_NAME = /^[a-zA-Z_][a-zA-Z0-9_-]{0,63}$/;
+// Authors may also add their own classes (styled by their own CSS or by Tailwind classes compiled into
+// the storefront, which include ":", "[", "]", "/" and "." as in "sm:grid-cols-2" or "border-t-[5px]").
+// A name is kept if it has no whitespace, quote, angle bracket, backtick or backslash, and the value is
+// escaped when written, so a class can never carry markup or break out of the attribute.
+const SAFE_CLASS_NAME = /^[^\s"'<>`\\\u0000-\u001f]{1,100}$/;
 const MAX_CLASSES = 20;
 
 // A profile allows `tags`; `attributes` says whether anything beyond the basic
