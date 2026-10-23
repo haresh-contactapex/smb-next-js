@@ -111,8 +111,8 @@ export function SiteFooterView({ columns, texts }) {
     <footer className="bg-white text-[#555555]">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16 pb-10">
         <div className="relative overflow-hidden rounded-2xl bg-[#6b6b6b]">
-          <img src="/storefront/footer-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover grayscale" />
-          <div aria-hidden="true" className="absolute inset-0 bg-[#4a4a4a]/70" />
+          <img src="/storefront/footer-bg.jpg" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover" />
+          <div aria-hidden="true" className="absolute inset-0 bg-[#3d3d3d]/65" />
           <div className="relative px-6 pt-8 pb-10 sm:px-12 sm:pt-10 sm:pb-12 lg:px-20">
             <Link href="/" className="mx-auto block w-fit" aria-label="shopmyband.com home">
               <img src="/storefront/logo.png" alt="shopmyband.com" className="h-7 sm:h-8 object-contain brightness-0 invert" />
