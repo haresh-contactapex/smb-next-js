@@ -21,7 +21,7 @@ const BASIC_TAGS = [
 
 const CMS_TAGS = [
   ...BASIC_TAGS,
-  "img", "hr", "figure", "figcaption", "sup", "sub", "code", "pre",
+  "img", "hr", "figure", "figcaption", "sup", "sub", "code", "pre", "span",
   "table", "caption", "thead", "tbody", "tfoot", "tr", "th", "td",
 ];
 
