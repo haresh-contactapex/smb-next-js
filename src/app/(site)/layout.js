@@ -1,4 +1,4 @@
-import { Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import GoogleSansFont from "@/components/storefront/GoogleSansFont";
 import TopBar from "@/components/storefront/TopBar";
 import SiteHeader from "@/components/storefront/SiteHeader";
@@ -12,9 +12,12 @@ import SearchOverlay from "@/components/storefront/search/SearchOverlay";
 import { listShippingCountries } from "@/lib/storefrontCart";
 import "./storefront.css";
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
+// Self-hosted like Inter in the root layout (the Google Fonts "latin" variable file in src/fonts).
+const playfair = localFont({
+  src: "../../fonts/playfair-display-latin.woff2",
+  weight: "400 700",
+  style: "normal",
+  display: "swap",
   variable: "--font-playfair",
 });
 

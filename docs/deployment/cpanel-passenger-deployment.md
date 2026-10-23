@@ -338,6 +338,7 @@ NEXT_PUBLIC_RECAPTCHA_SITE_KEY=<your site key>
 | "Ensure dependencies" shows Done instantly but nothing happens | It only runs `npm install` on cPanel's old npm; `onload-script` and custom hooks are not honoured | Don't rely on it for builds |
 | `package-lock.json` shows as modified | `npm install` on npm 8 rewrites it | `.npmrc` with `save=false` (§5.5) |
 | Site shows the 503 "being built" page forever | Build failed | Read `build.log`; fix; delete `.next`; restart (§9) |
+| `build.log`: `An error occurred in next/font` … `Cannot read properties of null (reading '1')` after `Retrying 1/3...` | The build could not download a Google font (the host's route to Google Fonts is flaky). Fixed by self-hosting Inter and Playfair Display with `next/font/local` (`src/fonts/`), so the build no longer needs the network for fonts | If it reappears, check nothing re-introduced `next/font/google`. Google Sans is still a runtime `<link>` in the browser, not a build step |
 | Login says "We couldn't send your sign-in code" (customer/staff 2FA by email) | The app could not send email; see §8.1 | Read `app.log`, then follow §8.1 |
 | `app.log`: `connect ENETUNREACH 2607:…:587` | Server has an IPv6 address but no IPv6 route; nodemailer picks IPv4/IPv6 at random | `app.js` hides IPv6 from `os.networkInterfaces()` (already in the §5.5 file) |
 | `app.log`: `getaddrinfo ENOTFOUND mail.<domain>` | The SMTP host has no DNS record (zone is at Cloudflare) | Use the server hostname, e.g. `server.contactapex.website`, not `mail.<domain>` |

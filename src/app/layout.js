@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import ThemeInitScript from "@/components/admin-panel/ThemeInitScript";
 import { GeneralSettingsProvider } from "@/components/providers/GeneralSettingsProvider";
@@ -8,9 +8,13 @@ import { getProductsSettings } from "@/lib/productsSettings";
 import { getSecuritySettings } from "@/lib/securitySettings";
 import { getIntegrationsSettings } from "@/lib/integrationsSettings";
 
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+// Self-hosted (src/fonts, the Google Fonts "latin" variable file) so `next build` never has to download it:
+// the cPanel host's connection to Google Fonts is unreliable and a failed download fails the whole build.
+const inter = localFont({
+  src: "../fonts/inter-latin.woff2",
+  weight: "400 800",
+  style: "normal",
+  display: "swap",
   variable: "--font-inter",
 });
 
