@@ -57,9 +57,11 @@ const CMS_CLASSES = new Set([
 
 // Authors may also add their own classes (styled by their own CSS or by Tailwind classes compiled into
 // the storefront, which include ":", "[", "]", "/" and "." as in "sm:grid-cols-2" or "border-t-[5px]").
-// A name is kept if it has no whitespace, quote, angle bracket, backtick or backslash, and the value is
-// escaped when written, so a class can never carry markup or break out of the attribute.
-const SAFE_CLASS_NAME = /^[^\s"'<>`\\\u0000-\u001f]{1,100}$/;
+// A name is kept if it has no whitespace, quote, "<", backtick or backslash, and the value is escaped when
+// written (">" and "&" become entities that the browser reads back), so a class can never carry markup or
+// break out of the attribute. ">" and "&" are allowed because Tailwind arbitrary variants use them,
+// as in "[&>li::marker]:text-[#EF9822]".
+const SAFE_CLASS_NAME = /^[^\s"'<`\\\u0000-\u001f]{1,150}$/;
 const MAX_CLASSES = 20;
 
 // A profile allows `tags`; `attributes` says whether anything beyond the basic
@@ -154,7 +156,7 @@ function openingTag(name, rawAttributes, profile) {
 
   if (profile.extended) {
     const classes = safeClasses(attrs);
-    if (classes.length) out.push(` class="${classes.join(" ")}"`);
+    if (classes.length) out.push(` class="${escapeAttribute(classes.join(" "))}"`);
   }
   return `<${name}${out.join("")}>`;
 }

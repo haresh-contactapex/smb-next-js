@@ -41,7 +41,7 @@ const CmsAlign = Extension.create({
 // a page does not drop them.
 // Any class an author wrote in the HTML source is kept too (the server allows plain class names), so
 // `cmsClass` holds the block's whole class list as one space-separated string.
-const SAFE_CLASS_NAME = /^[^\s"'<>`\\\u0000-\u001f]{1,100}$/;
+const SAFE_CLASS_NAME = /^[^\s"'<`\\\u0000-\u001f]{1,150}$/;
 const TABLE_STYLES = ["cms-plain", "cms-striped", "cms-cards", "cms-columns", "cms-products", "cms-hero", "cms-tiles", "cms-split", "cms-chips", "cms-luxe-hero", "cms-luxe-tiles", "cms-contact"];
 const HAS_DIV = /<div[\s>]/i;
 const classTokens =(value) => (value || "").split(/\s+/).filter(Boolean);

@@ -1,0 +1,11 @@
+<!--
+  Not a page. Tailwind only builds the classes it finds in files under src/, so a class that is typed
+  only into the admin's HTML tab (an arbitrary value or variant such as [&>li::marker]:text-[#EF9822])
+  has no CSS on the site. List such classes here, one example per line, and they are built on the next
+  deploy. Commit the file; nothing reads it at runtime.
+-->
+
+<!-- Bullet / number colour on a list -->
+<ul class="list-disc pl-5 [&>li::marker]:text-[#EF9822] mb-6"></ul>
+<ul class="list-disc pl-5 marker:text-[#EF9822] mb-6"></ul>
+<ol class="list-decimal pl-5 [&>li::marker]:text-[#EF9822] mb-6"></ol>
