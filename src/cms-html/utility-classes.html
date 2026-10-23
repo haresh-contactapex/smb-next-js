@@ -9,3 +9,12 @@
 <ul class="list-disc pl-5 [&>li::marker]:text-[#EF9822] mb-6"></ul>
 <ul class="list-disc pl-5 marker:text-[#EF9822] mb-6"></ul>
 <ol class="list-decimal pl-5 [&>li::marker]:text-[#EF9822] mb-6"></ol>
+
+<!-- Bullet / number size (the marker takes the font size of ::marker, not of the item text) -->
+<ul class="list-disc pl-5 [&>li::marker]:text-[22px] mb-6"></ul>
+<ul class="list-disc pl-5 marker:text-[22px] mb-6"></ul>
+<ul class="list-disc pl-5 marker:text-2xl mb-6"></ul>
+<ul class="list-disc pl-5 [&>li::marker]:text-2xl [&>li::marker]:text-[#EF9822] mb-6"></ul>
+
+<!-- Drawn round bullet, any size and colour, same in every browser (no span needed). h-2.5 w-2.5 is a 10px dot -->
+<ul class="list-none pl-0 mb-6 [&>li]:relative [&>li]:pl-6 [&>li]:before:absolute [&>li]:before:left-0 [&>li]:before:top-[0.6em] [&>li]:before:h-2.5 [&>li]:before:w-2.5 [&>li]:before:rounded-full [&>li]:before:bg-[#EF9822]"></ul>
