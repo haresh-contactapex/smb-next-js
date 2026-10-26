@@ -18,15 +18,39 @@ export function failureFrom(error, { KnownError, fallbackMessage, label }) {
   return fail(fallbackMessage, 500);
 }
 
+// Reads the request body as text, giving up as soon as it passes `maxBytes` instead of
+// buffering all of it first. Resolves to null when it is too large.
+async function readTextCapped(request, maxBytes) {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        await reader.cancel().catch(() => {});
+        return null;
+      }
+      chunks.push(value);
+    }
+  } catch {
+    return "";
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 // Reads a JSON request body no larger than `maxBytes`. Content-Length can be absent
-// (chunked body) or wrong, so the size is checked on the text actually read.
-// Resolves to { payload } or { response } (a 413/400 the handler returns as it is).
+// (chunked body) or wrong, so the limit is enforced on the bytes actually read, and reading
+// stops at the limit. Resolves to { payload } or { response } (a 413/400 the handler returns).
 export async function readJsonBody(request, { maxBytes, tooLongMessage = "That request was too large." }) {
   if (Number(request.headers.get("content-length")) > maxBytes) {
     return { response: fail(tooLongMessage, 413) };
   }
-  const raw = await request.text().catch(() => "");
-  if (Buffer.byteLength(raw) > maxBytes) return { response: fail(tooLongMessage, 413) };
+  const raw = await readTextCapped(request, maxBytes);
+  if (raw === null) return { response: fail(tooLongMessage, 413) };
   try {
     return { payload: JSON.parse(raw) };
   } catch {

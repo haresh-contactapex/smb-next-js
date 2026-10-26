@@ -693,19 +693,22 @@ export function updateProduct(id, payload) {
 
 // The product's own engraving setting lives beside the aggregate rather than in it. Only
 // written when the payload carries one, so imports and scripts that know nothing about
-// engraving leave an existing choice alone.
+// engraving leave an existing choice alone. Before the engraving migration there is no
+// column: "inherit" is what that means, so nothing is stored, and anything else is an error.
+// The column is checked up front because a failed UPDATE would abort the save's transaction.
 async function saveEngravingMode(id, payload) {
   if (payload.engraving_mode === undefined) return;
-  // setProductEngravingMode tolerates a missing engraving column by swallowing the error, but
-  // inside the save's transaction that error aborts the transaction. The savepoint lets that
-  // case be undone (RELEASE then fails with 25P02) so the rest of the save still commits.
-  await sql`SAVEPOINT engraving_mode`;
+  const [column] = await sql`
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = current_schema() AND table_name = 'products' AND column_name = 'engraving_mode'
+  `;
+  if (!column) {
+    if (normalizeEngravingMode(payload.engraving_mode) === "inherit") return;
+    throw new ProductError("The engraving columns are missing. Run `npm run db:migrate:engraving` and save again.", 503);
+  }
   try {
     await setProductEngravingMode(id, payload.engraving_mode);
-    await sql`RELEASE SAVEPOINT engraving_mode`;
   } catch (error) {
-    await sql`ROLLBACK TO SAVEPOINT engraving_mode`;
-    if (error.code === "25P02") return;
     throw error.status ? new ProductError(error.message, error.status) : error;
   }
 }

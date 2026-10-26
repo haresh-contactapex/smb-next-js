@@ -1,9 +1,6 @@
 // Every schema file, in the order a fresh database needs them (a table is created before
 // anything that references it). `npm run db:migrate:all` applies the ones not yet recorded
 // in schema_migrations; add a new feature's file here when it is created.
-// Not listed: docs/settings/payment-gateway-credentials-only.sql, a one-off upgrade for databases
-// whose payment_settings still has the old shared public_key/secret_key columns (run it by hand
-// with `npm run db:migrate:payment-gateways` only on such a database).
 export const MIGRATIONS = [
   "docs/category-product/category-product-catalog-database-schema.sql",
   "docs/media/media-library-schema.sql",
@@ -47,3 +44,9 @@ export const MIGRATIONS = [
   "docs/settings/admin-roles-table-only.sql",
   "docs/notifications/admin-notifications-table-only.sql",
 ];
+
+// One-off upgrades that must not run on a fresh database. payment-gateway-credentials-only.sql
+// is for databases whose payment_settings still has the old shared public_key/secret_key
+// columns (run it by hand with `npm run db:migrate:payment-gateways` only on such a database).
+// tests/migrations.test.mjs checks that every `db:migrate:*` script's file is in one list or the other.
+export const MANUAL_ONLY = ["docs/settings/payment-gateway-credentials-only.sql"];

@@ -28,13 +28,14 @@ npm run dev
 npm run build
 npm run lint
 npm test
+TEST_DATABASE_URL=postgresql://... npm test   # also runs tests/db.integration.test.mjs on a disposable empty database
 npm run db:migrate:all
 npm run db:seed:admin
 npm run db:seed:cms
 npm run db:seed:blog
 ```
 
-`db:migrate:all` applies, in dependency order, every schema file listed in `scripts/migrations.mjs` that is new or changed, each in one transaction, and records it (filename + checksum) in `schema_migrations`. Add a new feature's schema file to that list. The per-file `db:migrate:*` scripts in `package.json` (and `npm run db:migrate`, the catalog schema) still apply one file the same way; `--force` re-applies an unchanged file.
+`db:migrate:all` applies, in dependency order, every schema file listed in `scripts/migrations.mjs` that is new or changed, each in one transaction, and records it (filename + checksum) in `schema_migrations`. Add a new feature's schema file to that list. The per-file `db:migrate:*` scripts in `package.json` (and `npm run db:migrate`, the catalog schema) still apply one file the same way; `--force` re-applies an unchanged file. On a database whose schema is already in place (the first run of this runner there), run `npm run db:migrate:baseline` first to record every file without executing it. Runs take an advisory lock, so two cannot overlap. `tests/migrations.test.mjs` fails if a `db:migrate:*` script's file is missing from `scripts/migrations.mjs`.
 
 `DATABASE_URL` and `JWT_SECRET` belong in `.env.local`; use `.env.example` as the non-secret template. Never commit or print real credentials.
 
@@ -45,7 +46,7 @@ npm run db:seed:blog
 - Keep domain and database work in `src/lib/`; route handlers should parse input, call a lib function, and return the established JSON envelope: `{ success: true, data }` or `{ success: false, error }`.
 - Use `sql` tagged templates from `src/lib/db.js` for values. Use `sqlQuery` only where dynamically sized SQL is truly required, with positional parameters. Do not interpolate request data into SQL strings.
 - Never import server database or session helpers into client components.
-- Validation rules shared by forms and route handlers live in `src/lib/shared/` (pure, no React/DOM); `src/lib/` and `src/app/api/` must not import from `src/components/`. The old `components/**/helpers.js` paths are re-export stubs.
+- Validation rules shared by forms and route handlers live in `src/lib/shared/` (pure: no React, DOM or `window`; browser-only helpers stay in the component folders); `src/lib/` and `src/app/api/` must not import from `src/components/`. The old `components/**/helpers.js` paths are re-export stubs.
 - Route handlers build the JSON envelope with `ok`/`fail`/`failureFrom`/`readJsonBody` from `src/lib/api.js`. Write multi-statement saves inside `withTransaction` from `src/lib/db.js`.
 - Reuse existing feature helpers and shared controls before introducing a parallel implementation. Match the feature folder's local conventions for `helpers.js`, `Toast.js`, toolbar, sections, and client state.
 - Preserve the existing Tailwind design system: the `primary`, `accent`, `dark*`, semantic colors, card shadow, and radius tokens in `tailwind.config.js`; support both light and dark mode for new UI.

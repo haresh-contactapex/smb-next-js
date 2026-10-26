@@ -160,11 +160,6 @@ export function validateAddress(address, countries) {
   return location.valid ? { errors: {}, place: { state: location.state, city: location.city } } : { errors: { [location.field]: location.message } };
 }
 
-// Moves focus to the first field flagged invalid once React has rendered the errors.
-export function focusFirstInvalid(container) {
-  requestAnimationFrame(() => container?.querySelector('[aria-invalid="true"]')?.focus());
-}
-
 // ["18K Yellow Gold", "Size 7"]: the option values of a cart line, a bare size gets its label back.
 export function lineDetails(item) {
   return Object.entries(item.options).map(([name, value]) => (/^size$/i.test(name) ? `Size ${value}` : value));

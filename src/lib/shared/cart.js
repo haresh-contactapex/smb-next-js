@@ -207,11 +207,3 @@ export function sanitizeCart(raw) {
     shipping: sanitizeShipping(raw.shipping),
   };
 }
-
-export function readStoredCart() {
-  try {
-    return sanitizeCart(JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY) || "null"));
-  } catch {
-    return EMPTY_CART;
-  }
-}

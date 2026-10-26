@@ -11,10 +11,19 @@ const MAX_TRACKED_KEYS = 5000;
 // which case callers should skip limiting rather than lump everyone together.
 // x-forwarded-for is "client, proxy1, proxy2"; everything left of the hops we run is whatever
 // the client chose to send, so the entry our outermost proxy appended is the one trusted:
-// TRUSTED_PROXY_HOPS (default 1) counts the proxies in front of the app.
+// TRUSTED_PROXY_HOPS (default 1) counts the proxies in front of the app; with a CDN in front
+// of the server's own proxy it must be 2, or every visitor of one CDN node shares one address.
+let warnedAboutHops = false;
+
 export function clientIpOf(request) {
   const hops = Math.max(1, Number(process.env.TRUSTED_PROXY_HOPS) || 1);
   const forwarded = (request.headers.get("x-forwarded-for") || "").split(",").map((part) => part.trim()).filter(Boolean);
+  if (forwarded.length > hops && !warnedAboutHops) {
+    warnedAboutHops = true;
+    console.warn(
+      `x-forwarded-for has ${forwarded.length} entries but TRUSTED_PROXY_HOPS is ${hops}. If a CDN or another proxy sits in front of this server, set TRUSTED_PROXY_HOPS to the number of proxies, or rate limits will count many visitors as one.`
+    );
+  }
   return forwarded[Math.max(0, forwarded.length - hops)] || request.headers.get("x-real-ip") || "";
 }
 
