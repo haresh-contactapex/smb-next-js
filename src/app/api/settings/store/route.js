@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -14,9 +14,9 @@ export async function GET() {
 
   try {
     const data = await getStoreSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -25,7 +25,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       legalBusinessName: String(payload.legalBusinessName || "").trim(),
@@ -39,28 +41,25 @@ export async function PUT(request) {
     };
 
     if (!settings.legalBusinessName) {
-      return NextResponse.json({ success: false, error: "Legal business name is required." }, { status: 400 });
+      return fail("Legal business name is required.", 400);
     }
     if (!BUSINESS_TYPES.includes(settings.businessType)) {
-      return NextResponse.json({ success: false, error: "Select a valid business type." }, { status: 400 });
+      return fail("Select a valid business type.", 400);
     }
     if (!settings.storeUrl) {
-      return NextResponse.json({ success: false, error: "Store URL is required." }, { status: 400 });
+      return fail("Store URL is required.", 400);
     }
     if (!isValidStoreUrl(settings.storeUrl)) {
-      return NextResponse.json({ success: false, error: "Enter a valid store URL." }, { status: 400 });
+      return fail("Enter a valid store URL.", 400);
     }
     if (!isValidEmail(settings.supportEmail)) {
-      return NextResponse.json({ success: false, error: "Enter a valid support email address." }, { status: 400 });
+      return fail("Enter a valid support email address.", 400);
     }
     if (!settings.supportPhone) {
-      return NextResponse.json({ success: false, error: "Support phone number is required." }, { status: 400 });
+      return fail("Support phone number is required.", 400);
     }
     if (!isValidUsPhone(settings.supportPhone)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a valid 10-digit US phone number." },
-        { status: 400 }
-      );
+      return fail("Enter a valid 10-digit US phone number.", 400);
     }
 
     const updated = await updateStoreSettings(settings);
@@ -84,8 +83,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

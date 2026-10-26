@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api";
 import { requireNotificationViewer, notificationErrorResponse } from "@/lib/auth/notificationViewer";
 import { listNotifications, clearAllNotifications } from "@/lib/notifications";
 
@@ -17,7 +17,7 @@ export async function GET(request) {
       status: params.get("status") || "all",
       severity: params.get("severity") || "",
     });
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return notificationErrorResponse(error);
   }
@@ -30,7 +30,7 @@ export async function DELETE() {
 
   try {
     const data = await clearAllNotifications(auth.viewer);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return notificationErrorResponse(error);
   }

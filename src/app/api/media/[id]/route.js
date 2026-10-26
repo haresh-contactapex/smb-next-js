@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { fail } from "@/lib/api";
+import { fail, ok } from "@/lib/api";
 import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -14,13 +13,13 @@ export async function DELETE(request, { params }) {
   try {
     const url = await deleteMedia(params.id);
     if (!url) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return fail("Not found", 404);
     }
 
     await removeStoredFiles([url]);
 
-    return NextResponse.json({ success: true, data: { id: params.id } });
+    return ok({ id: params.id });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

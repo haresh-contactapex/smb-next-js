@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
 import { logAdminActivity } from "@/lib/notifications";
@@ -14,7 +14,7 @@ export async function GET() {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    return NextResponse.json({ success: true, data: await listCmsPages() });
+    return ok(await listCmsPages());
   } catch (error) {
     return cmsFailure(error);
   }
@@ -39,7 +39,7 @@ export async function POST(request) {
       description: `added /${page.slug} (${page.status}).`,
       severity: "success",
     });
-    return NextResponse.json({ success: true, data: page }, { status: 201 });
+    return ok(page, 201);
   } catch (error) {
     return cmsFailure(error);
   }
@@ -51,7 +51,7 @@ export async function DELETE(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const { ids, error } = await readBulkIds(request, "page");
-  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+  if (error) return fail(error, 400);
 
   try {
     const removed = await deleteCmsPages(ids);
@@ -66,7 +66,7 @@ export async function DELETE(request) {
         severity: "warning",
       });
     }
-    return NextResponse.json({ success: true, data: { deleted: removed.length } });
+    return ok({ deleted: removed.length });
   } catch (error) {
     return cmsFailure(error);
   }

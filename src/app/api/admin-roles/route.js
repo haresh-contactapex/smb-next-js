@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { listAdminRoles, createAdminRole, AdminRoleError } from "@/lib/adminRoles";
@@ -7,18 +7,18 @@ import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof AdminRoleError) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
+    return fail(publicErrorMessage(error), error.status);
   }
-  return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+  return fail(publicErrorMessage(error), 500);
 }
 
 export async function GET() {
   const auth = await requireStaffPermission(MANAGE_ROLES_PERMISSION);
-  if (!auth.ok) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  if (!auth.ok) return fail(auth.error, auth.status);
 
   try {
     const data = await listAdminRoles();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -26,10 +26,12 @@ export async function GET() {
 
 export async function POST(request) {
   const auth = await requireStaffPermission(MANAGE_ROLES_PERMISSION);
-  if (!auth.ok) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  if (!auth.ok) return fail(auth.error, auth.status);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
     const data = await createAdminRole(payload, auth.role);
     await logAdminActivity({
       actor: auth.user,
@@ -40,7 +42,7 @@ export async function POST(request) {
       severity: "warning",
       metadata: { permissionCount: data?.permissions?.length ?? 0, fullAccess: Boolean(data?.fullAccess) },
     });
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    return ok(data, 201);
   } catch (error) {
     return errorResponse(error);
   }

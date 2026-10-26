@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listBlogRevisions } from "@/lib/blog";
 import { blogFailure } from "@/lib/blogApi";
@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    return NextResponse.json({ success: true, data: await listBlogRevisions((await params).id) });
+    return ok(await listBlogRevisions((await params).id));
   } catch (error) {
     return blogFailure(error);
   }

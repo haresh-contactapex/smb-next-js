@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api";
 import { requireNotificationViewer, notificationErrorResponse } from "@/lib/auth/notificationViewer";
 import { markAllNotificationsRead } from "@/lib/notifications";
 
@@ -8,7 +8,7 @@ export async function POST() {
 
   try {
     const data = await markAllNotificationsRead(auth.viewer);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return notificationErrorResponse(error);
   }

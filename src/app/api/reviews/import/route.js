@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
@@ -16,13 +16,10 @@ const MAX_BODY_BYTES = MAX_IMPORT_FILE_BYTES + 512 * 1024;
 
 function errorResponse(error) {
   if (error instanceof ReviewImportError) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
+    return fail(publicErrorMessage(error), error.status);
   }
   console.error("Review import failed", error);
-  return NextResponse.json(
-    { success: false, error: "Something went wrong while importing the reviews. Try again." },
-    { status: 500 }
-  );
+  return fail("Something went wrong while importing the reviews. Try again.", 500);
 }
 
 export async function POST(request) {
@@ -70,7 +67,7 @@ export async function POST(request) {
         metadata: { imported: data.imported, skipped: data.counts.total - data.imported, status: data.status },
       });
     }
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }

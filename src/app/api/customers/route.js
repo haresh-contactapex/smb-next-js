@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listCustomers, createCustomerRecord, deleteCustomerRecords } from "@/lib/customers";
@@ -13,9 +13,9 @@ export async function GET() {
 
   try {
     const data = await listCustomers();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -24,7 +24,9 @@ export async function POST(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
     const id = await createCustomerRecord(payload);
     await logAdminActivity({
       actor: auth.user,
@@ -34,9 +36,9 @@ export async function POST(request) {
       title: `Customer "${String(payload?.name || [payload?.firstName, payload?.lastName].filter(Boolean).join(" ") || payload?.email || "").slice(0, 80) || "untitled"}" created`,
       severity: "success",
     });
-    return NextResponse.json({ success: true, data: { id } }, { status: 201 });
+    return ok({ id }, 201);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 400 });
+    return fail(publicErrorMessage(error), 400);
   }
 }
 
@@ -46,7 +48,7 @@ export async function DELETE(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const { ids, error } = await readBulkIds(request, "customer", "delete", { max: MAX_BULK_DELETE });
-  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+  if (error) return fail(error, 400);
 
   try {
     const deleted = await deleteCustomerRecords(ids);
@@ -58,8 +60,8 @@ export async function DELETE(request) {
       title: `${deleted} customer${deleted === 1 ? "" : "s"} deleted`,
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { deleted } });
+    return ok({ deleted });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listCmsRevisions } from "@/lib/cms";
 import { cmsFailure } from "@/lib/cmsApi";
@@ -10,7 +10,7 @@ export async function GET(request, { params }) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    return NextResponse.json({ success: true, data: await listCmsRevisions((await params).id) });
+    return ok(await listCmsRevisions((await params).id));
   } catch (error) {
     return cmsFailure(error);
   }

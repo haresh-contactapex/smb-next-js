@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
 import { logAdminActivity } from "@/lib/notifications";
@@ -9,7 +9,7 @@ import { cmsFailure, invalidRequest, readJsonObject } from "@/lib/cmsApi";
 // PUT takes the page fields plus `expectedUpdatedAt` (the updatedAt the editor
 // loaded), and answers 409 when someone else saved the page in the meantime.
 
-const notFound = () => NextResponse.json({ success: false, error: "That page no longer exists." }, { status: 404 });
+const notFound = () => fail("That page no longer exists.", 404);
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["content.view", "content.edit"]);
@@ -18,7 +18,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const page = await getCmsPageById(id);
-    return page ? NextResponse.json({ success: true, data: page }) : notFound();
+    return page ? ok(page) : notFound();
   } catch (error) {
     return cmsFailure(error);
   }
@@ -46,7 +46,7 @@ export async function PUT(request, { params }) {
       title: `CMS page "${page.title.slice(0, 80)}" updated`,
       description: `edited /${page.slug} (${page.status}).`,
     });
-    return NextResponse.json({ success: true, data: page });
+    return ok(page);
   } catch (error) {
     return cmsFailure(error);
   }
@@ -68,7 +68,7 @@ export async function DELETE(request, { params }) {
       description: `removed /${removed.slug}.`,
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { id: removed.id } });
+    return ok({ id: removed.id });
   } catch (error) {
     return cmsFailure(error);
   }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -12,9 +12,9 @@ export async function GET() {
 
   try {
     const data = await getPricingSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -23,7 +23,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       adjustmentValue: String(payload.adjustmentValue ?? "").trim(),
@@ -32,19 +34,16 @@ export async function PUT(request) {
     };
 
     if (!settings.adjustmentValue) {
-      return NextResponse.json({ success: false, error: "Adjustment value is required." }, { status: 400 });
+      return fail("Adjustment value is required.", 400);
     }
     if (!isValidAdjustmentValue(settings.adjustmentValue)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a number of 0 or more for the adjustment value, with up to 2 decimal places." },
-        { status: 400 }
-      );
+      return fail("Enter a number of 0 or more for the adjustment value, with up to 2 decimal places.", 400);
     }
     if (!ADJUSTMENT_TYPES.some((t) => t.value === settings.adjustmentType)) {
-      return NextResponse.json({ success: false, error: "Select a valid adjustment type." }, { status: 400 });
+      return fail("Select a valid adjustment type.", 400);
     }
     if (!ADJUSTMENT_DIRECTIONS.some((d) => d.value === settings.adjustmentDirection)) {
-      return NextResponse.json({ success: false, error: "Select a valid adjustment direction." }, { status: 400 });
+      return fail("Select a valid adjustment direction.", 400);
     }
 
     const updated = await updatePricingSettings(settings);
@@ -68,8 +67,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

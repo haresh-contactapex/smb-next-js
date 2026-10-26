@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -13,9 +13,9 @@ export async function GET() {
 
   try {
     const data = await getEmailSettings();
-    return NextResponse.json({ success: true, data: { ...data, activeSmtpSource: await getActiveSmtpSource() } });
+    return ok({ ...data, activeSmtpSource: await getActiveSmtpSource() });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -24,7 +24,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       smtpHost: String(payload.smtpHost || "").trim(),
@@ -48,7 +50,7 @@ export async function PUT(request) {
     const errors = getEmailSettingsErrors(settings, { hasSmtpPassword });
     const firstErrorField = EMAIL_FIELD_ORDER.find((field) => errors[field]);
     if (firstErrorField) {
-      return NextResponse.json({ success: false, error: errors[firstErrorField] }, { status: 400 });
+      return fail(errors[firstErrorField], 400);
     }
 
     const updated = await updateEmailSettings(settings);
@@ -72,11 +74,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({
-      success: true,
-      data: { ...updated, activeSmtpSource: await getActiveSmtpSource() },
-    });
+    return ok({ ...updated, activeSmtpSource: await getActiveSmtpSource() });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

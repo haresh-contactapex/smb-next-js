@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listCategories, createCategory } from "@/lib/categories";
@@ -10,9 +10,9 @@ export async function GET() {
 
   try {
     const data = await listCategories();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -21,7 +21,9 @@ export async function POST(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
     const id = await createCategory(payload);
     await logAdminActivity({
       actor: auth.user,
@@ -31,8 +33,8 @@ export async function POST(request) {
       title: `Category "${String(payload?.name || payload?.title || "").slice(0, 80) || "untitled"}" created`,
       severity: "success",
     });
-    return NextResponse.json({ success: true, data: { id } }, { status: 201 });
+    return ok({ id }, 201);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -12,10 +12,10 @@ import { EngravingError, getEngravingAdminConfig, saveEngravingAdminConfig } fro
 
 function failure(error) {
   if (error instanceof EngravingError) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field || undefined }, { status: error.status });
+    return fail(publicErrorMessage(error), error.status, { field: error.field || undefined });
   }
   console.error("Engraving settings request failed", error);
-  return NextResponse.json({ success: false, error: "Engraving settings could not be saved right now." }, { status: 500 });
+  return fail("Engraving settings could not be saved right now.", 500);
 }
 
 export async function GET() {
@@ -23,7 +23,7 @@ export async function GET() {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    return NextResponse.json({ success: true, data: await getEngravingAdminConfig() });
+    return ok(await getEngravingAdminConfig());
   } catch (error) {
     return failure(error);
   }
@@ -35,7 +35,7 @@ export async function PUT(request) {
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body !== "object") {
-    return NextResponse.json({ success: false, error: "That request wasn't valid." }, { status: 400 });
+    return fail("That request wasn't valid.", 400);
   }
 
   try {
@@ -50,7 +50,7 @@ export async function PUT(request) {
       severity: "warning",
       metadata: { engravingEnabled: data.settings.enabled },
     });
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return failure(error);
   }

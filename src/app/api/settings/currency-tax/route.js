@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -18,9 +18,9 @@ export async function GET() {
 
   try {
     const data = await getCurrencyTaxSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -29,7 +29,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       currency: String(payload.currency || "USD").trim(),
@@ -43,25 +45,22 @@ export async function PUT(request) {
     };
 
     if (!CURRENCIES.some((c) => c.value === settings.currency)) {
-      return NextResponse.json({ success: false, error: "Select a valid currency." }, { status: 400 });
+      return fail("Select a valid currency.", 400);
     }
     if (!CURRENCY_POSITIONS.some((p) => p.value === settings.currencyPosition)) {
-      return NextResponse.json({ success: false, error: "Select a valid currency position." }, { status: 400 });
+      return fail("Select a valid currency position.", 400);
     }
     if (!NUMBER_FORMATS.some((f) => f.value === settings.numberFormat)) {
-      return NextResponse.json({ success: false, error: "Select a valid number format." }, { status: 400 });
+      return fail("Select a valid number format.", 400);
     }
     if (!settings.defaultTaxRate) {
-      return NextResponse.json({ success: false, error: "Default tax rate is required." }, { status: 400 });
+      return fail("Default tax rate is required.", 400);
     }
     if (!isValidTaxRate(settings.defaultTaxRate)) {
-      return NextResponse.json({ success: false, error: "Enter a tax rate between 0 and 100." }, { status: 400 });
+      return fail("Enter a tax rate between 0 and 100.", 400);
     }
     if (settings.taxRegistrationNumber && !isValidTaxRegistrationNumber(settings.taxRegistrationNumber)) {
-      return NextResponse.json(
-        { success: false, error: "Tax registration number can only contain letters, numbers, spaces and dashes." },
-        { status: 400 }
-      );
+      return fail("Tax registration number can only contain letters, numbers, spaces and dashes.", 400);
     }
 
     const updated = await updateCurrencyTaxSettings(settings);
@@ -85,8 +84,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

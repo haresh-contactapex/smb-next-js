@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -17,9 +17,9 @@ export async function GET() {
 
   try {
     const data = await getProductsSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -28,7 +28,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       skuPrefix: String(payload.skuPrefix || "").trim(),
@@ -41,28 +43,22 @@ export async function PUT(request) {
     };
 
     if (!settings.skuPrefix) {
-      return NextResponse.json({ success: false, error: "SKU prefix is required." }, { status: 400 });
+      return fail("SKU prefix is required.", 400);
     }
     if (!isValidSkuPrefix(settings.skuPrefix)) {
-      return NextResponse.json(
-        { success: false, error: "SKU prefix can only contain up to 20 letters, numbers and dashes." },
-        { status: 400 }
-      );
+      return fail("SKU prefix can only contain up to 20 letters, numbers and dashes.", 400);
     }
     if (!PRODUCT_STATUSES.some((s) => s.value === settings.defaultStatus)) {
-      return NextResponse.json({ success: false, error: "Select a valid default product status." }, { status: 400 });
+      return fail("Select a valid default product status.", 400);
     }
     if (!WEIGHT_UNITS.some((u) => u.value === settings.defaultWeightUnit)) {
-      return NextResponse.json({ success: false, error: "Select a valid default weight unit." }, { status: 400 });
+      return fail("Select a valid default weight unit.", 400);
     }
     if (!settings.lowStockThreshold) {
-      return NextResponse.json({ success: false, error: "Low stock threshold is required." }, { status: 400 });
+      return fail("Low stock threshold is required.", 400);
     }
     if (!isValidLowStockThreshold(settings.lowStockThreshold)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a whole number of 0 or more for the low stock threshold." },
-        { status: 400 }
-      );
+      return fail("Enter a whole number of 0 or more for the low stock threshold.", 400);
     }
 
     const updated = await updateProductsSettings(settings);
@@ -86,8 +82,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

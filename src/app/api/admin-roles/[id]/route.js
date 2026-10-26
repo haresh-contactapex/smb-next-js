@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import {
@@ -13,14 +13,14 @@ import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof AdminRoleError) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
+    return fail(publicErrorMessage(error), error.status);
   }
-  return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+  return fail(publicErrorMessage(error), 500);
 }
 
 async function authorize() {
   const auth = await requireStaffPermission(MANAGE_ROLES_PERMISSION);
-  if (!auth.ok) return { auth, denied: NextResponse.json({ success: false, error: auth.error }, { status: auth.status }) };
+  if (!auth.ok) return { auth, denied: fail(auth.error, auth.status) };
   return { auth };
 }
 
@@ -31,8 +31,8 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const data = await getAdminRoleById(id);
-    if (!data) return NextResponse.json({ success: false, error: "Role not found." }, { status: 404 });
-    return NextResponse.json({ success: true, data });
+    if (!data) return fail("Role not found.", 404);
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -44,7 +44,9 @@ export async function PUT(request, { params }) {
 
   try {
     const { id } = await params;
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
     const data = await updateAdminRole(id, payload, auth.role);
     await logAdminActivity({
       actor: auth.user,
@@ -55,7 +57,7 @@ export async function PUT(request, { params }) {
       severity: "warning",
       metadata: { permissionCount: data?.permissions?.length ?? 0, fullAccess: Boolean(data?.fullAccess) },
     });
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -68,7 +70,9 @@ export async function PATCH(request, { params }) {
 
   try {
     const { id } = await params;
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
     const data = await setAdminRoleStatus(id, String(payload.status || ""), auth.role);
     await logAdminActivity({
       actor: auth.user,
@@ -79,7 +83,7 @@ export async function PATCH(request, { params }) {
       severity: "warning",
       metadata: { status: data?.status },
     });
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -100,7 +104,7 @@ export async function DELETE(request, { params }) {
       title: "Role deleted",
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }

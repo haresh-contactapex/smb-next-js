@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -18,9 +18,9 @@ export async function GET() {
 
   try {
     const data = await getShippingSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -29,7 +29,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       defaultCarrier: String(payload.defaultCarrier || "USPS").trim(),
@@ -42,40 +44,31 @@ export async function PUT(request) {
     };
 
     if (!CARRIERS.includes(settings.defaultCarrier)) {
-      return NextResponse.json({ success: false, error: "Select a valid default carrier." }, { status: 400 });
+      return fail("Select a valid default carrier.", 400);
     }
     if (!settings.flatRateFee) {
-      return NextResponse.json({ success: false, error: "Flat rate shipping fee is required." }, { status: 400 });
+      return fail("Flat rate shipping fee is required.", 400);
     }
     if (!isValidMoneyAmount(settings.flatRateFee)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a flat rate shipping fee of 0 or more, with up to 2 decimal places." },
-        { status: 400 }
-      );
+      return fail("Enter a flat rate shipping fee of 0 or more, with up to 2 decimal places.", 400);
     }
     if (!settings.freeShippingThreshold) {
-      return NextResponse.json({ success: false, error: "Free shipping threshold is required." }, { status: 400 });
+      return fail("Free shipping threshold is required.", 400);
     }
     if (!isValidMoneyAmount(settings.freeShippingThreshold)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a free shipping threshold of 0 or more, with up to 2 decimal places." },
-        { status: 400 }
-      );
+      return fail("Enter a free shipping threshold of 0 or more, with up to 2 decimal places.", 400);
     }
     if (!settings.processingTimeDays) {
-      return NextResponse.json({ success: false, error: "Order processing time is required." }, { status: 400 });
+      return fail("Order processing time is required.", 400);
     }
     if (!isValidProcessingTimeDays(settings.processingTimeDays)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a whole number of 0 or more for the order processing time." },
-        { status: 400 }
-      );
+      return fail("Enter a whole number of 0 or more for the order processing time.", 400);
     }
     if (!WEIGHT_UNITS.some((u) => u.value === settings.weightUnit)) {
-      return NextResponse.json({ success: false, error: "Select a valid weight unit." }, { status: 400 });
+      return fail("Select a valid weight unit.", 400);
     }
     if (!DIMENSION_UNITS.includes(settings.dimensionUnit)) {
-      return NextResponse.json({ success: false, error: "Select a valid dimension unit." }, { status: 400 });
+      return fail("Select a valid dimension unit.", 400);
     }
 
     const updated = await updateShippingSettings(settings);
@@ -99,8 +92,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

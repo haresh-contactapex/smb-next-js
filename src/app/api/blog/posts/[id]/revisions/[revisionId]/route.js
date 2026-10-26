@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getBlogRevision } from "@/lib/blog";
 import { blogFailure } from "@/lib/blogApi";
@@ -14,9 +14,9 @@ export async function GET(request, { params }) {
     const { id, revisionId } = await params;
     const revision = await getBlogRevision(id, revisionId);
     if (!revision) {
-      return NextResponse.json({ success: false, error: "That version no longer exists." }, { status: 404 });
+      return fail("That version no longer exists.", 404);
     }
-    return NextResponse.json({ success: true, data: revision });
+    return ok(revision);
   } catch (error) {
     return blogFailure(error);
   }

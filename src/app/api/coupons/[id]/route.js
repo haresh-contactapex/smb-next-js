@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getCouponById, updateCoupon, deleteCoupon, CouponError } from "@/lib/coupons";
-import { fail, failureFrom, readJsonBody } from "@/lib/api";
+import { fail, failureFrom, ok, readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
 
 const MAX_COUPON_BODY_BYTES = 64 * 1024;
@@ -16,11 +15,11 @@ export async function GET(request, { params }) {
   try {
     const coupon = await getCouponById(params.id);
     if (!coupon) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return fail("Not found", 404);
     }
-    return NextResponse.json({ success: true, data: coupon });
+    return ok(coupon);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -42,7 +41,7 @@ export async function PUT(request, { params }) {
       entityId: id,
       title: `Coupon "${String(payload?.code || payload?.name || "").slice(0, 80) || "untitled"}" updated`,
     });
-    return NextResponse.json({ success: true, data: { id } });
+    return ok({ id });
   } catch (error) {
     return failureFrom(error, { KnownError: CouponError, fallbackMessage: "Couldn't save the coupon.", label: "Update coupon" });
   }
@@ -63,8 +62,8 @@ export async function DELETE(request, { params }) {
       title: "Coupon deleted",
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { id: params.id } });
+    return ok({ id: params.id });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

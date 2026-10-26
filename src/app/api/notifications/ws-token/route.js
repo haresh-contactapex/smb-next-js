@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api";
 import { requireNotificationViewer } from "@/lib/auth/notificationViewer";
 import { signJwt } from "@/lib/auth/jwt";
 import { NOTIFICATIONS_WS_SCOPE } from "@/lib/auth/constants";
@@ -11,8 +11,8 @@ export async function GET() {
   if (!auth.ok) return auth.response;
 
   const url = process.env.NOTIFICATIONS_WS_URL;
-  if (!url) return NextResponse.json({ success: true, data: { enabled: false } });
+  if (!url) return ok({ enabled: false });
 
   const ticket = await signJwt({ sub: auth.user.id, scope: NOTIFICATIONS_WS_SCOPE }, "60s");
-  return NextResponse.json({ success: true, data: { enabled: true, url, ticket } });
+  return ok({ enabled: true, url, ticket });
 }

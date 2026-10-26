@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listCoupons, createCoupon, deleteCoupons, CouponError } from "@/lib/coupons";
 import { readBulkIds } from "@/lib/bulkIds";
-import { failureFrom, readJsonBody } from "@/lib/api";
+import { fail, failureFrom, ok, readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
 
 const MAX_COUPON_BODY_BYTES = 64 * 1024;
@@ -14,9 +13,9 @@ export async function GET() {
 
   try {
     const data = await listCoupons();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -38,7 +37,7 @@ export async function POST(request) {
       title: `Coupon "${String(payload?.code || payload?.name || "").slice(0, 80) || "untitled"}" created`,
       severity: "success",
     });
-    return NextResponse.json({ success: true, data: { id } }, { status: 201 });
+    return ok({ id }, 201);
   } catch (error) {
     return failureFrom(error, { KnownError: CouponError, fallbackMessage: "Couldn't save the coupon.", label: "Create coupon" });
   }
@@ -50,7 +49,7 @@ export async function DELETE(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const { ids, error } = await readBulkIds(request, "coupon");
-  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+  if (error) return fail(error, 400);
 
   try {
     const deleted = await deleteCoupons(ids);
@@ -64,8 +63,8 @@ export async function DELETE(request) {
         severity: "warning",
       });
     }
-    return NextResponse.json({ success: true, data: { deleted } });
+    return ok({ deleted });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

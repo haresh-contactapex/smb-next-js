@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
 import { logAdminActivity } from "@/lib/notifications";
@@ -10,7 +10,7 @@ import { blogPostPath } from "@/lib/blogRules";
 // PUT takes the post fields plus `expectedUpdatedAt` (the updatedAt the editor
 // loaded), and answers 409 when someone else saved the post in the meantime.
 
-const notFound = () => NextResponse.json({ success: false, error: "That post no longer exists." }, { status: 404 });
+const notFound = () => fail("That post no longer exists.", 404);
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["blog.view", "blog.edit"]);
@@ -19,7 +19,7 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const post = await getBlogPostById(id);
-    return post ? NextResponse.json({ success: true, data: post }) : notFound();
+    return post ? ok(post) : notFound();
   } catch (error) {
     return blogFailure(error);
   }
@@ -47,7 +47,7 @@ export async function PUT(request, { params }) {
       title: `Blog post "${post.title.slice(0, 80)}" updated`,
       description: `edited ${blogPostPath(post.categorySlug, post.slug)} (${post.status}).`,
     });
-    return NextResponse.json({ success: true, data: post });
+    return ok(post);
   } catch (error) {
     return blogFailure(error);
   }
@@ -69,7 +69,7 @@ export async function DELETE(request, { params }) {
       description: `removed ${blogPostPath(removed.categorySlug, removed.slug)}.`,
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { id: removed.id } });
+    return ok({ id: removed.id });
   } catch (error) {
     return blogFailure(error);
   }

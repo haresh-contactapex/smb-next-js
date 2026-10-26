@@ -18,6 +18,10 @@ export function failureFrom(error, { KnownError, fallbackMessage, label }) {
   return fail(fallbackMessage, 500);
 }
 
+// The most a JSON request body may be unless a route asks for more (a product with many variants, a
+// long CMS page): far above any form's size, far below anything that could strain the server.
+export const DEFAULT_JSON_BODY_BYTES = 1024 * 1024;
+
 // Reads the request body as text, giving up as soon as it passes `maxBytes` instead of
 // buffering all of it first. Resolves to null when it is too large.
 async function readTextCapped(request, maxBytes) {
@@ -45,7 +49,7 @@ async function readTextCapped(request, maxBytes) {
 // Reads a JSON request body no larger than `maxBytes`. Content-Length can be absent
 // (chunked body) or wrong, so the limit is enforced on the bytes actually read, and reading
 // stops at the limit. Resolves to { payload } or { response } (a 413/400 the handler returns).
-export async function readJsonBody(request, { maxBytes, tooLongMessage = "That request was too large." }) {
+export async function readJsonBody(request, { maxBytes = DEFAULT_JSON_BODY_BYTES, tooLongMessage = "That request was too large." } = {}) {
   if (Number(request.headers.get("content-length")) > maxBytes) {
     return { response: fail(tooLongMessage, 413) };
   }

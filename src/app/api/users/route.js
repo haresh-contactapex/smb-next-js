@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { listStaffUsers, createStaffUser, deleteStaffUsers, StaffUserError } from "@/lib/staffUsers";
@@ -9,14 +9,14 @@ import { getTrustedOrigin } from "@/lib/siteUrl";
 
 function errorResponse(error) {
   if (error instanceof StaffUserError) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field }, { status: error.status });
+    return fail(publicErrorMessage(error), error.status, { field: error.field });
   }
   console.error("Users API error", error);
-  return NextResponse.json({ success: false, error: "Something went wrong. Try again." }, { status: 500 });
+  return fail("Something went wrong. Try again.", 500);
 }
 
 function denied(auth) {
-  return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  return fail(auth.error, auth.status);
 }
 
 export async function GET() {
@@ -25,7 +25,7 @@ export async function GET() {
 
   try {
     const data = await listStaffUsers();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -37,7 +37,7 @@ export async function POST(request) {
 
   try {
     const payload = await request.json().catch(() => null);
-    if (!payload) return NextResponse.json({ success: false, error: "Invalid request body." }, { status: 400 });
+    if (!payload) return fail("Invalid request body.", 400);
     const { user, welcomeEmailSent } = await createStaffUser(payload, auth.role, { origin: getTrustedOrigin(request) });
     await logAdminActivity({
       actor: auth.user,
@@ -49,7 +49,7 @@ export async function POST(request) {
       severity: "success",
       metadata: { role: user.role },
     });
-    return NextResponse.json({ success: true, data: { ...user, welcomeEmailSent } }, { status: 201 });
+    return ok({ ...user, welcomeEmailSent }, 201);
   } catch (error) {
     return errorResponse(error);
   }
@@ -63,10 +63,10 @@ export async function DELETE(request) {
   const body = await request.json().catch(() => null);
   const ids = Array.isArray(body?.ids) ? body.ids : null;
   if (!ids || ids.length === 0) {
-    return NextResponse.json({ success: false, error: "Select at least one user to delete." }, { status: 400 });
+    return fail("Select at least one user to delete.", 400);
   }
   if (ids.length > MAX_BULK_DELETE || ids.some((id) => typeof id !== "string")) {
-    return NextResponse.json({ success: false, error: "Invalid user selection." }, { status: 400 });
+    return fail("Invalid user selection.", 400);
   }
 
   try {
@@ -82,7 +82,7 @@ export async function DELETE(request) {
         severity: "warning",
       });
     }
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }

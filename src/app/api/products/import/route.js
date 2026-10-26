@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { importProductsFromCsv } from "@/lib/productImport";
@@ -18,15 +18,15 @@ export async function POST(request) {
     const file = formData.get("file");
 
     if (!file || typeof file === "string") {
-      return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+      return fail("No file provided", 400);
     }
 
     const hasCsvExtension = (file.name || "").toLowerCase().endsWith(".csv");
     if (!hasCsvExtension && !ALLOWED_MIME_TYPES.has(file.type)) {
-      return NextResponse.json({ success: false, error: "Only .csv files are allowed" }, { status: 400 });
+      return fail("Only .csv files are allowed", 400);
     }
     if (file.size > MAX_SIZE_BYTES) {
-      return NextResponse.json({ success: false, error: "File exceeds the 5MB limit" }, { status: 400 });
+      return fail("File exceeds the 5MB limit", 400);
     }
 
     const csvText = await file.text();
@@ -40,8 +40,8 @@ export async function POST(request) {
       metadata: { summary: data },
     });
 
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
@@ -7,7 +7,7 @@ import { readBulkIds } from "@/lib/bulkIds";
 import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
-  return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status || 500 });
+  return fail(publicErrorMessage(error), error.status || 500);
 }
 
 export async function GET() {
@@ -16,7 +16,7 @@ export async function GET() {
 
   try {
     const data = await listReviews();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -37,7 +37,7 @@ export async function POST(request) {
       title: `Review "${String(payload.title || "").trim().slice(0, 80) || "untitled"}" added`,
       severity: "success",
     });
-    return NextResponse.json({ success: true, data: { id } }, { status: 201 });
+    return ok({ id }, 201);
   } catch (error) {
     return errorResponse(error);
   }
@@ -49,7 +49,7 @@ export async function DELETE(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const { ids, error } = await readBulkIds(request, "review");
-  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+  if (error) return fail(error, 400);
 
   try {
     const deleted = await deleteReviews(ids);
@@ -63,7 +63,7 @@ export async function DELETE(request) {
         severity: "warning",
       });
     }
-    return NextResponse.json({ success: true, data: { deleted } });
+    return ok({ deleted });
   } catch (error) {
     return errorResponse(error);
   }
