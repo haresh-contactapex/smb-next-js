@@ -1,12 +1,10 @@
 // importProductsFromCsv() turns CSV rows into createProduct() payloads. createProduct is replaced
 // with a recorder that applies the server's real payload validator, so a row the server would
 // refuse is reported as failed here too, and nothing touches a database.
-import test, { before, beforeEach, mock } from "node:test";
+import test, { before, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { fileURLToPath, pathToFileURL } from "node:url";
 import { validateProductPayload, describeProductErrors } from "@/lib/shared/product";
-
-const lib = (name) => pathToFileURL(fileURLToPath(new URL(`../src/lib/${name}.js`, import.meta.url))).href;
+import { mockLib } from "./mock-helpers.mjs";
 
 let saved;
 let failTitles;
@@ -14,16 +12,14 @@ let importProductsFromCsv;
 let IMPORT_MAX_ROWS;
 
 before(async () => {
-  mock.module(lib("products"), {
-    exports: {
-      slugify: (str) => String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
-      createProduct: async (payload) => {
-        const problems = validateProductPayload(payload);
-        if (problems.length) throw new Error(describeProductErrors(problems));
-        if (failTitles.has(payload.title)) throw new Error("A product with that handle already exists.");
-        saved.push(payload);
-        return `id-${saved.length}`;
-      },
+  mockLib("products", {
+    slugify: (str) => String(str).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+    createProduct: async (payload) => {
+      const problems = validateProductPayload(payload);
+      if (problems.length) throw new Error(describeProductErrors(problems));
+      if (failTitles.has(payload.title)) throw new Error("A product with that handle already exists.");
+      saved.push(payload);
+      return `id-${saved.length}`;
     },
   });
   ({ importProductsFromCsv, IMPORT_MAX_ROWS } = await import("@/lib/productImport"));

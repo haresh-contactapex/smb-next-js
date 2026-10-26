@@ -2,12 +2,9 @@
 // database, re-checks the coupon and shipping, and refuses a total the customer was not shown.
 // The data sources (database, settings, products, coupons) are replaced with in-memory fakes
 // below; the pricing, cart arithmetic and address/contact validation run for real.
-import test, { before, beforeEach, mock } from "node:test";
+import test, { before, beforeEach } from "node:test";
 import assert from "node:assert/strict";
-import { pathToFileURL } from "node:url";
-import { fileURLToPath } from "node:url";
-
-const lib = (name) => pathToFileURL(fileURLToPath(new URL(`../src/lib/${name}.js`, import.meta.url))).href;
+import { mockLib } from "./mock-helpers.mjs";
 
 const P1 = "11111111-1111-4111-8111-111111111111"; // simple product
 const P2 = "22222222-2222-4222-8222-222222222222"; // product with variants
@@ -37,27 +34,21 @@ before(async () => {
   const noDatabase = async () => {
     throw new Error("The pricing tests must not reach the database.");
   };
-  mock.module(lib("db"), {
-    exports: {
-      // The only query pricing makes itself: which cart products sit in a coupon's category.
-      sql: async () => db.categoryProductIds.map((id) => ({ id })),
-      sqlQuery: noDatabase,
-      sqlTransaction: noDatabase,
-      withTransaction: noDatabase,
-    },
+  mockLib("db", {
+    // The only query pricing makes itself: which cart products sit in a coupon's category.
+    sql: async () => db.categoryProductIds.map((id) => ({ id })),
+    sqlQuery: noDatabase,
+    sqlTransaction: noDatabase,
+    withTransaction: noDatabase,
   });
-  mock.module(lib("products"), {
-    exports: {
-      listCheckoutProducts: async (ids) => db.products.filter((product) => ids.includes(product.id)),
-      listStorefrontProductVariants: async () => [],
-    },
+  mockLib("products", {
+    listCheckoutProducts: async (ids) => db.products.filter((product) => ids.includes(product.id)),
+    listStorefrontProductVariants: async () => [],
   });
-  mock.module(lib("coupons"), { exports: { getCouponByCode: async () => db.coupon } });
-  mock.module(lib("shippingSettings"), { exports: { getShippingSettings: async () => db.shipping } });
-  mock.module(lib("storefrontCheckout"), {
-    exports: {
-      loadCheckoutPricingSettings: async () => ({ currency: "USD", moneyFormat: undefined, tax: db.tax }),
-    },
+  mockLib("coupons", { getCouponByCode: async () => db.coupon });
+  mockLib("shippingSettings", { getShippingSettings: async () => db.shipping });
+  mockLib("storefrontCheckout", {
+    loadCheckoutPricingSettings: async () => ({ currency: "USD", moneyFormat: undefined, tax: db.tax }),
   });
   ({ priceCheckout, CheckoutError } = await import("@/lib/checkoutPricing"));
 });
