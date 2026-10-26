@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listProducts, createProduct, searchProducts, deleteProducts } from "@/lib/products";
+import { readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BULK_DELETE = 5000;
+const MAX_PRODUCT_BODY_BYTES = 5 * 1024 * 1024;
 
 export async function GET(request) {
   const auth = await requireStaffPermission("products.view");
@@ -25,8 +27,11 @@ export async function POST(request) {
   const auth = await requireStaffPermission("products.create");
   if (!auth.ok) return permissionDeniedResponse(auth);
 
+  const body = await readJsonBody(request, { maxBytes: MAX_PRODUCT_BODY_BYTES });
+  if (body.response) return body.response;
+  const payload = body.payload;
+
   try {
-    const payload = await request.json();
     const id = await createProduct(payload);
     await logAdminActivity({
       actor: auth.user,

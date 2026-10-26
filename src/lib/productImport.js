@@ -25,7 +25,7 @@ function parseRequiredNumber(value, field, errors) {
     return null;
   }
   const n = Number(str);
-  if (Number.isNaN(n) || n < 0) {
+  if (!Number.isFinite(n) || n < 0) {
     errors.push(`${field} must be a non-negative number`);
     return null;
   }
@@ -36,7 +36,7 @@ function parseOptionalNumber(value, field, errors) {
   const str = String(value ?? "").trim();
   if (!str) return null;
   const n = Number(str);
-  if (Number.isNaN(n) || n < 0) {
+  if (!Number.isFinite(n) || n < 0) {
     errors.push(`${field} must be a non-negative number`);
     return null;
   }
@@ -151,8 +151,8 @@ function buildOptionsAndVariants(groupRows, defaultWeightUnit, errors) {
     let variantQuantity = 0;
     if (qtyRaw) {
       const n = Number(qtyRaw);
-      if (Number.isNaN(n) || n < 0) {
-        errors.push(`row ${rowNumber}: variant_inventory_quantity must be a non-negative number`);
+      if (!Number.isInteger(n) || n < 0) {
+        errors.push(`row ${rowNumber}: variant_inventory_quantity must be a non-negative whole number`);
       } else {
         variantQuantity = n;
       }
@@ -298,8 +298,9 @@ function mapGroupToProductPayload(group) {
 }
 
 // Imports every product in a CSV, one createProduct() call at a time so each
-// product gets the exact same validation/handle-uniqueness/rollback
-// behavior as a product saved through the Add Product form. A bad product
+// product gets the same server-side validation (lib/shared/product.js), handle-uniqueness
+// and rollback behavior as a product saved through the Add Product form (which adds its own
+// completeness checks on top). A bad product
 // never aborts the rest of the file — it's recorded in `failed` and the
 // import continues. Rows that share a `handle` are imported as one variable
 // product (see groupRowsByProduct/buildOptionsAndVariants); every other row

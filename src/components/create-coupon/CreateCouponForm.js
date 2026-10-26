@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { computeCouponStatus } from "@/lib/couponStatus";
+import { validateCouponPayload } from "@/lib/shared/coupon";
 import { DEFAULT_COUPON, buildCouponFromData, assembleCoupon } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import CouponDetailsSection from "./CouponDetailsSection";
@@ -108,20 +109,16 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
   function handleSave(e) {
     e?.preventDefault();
 
-    const missingCode = !coupon.code.trim();
-    const missingValue = coupon.type !== "free_shipping" && !String(coupon.value).trim();
+    // Same rules the server applies on save.
+    const problems = validateCouponPayload(assembleCoupon(coupon));
+    const failedFields = new Set(problems.map((problem) => problem.field));
 
-    setCodeError(missingCode);
-    setValueError(missingValue);
+    setCodeError(failedFields.has("code"));
+    setValueError(failedFields.has("value"));
 
-    if (missingCode || missingValue || dateRangeError) {
-      if (missingCode) codeInputRef.current?.focus();
-      showToast(
-        dateRangeError && !missingCode && !missingValue
-          ? "End date can't be before the start date"
-          : "Fill in the required fields before saving",
-        "error",
-      );
+    if (problems.length) {
+      if (failedFields.has("code")) codeInputRef.current?.focus();
+      showToast(problems[0].message, "error");
       return;
     }
 

@@ -1,6 +1,7 @@
 import { sql, sqlQuery, withTransaction } from "./db";
 import { setProductEngravingMode } from "./engraving";
 import { normalizeEngravingMode } from "./engravingRules";
+import { validateProductPayload, describeProductErrors } from "./shared/product";
 
 // Inserts many rows in a single round trip (one INSERT ... VALUES (...),(...),...)
 // instead of one query per row — the sequential-await version of this loop is
@@ -670,6 +671,8 @@ async function writeProductRow(id, payload, categoryId) {
 // variant-less "ghost" product on create, and no product stripped of its variants,
 // media and categories on update.
 async function saveProduct(id, payload) {
+  const problems = validateProductPayload(payload);
+  if (problems.length) throw new ProductError(describeProductErrors(problems), 422);
   assertPersistentMediaUrls(payload);
   // Categories are find-or-create and retry on a slug clash, which a transaction cannot do
   // (a failed INSERT aborts it), so they are settled first; a leftover category is harmless.

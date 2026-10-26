@@ -1,9 +1,6 @@
-export function formatCode(str) {
-  return String(str)
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "")
-    .slice(0, 20);
-}
+import { normalizeCouponCode } from "@/lib/shared/coupon";
+
+export const formatCode = normalizeCouponCode;
 
 const RANDOM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 

@@ -1,5 +1,6 @@
 import { sql } from "./db";
 import { todayISODate, computeCouponStatus } from "./couponStatus";
+import { validateCouponPayload, normalizeCouponCode } from "./shared/coupon";
 
 // Status is fully date-driven (never a manual admin choice) and can go
 // stale purely from time passing — a SCHEDULED coupon becomes ACTIVE once
@@ -99,21 +100,27 @@ function mapCoupon(row) {
   };
 }
 
+// Carries the HTTP status a route handler should answer with, so a rejected coupon is a
+// 422 (or a duplicate code a 409) rather than a 500.
+export class CouponError extends Error {
+  constructor(message, status = 422) {
+    super(message);
+    this.name = "CouponError";
+    this.status = status;
+  }
+}
+
 function couponValues(payload) {
+  const problems = validateCouponPayload(payload);
+  if (problems.length) throw new CouponError(problems.map((problem) => problem.message).join(" "));
+
   const type = payload.type;
   const appliesTo = payload.appliesTo === "CATEGORY" ? "CATEGORY" : "ALL";
   const startDate = payload.startDate || null;
   const endDate = payload.endDate || null;
 
-  if (startDate && endDate && endDate < startDate) {
-    throw new Error("End date can't be before the start date.");
-  }
-
   return {
-    code: String(payload.code || "")
-      .toUpperCase()
-      .replace(/[^A-Z0-9]+/g, "")
-      .slice(0, 20),
+    code: normalizeCouponCode(payload.code),
     description: payload.description || null,
     discount_type: type,
     discount_value: type === "free_shipping" ? null : toNumberOrNull(payload.value),
@@ -158,11 +165,18 @@ export async function createCoupon(payload) {
     `;
     return created.id;
   } catch (error) {
-    if (error.code === "23505" && error.constraint === "coupons_code_key") {
-      throw new Error(`A coupon with the code "${values.code}" already exists. Change the code and try again.`);
-    }
-    throw error;
+    throw asCouponError(error, values);
   }
+}
+
+// Known constraint violations become CouponErrors the routes can answer with; anything else is
+// rethrown untouched.
+function asCouponError(error, values) {
+  if (error.code === "23505" && error.constraint === "coupons_code_key") {
+    return new CouponError(`A coupon with the code "${values.code}" already exists. Change the code and try again.`, 409);
+  }
+  if (error.code === "23503") return new CouponError("The category you chose no longer exists.");
+  return error;
 }
 
 export async function updateCoupon(id, payload) {
@@ -180,10 +194,7 @@ export async function updateCoupon(id, payload) {
     `;
     return id;
   } catch (error) {
-    if (error.code === "23505" && error.constraint === "coupons_code_key") {
-      throw new Error(`A coupon with the code "${values.code}" already exists. Change the code and try again.`);
-    }
-    throw error;
+    throw asCouponError(error, values);
   }
 }
 

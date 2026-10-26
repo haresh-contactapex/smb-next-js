@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getProductById, updateProduct, deleteProduct } from "@/lib/products";
+import { readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
+
+const MAX_PRODUCT_BODY_BYTES = 5 * 1024 * 1024;
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["products.view", "products.edit"]);
@@ -23,8 +26,11 @@ export async function PUT(request, { params }) {
   const auth = await requireStaffPermission("products.edit");
   if (!auth.ok) return permissionDeniedResponse(auth);
 
+  const body = await readJsonBody(request, { maxBytes: MAX_PRODUCT_BODY_BYTES });
+  if (body.response) return body.response;
+  const payload = body.payload;
+
   try {
-    const payload = await request.json();
     const id = await updateProduct(params.id, payload);
     await logAdminActivity({
       actor: auth.user,
