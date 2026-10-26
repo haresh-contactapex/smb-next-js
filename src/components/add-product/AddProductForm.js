@@ -9,11 +9,8 @@ import {
   regenerateVariants,
   slugify,
   stripHtml,
-  toNumber,
   productStatusFromSettings,
   newAttributeId,
-  isPendingUpload,
-  isMissingUpload,
 } from "./helpers";
 import PageToolbar from "./PageToolbar";
 import ProductDetailsSection from "./ProductDetailsSection";
@@ -29,67 +26,13 @@ import OrganizationSidebar from "./OrganizationSidebar";
 import EngravingSidebar from "./EngravingSidebar";
 import JsonPayloadCard from "./JsonPayloadCard";
 import JsonModal from "./JsonModal";
-import Toast from "./Toast";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_SIZE_BYTES, classifyMediaFile, uploadPendingFiles } from "./mediaUpload";
+import { findProductProblem } from "./validation";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 const ENTER_SUBMIT_INPUT_TYPES = ["text", "search", "email", "tel", "url", "number", "password"];
-// Keep in sync with AUTO_DISMISS_MS in ./Toast.js (drives the success toast's progress-bar animation).
-const TOAST_AUTO_DISMISS_MS = 10000;
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
-const ALLOWED_MODEL_EXTENSIONS = [".glb", ".usdz"];
-const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
-
-async function uploadProductFile(file) {
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("purpose", "product");
-  let res;
-  try {
-    res = await fetch("/api/media", { method: "POST", body: formData });
-  } catch {
-    throw new Error(`Could not reach the server while uploading ${file.name} — check your connection and try again`);
-  }
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.success) throw new Error(json.error || `Failed to upload ${file.name}`);
-  return json.data.url;
-}
-
-// Uploads every item still holding a local File and swaps its blob: preview
-// URL for the stored public URL. Returns the next product state.
-async function uploadPendingFiles(product) {
-  const upload = async (item) => {
-    if (!isPendingUpload(item)) return item;
-    const url = await uploadProductFile(item.file);
-    return { type: item.type, url, name: item.name };
-  };
-  // One at a time: dozens of simultaneous multipart uploads can overwhelm the server
-  // and surface in the browser as a bare "Failed to fetch".
-  const media = [];
-  for (const item of product.media) media.push(await upload(item));
-  const variants = [];
-  for (const v of product.variants) {
-    if (!isPendingUpload(v.image)) {
-      variants.push(v);
-      continue;
-    }
-    const uploaded = await upload(v.image);
-    variants.push({ ...v, image: { url: uploaded.url, name: uploaded.name } });
-  }
-  // Only once every upload succeeded — a partial failure keeps the local previews.
-  [...product.media, ...product.variants.map((v) => v.image)]
-    .filter(isPendingUpload)
-    .forEach((item) => URL.revokeObjectURL(item.url));
-  return { ...product, media, variants };
-}
-
-function classifyMediaFile(file) {
-  if (ALLOWED_IMAGE_TYPES.includes(file.type)) return "image";
-  if (ALLOWED_VIDEO_TYPES.includes(file.type)) return "video";
-  const lowerName = file.name.toLowerCase();
-  if (ALLOWED_MODEL_EXTENSIONS.some((ext) => lowerName.endsWith(ext))) return "model";
-  return null;
-}
 
 export default function AddProductForm({ productId }) {
   const isEdit = Boolean(productId);
@@ -117,7 +60,7 @@ export default function AddProductForm({ productId }) {
   const [variantErrors, setVariantErrors] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [jsonOutput, setJsonOutput] = useState("");
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
   const editorRef = useRef(null);
   const titleInputRef = useRef(null);
@@ -126,7 +69,6 @@ export default function AddProductForm({ productId }) {
   const skuInputRef = useRef(null);
   const priceInputRef = useRef(null);
   const variantsSectionRef = useRef(null);
-  const toastTimerRef = useRef(null);
   const savingRef = useRef(false);
 
   useEffect(() => {
@@ -148,7 +90,7 @@ export default function AddProductForm({ productId }) {
     return () => {
       cancelled = true;
     };
-  }, [productId]);
+  }, [productId, showToast]);
 
   // The description editor is an uncontrolled contentEditable div (see
   // ProductDetailsSection) — while `loading` is true the form isn't mounted yet,
@@ -160,17 +102,6 @@ export default function AddProductForm({ productId }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
 
   function setField(field, value) {
     setProduct((prev) => ({ ...prev, [field]: value }));
@@ -372,101 +303,40 @@ export default function AddProductForm({ productId }) {
     // so it closes the race a state flag would leave open across renders.
     if (savingRef.current) return;
 
-    const variantRowErrors = product.variants.map((v) => ({
-      price: !v.price || toNumber(v.price) <= 0,
-      quantity: String(v.inventory_quantity).trim() === "",
-    }));
+    const problem = findProductProblem(product, { formatMoney });
+    const at = problem?.field;
+    // The red outline marks the first problem only, so fixing it moves on to the next one.
+    setTitleError(at === "title");
+    setCategoryError(at === "category");
+    setDescriptionError(at === "description");
+    setMediaError(at === "media" || at === "mediaMissing");
+    setPriceError(at === "price");
+    setSkuError(at === "sku");
+    setVariantErrors(at === "variants" ? problem.variantRowErrors : []);
 
-    // Order matches the page layout top to bottom, so validation stops at the
-    // first invalid field instead of jumping ahead to a field further down.
-    const steps = [
-      {
-        invalid: !product.title.trim(),
-        setError: setTitleError,
-        onFail: () => {
-          titleInputRef.current?.focus();
-          showToast("Add a title before saving", "error");
-        },
-      },
-      {
-        invalid: product.categories.length === 0,
-        setError: setCategoryError,
-        onFail: () => {
-          categoryInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          categoryInputRef.current?.focus();
-          showToast("Add at least one product category before saving", "error");
-        },
-      },
-      {
-        invalid: !stripHtml(product.body_html).trim(),
-        setError: setDescriptionError,
-        onFail: () => {
-          editorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          editorRef.current?.focus();
-          showToast("Add a description before saving", "error");
-        },
-      },
-      {
-        invalid: product.media.length === 0,
-        setError: setMediaError,
-        onFail: () => {
-          mediaSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          showToast("Add at least one image, video, or 3D model before saving", "error");
-        },
-      },
-      {
-        invalid: product.media.some(isMissingUpload),
-        setError: setMediaError,
-        onFail: () => {
-          mediaSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          showToast("Some media files were never uploaded — remove the items marked “Missing” and upload them again", "error");
-        },
-      },
-      {
-        invalid: !product.price || toNumber(product.price) <= 0,
-        setError: setPriceError,
-        onFail: () => {
-          priceInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          priceInputRef.current?.focus();
-          showToast(`Enter a price greater than ${formatMoney(0)} before saving`, "error");
-        },
-      },
-      {
-        invalid: !product.sku.trim(),
-        setError: setSkuError,
-        onFail: () => {
-          skuInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          skuInputRef.current?.focus();
-          showToast("Add a SKU before saving", "error");
-        },
-      },
-      {
-        invalid: variantRowErrors.some((err) => err.price || err.quantity),
-        setError: (isCurrent) => setVariantErrors(isCurrent ? variantRowErrors : []),
-        onFail: () => {
-          variantsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          showToast("Add a price and quantity for every variant before saving", "error");
-        },
-      },
-      {
-        invalid: product.variants.some((v) => isMissingUpload(v.image)),
-        setError: () => {},
-        onFail: () => {
-          variantsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-          showToast("Some variant images were never uploaded — remove or replace the images marked missing", "error");
-        },
-      },
-    ];
-
-    const firstInvalidIndex = steps.findIndex((step) => step.invalid);
-    steps.forEach((step, i) => step.setError(i === firstInvalidIndex));
-
-    if (firstInvalidIndex !== -1) {
-      steps[firstInvalidIndex].onFail();
+    if (problem) {
+      showProblem(at);
+      showToast(problem.message, "error");
       return;
     }
 
     persistProduct();
+  }
+
+  // Brings the field with the problem into view (and focuses it when it is an input).
+  function showProblem(field) {
+    const bringIntoView = (element) => element?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const focusInput = (ref) => {
+      bringIntoView(ref.current);
+      ref.current?.focus();
+    };
+    if (field === "title") titleInputRef.current?.focus();
+    else if (field === "category") focusInput(categoryInputRef);
+    else if (field === "description") focusInput(editorRef);
+    else if (field === "media" || field === "mediaMissing") bringIntoView(mediaSectionRef.current);
+    else if (field === "price") focusInput(priceInputRef);
+    else if (field === "sku") focusInput(skuInputRef);
+    else bringIntoView(variantsSectionRef.current);
   }
 
   async function persistProduct() {
