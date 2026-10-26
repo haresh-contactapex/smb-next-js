@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { readJsonBody } from "@/lib/api";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { CartError, lookupShippingRules } from "@/lib/storefrontCart";
 
@@ -14,12 +13,12 @@ export async function POST(request) {
     if (parsed.response) return parsed.response;
     const body = parsed.payload ?? {};
     const data = await lookupShippingRules(body?.country, body?.zip, body?.state, body?.city);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     if (error instanceof CartError) {
-      return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field || undefined }, { status: error.status });
+      return fail(publicErrorMessage(error), error.status, { field: error.field || undefined });
     }
     console.error("Cart shipping estimate failed", error);
-    return NextResponse.json({ success: false, error: "We couldn't estimate shipping right now. Please try again." }, { status: 500 });
+    return fail("We couldn't estimate shipping right now. Please try again.", 500);
   }
 }

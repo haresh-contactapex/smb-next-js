@@ -1,6 +1,4 @@
-import { NextResponse } from "next/server";
-import { readJsonBody } from "@/lib/api";
-import { publicErrorMessage } from "@/lib/publicError";
+import { failureFrom, ok, readJsonBody } from "@/lib/api";
 import { CartError, lookupCartCoupon } from "@/lib/storefrontCart";
 
 // A cart lookup is a few ids or a short address; anything near this size is not one.
@@ -15,12 +13,12 @@ export async function POST(request) {
     if (parsed.response) return parsed.response;
     const body = parsed.payload ?? {};
     const data = await lookupCartCoupon(body?.code, body?.productIds);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    if (error instanceof CartError) {
-      return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
-    }
-    console.error("Cart coupon lookup failed", error);
-    return NextResponse.json({ success: false, error: "We couldn't check that code right now. Please try again." }, { status: 500 });
+    return failureFrom(error, {
+      KnownError: CartError,
+      fallbackMessage: "We couldn't check that code right now. Please try again.",
+      label: "Cart coupon lookup",
+    });
   }
 }

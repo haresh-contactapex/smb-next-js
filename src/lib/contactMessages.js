@@ -52,7 +52,7 @@ export async function submitContactMessage({ payload, clientKey }) {
   }
 
   // No short-circuit: both limiters record the attempt, so neither count drifts.
-  const allowed = [(clientKey ? clientLimiter(clientKey) : true), addressLimiter(values.email.toLowerCase())];
+  const allowed = [clientLimiter(clientKey), addressLimiter(values.email.toLowerCase())];
   if (allowed.includes(false)) {
     throw new ContactMessageError("You've sent a few messages already. Please wait a little while before sending another.", 429);
   }

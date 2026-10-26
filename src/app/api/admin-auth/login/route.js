@@ -26,7 +26,7 @@ const allowLoginAttempt = createRateLimiter({ limit: 20, windowMs: 15 * 60 * 100
 export async function POST(request) {
   try {
     const ip = clientIpOf(request);
-    if (ip && !allowLoginAttempt(ip)) {
+    if (!allowLoginAttempt(ip)) {
       return NextResponse.json(
         { success: false, error: "Too many sign-in attempts. Please wait a few minutes and try again." },
         { status: 429 }

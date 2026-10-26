@@ -7,6 +7,7 @@ export const MIGRATIONS = [
   "docs/category-product/product-categories-table-only.sql",
   "docs/auth/customers-table-only.sql",
   "docs/my-account/users-table-only.sql",
+  "docs/my-account/addresses-table-only.sql",
   "docs/auth/session-revocation-only.sql",
   "docs/auth/customer-login-lockout-only.sql",
   "docs/my-account/users-security-columns-only.sql",
@@ -29,6 +30,8 @@ export const MIGRATIONS = [
   "docs/engraving/engraving-tables-only.sql",
   "docs/storefront/wishlist-table-only.sql",
   "docs/account/customer-account-tables-only.sql",
+  "docs/settings/general-store-tables-only.sql",
+  "docs/settings/orders-table-only.sql",
   "docs/settings/currency-tax-table-only.sql",
   "docs/settings/shipping-table-only.sql",
   "docs/settings/payment-table-only.sql",
@@ -50,3 +53,12 @@ export const MIGRATIONS = [
 // columns (run it by hand with `npm run db:migrate:payment-gateways` only on such a database).
 // tests/migrations.test.mjs checks that every `db:migrate:*` script's file is in one list or the other.
 export const MANUAL_ONLY = ["docs/settings/payment-gateway-credentials-only.sql"];
+
+// The full per-area schemas the *-only files above were cut from. They are documentation: their
+// CREATE TABLE statements are not IF NOT EXISTS, so the runner never applies them.
+export const REFERENCE_ONLY = [
+  "docs/my-account/my-account-database-schema.sql",
+  "docs/orders/orders-database-schema.sql",
+  "docs/settings/settings-database-schema.sql",
+  "docs/vouchers-coupons/vouchers-coupons-database-schema.sql",
+];
