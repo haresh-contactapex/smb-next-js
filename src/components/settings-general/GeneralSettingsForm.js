@@ -13,20 +13,16 @@ import PageToolbar from "./PageToolbar";
 import StoreIdentitySection from "./StoreIdentitySection";
 import StoreContactSection from "./StoreContactSection";
 import LocalizationSidebar from "./LocalizationSidebar";
-import Toast from "@/components/add-product/Toast";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 export default function GeneralSettingsForm() {
   const [settings, setSettings] = useState(DEFAULT_GENERAL_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
-  const toastTimerRef = useRef(null);
   const storeNameInputRef = useRef(null);
   const identitySectionRef = useRef(null);
   const storeEmailInputRef = useRef(null);
@@ -54,20 +50,6 @@ export default function GeneralSettingsForm() {
       return;
     }
     fieldRefs[field]?.current?.focus();
-  }
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast((t) => ({ ...t, visible: false })),
-      TOAST_AUTO_DISMISS_MS,
-    );
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
   }
 
   async function loadSettings() {

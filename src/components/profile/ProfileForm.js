@@ -9,11 +9,8 @@ import ProfileDetailsSection from "./ProfileDetailsSection";
 import PasswordSection from "./PasswordSection";
 import AccountStatusSidebar from "./AccountStatusSidebar";
 import PreferencesSidebar from "./PreferencesSidebar";
-import Toast from "@/components/add-product/Toast";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 // What is stored for the two settings that need the current password to change.
 const savedSecurityOf = (state) => ({
@@ -27,10 +24,9 @@ export default function ProfileForm() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
   const [passwordExpiredNotice, setPasswordExpiredNotice] = useState(false);
 
-  const toastTimerRef = useRef(null);
   const fieldRefs = useRef({});
 
   // Reads the redirect reason from the URL directly (rather than
@@ -48,20 +44,6 @@ export default function ProfileForm() {
     return (el) => {
       fieldRefs.current[field] = el;
     };
-  }
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast((t) => ({ ...t, visible: false })),
-      TOAST_AUTO_DISMISS_MS,
-    );
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
   }
 
   async function loadProfile() {

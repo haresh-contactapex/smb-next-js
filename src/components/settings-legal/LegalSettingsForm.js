@@ -7,11 +7,8 @@ import TextField from "@/components/settings-shared/TextField";
 import TextAreaField from "@/components/settings-shared/TextAreaField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
-import Toast from "@/components/add-product/Toast";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 const DEFAULT_SETTINGS = {
   termsUrl: "",
@@ -65,23 +62,8 @@ function validateLegalSettings(settings) {
 export default function LegalSettingsForm() {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
-  const toastTimerRef = useRef(null);
+  const { toast, showToast, dismissToast } = useToast();
   const fieldRefs = useRef({});
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast((t) => ({ ...t, visible: false })),
-      TOAST_AUTO_DISMISS_MS,
-    );
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
 
   function setField(field, value) {
     setSettings((prev) => ({ ...prev, [field]: value }));
