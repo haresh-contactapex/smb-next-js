@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
-import { getCouponById, updateCoupon, deleteCoupon } from "@/lib/coupons";
+import { getCouponById, updateCoupon, deleteCoupon, CouponError } from "@/lib/coupons";
+import { failureFrom, readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
+
+const MAX_COUPON_BODY_BYTES = 64 * 1024;
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["coupons.view", "coupons.edit"]);
@@ -23,8 +26,11 @@ export async function PUT(request, { params }) {
   const auth = await requireStaffPermission("coupons.edit");
   if (!auth.ok) return permissionDeniedResponse(auth);
 
+  const body = await readJsonBody(request, { maxBytes: MAX_COUPON_BODY_BYTES });
+  if (body.response) return body.response;
+  const payload = body.payload;
+
   try {
-    const payload = await request.json();
     const id = await updateCoupon(params.id, payload);
     await logAdminActivity({
       actor: auth.user,
@@ -35,7 +41,7 @@ export async function PUT(request, { params }) {
     });
     return NextResponse.json({ success: true, data: { id } });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return failureFrom(error, { KnownError: CouponError, fallbackMessage: "Couldn't save the coupon.", label: "Update coupon" });
   }
 }
 
