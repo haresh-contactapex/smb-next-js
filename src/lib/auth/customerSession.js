@@ -22,7 +22,7 @@ export async function createCustomerSession(customerId, { rememberMe = false } =
   });
 }
 
-// A transient DB hiccup (e.g. a Neon cold start) should surface as "no
+// A transient DB hiccup (e.g. a dropped connection) should surface as "no
 // session" rather than a 500 — the same fallback an invalid/expired token
 // already gets. See getCurrentStaffUser for why this matters even more for
 // the staff-session equivalent, which RootLayout calls on every render.

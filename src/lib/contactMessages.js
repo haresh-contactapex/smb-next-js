@@ -3,7 +3,7 @@ import { getStoreSettings } from "./storeSettings";
 import { createRateLimiter } from "./rateLimit";
 import { isEmailConfigured, sendContactMessageAdminEmail, sendContactMessageConfirmationEmail } from "./email";
 import { checkRecaptchaIfEnabled } from "./auth/recaptcha";
-import { normalizeContact, validateContact } from "@/components/storefront/contact/helpers";
+import { normalizeContact, validateContact } from "@/lib/shared/contactForm";
 
 // Server side of the storefront Contact form. Nothing is stored: the message is
 // emailed to the store (Settings -> General store email, else Settings ->
@@ -52,7 +52,7 @@ export async function submitContactMessage({ payload, clientKey }) {
   }
 
   // No short-circuit: both limiters record the attempt, so neither count drifts.
-  const allowed = [clientLimiter(clientKey), addressLimiter(values.email.toLowerCase())];
+  const allowed = [(clientKey ? clientLimiter(clientKey) : true), addressLimiter(values.email.toLowerCase())];
   if (allowed.includes(false)) {
     throw new ContactMessageError("You've sent a few messages already. Please wait a little while before sending another.", 429);
   }

@@ -22,7 +22,7 @@ export async function createStaffSession(userId) {
 }
 
 // RootLayout calls this on every page render (including the login page
-// itself), so a transient DB hiccup (e.g. a Neon cold start) must not crash
+// itself), so a transient DB hiccup (e.g. a dropped connection) must not crash
 // the whole app — fall back to "no session" the same way an invalid/expired
 // token does, rather than throwing.
 export async function getCurrentStaffUser() {

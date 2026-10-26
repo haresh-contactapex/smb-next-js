@@ -113,7 +113,7 @@ function VariantImageCell({ image, label, onOpenPicker, onRemove }) {
         {missing ? (
           <Icon name="upload-cloud" className="w-4 h-4 text-error" />
         ) : image ? (
-          // eslint-disable-next-line @next/next/no-img-element -- blob: preview or Vercel Blob URL
+          // eslint-disable-next-line @next/next/no-img-element -- blob: preview or uploaded /uploads URL
           <img
             src={image.url}
             alt={image.name || label}

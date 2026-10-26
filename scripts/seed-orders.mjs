@@ -1,6 +1,6 @@
 // Seeds test dummy orders for the Orders module (All/Pending/Processing/
 // Completed/Cancelled), so the listing pages and the sidebar's live
-// per-status badges have something to show. Writes directly to Neon (same
+// per-status badges have something to show. Writes directly to the database (same
 // table as src/lib/orders.js) so it doesn't need a running dev server or an
 // authenticated session — same pattern as scripts/seed-dummy-products.mjs.
 //
@@ -9,7 +9,7 @@
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
-import { neon } from "./lib/pg-neon.mjs";
+import { pgTagged } from "./lib/pg-tagged.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,7 +34,7 @@ loadEnvLocal();
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set. Add it to your .env.local file.");
 }
-const sql = neon(process.env.DATABASE_URL);
+const sql = pgTagged(process.env.DATABASE_URL);
 
 async function batchInsert(table, columns, rows, returning) {
   if (!rows.length) return [];

@@ -5,7 +5,7 @@ import { insertStaffResetToken } from "./passwordResetTokens";
 import { sendStaffWelcomeEmail } from "./email";
 import { getGeneralSettings } from "./generalSettings";
 import { isValidUsPhone } from "./phone";
-import { isValidPassword, getPasswordErrorMessage } from "@/components/auth/helpers";
+import { isValidPassword, getPasswordErrorMessage } from "@/lib/shared/auth";
 import { LANGUAGES, TIMEZONES } from "@/data/accountData";
 
 /**

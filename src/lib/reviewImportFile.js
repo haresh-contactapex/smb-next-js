@@ -4,8 +4,8 @@ import { unzipSync } from "fflate";
 // Everything happens in memory: the upload is never written to disk, and
 // nothing in it is executed (macros, embedded objects and images are ignored).
 
-// Kept under Vercel's ~4.5 MB request-body cap, so an oversized upload is
-// refused here with a clear message instead of failing at the platform.
+// A review list is plain text, so anything bigger is refused here with a clear
+// message instead of being read into memory.
 export const MAX_IMPORT_FILE_BYTES = 4 * 1024 * 1024;
 export const FILE_TOO_LARGE_MESSAGE = `The file is larger than the ${MAX_IMPORT_FILE_BYTES / (1024 * 1024)} MB limit.`;
 // A .docx is a zip. Only word/document.xml is unpacked, and never past this

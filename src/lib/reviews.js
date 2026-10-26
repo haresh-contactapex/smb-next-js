@@ -2,8 +2,8 @@ import { sql } from "./db";
 import { createRateLimiter } from "./rateLimit";
 import { getProductsSettings } from "./productsSettings";
 import { checkRecaptchaIfEnabled } from "./auth/recaptcha";
-import { isValidEmail } from "@/components/auth/helpers";
-import { normalizeReview, validateReview } from "@/components/storefront/reviews/helpers";
+import { isValidEmail } from "@/lib/shared/auth";
+import { normalizeReview, validateReview } from "@/lib/shared/reviewForm";
 import {
   MAX_CONTENT_LENGTH,
   MAX_DISPLAY_NAME_LENGTH,
@@ -277,7 +277,7 @@ export async function submitStorefrontReview({ payload, clientKey }) {
   if (!handle || handle.length > MAX_HANDLE_LENGTH) throw new ReviewError("Choose a valid product.");
 
   // No short-circuit: both limiters record the attempt, so neither count drifts.
-  const allowed = [clientLimiter(clientKey), addressLimiter(values.email)];
+  const allowed = [(clientKey ? clientLimiter(clientKey) : true), addressLimiter(values.email)];
   if (allowed.includes(false)) {
     throw new ReviewError("You've sent a few reviews already. Please wait a little while before sending another.", 429);
   }

@@ -281,7 +281,7 @@ export default function MediaSelectModal({
                               : "border-slate-200 hover:border-primary-300 dark:border-white/10 dark:hover:border-accent-500/50"
                           }`}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element -- Vercel Blob / uploads URLs, not optimizable by next/image */}
+                          {/* eslint-disable-next-line @next/next/no-img-element -- uploads URLs, not optimizable by next/image */}
                           <img
                             src={item.url}
                             alt={item.altText || item.fileName}

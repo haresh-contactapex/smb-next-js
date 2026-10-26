@@ -4,7 +4,7 @@ import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getSystemMaintenanceSettings, updateSystemMaintenanceSettings } from "@/lib/systemMaintenanceSettings";
-import { validateSystemMaintenanceSettingsForm } from "@/components/settings-system-maintenance/helpers";
+import { validateSystemMaintenanceSettingsForm } from "@/lib/shared/settingsSystemMaintenance";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("system-maintenance", "view"));

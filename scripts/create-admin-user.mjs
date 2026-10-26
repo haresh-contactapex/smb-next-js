@@ -9,7 +9,7 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import bcrypt from "bcryptjs";
-import { neon } from "./lib/pg-neon.mjs";
+import { pgTagged } from "./lib/pg-tagged.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,7 +48,7 @@ async function main() {
     throw new Error("DATABASE_URL is not set. Add it to your .env.local file.");
   }
 
-  const sql = neon(process.env.DATABASE_URL);
+  const sql = pgTagged(process.env.DATABASE_URL);
   const passwordHash = await bcrypt.hash(password, 12);
   const normalizedEmail = email.trim().toLowerCase();
 

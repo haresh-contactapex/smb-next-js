@@ -1,8 +1,7 @@
-# Deploying Shop My Band to cPanel (Phusion Passenger) — migrating from Vercel
+# Deploying Shop My Band to cPanel (Phusion Passenger)
 
-This is the exact procedure that was used to move the Next.js 15 admin panel and storefront from
-`https://smb-next-js.vercel.app` to a cPanel server (`shopweddingband.com`), with the project living **inside
-`public_html`**. It also records every problem hit on the way, so the next deploy is a checklist rather than an
+This is the exact procedure used to run the Next.js 15 admin panel and storefront on a cPanel server
+(`shopweddingband.com`), with the project living **inside `public_html`**. It also records every problem hit on the way, so the next deploy is a checklist rather than an
 investigation.
 
 No secrets are stored in this file. Where a secret is needed, the step says where to copy it from.
@@ -35,7 +34,7 @@ Browser ──> Apache ──> Phusion Passenger ──> app.js ──> Next.js 
 | Node for the app | `/opt/cpanel/ea-nodejs22/bin/node` (EasyApache 4 package `ea-nodejs22`, v22.23.x) |
 | System Node (do not use) | `/usr/bin/node` v16.20.2 |
 | Application Manager | Present, but has **no Node version selector** (not CloudLinux) |
-| Database | PostgreSQL 18 run as the cPanel user (no root), `127.0.0.1:5433`, database `smb` (§11). Neon was used until 2026-10-21. |
+| Database | PostgreSQL 18 run as the cPanel user (no root), `127.0.0.1:5433`, database `smb` (§11). |
 | Media storage | Local disk, `public_html/public/uploads/YYYY/MM/` (see §4) |
 
 ---
@@ -52,45 +51,35 @@ These need root access and are done once per server.
 
 ---
 
-## 3. Collect the Vercel settings (before touching the server)
+## 3. Environment variables (before touching the server)
 
-In the Vercel dashboard → Project → *Settings → Environment Variables* (or run `vercel env pull` locally), note the
-values for the variables below. The app reads exactly these:
+Gather the values for the variables below. The app reads exactly these:
 
 | Variable | Needed? | Secret? | Notes |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | Yes | Yes | On cPanel: `postgresql://smb_app:<password>@127.0.0.1:5433/smb`, kept in `~/.smb-database-url` (§11.4). The password must be letters and digits only. Neon (Vercel) used a Neon string here. |
-| `JWT_SECRET` | Yes | Yes | Must match Vercel's value if you want existing sessions to stay valid; a new value logs everyone out. |
-| `BLOB_READ_WRITE_TOKEN` | No | Yes | Only for the old Vercel deployment. Uploads now go to `public/uploads/` on disk (§4). |
+| `DATABASE_URL` | Yes | Yes | On cPanel: `postgresql://smb_app:<password>@127.0.0.1:5433/smb`, kept in `~/.smb-database-url` (§11.4). The password must be letters and digits only. |
+| `JWT_SECRET` | Yes | Yes | Keep the same value across deploys so existing sessions stay valid; a new value logs everyone out. |
 | `NODE_ENV` | Yes | No | `production` |
-| `SITE_URL` | Yes | No | `https://<your-domain>`. Vercel used `VERCEL_PROJECT_PRODUCTION_URL` automatically; on cPanel nothing provides it, so password-reset emails are **not sent** without `SITE_URL`. |
+| `SITE_URL` | Yes | No | `https://<your-domain>`. Nothing else provides it, so password-reset emails are **not sent** without `SITE_URL`. |
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | If reCAPTCHA is on | No | Baked into the browser bundle at **build** time. Must exist before the build runs (see §5.8). |
 | `RECAPTCHA_SECRET_KEY` | If reCAPTCHA is on | Yes | Runtime. |
+| `TRUSTED_PROXY_HOPS` | No | No | Proxies in front of the app that append to `x-forwarded-for` (default `1`: the server's own proxy). Set `2` if a CDN such as Cloudflare is added in front; otherwise rate limits (checkout, login, contact) count many visitors as one. The app logs a warning when it sees more entries than this. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | `SMTP_PASS` | Fallback only; SMTP saved in *Settings → Email* (database) takes precedence. |
-| `NOTIFICATIONS_WS_*` | No | Yes | Needs a separate long-lived WebSocket process. Neither Vercel nor Passenger can host it; the admin bell falls back to polling every 30 s. |
+| `NOTIFICATIONS_WS_*` | No | Yes | Needs a separate long-lived WebSocket process. Passenger cannot host it; the admin bell falls back to polling every 30 s. |
 
 Payment gateway keys, shipping, tax and email templates live in the database (Settings pages), so they travel with
 `DATABASE_URL` and need no action.
 
 ---
 
-## 4. Things that behave differently from Vercel
+## 4. Things to know about this hosting
 
 * **Media storage**: new uploads are written to this server's disk, WordPress-style, as
   `public_html/public/uploads/YYYY/MM/<uuid>.<ext>` (for example `public/uploads/2026/10/3f2a….jpg`) and are
   served at `/uploads/YYYY/MM/<uuid>.<ext>` by the app (`src/app/uploads/[...path]/route.js`; `next start` does not
   serve files added after startup). The folder is created on first upload and must stay writable by the cPanel user.
   Back it up (it is not in Git) and keep it out of any "clean" deploy step.
-  **Migration of the old Vercel Blob images (done 2026-10-19):** all 1,543 existing images/PDFs were downloaded
-  (101 MB), stored as `public/uploads/2026/09` (25) and `2026/10` (1,518) (folder = month of the original upload),
-  and the database was rewritten from `https://<store>.public.blob.vercel-storage.com/<file>` to
-  `/uploads/YYYY/MM/<file>` in `media.url`, `product_media.url`, `product_variants.image_url`,
-  `categories.image_url`, `cms_pages.content_html`, `cms_page_revisions.content_html`,
-  `general_settings.logo_url`/`favicon_url` and `users.avatar_url` (2,348 rows, one transaction, backup kept).
-  No Blob URL remains in the database, so the Vercel Blob store is no longer needed by this site. The old Vercel
-  deployment shares the same database, so its images no longer load; it does not have these files.
-  To roll back, run `restore.mjs` from the migration backup (it maps `/uploads/…` back to the Blob URLs, keeping any
-  later edits); the Blob files themselves were not deleted. Deleting media in the admin removes the file from
+  Deleting media in the admin removes the file from
   `public/uploads`.
 * **`SITE_URL`**: required, see §3.
 * **No edge/serverless limits**: long requests are fine, but the process is one long-lived Node process under
@@ -309,16 +298,15 @@ NEXT_PUBLIC_RECAPTCHA_SITE_KEY=<your site key>
 
 ---
 
-## 7. Domain, DNS and SSL cutover from Vercel
+## 7. Domain, DNS and SSL
 
-1. Deploy and verify on a test hostname first (the cPanel account's own domain), keep Vercel serving production.
+1. Deploy and verify on a test hostname first (the cPanel account's own domain).
 2. Add the production domain to the cPanel account (*Domains*), deploy the app to it in Application Manager
    (a second registration, or move the existing one).
 3. Issue the certificate (AutoSSL / *SSL/TLS Status*) and confirm `https://` works **before** changing DNS if
    possible (temporary hosts-file entry), otherwise right after.
 4. Update `SITE_URL` to the production `https://` URL and restart the app (§9).
-5. Lower the DNS TTL a day ahead, then point the A record to the cPanel server IP (and remove/replace the Vercel
-   `CNAME`). The Blob-hosted images are already migrated (§4), so the Vercel project is no longer needed for media.
+5. Lower the DNS TTL a day ahead, then point the A record to the cPanel server IP (and remove any old `CNAME`).
 6. Update external callbacks: Stripe webhook URL, reCAPTCHA allowed domains, any Google/Meta integrations.
 7. Watch `logs/` in cPanel and the admin panel for the first day.
 
@@ -418,7 +406,7 @@ web root) before each rebuild. To roll back, Trash the bad `.next`, extract the 
 
 ---
 
-## 11. PostgreSQL on this server (user-level, migrated from Neon on 2026-10-21)
+## 11. PostgreSQL on this server (user-level)
 
 This cPanel account has no PostgreSQL feature (no "PostgreSQL Databases" in cPanel, no root, and the shell is a
 jailed shell, so there is no systemd). PostgreSQL therefore runs as the cPanel user, installed under the home
@@ -428,8 +416,8 @@ directory. Nothing here needs root.
 
 * The terminal is a jailed shell. **Processes started from a terminal session die when the session closes**, even
   with `setsid nohup`. Only a cron job keeps the database up (§11.5).
-* The server **cannot reach Neon on port 5432** (outbound firewall), so `pg_dump` against Neon does not work from
-  here. Export from a machine that can (the app's `src/lib/databaseBackup.js` writes a restorable SQL file; see §11.6).
+* The server **cannot reach an external database on port 5432** (outbound firewall), so `pg_dump` against a remote
+  database does not work from here. Export from a machine that can (the app's `src/lib/databaseBackup.js` writes a restorable SQL file; see §11.6).
 * `pg` cannot run in the Edge runtime, so `src/middleware.js` is `runtime: "nodejs"` (Next 15.5). Without it every
   request fails with `TypeError: f.deprecate is not a function`.
 * Application Manager's edit form fails for this app with `Invalid configuration for the parameter "python"`
@@ -500,7 +488,7 @@ fi
 If the server is killed it is back within about a minute, after crash recovery (visible in `~/pgdata/server.log`).
 `pg_isready` without `-U` logs a harmless `role "<cpanel user>" does not exist` line each run.
 
-### 11.6 Moving data (how Neon was migrated)
+### 11.6 Moving data in from another database
 
 1. On a machine that can reach the old database, run `generateDatabaseBackup()` from `src/lib/databaseBackup.js`
    to a `.sql` file (it skips the one-time reset/OTP token tables).
@@ -509,7 +497,7 @@ If the server is killed it is back within about a minute, after crash recovery (
    into an empty `smb` database (`CREATE EXTENSION pgcrypto` first, as `smb_admin`).
 3. Compare table and row counts with the source, then delete the file from the server and from your computer.
 
-Migrated on 2026-10-21: 55 tables, 46,741 rows (172 products, 32 customers, 82 orders), counts identical to Neon.
+Migrated on 2026-10-21: 55 tables, 46,741 rows (172 products, 32 customers, 82 orders), counts identical to the source.
 
 ### 11.7 Deploy traps seen during this migration
 
@@ -525,6 +513,4 @@ Migrated on 2026-10-21: 55 tables, 46,741 rows (172 products, 32 customers, 82 o
 
 * **Backups**: nothing backs up this database yet. Add a nightly `pg_dump` (custom format) to a folder outside
   `public_html`, and copy it off the server.
-* Keep the Neon project for a short rollback window, then delete it. Rolling back needs the previous code
-  (`95b358b`, Neon driver) as well as the old `DATABASE_URL`.
 * PostgreSQL upgrades are manual (`micromamba update -p ~/opt/pg postgresql`, then check release notes).

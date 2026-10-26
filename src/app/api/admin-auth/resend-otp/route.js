@@ -5,7 +5,7 @@ import { checkOtpRateLimit, issueLoginOtp, OTP_TTL_MS } from "@/lib/auth/loginOt
 import { getStaffRowById } from "@/lib/staff";
 import { sendLoginOtpEmail } from "@/lib/email";
 import { logAdminActivity } from "@/lib/notifications";
-import { maskEmail } from "@/components/auth/helpers";
+import { maskEmail } from "@/lib/shared/auth";
 
 const NO_CHALLENGE_ERROR = "Your sign-in session has expired. Sign in again.";
 

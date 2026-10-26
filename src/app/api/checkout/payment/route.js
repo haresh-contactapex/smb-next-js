@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
 import { placeCodOrder, startCardPayment } from "@/lib/checkoutOrders";
 import { CheckoutError } from "@/lib/checkoutPricing";
-import { createRateLimiter } from "@/lib/rateLimit";
+import { clientIpOf, createRateLimiter } from "@/lib/rateLimit";
 
 // Public: the storefront checkout's Place Order. Takes what the customer wants (items
 // by id and quantity, addresses, a coupon code) and prices everything itself, then
@@ -13,18 +14,20 @@ import { createRateLimiter } from "@/lib/rateLimit";
 // Answers a 409 with `reason` and `details` when the cart or total has changed.
 
 // Each call can create a Stripe PaymentIntent and an order, so a script shouldn't get far.
+const MAX_BODY_BYTES = 200_000;
 const allow = createRateLimiter({ limit: 12, windowMs: 10 * 60 * 1000 });
 
-function clientKey(request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || request.headers.get("x-real-ip") || "unknown";
-}
-
 export async function POST(request) {
-  if (!allow(clientKey(request))) {
+  // No client address (no proxy, e.g. local dev) means nothing to count against, so no limit.
+  const ip = clientIpOf(request);
+  if (ip && !allow(ip)) {
     return NextResponse.json({ success: false, error: "Too many attempts. Please wait a few minutes and try again." }, { status: 429 });
   }
 
-  const body = await request.json().catch(() => null);
+  // Addresses, a note and engraving text make a big cart body, but nowhere near this.
+  const parsed = await readJsonBody(request, { maxBytes: MAX_BODY_BYTES });
+  if (parsed.response) return parsed.response;
+  const body = parsed.payload;
   if (!body || typeof body !== "object") {
     return NextResponse.json({ success: false, error: "That request wasn't valid." }, { status: 400 });
   }

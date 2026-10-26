@@ -33,8 +33,7 @@ export function resolveUploadPath(segments) {
 }
 
 // Deletes the stored files behind the given media URLs, best effort. Only /uploads/ URLs are
-// ours to delete; links to other hosts (for example images uploaded to Vercel Blob before the
-// move to this server) are left alone.
+// ours to delete; links to other hosts are left alone.
 export async function removeStoredFiles(urls) {
   await Promise.all(
     urls.map(async (url) => {

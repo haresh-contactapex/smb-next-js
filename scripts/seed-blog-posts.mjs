@@ -2,7 +2,7 @@
 // store's five blogs, each with the content in scripts/blog-content/<slug>.html, its featured
 // picture in public/storefront/blog/ and the date, author, category and tags it had. Every post is
 // created PUBLISHED. Safe to run again: a post whose URL already exists is left exactly as it is, so
-// nothing an admin has written is ever overwritten. Writes directly to Neon, so it needs no running
+// nothing an admin has written is ever overwritten. Writes directly to the database, so it needs no running
 // dev server or login (same pattern as scripts/seed-cms-pages.mjs).
 //
 // Requires: npm run db:migrate:blog
@@ -13,7 +13,7 @@
 import { existsSync, readFileSync } from "fs";
 import { fileURLToPath, pathToFileURL } from "url";
 import path from "path";
-import { neon } from "./lib/pg-neon.mjs";
+import { pgTagged } from "./lib/pg-tagged.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -38,7 +38,7 @@ loadEnvLocal();
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set. Add it to your .env.local file.");
 }
-const sql = neon(process.env.DATABASE_URL);
+const sql = pgTagged(process.env.DATABASE_URL);
 
 // Content files are cleaned with the same allowlist the CMS applies on save. That module is an ES
 // module in a .js file, which plain Node loads from 22.7 on; on older Node the post is still created

@@ -1,10 +1,9 @@
-// Drop-in for `neon(url)` from @neondatabase/serverless, backed by node-postgres
-// so the CLI scripts work against a plain PostgreSQL server (cPanel).
-// The returned function is a tagged template resolving to row objects and has
-// `.query(text, params)` like the Neon one.
+// Tagged-template SQL client for the CLI scripts, backed by node-postgres so they work
+// against a plain PostgreSQL server (cPanel). `pgTagged(url)` returns a function that is a
+// tagged template resolving to row objects and also has `.query(text, params)`.
 import pg from "pg";
 
-export function neon(connectionString) {
+export function pgTagged(connectionString) {
   // allowExitOnIdle lets a one-shot script end once its work is done.
   const pool = new pg.Pool({ connectionString, max: 4, allowExitOnIdle: true });
 

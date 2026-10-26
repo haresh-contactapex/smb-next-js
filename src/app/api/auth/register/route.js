@@ -5,7 +5,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { createCustomerSession } from "@/lib/auth/customerSession";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
-import { isValidEmail, isValidPassword } from "@/components/auth/helpers";
+import { isValidEmail, isValidPassword } from "@/lib/shared/auth";
 import { formatUsPhone, isValidUsPhone } from "@/lib/phone";
 import { isEmailConfigured, sendCustomerWelcomeEmail, sendNewCustomerAdminNotification } from "@/lib/email";
 import { getGeneralSettings } from "@/lib/generalSettings";

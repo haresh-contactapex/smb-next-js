@@ -3,7 +3,7 @@ import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission, settingsPermission } from "@/lib/permissions";
 import { applyPriceAdjustmentToAllProducts } from "@/lib/pricing";
-import { ADJUSTMENT_TYPES, ADJUSTMENT_DIRECTIONS, isValidAdjustmentValue } from "@/components/settings-pricing/helpers";
+import { ADJUSTMENT_TYPES, ADJUSTMENT_DIRECTIONS, isValidAdjustmentValue } from "@/lib/shared/settingsPricing";
 
 export async function POST(request) {
   // Rewrites every product's price, so it needs product editing rights as

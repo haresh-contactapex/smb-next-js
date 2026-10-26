@@ -1,6 +1,6 @@
 // Seeds test/demo rows for Categories, Coupons, Customers and Staff Users so
 // their listing pages have enough rows to exercise pagination, rows-per-page,
-// and sorting. Writes directly to Neon (same tables/shape as the matching
+// and sorting. Writes directly to the database (same tables/shape as the matching
 // src/lib/*.js modules) — same pattern as scripts/seed-dummy-products.mjs.
 //
 // Usage: node scripts/seed-testing-data.mjs
@@ -9,7 +9,7 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import bcrypt from "bcryptjs";
-import { neon } from "./lib/pg-neon.mjs";
+import { pgTagged } from "./lib/pg-tagged.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -34,7 +34,7 @@ loadEnvLocal();
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set. Add it to your .env.local file.");
 }
-const sql = neon(process.env.DATABASE_URL);
+const sql = pgTagged(process.env.DATABASE_URL);
 
 function slugify(str) {
   return String(str)

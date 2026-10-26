@@ -12,7 +12,7 @@ export default function ProductThumbnail({ src, alt, iconColor }) {
   if (src && !failed) {
     return (
       <span className="w-10 h-10 rounded-xl overflow-hidden shrink-0 bg-slate-100 dark:bg-darksurface2 border border-slate-200 dark:border-white/10">
-        {/* eslint-disable-next-line @next/next/no-img-element -- Vercel Blob / uploaded URLs at arbitrary runtime paths */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- uploaded URLs at arbitrary runtime paths */}
         <img src={src} alt={alt} loading="lazy" className="w-full h-full object-cover" onError={() => setFailed(true)} />
       </span>
     );

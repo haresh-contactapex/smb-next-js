@@ -1,13 +1,13 @@
 ---
 name: database-docs
-description: Change Shop My Band Neon PostgreSQL access, schema SQL, data mapping, and migration documentation safely.
+description: Change Shop My Band PostgreSQL (cPanel host) access, schema SQL, data mapping, and migration documentation safely.
 ---
 
 # Database and schema work
 
 ## Access layer
 
-- All runtime database access goes through `src/lib/db.js`. `sql` is the preferred Neon tagged-template interface; it safely binds interpolated values.
+- All runtime database access goes through `src/lib/db.js`. `sql` is the preferred tagged-template interface (node-postgres underneath); it safely binds interpolated values.
 - Use `sqlQuery(text, params)` only for dynamic query structure such as a variable-length multi-row insert. Build placeholders yourself and pass every value in `params`; never concatenate untrusted values into SQL.
 - Keep the lazy `DATABASE_URL` initialization in `db.js`: importing a server module during `next build` must not require a configured database.
 - Keep row-to-client mappers in the relevant lib module. Database fields are snake_case; the UI/API generally uses camelCase.

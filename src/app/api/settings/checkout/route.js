@@ -4,7 +4,7 @@ import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getCheckoutSettings, updateCheckoutSettings } from "@/lib/checkoutSettings";
-import { isValidMinimumOrderAmount, isValidReminderDelayHours } from "@/components/settings-checkout/helpers";
+import { isValidMinimumOrderAmount, isValidReminderDelayHours } from "@/lib/shared/settingsCheckout";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("checkout", "view"));

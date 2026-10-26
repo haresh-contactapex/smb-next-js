@@ -10,7 +10,7 @@ import {
   NUMBER_FORMATS,
   isValidTaxRate,
   isValidTaxRegistrationNumber,
-} from "@/components/settings-currency-tax/helpers";
+} from "@/lib/shared/settingsCurrencyTax";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("currency-tax", "view"));
