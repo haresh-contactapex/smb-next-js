@@ -137,7 +137,7 @@ export default function MediaSection({ media, mediaError, sectionRef, onAddFiles
                 </span>
               </div>
             ) : m.type === "image" ? (
-              // eslint-disable-next-line @next/next/no-img-element -- blob: previews and Vercel Blob URLs, not optimizable by next/image
+              // eslint-disable-next-line @next/next/no-img-element -- blob: previews and uploaded /uploads URLs, not optimizable by next/image
               <img
                 src={m.url}
                 alt={m.name || ""}

@@ -27,9 +27,6 @@ export function getTrustedOrigin(request) {
   const configured = process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL;
   if (configured) return configured.replace(/\/+$/, "");
 
-  const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
-  if (vercelHost) return `https://${vercelHost}`;
-
   if (process.env.NODE_ENV !== "production") return new URL(request.url).origin;
   return "";
 }

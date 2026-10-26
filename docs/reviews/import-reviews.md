@@ -70,7 +70,7 @@ tab-separated lines), so one parser handles `.docx` and `.doc`.
 | Rule | Value |
 | ---- | ----- |
 | File types | `.docx`, `.doc` — the extension is checked **and** the file's first bytes (zip / OLE signature), so a renamed PDF or image is rejected |
-| File size | 4 MB (`413`) — kept under Vercel's ~4.5 MB request-body cap |
+| File size | 4 MB (`413`) — a review list is plain text, so larger files are refused |
 | `word/document.xml` unpacked size | 20 MB cap, so a small "zip bomb" is never inflated |
 | Reviews per file | 500 |
 | Field limits | title 150, review text 5,000, display name 100, email 254 |

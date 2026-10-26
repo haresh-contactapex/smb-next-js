@@ -2,9 +2,9 @@
 //
 //   npm run ws:notifications
 //
-// Vercel serverless functions can't hold WebSocket connections, so this runs
-// as its own long-lived Node process (Railway, Fly.io, a VPS, ... or locally
-// next to `npm run dev`). Flow:
+// The Next.js app under Passenger can't hold WebSocket connections, so this runs
+// as its own long-lived Node process (on the cPanel host, or locally next to
+// `npm run dev`). Flow:
 //
 //   logAdminActivity() -> INSERT -> POST /publish {id}  (x-internal-secret)
 //     -> for every connected admin: reload their role from the database
