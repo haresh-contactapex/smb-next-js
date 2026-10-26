@@ -1,12 +1,11 @@
 import { sql } from "./db";
+import { isUuid } from "./shared/ids";
 import { listStorefrontProductVariants } from "./products";
 
 // Server side of the storefront wishlist. A signed-in customer's list lives in
 // wishlist_items; a guest's list stays in the browser and is merged in at
 // sign-in. Entries are references (product, optional variant) only: titles,
 // prices and stock are always read live so a saved item never goes stale.
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const MAX_WISHLIST_ITEMS = 100;
 
@@ -17,8 +16,6 @@ export class WishlistError extends Error {
     this.status = status;
   }
 }
-
-const isUuid = (value) => typeof value === "string" && UUID_PATTERN.test(value);
 
 // Validates one { productId, variantId } reference from a request body. A
 // missing/null variant means "the product, no color or size chosen".

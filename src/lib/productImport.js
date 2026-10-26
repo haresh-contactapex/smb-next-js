@@ -1,5 +1,6 @@
 import Papa from "papaparse";
-import { createProduct, slugify } from "./products";
+import { createProduct } from "./products";
+import { slugify } from "./shared/slug";
 
 // Guards against a pathological upload turning into thousands of sequential
 // createProduct() calls (each of which is itself several round trips) —

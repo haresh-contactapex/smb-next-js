@@ -3,9 +3,9 @@ import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listProducts, createProduct, searchProducts, deleteProducts } from "@/lib/products";
 import { readJsonBody } from "@/lib/api";
+import { readBulkIds } from "@/lib/bulkIds";
 import { logAdminActivity } from "@/lib/notifications";
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BULK_DELETE = 5000;
 const MAX_PRODUCT_BODY_BYTES = 5 * 1024 * 1024;
 
@@ -52,20 +52,8 @@ export async function DELETE(request) {
   const auth = await requireStaffPermission("products.delete");
   if (!auth.ok) return permissionDeniedResponse(auth);
 
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
-  }
-
-  const ids = Array.isArray(body?.ids) ? [...new Set(body.ids)] : null;
-  if (!ids || ids.length === 0) {
-    return NextResponse.json({ success: false, error: "Select at least one product to delete" }, { status: 400 });
-  }
-  if (ids.length > MAX_BULK_DELETE || ids.some((id) => typeof id !== "string" || !UUID_PATTERN.test(id))) {
-    return NextResponse.json({ success: false, error: "Invalid product selection" }, { status: 400 });
-  }
+  const { ids, error } = await readBulkIds(request, "product", "delete", { max: MAX_BULK_DELETE });
+  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
 
   try {
     const deleted = await deleteProducts(ids);

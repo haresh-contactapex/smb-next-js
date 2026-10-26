@@ -1,6 +1,7 @@
 import { sql, sqlQuery, withTransaction } from "./db";
 import { setProductEngravingMode } from "./engraving";
 import { normalizeEngravingMode } from "./engravingRules";
+import { slugify } from "./shared/slug";
 import { validateProductPayload, describeProductErrors } from "./shared/product";
 
 // Inserts many rows in a single round trip (one INSERT ... VALUES (...),(...),...)
@@ -79,14 +80,6 @@ async function dedupeSkusGlobally(variants) {
     taken.add(sku);
     return { ...variant, sku };
   });
-}
-
-export function slugify(str) {
-  return String(str)
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
 }
 
 // Splits a taxonomy path like "Jewelry > Rings > Wedding Bands" into a

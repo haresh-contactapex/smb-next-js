@@ -1,4 +1,5 @@
 import { sql } from "./db";
+import { isUuid } from "./shared/ids";
 import { getCouponByCode } from "./coupons";
 import { getShippingSettings } from "./shippingSettings";
 import { listStorefrontProductVariants } from "./products";
@@ -12,7 +13,6 @@ import { validateUsLocation } from "./usAddress";
 // Both return the rule, and the drawer applies it to the live cart so the
 // totals update as items change without another round trip.
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_CART_PRODUCTS = 100;
 
 // Thrown for problems the visitor can fix; route handlers turn `status` into the HTTP status.
@@ -36,7 +36,7 @@ function normalizeCouponCode(value) {
 
 function parseProductIds(value) {
   if (!Array.isArray(value)) return [];
-  const ids = value.filter((id) => typeof id === "string" && UUID_PATTERN.test(id));
+  const ids = value.filter(isUuid);
   return [...new Set(ids)].slice(0, MAX_CART_PRODUCTS);
 }
 

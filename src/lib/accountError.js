@@ -9,9 +9,8 @@ export class AccountError extends Error {
   }
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-export const isUuid = (value) => typeof value === "string" && UUID_PATTERN.test(value);
+// Kept as a re-export: many modules already import it from here.
+export { isUuid } from "./shared/ids";
 
 // Postgres "undefined_table" / "undefined_column": the optional table or column
 // a query needs hasn't been migrated into this database.

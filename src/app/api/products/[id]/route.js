@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getProductById, updateProduct, deleteProduct } from "@/lib/products";
-import { readJsonBody } from "@/lib/api";
+import { fail, readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
 
 const MAX_PRODUCT_BODY_BYTES = 5 * 1024 * 1024;
@@ -10,6 +11,7 @@ const MAX_PRODUCT_BODY_BYTES = 5 * 1024 * 1024;
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["products.view", "products.edit"]);
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     const product = await getProductById(params.id);
@@ -25,6 +27,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   const auth = await requireStaffPermission("products.edit");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   const body = await readJsonBody(request, { maxBytes: MAX_PRODUCT_BODY_BYTES });
   if (body.response) return body.response;
@@ -48,6 +51,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   const auth = await requireStaffPermission("products.delete");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     await deleteProduct(params.id);

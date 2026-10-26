@@ -12,6 +12,7 @@ import { CheckoutError, countryCode, priceCheckout } from "./checkoutPricing";
 import { cancelPaymentIntent, createPaymentIntent, loadStripeConfig, retrievePaymentIntent } from "./stripe";
 import { sendNewOrderAlert, sendOrderConfirmation, sendOrderStatusEmail } from "./orderEmails";
 import { releaseStaleCouponClaims } from "./couponClaims";
+import { isUuid } from "./shared/ids";
 
 // Placing an order and recording what Stripe says about its payment.
 //
@@ -23,7 +24,6 @@ import { releaseStaleCouponClaims } from "./couponClaims";
 // webhook or the return page; the browser saying "it worked" is never enough.
 
 const MAX_ORDER_NUMBER_ATTEMPTS = 3;
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function isOrderNumberCollision(error) {
   return error?.code === "23505" && /order_number/.test(`${error.constraint || ""} ${error.message || ""}`);
@@ -381,7 +381,7 @@ async function paidAlertAlreadySent(orderId) {
 // currency. Returns { found, paid }.
 export async function syncPaymentIntent(intent) {
   const orderId = intent?.metadata?.order_id;
-  if (!intent?.id || !UUID_PATTERN.test(String(orderId || ""))) return { found: false, paid: false };
+  if (!intent?.id || !isUuid(orderId)) return { found: false, paid: false };
 
   const [order] = await sql`
     SELECT o.id, o.order_number, o.status, o.payment_status, o.total_amount, o.currency, o.customer_name
@@ -478,7 +478,7 @@ const PLACED_STATES = new Set(["paid", "authorized", "processing"]);
 // Only an order whose payment is cash on delivery qualifies. state: "cod" | "unknown".
 export async function resolveCodResult(orderId) {
   const unknown = { state: "unknown", orderNumber: null, total: 0, currency: null, details: null };
-  if (!UUID_PATTERN.test(String(orderId || ""))) return unknown;
+  if (!isUuid(orderId)) return unknown;
 
   const [order] = await sql`
     SELECT o.order_number, o.total_amount, o.currency
@@ -527,7 +527,7 @@ export async function resolveCheckoutResult({ paymentIntentId, clientSecret }) {
   await syncPaymentIntent(intent);
 
   const orderId = intent.metadata?.order_id;
-  const [order] = UUID_PATTERN.test(String(orderId || ""))
+  const [order] = isUuid(orderId)
     ? await sql`SELECT order_number, total_amount, currency FROM orders WHERE id = ${orderId}`
     : [];
   if (!order) return unknown;

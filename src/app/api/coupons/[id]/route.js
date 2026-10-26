@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getCouponById, updateCoupon, deleteCoupon, CouponError } from "@/lib/coupons";
-import { failureFrom, readJsonBody } from "@/lib/api";
+import { fail, failureFrom, readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
 
 const MAX_COUPON_BODY_BYTES = 64 * 1024;
@@ -10,6 +11,7 @@ const MAX_COUPON_BODY_BYTES = 64 * 1024;
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["coupons.view", "coupons.edit"]);
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     const coupon = await getCouponById(params.id);
@@ -25,6 +27,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   const auth = await requireStaffPermission("coupons.edit");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   const body = await readJsonBody(request, { maxBytes: MAX_COUPON_BODY_BYTES });
   if (body.response) return body.response;
@@ -48,6 +51,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   const auth = await requireStaffPermission("coupons.delete");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     await deleteCoupon(params.id);

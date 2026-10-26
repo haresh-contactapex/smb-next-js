@@ -1,6 +1,8 @@
 // Rules for a coupon payload, enforced by the server on every create/update and reused by the
 // Create Coupon form so both give the same answer. Pure: no React, DOM or database access.
 
+import { isUuid } from "./ids";
+
 export const COUPON_TYPES = ["percentage", "fixed", "free_shipping"];
 export const COUPON_APPLIES_TO = ["ALL", "CATEGORY"];
 export const MAX_COUPON_CODE_LENGTH = 20;
@@ -9,7 +11,6 @@ export const MAX_COUPON_CODE_LENGTH = 20;
 const MAX_AMOUNT = 1e10;
 const MAX_USAGE_LIMIT = 2147483647;
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
 const isBlank = (value) => value === undefined || value === null || String(value).trim() === "";
@@ -89,7 +90,7 @@ export function validateCouponPayload(payload) {
 
   if (payload.appliesTo !== undefined && !COUPON_APPLIES_TO.includes(payload.appliesTo)) {
     add("appliesTo", `Applies to must be one of ${COUPON_APPLIES_TO.join(", ")}.`);
-  } else if (payload.appliesTo === "CATEGORY" && !UUID_PATTERN.test(String(payload.categoryId ?? ""))) {
+  } else if (payload.appliesTo === "CATEGORY" && !isUuid(payload.categoryId)) {
     add("categoryId", "Choose the category this coupon applies to.");
   }
 

@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { fail } from "@/lib/api";
+import { isUuid } from "@/lib/shared/ids";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { createOrderInvoicePdf } from "@/lib/orderInvoice";
 
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission("orders.view");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     const invoice = await createOrderInvoicePdf(params.id);

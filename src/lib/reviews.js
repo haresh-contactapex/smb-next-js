@@ -1,4 +1,5 @@
 import { sql } from "./db";
+import { isUuid } from "./shared/ids";
 import { createRateLimiter } from "./rateLimit";
 import { getProductsSettings } from "./productsSettings";
 import { checkRecaptchaIfEnabled } from "./auth/recaptcha";
@@ -24,12 +25,11 @@ export class ReviewError extends Error {
   }
 }
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // A malformed id can never match a row; short-circuit instead of letting
 // Postgres reject it with an "invalid input syntax for type uuid" 500.
 function assertReviewId(id) {
-  if (!UUID_PATTERN.test(String(id))) throw new ReviewError("Review not found.", 404);
+  if (!isUuid(id)) throw new ReviewError("Review not found.", 404);
 }
 
 export async function parseReviewBody(request) {
@@ -74,7 +74,7 @@ export async function listReviews() {
 }
 
 export async function getReviewById(id) {
-  if (!UUID_PATTERN.test(String(id))) return null;
+  if (!isUuid(id)) return null;
   const [row] = await sql`
     SELECT
       r.id, r.product_id, p.title AS product_title, r.rating, r.title, r.content,
@@ -91,7 +91,7 @@ export async function getReviewById(id) {
 // approved review even though the returned list is capped.
 export async function getPublicReviewsForProduct(productId, limit = 50) {
   const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-  if (!UUID_PATTERN.test(String(productId))) return { count: 0, average: 0, distribution, reviews: [] };
+  if (!isUuid(productId)) return { count: 0, average: 0, distribution, reviews: [] };
   const [rows, buckets] = await Promise.all([
     sql`
       SELECT
@@ -175,7 +175,7 @@ function reviewValues(payload) {
   const displayName = String(payload.displayName ?? "").trim();
   const email = String(payload.email ?? "").trim().toLowerCase();
 
-  if (!UUID_PATTERN.test(productId)) throw new ReviewError("Choose the product this review is for.");
+  if (!isUuid(productId)) throw new ReviewError("Choose the product this review is for.");
   if (!isValidRating(rating)) {
     throw new ReviewError(`Rating must be from ${RATING_MIN} to ${RATING_MAX} stars, in half-star steps.`);
   }

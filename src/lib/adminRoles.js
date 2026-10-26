@@ -1,4 +1,5 @@
 import { sql } from "./db";
+import { isUuid } from "./shared/ids";
 import {
   getAllPermissionKeys,
   sanitizePermissions,
@@ -129,10 +130,6 @@ export async function getAdminRoleForUser(userId) {
     `;
     return toAdminRole(row);
   });
-}
-
-function isUuid(value) {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function slugify(name) {
