@@ -8,11 +8,8 @@ import { DEFAULT_CUSTOMER, buildCustomerFromData, assembleCustomer } from "./hel
 import PageToolbar from "./PageToolbar";
 import CustomerDetailsSection from "./CustomerDetailsSection";
 import AccountSettingsSidebar from "./AccountSettingsSidebar";
-import Toast from "@/components/add-product/Toast";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 export default function AddCustomerForm({ customerId }) {
   const isEdit = Boolean(customerId);
@@ -24,10 +21,9 @@ export default function AddCustomerForm({ customerId }) {
   const [lastNameError, setLastNameError] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [phoneError, setPhoneError] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
   const firstNameInputRef = useRef(null);
-  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     if (!customerId) return;
@@ -48,21 +44,7 @@ export default function AddCustomerForm({ customerId }) {
     return () => {
       cancelled = true;
     };
-  }, [customerId]);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast((t) => ({ ...t, visible: false })),
-      TOAST_AUTO_DISMISS_MS,
-    );
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
+  }, [customerId, showToast]);
 
   function setField(field, value) {
     setCustomer((prev) => ({ ...prev, [field]: value }));

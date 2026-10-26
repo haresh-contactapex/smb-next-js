@@ -11,11 +11,8 @@ import DiscountValueSection from "./DiscountValueSection";
 import UsageLimitsSection from "./UsageLimitsSection";
 import ActiveDatesSidebar from "./ActiveDatesSidebar";
 import EligibilitySidebar from "./EligibilitySidebar";
-import Toast from "@/components/add-product/Toast";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 export default function CreateCouponForm({ couponId, categories = [] }) {
   const isEdit = Boolean(couponId);
@@ -25,10 +22,9 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
   const [saving, setSaving] = useState(false);
   const [codeError, setCodeError] = useState(false);
   const [valueError, setValueError] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
   const codeInputRef = useRef(null);
-  const toastTimerRef = useRef(null);
 
   useEffect(() => {
     if (!couponId) return;
@@ -49,27 +45,13 @@ export default function CreateCouponForm({ couponId, categories = [] }) {
     return () => {
       cancelled = true;
     };
-  }, [couponId]);
+  }, [couponId, showToast]);
 
   // Status is always derived from the date range — recalculated on every
   // render, never stored or chosen manually.
   const effectiveEndDate = coupon.endDateEnabled ? coupon.endDate : "";
   const displayStatus = computeCouponStatus(coupon.startDate, effectiveEndDate);
   const dateRangeError = Boolean(effectiveEndDate && coupon.startDate && effectiveEndDate < coupon.startDate);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast((t) => ({ ...t, visible: false })),
-      TOAST_AUTO_DISMISS_MS,
-    );
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
 
   function setField(field, value) {
     setCoupon((prev) => ({ ...prev, [field]: value }));

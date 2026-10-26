@@ -3,14 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
 import Icon from "@/components/admin-panel/Icon";
-import Toast from "@/components/add-product/Toast";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextAreaField from "@/components/settings-shared/TextAreaField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import { ALL_PAGES_PATH, FOOTER_TEXT_MAX, normalizeFooterTextsInput, PATH_HINT } from "@/lib/footerTextRules";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast.
-const TOAST_AUTO_DISMISS_MS = 10000;
 
 const NO_ERRORS = {};
 const DATALIST_ID = "footer-text-paths";
@@ -43,9 +41,8 @@ export default function FooterTextForm({ entries, suggestions = [] }) {
   // Field errors: { default?: string, rows: { [rowKey]: { path?, content? } } }
   const [errors, setErrors] = useState(NO_ERRORS);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
-  const toastTimerRef = useRef(null);
   const savingRef = useRef(false);
   const initialSnapshot = useRef(JSON.stringify(toPayload(base, rows)));
   const dirty = JSON.stringify(toPayload(base, rows)) !== initialSnapshot.current;
@@ -60,17 +57,6 @@ export default function FooterTextForm({ entries, suggestions = [] }) {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
 
   function updateRow(key, field, value) {
     setRows((prev) => prev.map((row) => (row.key === key ? { ...row, [field]: value } : row)));

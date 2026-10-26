@@ -7,11 +7,8 @@ import BillingAddressSection from "./BillingAddressSection";
 import ShippingAddressSection from "./ShippingAddressSection";
 import AddressPreviewSidebar from "./AddressPreviewSidebar";
 import DeliveryInstructionsSidebar from "./DeliveryInstructionsSidebar";
-import Toast from "@/components/add-product/Toast";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 function toFormAddress(saved, profile) {
   if (!saved) return emptyAddressFromProfile(profile);
@@ -27,9 +24,8 @@ export default function AddressForm() {
   const [saving, setSaving] = useState(false);
   const [billingErrors, setBillingErrors] = useState({});
   const [shippingErrors, setShippingErrors] = useState({});
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
-  const toastTimerRef = useRef(null);
   const billingRefs = useRef({});
   const shippingRefs = useRef({});
   const profileRef = useRef(null);
@@ -44,20 +40,6 @@ export default function AddressForm() {
     return (el) => {
       shippingRefs.current[field] = el;
     };
-  }
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast((t) => ({ ...t, visible: false })),
-      TOAST_AUTO_DISMISS_MS,
-    );
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
   }
 
   async function loadAddresses() {

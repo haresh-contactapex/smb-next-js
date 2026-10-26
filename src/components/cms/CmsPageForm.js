@@ -4,17 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CMS_FIELD_ORDER, normalizeCmsPageInput, slugify } from "@/lib/cmsRules";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
-import Toast from "@/components/add-product/Toast";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 import CmsFormToolbar from "./CmsFormToolbar";
 import CmsContentSection from "./CmsContentSection";
 import CmsSeoSection from "./CmsSeoSection";
 import CmsSettingsSidebar from "./CmsSettingsSidebar";
 import CmsPreviewModal from "./CmsPreviewModal";
 import { EMPTY_PAGE, formToPayload, pageToForm } from "./helpers";
-
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
 
 const NO_ERRORS = {};
 
@@ -41,11 +38,10 @@ export default function CmsPageForm({ page = null }) {
   const [revisionsLoading, setRevisionsLoading] = useState(false);
   const [revisionsError, setRevisionsError] = useState("");
   const [restoringId, setRestoringId] = useState(null);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
   const titleInputRef = useRef(null);
   const slugInputRef = useRef(null);
-  const toastTimerRef = useRef(null);
   const savingRef = useRef(false);
 
   const initialSnapshot = useRef(JSON.stringify(formToPayload(form)));
@@ -61,17 +57,6 @@ export default function CmsPageForm({ page = null }) {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [dirty]);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
 
   function setField(field, value) {
     setForm((prev) => ({ ...prev, [field]: value }));

@@ -1,31 +1,18 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 import { Can } from "@/components/providers/StaffPermissionsProvider";
 import { downloadOrderInvoice } from "./downloadInvoice";
-import Toast from "@/components/add-product/Toast";
-
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 // The View Order page's buttons: download the invoice, and (for roles that may
 // edit orders) jump to the Edit Order page.
 export default function ViewOrderActions({ orderId, orderNumber }) {
   const [downloading, setDownloading] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
-  const toastTimerRef = useRef(null);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
+  const { toast, showToast, dismissToast } = useToast();
 
   async function handleDownloadInvoice() {
     setDownloading(true);

@@ -1,19 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import OrdersFilters from "./OrdersFilters";
 import OrdersTable from "./OrdersTable";
 import Pagination, { PAGE_SIZE_OPTIONS } from "./Pagination";
 import { downloadOrderInvoice } from "./downloadInvoice";
-import Toast from "@/components/add-product/Toast";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 import DeleteOverlay from "@/components/admin-panel/DeleteOverlay";
 import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { BulkSelectionBar, requestBulkDelete, useBulkSelection } from "@/components/admin-panel/BulkSelection";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import { BULK_CANCELLABLE_STATUSES } from "./orderHelpers";
-
-const TOAST_AUTO_DISMISS_MS = 10000;
 
 // POST /api/orders/cancel with { ids }; resolves with { cancelled, skipped, paid }.
 function requestBulkCancel(ids) {
@@ -41,19 +40,7 @@ export default function OrdersListing({ orders: initialOrders, fixedStatus }) {
   const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [sort, setSort] = useState({ key: "date", direction: "desc" });
   const [downloadingId, setDownloadingId] = useState(null);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
-  const toastTimerRef = useRef(null);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
+  const { toast, showToast, dismissToast } = useToast();
 
   // Server data changes after router.refresh(); keep local state in step.
   useEffect(() => setOrders(initialOrders), [initialOrders]);

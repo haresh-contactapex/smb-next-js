@@ -7,7 +7,8 @@ import SelectField from "@/components/settings-shared/SelectField";
 import TextField from "@/components/settings-shared/TextField";
 import ToggleField from "@/components/settings-shared/ToggleField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
-import Toast from "@/components/add-product/Toast";
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 import { formatUsPhone } from "@/lib/phone";
 import {
   BUSINESS_TYPES,
@@ -17,18 +18,13 @@ import {
   validateStoreSettingsForm,
 } from "./helpers";
 
-// Keep in sync with AUTO_DISMISS_MS in the shared Add Product toast, which
-// also drives the progress-bar animation for both success and error messages.
-const TOAST_AUTO_DISMISS_MS = 10000;
-
 export default function StoreSettingsForm() {
   const [settings, setSettings] = useState(DEFAULT_STORE_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+  const { toast, showToast, dismissToast } = useToast();
 
-  const toastTimerRef = useRef(null);
   const legalBusinessNameInputRef = useRef(null);
   const storeUrlInputRef = useRef(null);
   const supportEmailInputRef = useRef(null);
@@ -43,20 +39,6 @@ export default function StoreSettingsForm() {
 
   function focusField(field) {
     fieldRefs[field]?.current?.focus();
-  }
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(
-      () => setToast((t) => ({ ...t, visible: false })),
-      TOAST_AUTO_DISMISS_MS,
-    );
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
   }
 
   async function loadSettings() {

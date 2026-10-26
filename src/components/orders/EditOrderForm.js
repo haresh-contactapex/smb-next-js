@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Breadcrumbs from "@/components/admin-panel/Breadcrumbs";
@@ -10,9 +10,8 @@ import { STATUS_OPTIONS, PAYMENT_OPTIONS } from "./orderHelpers";
 import { OrderItemsCard, OrderNoteCard, OrderSummaryCard, PaymentsCard, CustomerCard, AddressCard } from "./OrderDetailsSections";
 import EditOrderSkeleton from "./EditOrderSkeleton";
 import { downloadOrderInvoice } from "./downloadInvoice";
-import Toast from "@/components/add-product/Toast";
-
-const TOAST_AUTO_DISMISS_MS = 10000;
+import Toast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
 
 export default function EditOrderForm({ orderId }) {
   const router = useRouter();
@@ -22,8 +21,7 @@ export default function EditOrderForm({ orderId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
-  const toastTimerRef = useRef(null);
+  const { toast, showToast, dismissToast } = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -45,18 +43,7 @@ export default function EditOrderForm({ orderId }) {
     return () => {
       cancelled = true;
     };
-  }, [orderId]);
-
-  function showToast(message, variant = "success") {
-    setToast({ message, visible: true, variant });
-    clearTimeout(toastTimerRef.current);
-    toastTimerRef.current = setTimeout(() => setToast((t) => ({ ...t, visible: false })), TOAST_AUTO_DISMISS_MS);
-  }
-
-  function dismissToast() {
-    clearTimeout(toastTimerRef.current);
-    setToast((t) => ({ ...t, visible: false }));
-  }
+  }, [orderId, showToast]);
 
   async function handleSave(e) {
     e.preventDefault();
