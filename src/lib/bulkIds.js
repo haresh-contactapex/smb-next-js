@@ -1,17 +1,17 @@
 // Parses a bulk-action body `{ ids: [uuid, ...] }` for the list DELETE routes
-// (coupons, reviews, CMS pages, blog posts, media) and bulk order cancel.
+// (products, customers, coupons, reviews, CMS pages, blog posts, media) and bulk order cancel.
 // Duplicates are dropped.
 // Returns { ids } or { error } — a message suitable for a 400 response.
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { parseUuidList } from "./shared/ids";
+
 export const MAX_BULK_IDS = 1000;
 
-export async function readBulkIds(request, noun, verb = "delete") {
+export async function readBulkIds(request, noun, verb = "delete", { max = MAX_BULK_IDS } = {}) {
   const body = await request.json().catch(() => null);
-  const ids = Array.isArray(body?.ids) ? [...new Set(body.ids)] : null;
-  if (!ids || ids.length === 0) return { error: `Select at least one ${noun} to ${verb}.` };
-  if (ids.length > MAX_BULK_IDS || ids.some((id) => typeof id !== "string" || !UUID_PATTERN.test(id))) {
-    return { error: `Invalid ${noun} selection.` };
-  }
+  const unique = Array.isArray(body?.ids) ? new Set(body.ids) : null;
+  if (!unique || unique.size === 0) return { error: `Select at least one ${noun} to ${verb}.` };
+  const ids = parseUuidList([...unique], { max });
+  if (!ids) return { error: `Invalid ${noun} selection.` };
   return { ids };
 }

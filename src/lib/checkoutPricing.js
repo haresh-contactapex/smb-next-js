@@ -10,9 +10,9 @@ import { sanitizeLineEngraving } from "./engravingRules";
 // same totals the customer was shown, and prices and discounts are never taken from
 // the request.
 import { NOTE_MAX_LENGTH, cartTotals, lineKey, round2 } from "@/lib/shared/cart";
+import { isUuid } from "@/lib/shared/ids";
 import { PHONE_COUNTRIES, checkoutTotals, phoneCountryOf, validateAddress, validateContact } from "@/lib/shared/checkout";
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_LINES = 50;
 const MAX_QUANTITY = 99;
 const PRICE_TOLERANCE = 0.005;
@@ -55,7 +55,7 @@ function parseItems(raw) {
     const variantId = item?.variantId ? String(item.variantId) : null;
     const quantity = Number(item?.quantity);
     const price = Number(item?.price);
-    if (!UUID_PATTERN.test(productId) || (variantId !== null && !UUID_PATTERN.test(variantId))) {
+    if (!isUuid(productId) || (variantId !== null && !isUuid(variantId))) {
       throw new CheckoutError("An item in your cart isn't valid. Please review your cart.");
     }
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) throw new CheckoutError("An item in your cart has an invalid quantity.");

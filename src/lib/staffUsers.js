@@ -1,4 +1,5 @@
 import { sql } from "./db";
+import { isUuid } from "./shared/ids";
 import { hashPassword, generateTemporaryPassword } from "./auth/password";
 import { createResetToken, WELCOME_TOKEN_TTL_MS } from "./auth/resetToken";
 import { insertStaffResetToken } from "./passwordResetTokens";
@@ -85,10 +86,6 @@ async function run(fn) {
   } catch (error) {
     throw translateDbError(error);
   }
-}
-
-function isUuid(value) {
-  return typeof value === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function isValidEmail(value) {

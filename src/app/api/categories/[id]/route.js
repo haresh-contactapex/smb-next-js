@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { fail } from "@/lib/api";
+import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getCategoryById, updateCategory, deleteCategory } from "@/lib/categories";
@@ -7,6 +9,7 @@ import { logAdminActivity } from "@/lib/notifications";
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission(["categories.view", "categories.edit"]);
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     const category = await getCategoryById(params.id);
@@ -22,6 +25,7 @@ export async function GET(request, { params }) {
 export async function PUT(request, { params }) {
   const auth = await requireStaffPermission("categories.edit");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     const payload = await request.json();
@@ -42,6 +46,7 @@ export async function PUT(request, { params }) {
 export async function DELETE(request, { params }) {
   const auth = await requireStaffPermission("categories.delete");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     await deleteCategory(params.id);

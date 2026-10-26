@@ -1,4 +1,5 @@
 import { sql, sqlQuery } from "./db";
+import { isUuid } from "./shared/ids";
 import { REVIEW_STATUSES } from "./reviewFields";
 import { ReviewImportError, extractReviewLines } from "./reviewImportFile";
 import { parseReviewLines } from "./reviewImportParser";
@@ -10,7 +11,6 @@ import { parseReviewLines } from "./reviewImportParser";
 // repeats the checks and inserts every importable review in a single
 // statement — all or nothing.
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const COLUMNS_PER_ROW = 7;
 
 const normalize = (text) => String(text ?? "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -19,7 +19,7 @@ const slug = (text) => String(text ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "
 const duplicateKey = (review) => `${normalize(review.displayName)}\u0000${normalize(review.content)}`;
 
 async function loadProduct(productId) {
-  if (!UUID_PATTERN.test(String(productId ?? ""))) {
+  if (!isUuid(productId)) {
     throw new ReviewImportError("Choose the product these reviews belong to.");
   }
   const [row] = await sql`SELECT id, title, sku FROM products WHERE id = ${productId}`;

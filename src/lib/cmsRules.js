@@ -2,6 +2,8 @@
 // same input. No server imports: the client bundle uses this file too.
 // See docs/cms/cms.md.
 
+import { slugify as sharedSlugify } from "./shared/slug";
+
 export const CMS_TITLE_MAX = 200;
 export const CMS_SLUG_MAX = 100;
 export const CMS_CONTENT_MAX = 200000;
@@ -37,15 +39,7 @@ export const RESERVED_SLUGS = new Set([
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-export function slugify(value) {
-  return String(value ?? "")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, CMS_SLUG_MAX)
-    .replace(/-$/, "");
-}
+export const slugify = (value) => sharedSlugify(value, { max: CMS_SLUG_MAX });
 
 export function slugError(slug) {
   if (!slug) return "Enter a URL for the page.";

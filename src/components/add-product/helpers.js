@@ -4,14 +4,9 @@
  */
 
 import { normalizeEngravingMode } from "@/lib/engravingRules";
+import { slugify } from "@/lib/shared/slug";
 
-export function slugify(str) {
-  return String(str)
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
+export { slugify };
 
 export function toNumber(str) {
   const n = parseFloat(String(str).replace(/[^0-9.\-]/g, ""));

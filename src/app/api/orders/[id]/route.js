@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { fail } from "@/lib/api";
+import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getOrderById, getOrderDetails, updateOrderStatus } from "@/lib/orders";
@@ -11,6 +13,7 @@ const STATUS_EMAILS = { Processing: "processing", Completed: "completed", Cancel
 export async function GET(request, { params }) {
   const auth = await requireStaffPermission("orders.view");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
     const order = await getOrderDetails(params.id);
@@ -24,6 +27,7 @@ export async function GET(request, { params }) {
 export async function PATCH(request, { params }) {
   const auth = await requireStaffPermission("orders.edit");
   if (!auth.ok) return permissionDeniedResponse(auth);
+  if (!isUuid(params.id)) return fail("Not found", 404);
 
   const body = await request.json();
   try {
