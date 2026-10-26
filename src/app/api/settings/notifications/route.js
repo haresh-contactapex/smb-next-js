@@ -8,8 +8,8 @@ import {
   MIN_TOAST_TIMEOUT_SECONDS,
   MAX_TOAST_TIMEOUT_SECONDS,
   isValidToastTimeoutSeconds,
-} from "@/components/settings-notifications/helpers";
-import { isValidEmail } from "@/components/auth/helpers";
+} from "@/lib/shared/settingsNotifications";
+import { isValidEmail } from "@/lib/shared/auth";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("notifications", "view"));

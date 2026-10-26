@@ -4,7 +4,7 @@ import { createStaffSession, getCurrentStaffUser } from "@/lib/auth/staffSession
 import { checkStaffCurrentPassword } from "@/lib/auth/staffReauth";
 import { revokeStaffSessions } from "@/lib/auth/sessionRevocation";
 import { updateStaffProfile } from "@/lib/staff";
-import { isValidEmail } from "@/components/auth/helpers";
+import { isValidEmail } from "@/lib/shared/auth";
 import { isValidUsPhone } from "@/lib/phone";
 
 export async function GET() {

@@ -35,7 +35,7 @@ Browser ──> Apache ──> Phusion Passenger ──> app.js ──> Next.js 
 | Node for the app | `/opt/cpanel/ea-nodejs22/bin/node` (EasyApache 4 package `ea-nodejs22`, v22.23.x) |
 | System Node (do not use) | `/usr/bin/node` v16.20.2 |
 | Application Manager | Present, but has **no Node version selector** (not CloudLinux) |
-| Database | PostgreSQL 18 run as the cPanel user (no root), `127.0.0.1:5433`, database `smb` (§11). Neon was used until 2026-10-21. |
+| Database | PostgreSQL 18 run as the cPanel user (no root), `127.0.0.1:5433`, database `smb` (§11). |
 | Media storage | Local disk, `public_html/public/uploads/YYYY/MM/` (see §4) |
 
 ---
@@ -59,7 +59,7 @@ values for the variables below. The app reads exactly these:
 
 | Variable | Needed? | Secret? | Notes |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | Yes | Yes | On cPanel: `postgresql://smb_app:<password>@127.0.0.1:5433/smb`, kept in `~/.smb-database-url` (§11.4). The password must be letters and digits only. Neon (Vercel) used a Neon string here. |
+| `DATABASE_URL` | Yes | Yes | On cPanel: `postgresql://smb_app:<password>@127.0.0.1:5433/smb`, kept in `~/.smb-database-url` (§11.4). The password must be letters and digits only. |
 | `JWT_SECRET` | Yes | Yes | Must match Vercel's value if you want existing sessions to stay valid; a new value logs everyone out. |
 | `BLOB_READ_WRITE_TOKEN` | No | Yes | Only for the old Vercel deployment. Uploads now go to `public/uploads/` on disk (§4). |
 | `NODE_ENV` | Yes | No | `production` |
@@ -418,7 +418,7 @@ web root) before each rebuild. To roll back, Trash the bad `.next`, extract the 
 
 ---
 
-## 11. PostgreSQL on this server (user-level, migrated from Neon on 2026-10-21)
+## 11. PostgreSQL on this server (user-level)
 
 This cPanel account has no PostgreSQL feature (no "PostgreSQL Databases" in cPanel, no root, and the shell is a
 jailed shell, so there is no systemd). PostgreSQL therefore runs as the cPanel user, installed under the home
@@ -428,8 +428,8 @@ directory. Nothing here needs root.
 
 * The terminal is a jailed shell. **Processes started from a terminal session die when the session closes**, even
   with `setsid nohup`. Only a cron job keeps the database up (§11.5).
-* The server **cannot reach Neon on port 5432** (outbound firewall), so `pg_dump` against Neon does not work from
-  here. Export from a machine that can (the app's `src/lib/databaseBackup.js` writes a restorable SQL file; see §11.6).
+* The server **cannot reach an external database on port 5432** (outbound firewall), so `pg_dump` against a remote
+  database does not work from here. Export from a machine that can (the app's `src/lib/databaseBackup.js` writes a restorable SQL file; see §11.6).
 * `pg` cannot run in the Edge runtime, so `src/middleware.js` is `runtime: "nodejs"` (Next 15.5). Without it every
   request fails with `TypeError: f.deprecate is not a function`.
 * Application Manager's edit form fails for this app with `Invalid configuration for the parameter "python"`
@@ -500,7 +500,7 @@ fi
 If the server is killed it is back within about a minute, after crash recovery (visible in `~/pgdata/server.log`).
 `pg_isready` without `-U` logs a harmless `role "<cpanel user>" does not exist` line each run.
 
-### 11.6 Moving data (how Neon was migrated)
+### 11.6 Moving data in from another database
 
 1. On a machine that can reach the old database, run `generateDatabaseBackup()` from `src/lib/databaseBackup.js`
    to a `.sql` file (it skips the one-time reset/OTP token tables).
@@ -509,7 +509,7 @@ If the server is killed it is back within about a minute, after crash recovery (
    into an empty `smb` database (`CREATE EXTENSION pgcrypto` first, as `smb_admin`).
 3. Compare table and row counts with the source, then delete the file from the server and from your computer.
 
-Migrated on 2026-10-21: 55 tables, 46,741 rows (172 products, 32 customers, 82 orders), counts identical to Neon.
+Migrated on 2026-10-21: 55 tables, 46,741 rows (172 products, 32 customers, 82 orders), counts identical to the source.
 
 ### 11.7 Deploy traps seen during this migration
 
@@ -525,6 +525,4 @@ Migrated on 2026-10-21: 55 tables, 46,741 rows (172 products, 32 customers, 82 o
 
 * **Backups**: nothing backs up this database yet. Add a nightly `pg_dump` (custom format) to a folder outside
   `public_html`, and copy it off the server.
-* Keep the Neon project for a short rollback window, then delete it. Rolling back needs the previous code
-  (`95b358b`, Neon driver) as well as the old `DATABASE_URL`.
 * PostgreSQL upgrades are manual (`micromamba update -p ~/opt/pg postgresql`, then check release notes).

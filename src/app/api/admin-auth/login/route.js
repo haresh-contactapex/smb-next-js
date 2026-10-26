@@ -9,7 +9,7 @@ import {
 import { burnPasswordCheck, verifyPassword } from "@/lib/auth/password";
 import { clientIpOf, createRateLimiter } from "@/lib/rateLimit";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
-import { isValidEmail, maskEmail } from "@/components/auth/helpers";
+import { isValidEmail, maskEmail } from "@/lib/shared/auth";
 import { getSecuritySettings } from "@/lib/securitySettings";
 import { logAdminActivity } from "@/lib/notifications";
 import { finalizeStaffLogin } from "@/lib/auth/finalizeStaffLogin";

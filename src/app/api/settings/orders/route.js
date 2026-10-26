@@ -10,7 +10,7 @@ import {
   isValidOrderNumberPrefix,
   isValidStartingOrderNumber,
   isValidAutoCancelHours,
-} from "@/components/settings-orders/helpers";
+} from "@/lib/shared/settingsOrders";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("orders", "view"));

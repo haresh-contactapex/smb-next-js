@@ -3,7 +3,7 @@ import { publicErrorMessage } from "@/lib/publicError";
 import { WishlistError } from "@/lib/wishlist";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
 
-export const ok = (data) => NextResponse.json({ success: true, data });
+export { ok } from "@/lib/api";
 
 // A visitor-fixable problem keeps its own status and message; anything else is
 // logged and reported generically.

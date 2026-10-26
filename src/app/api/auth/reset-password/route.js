@@ -6,7 +6,7 @@ import { hashPassword } from "@/lib/auth/password";
 import { hashResetToken } from "@/lib/auth/resetToken";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
-import { isValidPassword, getPasswordErrorMessage } from "@/components/auth/helpers";
+import { isValidPassword, getPasswordErrorMessage } from "@/lib/shared/auth";
 
 export async function POST(request) {
   try {

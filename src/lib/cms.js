@@ -24,7 +24,7 @@ export class CmsError extends Error {
 
 const NOT_MIGRATED = "The CMS tables are missing. Run `npm run db:migrate:cms` and try again.";
 
-// Neon reports a table that was never migrated as 42P01 and a duplicate slug as 23505.
+// PostgreSQL reports a table that was never migrated as 42P01 and a duplicate slug as 23505.
 function translateError(error) {
   if (isMissingRelation(error)) return new CmsError(NOT_MIGRATED, 503);
   if (error?.code === "23505") {

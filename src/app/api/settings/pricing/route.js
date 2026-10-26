@@ -4,7 +4,7 @@ import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getPricingSettings, updatePricingSettings } from "@/lib/pricingSettings";
-import { ADJUSTMENT_TYPES, ADJUSTMENT_DIRECTIONS, isValidAdjustmentValue } from "@/components/settings-pricing/helpers";
+import { ADJUSTMENT_TYPES, ADJUSTMENT_DIRECTIONS, isValidAdjustmentValue } from "@/lib/shared/settingsPricing";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("pricing", "view"));

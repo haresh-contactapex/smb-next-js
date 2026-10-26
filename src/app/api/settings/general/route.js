@@ -4,7 +4,7 @@ import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getGeneralSettings, updateGeneralSettings } from "@/lib/generalSettings";
-import { isValidEmail } from "@/components/auth/helpers";
+import { isValidEmail } from "@/lib/shared/auth";
 import { isValidUsPhone } from "@/lib/phone";
 import { validateLocationHierarchy } from "@/lib/validateAddress";
 

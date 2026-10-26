@@ -4,9 +4,9 @@ import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getStoreSettings, updateStoreSettings } from "@/lib/storeSettings";
-import { isValidEmail } from "@/components/auth/helpers";
+import { isValidEmail } from "@/lib/shared/auth";
 import { isValidUsPhone } from "@/lib/phone";
-import { isValidStoreUrl, BUSINESS_TYPES } from "@/components/settings-store/helpers";
+import { isValidStoreUrl, BUSINESS_TYPES } from "@/lib/shared/settingsStore";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("store", "view"));

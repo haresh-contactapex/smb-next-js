@@ -4,7 +4,7 @@ import { createStaffSession, getCurrentStaffUser } from "@/lib/auth/staffSession
 import { updateStaffPassword } from "@/lib/staff";
 import { hashPassword } from "@/lib/auth/password";
 import { checkStaffCurrentPassword } from "@/lib/auth/staffReauth";
-import { getPasswordErrorMessage, isValidPassword } from "@/components/auth/helpers";
+import { getPasswordErrorMessage, isValidPassword } from "@/lib/shared/auth";
 
 export async function PUT(request) {
   const staffUser = await getCurrentStaffUser();

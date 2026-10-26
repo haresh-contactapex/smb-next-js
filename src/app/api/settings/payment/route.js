@@ -4,7 +4,7 @@ import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { settingsPermission } from "@/lib/permissions";
 import { getPaymentSettings, updatePaymentSettings } from "@/lib/paymentSettings";
-import { GATEWAY_CREDENTIAL_KEYS, validatePaymentSettingsForm } from "@/components/settings-payment/helpers";
+import { GATEWAY_CREDENTIAL_KEYS, validatePaymentSettingsForm } from "@/lib/shared/settingsPayment";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("payment", "view"));

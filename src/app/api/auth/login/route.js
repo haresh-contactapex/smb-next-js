@@ -6,7 +6,7 @@ import { isCustomerLocked, registerFailedCustomerLogin, resetCustomerLoginAttemp
 import { clientIpOf, createRateLimiter } from "@/lib/rateLimit";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
 import { checkMaintenanceMode } from "@/lib/systemMaintenanceSettings";
-import { isValidEmail, maskEmail } from "@/components/auth/helpers";
+import { isValidEmail, maskEmail } from "@/lib/shared/auth";
 import { getSecuritySettings } from "@/lib/securitySettings";
 import { finalizeCustomerLogin } from "@/lib/auth/finalizeCustomerLogin";
 import { createCustomerTwoFactorChallenge } from "@/lib/auth/customer2faChallenge";

@@ -3,7 +3,7 @@
 //   2. full        — options+variants AND custom attributes
 //   3. variants-only — options+variants, no attributes
 //   4. attributes-only — no options/variants, custom attributes only
-// Writes directly to Neon (same tables/shape as src/lib/products.js) so it
+// Writes directly to the database (same tables/shape as src/lib/products.js) so it
 // doesn't need a running dev server or an authenticated session — same
 // pattern as scripts/migrate.mjs and scripts/create-admin-user.mjs.
 //
@@ -12,7 +12,7 @@
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
-import { neon } from "./lib/pg-neon.mjs";
+import { pgTagged } from "./lib/pg-tagged.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -37,7 +37,7 @@ loadEnvLocal();
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set. Add it to your .env.local file.");
 }
-const sql = neon(process.env.DATABASE_URL);
+const sql = pgTagged(process.env.DATABASE_URL);
 
 function slugify(str) {
   return String(str)

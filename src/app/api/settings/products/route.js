@@ -9,7 +9,7 @@ import {
   WEIGHT_UNITS,
   isValidSkuPrefix,
   isValidLowStockThreshold,
-} from "@/components/settings-products/helpers";
+} from "@/lib/shared/settingsProducts";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("products", "view"));

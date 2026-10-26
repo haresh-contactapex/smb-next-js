@@ -3,7 +3,7 @@ import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
 import { placeCodOrder, startCardPayment } from "@/lib/checkoutOrders";
 import { CheckoutError } from "@/lib/checkoutPricing";
-import { createRateLimiter } from "@/lib/rateLimit";
+import { clientIpOf, createRateLimiter } from "@/lib/rateLimit";
 
 // Public: the storefront checkout's Place Order. Takes what the customer wants (items
 // by id and quantity, addresses, a coupon code) and prices everything itself, then
@@ -15,12 +15,10 @@ import { createRateLimiter } from "@/lib/rateLimit";
 // Each call can create a Stripe PaymentIntent and an order, so a script shouldn't get far.
 const allow = createRateLimiter({ limit: 12, windowMs: 10 * 60 * 1000 });
 
-function clientKey(request) {
-  return request.headers.get("x-forwarded-for")?.split(",")[0].trim() || request.headers.get("x-real-ip") || "unknown";
-}
-
 export async function POST(request) {
-  if (!allow(clientKey(request))) {
+  // No client address (no proxy, e.g. local dev) means nothing to count against, so no limit.
+  const ip = clientIpOf(request);
+  if (ip && !allow(ip)) {
     return NextResponse.json({ success: false, error: "Too many attempts. Please wait a few minutes and try again." }, { status: 429 });
   }
 

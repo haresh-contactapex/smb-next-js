@@ -5,7 +5,7 @@ import { getSecuritySettings } from "./securitySettings";
 import { hashPassword, verifyPassword } from "./auth/password";
 import { createRateLimiter } from "./rateLimit";
 import { revokeCustomerSessions } from "./auth/sessionRevocation";
-import { isValidPassword, isValidEmail } from "@/components/auth/helpers";
+import { isValidPassword, isValidEmail } from "@/lib/shared/auth";
 import { formatUsPhone, isValidUsPhone } from "./phone";
 
 // Server side of the account's Profile & security page. Anything that proves

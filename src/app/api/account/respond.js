@@ -6,7 +6,7 @@ import { getCurrentCustomer } from "@/lib/auth/customerSession";
 // Shared by every /api/account/* handler. Middleware does not cover /api, so
 // each handler starts with requireCustomer() itself.
 
-export const ok = (data) => NextResponse.json({ success: true, data });
+export { ok } from "@/lib/api";
 
 // A customer-fixable problem keeps its own status, message and (when it has
 // one) the form field at fault; anything else is logged and reported generically.

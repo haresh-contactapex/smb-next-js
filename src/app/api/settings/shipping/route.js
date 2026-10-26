@@ -10,7 +10,7 @@ import {
   DIMENSION_UNITS,
   isValidMoneyAmount,
   isValidProcessingTimeDays,
-} from "@/components/settings-shipping/helpers";
+} from "@/lib/shared/settingsShipping";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("shipping", "view"));

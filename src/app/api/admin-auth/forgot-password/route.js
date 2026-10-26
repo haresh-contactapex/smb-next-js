@@ -4,7 +4,7 @@ import { findStaffByEmail } from "@/lib/staff";
 import { insertStaffResetToken } from "@/lib/passwordResetTokens";
 import { createResetToken } from "@/lib/auth/resetToken";
 import { checkRecaptchaIfEnabled } from "@/lib/auth/recaptcha";
-import { isValidEmail } from "@/components/auth/helpers";
+import { isValidEmail } from "@/lib/shared/auth";
 import { isEmailConfigured, sendPasswordResetEmail } from "@/lib/email";
 import { getTrustedOrigin } from "@/lib/siteUrl";
 

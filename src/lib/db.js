@@ -1,9 +1,13 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { Pool } from 'pg';
 
 // node-postgres over TCP (self-hosted PostgreSQL on cPanel). The exports keep
-// the shape the app already uses (previously the Neon HTTP driver): `sql` and
-// `sqlQuery` resolve to an array of row objects, and `sqlTransaction` resolves
-// to one row array per statement.
+// `sql` and `sqlQuery` resolve to an array of row objects, and `sqlTransaction`
+// resolves to one row array per statement.
+
+// Holds the client of the transaction opened by withTransaction, so `sql` and
+// `sqlQuery` called anywhere inside its callback run on that connection.
+const transactionClient = new AsyncLocalStorage();
 
 // Kept on globalThis so `next dev` hot reloads reuse one pool instead of
 // opening a new set of connections on every module re-evaluation.
@@ -38,8 +42,33 @@ function toQuery(strings, values) {
 // var isn't set yet.
 export async function sql(strings, ...values) {
   const { text, values: params } = toQuery(strings, values);
-  const result = await getPool().query(text, params);
+  const result = await (transactionClient.getStore() ?? getPool()).query(text, params);
   return result.rows;
+}
+
+// Runs `work` in one database transaction: committed when it resolves, rolled
+// back when it throws. Unlike sqlTransaction the statements need not be known
+// up front, so a later one can use an earlier one's result. `sql` and `sqlQuery`
+// calls made inside `work` (including from helpers it calls) join the transaction;
+// the client is also passed in for code that wants it directly.
+export async function withTransaction(work) {
+  if (transactionClient.getStore()) return work(transactionClient.getStore());
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const result = await transactionClient.run(client, () => work(client));
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // The connection is already broken; the original error is the useful one.
+    }
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 // Several statements applied together or not at all, in one database
@@ -74,6 +103,6 @@ export async function sqlTransaction(build) {
 // Raw parameterized query ($1, $2, ...) for cases the tagged-template form
 // can't express, such as a dynamically-sized multi-row INSERT.
 export async function sqlQuery(text, params) {
-  const result = await getPool().query(text, params);
+  const result = await (transactionClient.getStore() ?? getPool()).query(text, params);
   return result.rows;
 }

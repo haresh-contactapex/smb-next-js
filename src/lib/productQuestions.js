@@ -3,7 +3,7 @@ import { getGeneralSettings } from "./generalSettings";
 import { getStoreSettings } from "./storeSettings";
 import { createRateLimiter } from "./rateLimit";
 import { isEmailConfigured, sendProductQuestionAdminEmail, sendProductQuestionConfirmationEmail } from "./email";
-import { normalizeQuestion, validateQuestion } from "@/components/storefront/ask-question/helpers";
+import { normalizeQuestion, validateQuestion } from "@/lib/shared/askQuestion";
 
 // Server side of the product page's "Ask a question" form. Nothing is stored:
 // the question is emailed to the store (Settings -> General store email, else
@@ -49,7 +49,7 @@ export async function submitProductQuestion({ payload, clientKey, origin }) {
   if (!handle || handle.length > MAX_HANDLE_LENGTH) throw new ProductQuestionError("Choose a valid product.");
 
   // No short-circuit: both limiters record the attempt, so neither count drifts.
-  const allowed = [clientLimiter(clientKey), addressLimiter(values.email.toLowerCase())];
+  const allowed = [(clientKey ? clientLimiter(clientKey) : true), addressLimiter(values.email.toLowerCase())];
   if (allowed.includes(false)) {
     throw new ProductQuestionError("You've sent a few questions already. Please wait a little while before sending another.", 429);
   }

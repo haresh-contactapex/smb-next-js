@@ -9,8 +9,8 @@ import { sanitizeLineEngraving } from "./engravingRules";
 // validation. Both are shared with the browser on purpose: the server must reach the
 // same totals the customer was shown, and prices and discounts are never taken from
 // the request.
-import { NOTE_MAX_LENGTH, cartTotals, lineKey, round2 } from "@/components/storefront/cart/cartHelpers";
-import { PHONE_COUNTRIES, checkoutTotals, phoneCountryOf, validateAddress, validateContact } from "@/components/storefront/checkout/checkoutHelpers";
+import { NOTE_MAX_LENGTH, cartTotals, lineKey, round2 } from "@/lib/shared/cart";
+import { PHONE_COUNTRIES, checkoutTotals, phoneCountryOf, validateAddress, validateContact } from "@/lib/shared/checkout";
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_LINES = 50;

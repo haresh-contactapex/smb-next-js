@@ -26,7 +26,7 @@ export class EngravingError extends Error {
 
 const NOT_MIGRATED = "The engraving tables are missing. Run `npm run db:migrate:engraving` and try again.";
 
-// Neon reports a table or column that was never migrated as 42P01 / 42703.
+// PostgreSQL reports a table or column that was never migrated as 42P01 / 42703.
 export function translateMissingTables(error) {
   return isMissingRelation(error) ? new EngravingError(NOT_MIGRATED, 503) : error;
 }

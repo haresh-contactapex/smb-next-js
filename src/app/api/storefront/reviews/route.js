@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { publicErrorMessage } from "@/lib/publicError";
+import { failureFrom, ok, readJsonBody } from "@/lib/api";
+import { clientIpOf } from "@/lib/rateLimit";
 import { ReviewError, submitStorefrontReview } from "@/lib/reviews";
 
 // A review is a few short fields plus up to 5,000 characters of text (a
@@ -10,31 +10,17 @@ const MAX_BODY_BYTES = 40_000;
 // validation, a honeypot, rate limits and moderation in submitStorefrontReview
 // rather than a session. Reviews are saved as PENDING and never shown until
 // a moderator approves them.
-function clientKey(request) {
-  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
-  return forwarded || request.headers.get("x-real-ip") || "unknown";
-}
-
 export async function POST(request) {
-  if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) {
-    return NextResponse.json({ success: false, error: "Your review is too long." }, { status: 413 });
-  }
-
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return NextResponse.json({ success: false, error: "Invalid request." }, { status: 400 });
-  }
+  const body = await readJsonBody(request, { maxBytes: MAX_BODY_BYTES, tooLongMessage: "Your review is too long." });
+  if (body.response) return body.response;
 
   try {
-    const data = await submitStorefrontReview({ payload, clientKey: clientKey(request) });
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    return ok(await submitStorefrontReview({ payload: body.payload, clientKey: clientIpOf(request) }), 201);
   } catch (error) {
-    if (error instanceof ReviewError) {
-      return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status });
-    }
-    console.error("Storefront review failed", error);
-    return NextResponse.json({ success: false, error: "We couldn't save your review. Please try again." }, { status: 500 });
+    return failureFrom(error, {
+      KnownError: ReviewError,
+      fallbackMessage: "We couldn't save your review. Please try again.",
+      label: "Storefront review",
+    });
   }
 }

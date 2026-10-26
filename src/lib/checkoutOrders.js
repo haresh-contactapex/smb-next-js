@@ -33,7 +33,7 @@ function isCustomerEmailCollision(error) {
   return error?.code === "23505" && /customers_email/.test(`${error.constraint || ""} ${error.message || ""}`);
 }
 
-// Neon reports a missing table as 42P01; the detail tables come from the order-details migration.
+// PostgreSQL reports a missing table as 42P01; the detail tables come from the order-details migration.
 function isMissingTable(error) {
   return error?.code === "42P01";
 }

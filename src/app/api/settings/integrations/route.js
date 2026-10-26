@@ -10,7 +10,7 @@ import {
   isValidMailchimpApiKey,
   isValidGoogleRecaptchaSiteKey,
   isValidGoogleRecaptchaSecretKey,
-} from "@/components/settings-integrations/helpers";
+} from "@/lib/shared/settingsIntegrations";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("integrations", "view"));

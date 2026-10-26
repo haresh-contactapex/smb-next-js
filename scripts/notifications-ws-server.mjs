@@ -22,7 +22,7 @@ import http from "http";
 import crypto from "crypto";
 import { WebSocketServer } from "ws";
 import { jwtVerify } from "jose";
-import { neon } from "./lib/pg-neon.mjs";
+import { pgTagged } from "./lib/pg-tagged.mjs";
 import { canViewNotification } from "../src/lib/notificationAudience.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -66,7 +66,7 @@ for (const [name, value] of [["DATABASE_URL", process.env.DATABASE_URL], ["JWT_S
   }
 }
 
-const sql = neon(process.env.DATABASE_URL);
+const sql = pgTagged(process.env.DATABASE_URL);
 const jwtKey = new TextEncoder().encode(JWT_SECRET);
 
 /** @type {Set<{ ws: import("ws").WebSocket, userId: string|null, viewer: object|null, loadedAt: number, alive: boolean }>} */

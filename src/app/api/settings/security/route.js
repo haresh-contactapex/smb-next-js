@@ -9,7 +9,7 @@ import {
   isValidPasswordExpiryDays,
   isValidMaxLoginAttempts,
   isValidIpAllowlist,
-} from "@/components/settings-security/helpers";
+} from "@/lib/shared/settingsSecurity";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("security", "view"));

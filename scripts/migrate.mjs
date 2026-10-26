@@ -1,7 +1,10 @@
+import { createHash } from "crypto";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
-import { neon } from "./lib/pg-neon.mjs";
+import pg from "pg";
+import { splitStatements } from "./lib/splitStatements.mjs";
+import { MIGRATIONS } from "./migrations.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -25,59 +28,57 @@ function loadEnvLocal() {
 
 loadEnvLocal();
 
-const DEFAULT_SCHEMA_FILE = path.join(
-  __dirname,
-  "..",
-  "docs",
-  "category-product",
-  "category-product-catalog-database-schema.sql"
-);
+const ROOT = path.join(__dirname, "..");
 
-const SCHEMA_FILE = process.argv[2]
-  ? path.resolve(process.cwd(), process.argv[2])
-  : DEFAULT_SCHEMA_FILE;
+const DEFAULT_SCHEMA_FILE = MIGRATIONS[0];
 
-function stripLineComments(sql) {
-  return sql
-    .split("\n")
-    .map((line) => line.replace(/--.*$/, ""))
-    .join("\n");
+// node scripts/migrate.mjs                 the catalog schema (docs/category-product/...)
+// node scripts/migrate.mjs <file.sql>      one schema file
+// node scripts/migrate.mjs --all           every file in scripts/migrations.mjs that is new or changed
+// --force re-applies files even when their recorded checksum matches.
+const args = process.argv.slice(2);
+const force = args.includes("--force");
+const all = args.includes("--all");
+const fileArg = args.find((arg) => !arg.startsWith("--"));
+
+function targets() {
+  if (all) return MIGRATIONS;
+  return [fileArg ? path.relative(ROOT, path.resolve(process.cwd(), fileArg)) : DEFAULT_SCHEMA_FILE];
 }
 
-// A naive split(";") breaks on any semicolon inside a single-quoted string
-// literal (e.g. a COMMENT ON ... IS '...; ...' with punctuation in the text),
-// so this walks the source tracking string state and only splits outside one.
-// '' inside a string is SQL's escaped single quote, not a terminator.
-function splitStatements(sql) {
-  const source = stripLineComments(sql);
-  const statements = [];
-  let current = "";
-  let inString = false;
+// Each file runs in its own transaction, so one that fails halfway leaves nothing applied.
+// The record is written inside that transaction, so "applied" and "recorded" cannot disagree.
+// Schema files are idempotent (IF NOT EXISTS ...), so a changed file is simply applied again.
+async function apply(client, relativeFile) {
+  const file = relativeFile.split(path.sep).join("/");
+  const source = readFileSync(path.join(ROOT, file), "utf8");
+  const checksum = createHash("sha256").update(source).digest("hex");
 
-  for (let i = 0; i < source.length; i++) {
-    const char = source[i];
-    current += char;
-
-    if (char === "'") {
-      if (inString && source[i + 1] === "'") {
-        current += source[++i];
-        continue;
-      }
-      inString = !inString;
-      continue;
-    }
-
-    if (char === ";" && !inString) {
-      const trimmed = current.slice(0, -1).trim();
-      if (trimmed) statements.push(trimmed);
-      current = "";
-    }
+  const [recorded] = (await client.query("SELECT checksum FROM schema_migrations WHERE filename = $1", [file])).rows;
+  if (recorded?.checksum === checksum && !force) {
+    process.stdout.write(`Skipping ${file} (already applied)
+`);
+    return 0;
   }
 
-  const trailing = current.trim();
-  if (trailing) statements.push(trailing);
-
-  return statements;
+  const statements = splitStatements(source);
+  process.stdout.write(`Applying ${file} (${statements.length} statements)
+`);
+  await client.query("BEGIN");
+  try {
+    for (const statement of statements) await client.query(statement);
+    await client.query(
+      `INSERT INTO schema_migrations (filename, checksum) VALUES ($1, $2)
+       ON CONFLICT (filename) DO UPDATE SET checksum = EXCLUDED.checksum, applied_at = now()`,
+      [file, checksum]
+    );
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    error.message = `${file}: ${error.message}`;
+    throw error;
+  }
+  return statements.length;
 }
 
 async function main() {
@@ -85,16 +86,21 @@ async function main() {
     throw new Error("DATABASE_URL is not set. Add it to your .env.local file.");
   }
 
-  const sql = neon(process.env.DATABASE_URL);
-  const statements = splitStatements(readFileSync(SCHEMA_FILE, "utf8"));
-
-  for (const statement of statements) {
-    const label = statement.split("\n")[0].slice(0, 70);
-    process.stdout.write(`Running: ${label}...\n`);
-    await sql.query(statement);
+  const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  try {
+    await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
+      filename text PRIMARY KEY,
+      checksum text NOT NULL,
+      applied_at timestamptz NOT NULL DEFAULT now()
+    )`);
+    let applied = 0;
+    for (const file of targets()) applied += await apply(client, file);
+    process.stdout.write(`Done — applied ${applied} statements.
+`);
+  } finally {
+    await client.end();
   }
-
-  process.stdout.write(`Done — applied ${statements.length} statements.\n`);
 }
 
 main().catch((error) => {

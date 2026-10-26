@@ -5,7 +5,7 @@ import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/sta
 import { settingsPermission } from "@/lib/permissions";
 import { getEmailSettings, hasStoredSmtpPassword, updateEmailSettings } from "@/lib/emailSettings";
 import { getActiveSmtpSource } from "@/lib/email";
-import { EMAIL_FIELD_ORDER, getEmailSettingsErrors } from "@/components/settings-email/helpers";
+import { EMAIL_FIELD_ORDER, getEmailSettingsErrors } from "@/lib/shared/settingsEmail";
 
 export async function GET() {
   const auth = await requireStaffPermission(settingsPermission("email", "view"));

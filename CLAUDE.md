@@ -4,7 +4,7 @@
 
 - Next.js 15 App Router application, written in JavaScript (not TypeScript).
 - React 18, Tailwind CSS 3, and Chart.js power the admin interface.
-- PostgreSQL is accessed with node-postgres (`pg`) through `src/lib/db.js`. Production runs a user-level PostgreSQL on the cPanel host (see `docs/deployment/cpanel-passenger-deployment.md` §11); the app was on Neon until 2026-10-21. `pg` needs Node APIs, so `src/middleware.js` runs on the Node.js runtime (`runtime: "nodejs"`), not Edge.
+- PostgreSQL is accessed with node-postgres (`pg`) through `src/lib/db.js`. Production runs a user-level PostgreSQL on the cPanel host (see `docs/deployment/cpanel-passenger-deployment.md` §11); there is no other database. `pg` needs Node APIs, so `src/middleware.js` runs on the Node.js runtime (`runtime: "nodejs"`), not Edge.
 - This is an authenticated Shop My Band admin panel. The former static prototype remains in `legacy-static/` as reference only; do not add production features there.
 
 ## Repository map
@@ -27,22 +27,14 @@
 npm run dev
 npm run build
 npm run lint
-npm run db:migrate
-npm run db:migrate:media
-npm run db:migrate:coupons
-npm run db:migrate:customers
-npm run db:migrate:account
-npm run db:migrate:auth
-npm run db:migrate:staff-users
-npm run db:migrate:currency-tax
-npm run db:migrate:products
-npm run db:migrate:engraving
-npm run db:migrate:cms
-npm run db:migrate:blog
+npm test
+npm run db:migrate:all
 npm run db:seed:admin
 npm run db:seed:cms
 npm run db:seed:blog
 ```
+
+`db:migrate:all` applies, in dependency order, every schema file listed in `scripts/migrations.mjs` that is new or changed, each in one transaction, and records it (filename + checksum) in `schema_migrations`. Add a new feature's schema file to that list. The per-file `db:migrate:*` scripts in `package.json` (and `npm run db:migrate`, the catalog schema) still apply one file the same way; `--force` re-applies an unchanged file.
 
 `DATABASE_URL` and `JWT_SECRET` belong in `.env.local`; use `.env.example` as the non-secret template. Never commit or print real credentials.
 
@@ -53,12 +45,14 @@ npm run db:seed:blog
 - Keep domain and database work in `src/lib/`; route handlers should parse input, call a lib function, and return the established JSON envelope: `{ success: true, data }` or `{ success: false, error }`.
 - Use `sql` tagged templates from `src/lib/db.js` for values. Use `sqlQuery` only where dynamically sized SQL is truly required, with positional parameters. Do not interpolate request data into SQL strings.
 - Never import server database or session helpers into client components.
+- Validation rules shared by forms and route handlers live in `src/lib/shared/` (pure, no React/DOM); `src/lib/` and `src/app/api/` must not import from `src/components/`. The old `components/**/helpers.js` paths are re-export stubs.
+- Route handlers build the JSON envelope with `ok`/`fail`/`failureFrom`/`readJsonBody` from `src/lib/api.js`. Write multi-statement saves inside `withTransaction` from `src/lib/db.js`.
 - Reuse existing feature helpers and shared controls before introducing a parallel implementation. Match the feature folder's local conventions for `helpers.js`, `Toast.js`, toolbar, sections, and client state.
 - Preserve the existing Tailwind design system: the `primary`, `accent`, `dark*`, semantic colors, card shadow, and radius tokens in `tailwind.config.js`; support both light and dark mode for new UI.
 - Preserve accessible labels, visible validation errors, keyboard behavior, loading/saving guards, and the current confirmation pattern for destructive actions.
 - `src/middleware.js` protects page navigation but intentionally excludes `/api`. Do not treat the UI gate as API authorization: add server-side session/role checks before exposing or expanding sensitive API operations.
 - Customer and staff identities are distinct. Keep their cookie names and JWT scopes separate; never allow a customer token to act as staff.
-- Update the matching documentation and SQL schema in `docs/` when changing persisted data. The migration runner applies the selected schema SQL file statement-by-statement.
+- Update the matching documentation and SQL schema in `docs/` when changing persisted data. The migration runner applies the selected schema SQL file statement-by-statement inside one transaction; register new files in `scripts/migrations.mjs`.
 - Do not clean up unrelated files or overwrite current user changes. The working tree may already contain active work.
 
 ## Feature workflow
@@ -90,7 +84,7 @@ Read the relevant skill before a substantial change in that area:
 - `.claude/skills/catalog/SKILL.md` — products, categories, variants, and media relationships.
 - `.claude/skills/auth/SKILL.md` — customer/staff authentication, JWTs, cookies, and reset flows.
 - `.claude/skills/settings/SKILL.md` — database-backed settings pages and global setting consumers.
-- `.claude/skills/database-docs/SKILL.md` — Neon access, schema SQL, migrations, and data mapping.
+- `.claude/skills/database-docs/SKILL.md` — PostgreSQL access, schema SQL, migrations, and data mapping.
 
 ## Verification
 

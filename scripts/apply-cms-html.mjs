@@ -12,7 +12,7 @@
 import { readFileSync } from "fs";
 import { fileURLToPath, pathToFileURL } from "url";
 import path from "path";
-import { neon } from "./lib/pg-neon.mjs";
+import { pgTagged } from "./lib/pg-tagged.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const MAX_REVISIONS = 20; // keep in step with src/lib/cms.js
@@ -44,7 +44,7 @@ if (!slug || !file) {
 if (!process.env.DATABASE_URL) {
   throw new Error("DATABASE_URL is not set. Add it to your .env.local file.");
 }
-const sql = neon(process.env.DATABASE_URL);
+const sql = pgTagged(process.env.DATABASE_URL);
 
 const { sanitizeCmsHtml } = await import(pathToFileURL(path.join(__dirname, "..", "src", "lib", "sanitizeHtml.js")).href);
 const html = sanitizeCmsHtml(readFileSync(path.resolve(file), "utf8")).trim();

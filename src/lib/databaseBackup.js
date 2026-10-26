@@ -1,7 +1,7 @@
 import { sqlQuery } from "./db";
 
-// Logical backup of the public schema as a plain SQL script. Neon is reached
-// over HTTP, so pg_dump isn't available — this rebuilds an equivalent script
+// Logical backup of the public schema as a plain SQL script. It runs through the app's
+// connection, so pg_dump isn't needed — this rebuilds an equivalent script
 // (sequences, tables, rows, constraints, indexes) that restores with psql into
 // an empty database. It is read-only and not a single-transaction snapshot:
 // rows written while it runs may or may not be included.
