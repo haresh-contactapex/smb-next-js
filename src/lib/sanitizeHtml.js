@@ -27,6 +27,8 @@ const CMS_TAGS = [
 
 const VOID_TAGS = new Set(["br", "hr", "img"]);
 
+const DROP_VOID_TAGS = new Set(["embed"]);
+
 // Dropped together with everything inside them (not just the tag itself).
 const DROP_WITH_CONTENT = new Set([
   "script", "style", "iframe", "object", "embed", "noscript", "template",
@@ -181,7 +183,8 @@ export function sanitizeHtml(input, { profile: profileName = "basic" } = {}) {
       continue;
     }
     if (DROP_WITH_CONTENT.has(name)) {
-      if (!closing && !attributes.trimEnd().endsWith("/")) skipping = name;
+      // <embed> never has content or a closing tag, so skipping to one would swallow the rest of the page.
+      if (!closing && !DROP_VOID_TAGS.has(name) && !attributes.trimEnd().endsWith("/")) skipping = name;
       continue;
     }
     if (!profile.tags.has(name)) continue; // unknown tag: drop the tag, keep its text

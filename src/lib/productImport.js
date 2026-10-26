@@ -69,9 +69,13 @@ function parseProductCsv(csvText) {
     transformHeader: (h) => h.trim().toLowerCase().replace(/\s+/g, "_"),
   });
 
-  if (result.errors?.length) {
-    const first = result.errors[0];
-    throw new Error(`Could not parse the CSV file: ${first.message} (row ${first.row + 2})`);
+  // A file with a single column has no delimiter to find, which is not a parse failure (it is then
+  // reported as missing columns below).
+  const parseErrors = (result.errors || []).filter((error) => error.code !== "UndetectableDelimiter");
+  if (parseErrors.length) {
+    const first = parseErrors[0];
+    const where = Number.isInteger(first.row) ? ` (row ${first.row + 2})` : "";
+    throw new Error(`Could not parse the CSV file: ${first.message}${where}`);
   }
 
   const fields = result.meta?.fields || [];
