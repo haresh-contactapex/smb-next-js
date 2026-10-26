@@ -340,3 +340,22 @@ export function effectivePermissions(role, modules = getPermissionModules()) {
   if (role?.fullAccess) return getAllPermissionKeys(modules);
   return sanitizePermissions(role?.permissions, modules);
 }
+
+// Whether the actor's role holds every one of `keys`. A role that is not active holds nothing, as in
+// roleHasPermission(). Used so nobody can hand out, or reach into, more than they hold themselves.
+export function holdsAllPermissions(actorRole, keys) {
+  if (!actorRole || actorRole.status !== "active") return false;
+  if (actorRole.fullAccess) return true;
+  const mine = new Set(effectivePermissions(actorRole));
+  return sanitizePermissions(keys).every((key) => mine.has(key));
+}
+
+// Whether the actor may manage `targetRole` (change or delete the users who hold it, assign it, edit
+// or switch it off): only when they hold everything it grants. A full-access role is covered by
+// full-access actors alone. `targetRole` is { fullAccess, permissions }, or null for a user whose
+// role no longer exists (it grants nothing, so anyone covers it).
+export function roleCovers(actorRole, targetRole) {
+  if (!targetRole) return true;
+  if (targetRole.fullAccess) return Boolean(actorRole?.fullAccess) && actorRole.status === "active";
+  return holdsAllPermissions(actorRole, targetRole.permissions);
+}

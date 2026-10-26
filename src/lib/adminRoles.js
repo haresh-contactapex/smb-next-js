@@ -4,6 +4,8 @@ import {
   getAllPermissionKeys,
   sanitizePermissions,
   roleHasPermission,
+  roleCovers,
+  holdsAllPermissions,
   MANAGE_ROLES_PERMISSION,
   MANAGE_PERMISSIONS_PERMISSION,
 } from "./permissions";
@@ -162,6 +164,26 @@ function assertCanChangePermissions(actorRole, before, after) {
   }
 }
 
+// Nobody may grant a permission they don't hold themselves, or edit, switch off, copy or delete a role
+// that grants more than they hold: with Manage Permissions alone an admin could otherwise build a role
+// with every permission and give it to an account they control.
+function assertCanGrant(actorRole, permissions) {
+  if (!holdsAllPermissions(actorRole, permissions)) {
+    throw new AdminRoleError("You can only grant permissions you hold yourself.", 403);
+  }
+}
+
+function assertCoversRole(actorRole, role) {
+  if (!roleCovers(actorRole, { fullAccess: role.fullAccess, permissions: role.permissions })) {
+    throw new AdminRoleError(
+      role.fullAccess
+        ? `Only a Super Admin can change ${role.name}.`
+        : `You can only manage roles whose permissions you hold yourself, and ${role.name} includes some you don't have.`,
+      403
+    );
+  }
+}
+
 // Stops an admin from deactivating or stripping role management from the
 // role they are signed in with, which would lock them out of this screen.
 function assertNotSelfLockout(actorRole, role, next) {
@@ -180,6 +202,7 @@ function assertNotSelfLockout(actorRole, role, next) {
 export async function createAdminRole(payload, actorRole) {
   const input = validateRoleInput(payload);
   assertCanChangePermissions(actorRole, [], input.permissions);
+  assertCanGrant(actorRole, input.permissions);
 
   return run(async () => {
     const slug = await uniqueSlug(input.name);
@@ -195,6 +218,7 @@ export async function createAdminRole(payload, actorRole) {
 export async function updateAdminRole(id, payload, actorRole) {
   const role = await getAdminRoleById(id);
   if (!role) throw new AdminRoleError("Role not found.", 404);
+  assertCoversRole(actorRole, role);
 
   // System roles keep their name, status and full access; only the
   // description can change.
@@ -214,6 +238,7 @@ export async function updateAdminRole(id, payload, actorRole) {
 
   const input = validateRoleInput(payload);
   assertCanChangePermissions(actorRole, sanitizePermissions(role.permissions), input.permissions);
+  assertCanGrant(actorRole, input.permissions);
   assertNotSelfLockout(actorRole, role, input);
 
   return run(async () => {
@@ -235,6 +260,7 @@ export async function setAdminRoleStatus(id, status, actorRole) {
   const role = await getAdminRoleById(id);
   if (!role) throw new AdminRoleError("Role not found.", 404);
   if (role.isSystem) throw new AdminRoleError(`${role.name} is a system role and can't be deactivated.`, 403);
+  assertCoversRole(actorRole, role);
   assertNotSelfLockout(actorRole, role, { status });
 
   return run(async () => {
@@ -261,6 +287,7 @@ export async function duplicateAdminRole(id, actorRole) {
   if (!role) throw new AdminRoleError("Role not found.", 404);
   const permissions = role.fullAccess ? getAllPermissionKeys() : sanitizePermissions(role.permissions);
   assertCanChangePermissions(actorRole, [], permissions);
+  assertCanGrant(actorRole, permissions);
 
   return run(async () => {
     const name = await uniqueCopyName(role.name);
@@ -274,9 +301,10 @@ export async function duplicateAdminRole(id, actorRole) {
   });
 }
 
-export async function deleteAdminRole(id) {
+export async function deleteAdminRole(id, actorRole) {
   const role = await getAdminRoleById(id);
   if (!role) throw new AdminRoleError("Role not found.", 404);
+  assertCoversRole(actorRole, role);
   if (role.isSystem) throw new AdminRoleError(`${role.name} is a system role and can't be deleted.`, 403);
   if (role.usersAssigned > 0) {
     throw new AdminRoleError(

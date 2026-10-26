@@ -95,7 +95,7 @@ export async function DELETE(request, { params }) {
 
   try {
     const { id } = await params;
-    const data = await deleteAdminRole(id);
+    const data = await deleteAdminRole(id, auth.role);
     await logAdminActivity({
       actor: auth.user,
       action: "role.deleted",
