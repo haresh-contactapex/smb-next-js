@@ -1,4 +1,5 @@
 import { sql } from "./db";
+import { roleCovers } from "./permissions";
 import { isUuid } from "./shared/ids";
 import { hashPassword, generateTemporaryPassword } from "./auth/password";
 import { createResetToken, WELCOME_TOKEN_TTL_MS } from "./auth/resetToken";
@@ -170,21 +171,41 @@ export async function getStaffUserById(id) {
 }
 
 async function findRole(slug) {
-  const [row] = await sql`SELECT slug, name, full_access FROM admin_roles WHERE slug = ${slug}`;
+  const [row] = await sql`SELECT slug, name, full_access, permissions FROM admin_roles WHERE slug = ${slug}`;
   return row || null;
 }
 
+// The shape roleCovers() takes, from an admin_roles row (or a row joined onto users).
+const coverage = (row) => (row ? { fullAccess: Boolean(row.full_access), permissions: Array.isArray(row.permissions) ? row.permissions : [] } : null);
+
+// A staff member may only hand out roles whose permissions they hold themselves; otherwise anyone with
+// Users -> Edit could promote themselves or a friend past their own level.
 async function assertAssignableRole(slug, actorRole) {
   const role = await run(() => findRole(slug));
   if (!role) fail("role", "Choose a role that exists.");
-  if (role.full_access && !actorRole?.fullAccess) {
-    throw new StaffUserError(`Only a Super Admin can assign the ${role.name} role.`, 403, "role");
+  if (!roleCovers(actorRole, coverage(role))) {
+    throw new StaffUserError(
+      role.full_access
+        ? `Only a Super Admin can assign the ${role.name} role.`
+        : `You can only assign roles whose permissions you hold yourself, and ${role.name} includes some you don't have.`,
+      403,
+      "role"
+    );
   }
 }
 
-function assertCanManageTarget(target, actorRole) {
-  if (target.roleFullAccess && !actorRole?.fullAccess) {
-    throw new StaffUserError("Only a Super Admin can change or delete another Super Admin.", 403);
+// Changing or deleting a user (their password, email, role, account) is only allowed when the actor
+// holds every permission of that user's role; otherwise resetting their password would be a way to
+// become them.
+async function assertCanManageTarget(target, actorRole) {
+  const role = await run(() => findRole(target.role));
+  if (!roleCovers(actorRole, coverage(role))) {
+    throw new StaffUserError(
+      role?.full_access
+        ? "Only a Super Admin can change or delete another Super Admin."
+        : "You can only change or delete users whose role permissions you hold yourself.",
+      403
+    );
   }
 }
 
@@ -249,7 +270,7 @@ export async function createStaffUser(payload, actorRole, { origin }) {
 export async function updateStaffUser(id, payload, actor, actorRole) {
   const target = await getStaffUserById(id);
   if (!target) throw new StaffUserError("User not found.", 404);
-  assertCanManageTarget(target, actorRole);
+  await assertCanManageTarget(target, actorRole);
 
   const input = validateStaffUserInput(payload, { requirePassword: false });
   if (input.role !== target.role) {
@@ -288,7 +309,7 @@ export async function deleteStaffUser(id, actor, actorRole) {
   const target = await getStaffUserById(id);
   if (!target) throw new StaffUserError("User not found.", 404);
   if (actor?.id === target.id) throw new StaffUserError("You can't delete your own account.", 400);
-  assertCanManageTarget(target, actorRole);
+  await assertCanManageTarget(target, actorRole);
 
   return run(async () => {
     await sql`DELETE FROM users WHERE id = ${id}`;
@@ -308,7 +329,7 @@ export async function deleteStaffUsers(ids, actor, actorRole) {
 
   return run(async () => {
     const rows = await sql`
-      SELECT u.id, u.first_name, u.last_name, r.full_access AS role_full_access
+      SELECT u.id, u.first_name, u.last_name, r.full_access, r.permissions
       FROM users u
       LEFT JOIN admin_roles r ON r.slug = u.role
       WHERE u.id = ANY(${uniqueIds}::uuid[])
@@ -316,10 +337,12 @@ export async function deleteStaffUsers(ids, actor, actorRole) {
     if (rows.some((row) => row.id === actor?.id)) {
       throw new StaffUserError("You can't delete your own account. Unselect it and try again.", 400);
     }
-    const protectedRow = rows.find((row) => row.role_full_access && !actorRole?.fullAccess);
+    const protectedRow = rows.find((row) => !roleCovers(actorRole, row.full_access === null ? null : coverage(row)));
     if (protectedRow) {
       throw new StaffUserError(
-        `Only a Super Admin can delete ${protectedRow.first_name} ${protectedRow.last_name}. Unselect them and try again.`,
+        protectedRow.full_access
+          ? `Only a Super Admin can delete ${protectedRow.first_name} ${protectedRow.last_name}. Unselect them and try again.`
+          : `You can only delete users whose role permissions you hold yourself, and that isn't the case for ${protectedRow.first_name} ${protectedRow.last_name}. Unselect them and try again.`,
         403
       );
     }
