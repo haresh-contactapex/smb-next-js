@@ -277,7 +277,7 @@ export async function submitStorefrontReview({ payload, clientKey }) {
   if (!handle || handle.length > MAX_HANDLE_LENGTH) throw new ReviewError("Choose a valid product.");
 
   // No short-circuit: both limiters record the attempt, so neither count drifts.
-  const allowed = [(clientKey ? clientLimiter(clientKey) : true), addressLimiter(values.email)];
+  const allowed = [clientLimiter(clientKey), addressLimiter(values.email)];
   if (allowed.includes(false)) {
     throw new ReviewError("You've sent a few reviews already. Please wait a little while before sending another.", 429);
   }

@@ -31,7 +31,16 @@ test("clientIpOf trusts the entry the proxy appended, not what the client sent",
   delete process.env.TRUSTED_PROXY_HOPS;
 });
 
-test("clientIpOf is empty without proxy headers, so callers skip limiting", () => {
+test("clientIpOf is empty without proxy headers", () => {
   assert.equal(clientIpOf(req({})), "");
   assert.equal(clientIpOf(req({ "x-real-ip": "198.51.100.4" })), "198.51.100.4");
+});
+
+test("callers with no known address share one bucket ten times as large", (t) => {
+  t.mock.timers.enable({ apis: ["Date"], now: 0 });
+  const allow = createRateLimiter({ limit: 2, windowMs: 1000 });
+  const results = Array.from({ length: 21 }, () => allow(""));
+  assert.deepEqual(results.filter(Boolean).length, 20);
+  assert.equal(results[20], false);
+  assert.equal(allow("198.51.100.4"), true, "a visitor with an address is not affected by the shared bucket");
 });

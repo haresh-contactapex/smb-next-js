@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
 import pg from "pg";
+import { missingTables } from "./lib/schemaObjects.mjs";
 import { splitStatements } from "./lib/splitStatements.mjs";
 import { MIGRATIONS } from "./migrations.mjs";
 
@@ -38,7 +39,9 @@ const DEFAULT_SCHEMA_FILE = MIGRATIONS[0];
 // node scripts/migrate.mjs --all           every file in scripts/migrations.mjs that is new or changed
 // --force re-applies files even when their recorded checksum matches.
 // --baseline records the files' current checksums without running them, for a database whose
-// schema is already in place (the first run of this runner on an existing database).
+// schema is already in place (the first run of this runner on an existing database). A file
+// whose tables are not all there is not recorded, so the next --all run applies it.
+// A recorded file whose tables have gone missing is applied again rather than skipped.
 const args = process.argv.slice(2);
 const force = args.includes("--force");
 const baseline = args.includes("--baseline");
@@ -67,17 +70,28 @@ async function apply(client, relativeFile) {
   const checksum = createHash("sha256").update(source).digest("hex");
 
   const [recorded] = (await client.query("SELECT checksum FROM schema_migrations WHERE filename = $1", [file])).rows;
-  if (recorded?.checksum === checksum && !force) {
+  const upToDate = recorded?.checksum === checksum;
+  const missing = await missingTables(client, source);
+  if (upToDate && missing.length === 0 && !force) {
     process.stdout.write(`Skipping ${file} (already applied)
 `);
     return 0;
   }
 
+  if (baseline && missing.length > 0) {
+    process.stdout.write(`NOT recording ${file}: table(s) missing: ${missing.join(", ")}. \`npm run db:migrate:all\` will apply it.
+`);
+    return 0;
+  }
   if (baseline) {
     await recordMigration(client, file, checksum);
     process.stdout.write(`Recorded ${file} without running it
 `);
     return 0;
+  }
+  if (upToDate && missing.length > 0) {
+    process.stdout.write(`${file} is recorded as applied but table(s) are missing: ${missing.join(", ")}
+`);
   }
 
   const statements = splitStatements(source);

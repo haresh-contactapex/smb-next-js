@@ -63,7 +63,7 @@ Gather the values for the variables below. The app reads exactly these:
 | `SITE_URL` | Yes | No | `https://<your-domain>`. Nothing else provides it, so password-reset emails are **not sent** without `SITE_URL`. |
 | `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | If reCAPTCHA is on | No | Baked into the browser bundle at **build** time. Must exist before the build runs (see §5.8). |
 | `RECAPTCHA_SECRET_KEY` | If reCAPTCHA is on | Yes | Runtime. |
-| `TRUSTED_PROXY_HOPS` | No | No | Proxies in front of the app that append to `x-forwarded-for` (default `1`: the server's own proxy). Set `2` if a CDN such as Cloudflare is added in front; otherwise rate limits (checkout, login, contact) count many visitors as one. The app logs a warning when it sees more entries than this. |
+| `TRUSTED_PROXY_HOPS` | No | No | Proxies in front of the app that append to `x-forwarded-for` (default `1`: the server's own proxy). Set `2` if a CDN such as Cloudflare is added in front; otherwise rate limits (checkout, login, contact) count many visitors as one. The app logs a warning once when it sees more entries than this. If `app.log` shows "neither x-forwarded-for nor x-real-ip", the web server is not passing the visitor's address; rate limits then share one larger bucket for everyone until that is fixed. |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Optional | `SMTP_PASS` | Fallback only; SMTP saved in *Settings → Email* (database) takes precedence. |
 | `NOTIFICATIONS_WS_*` | No | Yes | Needs a separate long-lived WebSocket process. Passenger cannot host it; the admin bell falls back to polling every 30 s. |
 

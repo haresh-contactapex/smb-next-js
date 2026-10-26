@@ -49,7 +49,7 @@ export async function submitProductQuestion({ payload, clientKey, origin }) {
   if (!handle || handle.length > MAX_HANDLE_LENGTH) throw new ProductQuestionError("Choose a valid product.");
 
   // No short-circuit: both limiters record the attempt, so neither count drifts.
-  const allowed = [(clientKey ? clientLimiter(clientKey) : true), addressLimiter(values.email.toLowerCase())];
+  const allowed = [clientLimiter(clientKey), addressLimiter(values.email.toLowerCase())];
   if (allowed.includes(false)) {
     throw new ProductQuestionError("You've sent a few questions already. Please wait a little while before sending another.", 429);
   }

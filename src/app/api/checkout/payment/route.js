@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { readJsonBody } from "@/lib/api";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentCustomer } from "@/lib/auth/customerSession";
 import { placeCodOrder, startCardPayment } from "@/lib/checkoutOrders";
@@ -18,10 +17,8 @@ const MAX_BODY_BYTES = 200_000;
 const allow = createRateLimiter({ limit: 12, windowMs: 10 * 60 * 1000 });
 
 export async function POST(request) {
-  // No client address (no proxy, e.g. local dev) means nothing to count against, so no limit.
-  const ip = clientIpOf(request);
-  if (ip && !allow(ip)) {
-    return NextResponse.json({ success: false, error: "Too many attempts. Please wait a few minutes and try again." }, { status: 429 });
+  if (!allow(clientIpOf(request))) {
+    return fail("Too many attempts. Please wait a few minutes and try again.", 429);
   }
 
   // Addresses, a note and engraving text make a big cart body, but nowhere near this.
@@ -29,22 +26,19 @@ export async function POST(request) {
   if (parsed.response) return parsed.response;
   const body = parsed.payload;
   if (!body || typeof body !== "object") {
-    return NextResponse.json({ success: false, error: "That request wasn't valid." }, { status: 400 });
+    return fail("That request wasn't valid.", 400);
   }
 
   try {
     const customer = await getCurrentCustomer();
     // A cash-on-delivery order is the same request with `paymentMethod: "cod"`; anything else is a card order.
     const data = body.paymentMethod === "cod" ? await placeCodOrder(body, customer) : await startCardPayment(body, customer);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     if (error instanceof CheckoutError) {
-      return NextResponse.json(
-        { success: false, error: publicErrorMessage(error), reason: error.reason || undefined, details: error.details || undefined },
-        { status: error.status }
-      );
+      return fail(publicErrorMessage(error), error.status, { reason: error.reason || undefined, details: error.details || undefined });
     }
     console.error("Checkout payment failed", error);
-    return NextResponse.json({ success: false, error: "We couldn't place your order right now. Please try again." }, { status: 500 });
+    return fail("We couldn't place your order right now. Please try again.", 500);
   }
 }

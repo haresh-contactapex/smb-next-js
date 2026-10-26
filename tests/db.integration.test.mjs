@@ -57,6 +57,33 @@ describe("database", { skip: !url && "TEST_DATABASE_URL is not set" }, () => {
     assert.match(migrate("--all"), /Skipping docs\/media\/media-library-schema\.sql/);
   });
 
+  test("a table missing from a recorded file is created again by --all", async () => {
+    await db.sql`DROP TABLE footer_texts`;
+    const out = migrate("--all");
+    assert.match(out, /footer-texts-table-only\.sql is recorded as applied but table\(s\) are missing: footer_texts/);
+    assert.match(out, /Applying docs\/cms\/footer-texts-table-only\.sql/);
+    const [{ found }] = await db.sql`SELECT to_regclass('footer_texts') AS found`;
+    assert.ok(found, "footer_texts must exist again");
+  });
+
+  test("baseline does not record a file whose table is missing", async () => {
+    await db.sql`DROP TABLE footer_texts`;
+    await db.sql`DELETE FROM schema_migrations WHERE filename = 'docs/cms/footer-texts-table-only.sql'`;
+    assert.match(migrate("--all", "--baseline"), /NOT recording docs\/cms\/footer-texts-table-only\.sql: table\(s\) missing: footer_texts/);
+    const rows = await db.sql`SELECT 1 FROM schema_migrations WHERE filename = 'docs/cms/footer-texts-table-only.sql'`;
+    assert.equal(rows.length, 0);
+    assert.match(migrate("--all"), /Applying docs\/cms\/footer-texts-table-only\.sql/);
+  });
+
+  test("the settings and address tables the app reads exist after migrate --all", async () => {
+    for (const table of ["general_settings", "store_settings", "orders_settings", "addresses"]) {
+      const [{ found }] = await db.sql`SELECT to_regclass(${table}) AS found`;
+      assert.ok(found, `${table} is not created by scripts/migrations.mjs`);
+    }
+    const general = await import("@/lib/generalSettings");
+    assert.ok(await general.getGeneralSettings());
+  });
+
   test("a failed update rolls back and keeps the old variants and media", async () => {
     const sku = unique().slice(-8).toUpperCase();
     const handle = unique();
