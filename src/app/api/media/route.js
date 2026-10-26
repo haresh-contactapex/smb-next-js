@@ -1,5 +1,5 @@
 import { extname } from "path";
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { listMedia, createMedia, deleteMediaItems } from "@/lib/media";
 import { saveUpload, removeStoredFiles } from "@/lib/mediaStorage";
@@ -91,12 +91,12 @@ function isPdfFile(file) {
 // Returns an error response for an unacceptable PDF, or null when it's fine.
 async function pdfProblem(file) {
   if (file.size > CMS_MAX_PDF_SIZE_BYTES) {
-    return NextResponse.json({ success: false, error: "The PDF exceeds the 10MB limit" }, { status: 400 });
+    return fail("The PDF exceeds the 10MB limit", 400);
   }
   // A PDF starts with "%PDF-"; the browser-reported type alone is not trusted.
   const header = new Uint8Array(await file.slice(0, 5).arrayBuffer());
   if (String.fromCharCode(...header) !== "%PDF-") {
-    return NextResponse.json({ success: false, error: "That file is not a valid PDF" }, { status: 400 });
+    return fail("That file is not a valid PDF", 400);
   }
   return null;
 }
@@ -105,10 +105,7 @@ async function handleCmsPdfUpload(file) {
   const problem = await pdfProblem(file);
   if (problem) return problem;
   const { url } = await saveUpload(file, ".pdf");
-  return NextResponse.json(
-    { success: true, data: { id: null, fileName: file.name, url, mimeType: "application/pdf", kind: "pdf" } },
-    { status: 201 }
-  );
+  return ok({ id: null, fileName: file.name, url, mimeType: "application/pdf", kind: "pdf" }, 201);
 }
 
 // A PDF uploaded on the Media page is recorded in the library like an image.
@@ -122,37 +119,28 @@ async function handleLibraryPdfUpload(file) {
     mimeType: "application/pdf",
     sizeBytes: file.size,
   });
-  return NextResponse.json({ success: true, data: created }, { status: 201 });
+  return ok(created, 201);
 }
 
 async function handleProductUpload(file) {
   const kind = productMediaKind(file);
   if (!kind) {
-    return NextResponse.json(
-      { success: false, error: "Only JPG, PNG, WEBP, or GIF images, videos, .glb, or .usdz files are allowed" },
-      { status: 400 }
-    );
+    return fail("Only JPG, PNG, WEBP, or GIF images, videos, .glb, or .usdz files are allowed", 400);
   }
   const limit = kind === "image" ? PRODUCT_MAX_IMAGE_SIZE_BYTES : PRODUCT_MAX_OTHER_SIZE_BYTES;
   if (file.size > limit) {
-    return NextResponse.json(
-      { success: false, error: `${file.name} exceeds the ${limit / (1024 * 1024)}MB limit` },
-      { status: 400 }
-    );
+    return fail(`${file.name} exceeds the ${limit / (1024 * 1024)}MB limit`, 400);
   }
 
   const contentType = productContentType(file, kind);
   const extension = extensionFor(file);
   if (!extension) {
-    return NextResponse.json({ success: false, error: "That file type could not be identified" }, { status: 400 });
+    return fail("That file type could not be identified", 400);
   }
   const { url } = await saveUpload(file, extension);
 
   if (kind !== "image") {
-    return NextResponse.json(
-      { success: true, data: { id: null, fileName: file.name, url, mimeType: contentType, kind } },
-      { status: 201 }
-    );
+    return ok({ id: null, fileName: file.name, url, mimeType: contentType, kind }, 201);
   }
   const created = await createMedia({
     fileName: file.name,
@@ -160,7 +148,7 @@ async function handleProductUpload(file) {
     mimeType: file.type,
     sizeBytes: file.size,
   });
-  return NextResponse.json({ success: true, data: { ...created, kind } }, { status: 201 });
+  return ok({ ...created, kind }, 201);
 }
 
 export async function GET() {
@@ -169,9 +157,9 @@ export async function GET() {
 
   try {
     const data = await listMedia();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -186,7 +174,7 @@ export async function POST(request) {
     // upload needs media or settings rights.
     if (purpose === "avatar") {
       if (!(await getCurrentStaffUser())) {
-        return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+        return fail("Not signed in.", 401);
       }
     } else if (purpose === "product") {
       const auth = await requireStaffPermission(PRODUCT_UPLOAD_PERMISSIONS);
@@ -205,7 +193,7 @@ export async function POST(request) {
     const file = formData.get("file");
 
     if (!file || typeof file === "string") {
-      return NextResponse.json({ success: false, error: "No file provided" }, { status: 400 });
+      return fail("No file provided", 400);
     }
     if (purpose === "product") return handleProductUpload(file);
     if (purpose === "cms" && file.type === "application/pdf") return handleCmsPdfUpload(file);
@@ -213,18 +201,12 @@ export async function POST(request) {
     // purposes (avatar, category, settings logo/favicon) are image-only.
     if (!purpose && isPdfFile(file)) return handleLibraryPdfUpload(file);
     if (!ALLOWED_TYPES.has(file.type)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: purpose
+      return fail(purpose
             ? "Only JPEG, PNG, WEBP, or GIF images are allowed"
-            : "Only JPEG, PNG, WEBP, or GIF images, or PDF files, are allowed",
-        },
-        { status: 400 }
-      );
+            : "Only JPEG, PNG, WEBP, or GIF images, or PDF files, are allowed", 400);
     }
     if (file.size > MAX_SIZE_BYTES) {
-      return NextResponse.json({ success: false, error: "File exceeds the 10MB limit" }, { status: 400 });
+      return fail("File exceeds the 10MB limit", 400);
     }
 
     const { url } = await saveUpload(file, extensionFor(file));
@@ -236,9 +218,9 @@ export async function POST(request) {
       sizeBytes: file.size,
     });
 
-    return NextResponse.json({ success: true, data: created }, { status: 201 });
+    return ok(created, 201);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -249,13 +231,13 @@ export async function DELETE(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const { ids, error } = await readBulkIds(request, "file");
-  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+  if (error) return fail(error, 400);
 
   try {
     const urls = await deleteMediaItems(ids);
     if (urls.length > 0) await removeStoredFiles(urls);
-    return NextResponse.json({ success: true, data: { deleted: urls.length } });
+    return ok({ deleted: urls.length });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

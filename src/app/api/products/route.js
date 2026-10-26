@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { listProducts, createProduct, searchProducts, deleteProducts } from "@/lib/products";
-import { readJsonBody } from "@/lib/api";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { readBulkIds } from "@/lib/bulkIds";
 import { logAdminActivity } from "@/lib/notifications";
 
@@ -17,9 +16,9 @@ export async function GET(request) {
 
   try {
     const data = q ? await searchProducts(q) : await listProducts();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -41,9 +40,9 @@ export async function POST(request) {
       title: `Product "${String(payload?.name || payload?.title || "Untitled").slice(0, 80)}" created`,
       severity: "success",
     });
-    return NextResponse.json({ success: true, data: { id } }, { status: 201 });
+    return ok({ id }, 201);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status || 500 });
+    return fail(publicErrorMessage(error), error.status || 500);
   }
 }
 
@@ -53,7 +52,7 @@ export async function DELETE(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const { ids, error } = await readBulkIds(request, "product", "delete", { max: MAX_BULK_DELETE });
-  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+  if (error) return fail(error, 400);
 
   try {
     const deleted = await deleteProducts(ids);
@@ -65,8 +64,8 @@ export async function DELETE(request) {
       title: `${deleted} product${deleted === 1 ? "" : "s"} deleted`,
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { deleted } });
+    return ok({ deleted });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { cancelOrders } from "@/lib/orders";
@@ -15,7 +15,7 @@ export async function POST(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const { ids, error } = await readBulkIds(request, "order", "cancel");
-  if (error) return NextResponse.json({ success: false, error }, { status: 400 });
+  if (error) return fail(error, 400);
 
   try {
     const cancelled = await cancelOrders(ids);
@@ -33,15 +33,12 @@ export async function POST(request) {
       // Queued to run after the response (see orderEmails.js), so many orders don't hold it up.
       await sendOrderStatusEmail(order.id, "cancelled");
     }
-    return NextResponse.json({
-      success: true,
-      data: {
+    return ok({
         cancelled: cancelled.length,
         skipped: ids.length - cancelled.length,
         paid: cancelled.filter((order) => order.paymentStatus === "Paid").length,
-      },
-    });
+      });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

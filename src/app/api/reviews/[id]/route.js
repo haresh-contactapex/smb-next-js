@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission } from "@/lib/permissions";
@@ -7,7 +7,7 @@ import { STATUS_LABELS } from "@/lib/reviewFields";
 import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
-  return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status || 500 });
+  return fail(publicErrorMessage(error), error.status || 500);
 }
 
 export async function GET(request, { params }) {
@@ -18,9 +18,9 @@ export async function GET(request, { params }) {
     const { id } = await params;
     const review = await getReviewById(id);
     if (!review) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return fail("Not found", 404);
     }
-    return NextResponse.json({ success: true, data: review });
+    return ok(review);
   } catch (error) {
     return errorResponse(error);
   }
@@ -41,7 +41,7 @@ export async function PUT(request, { params }) {
       entityId: id,
       title: `Review "${String(payload.title || "").trim().slice(0, 80) || "untitled"}" updated`,
     });
-    return NextResponse.json({ success: true, data: { id } });
+    return ok({ id });
   } catch (error) {
     return errorResponse(error);
   }
@@ -64,7 +64,7 @@ export async function PATCH(request, { params }) {
       title: `Review marked ${STATUS_LABELS[status].toLowerCase()}`,
       severity: status === "REJECTED" ? "warning" : "info",
     });
-    return NextResponse.json({ success: true, data: { id, status } });
+    return ok({ id, status });
   } catch (error) {
     return errorResponse(error);
   }
@@ -85,7 +85,7 @@ export async function DELETE(request, { params }) {
       title: "Review deleted",
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { id } });
+    return ok({ id });
   } catch (error) {
     return errorResponse(error);
   }

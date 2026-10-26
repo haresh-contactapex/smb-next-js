@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
 
   try {
     const invoice = await createOrderInvoicePdf(params.id);
-    if (!invoice) return NextResponse.json({ success: false, error: "Order not found." }, { status: 404 });
+    if (!invoice) return fail("Order not found.", 404);
 
     return new NextResponse(invoice.pdf, {
       headers: {
@@ -22,6 +22,6 @@ export async function GET(request, { params }) {
     });
   } catch (error) {
     console.error("Invoice could not be created", error);
-    return NextResponse.json({ success: false, error: "The invoice couldn't be created. Try again." }, { status: 500 });
+    return fail("The invoice couldn't be created. Try again.", 500);
   }
 }

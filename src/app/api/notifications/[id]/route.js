@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { requireNotificationViewer, notificationErrorResponse } from "@/lib/auth/notificationViewer";
 import { setNotificationRead, clearNotification } from "@/lib/notifications";
 
@@ -11,10 +11,10 @@ export async function PATCH(request, { params }) {
     const { id } = await params;
     const body = await request.json().catch(() => null);
     if (!body || typeof body.read !== "boolean") {
-      return NextResponse.json({ success: false, error: "Send { read: true | false }." }, { status: 400 });
+      return fail("Send { read: true | false }.", 400);
     }
     const data = await setNotificationRead(auth.viewer, id, body.read);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return notificationErrorResponse(error);
   }
@@ -27,7 +27,7 @@ export async function DELETE(request, { params }) {
   try {
     const { id } = await params;
     const data = await clearNotification(auth.viewer, id);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return notificationErrorResponse(error);
   }

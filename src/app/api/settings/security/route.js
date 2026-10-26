@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -17,9 +17,9 @@ export async function GET() {
 
   try {
     const data = await getSecuritySettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -28,7 +28,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       requireTwoFactorAuth: Boolean(payload.requireTwoFactorAuth),
@@ -41,37 +43,25 @@ export async function PUT(request) {
     };
 
     if (!settings.sessionTimeoutMinutes) {
-      return NextResponse.json({ success: false, error: "Session timeout is required." }, { status: 400 });
+      return fail("Session timeout is required.", 400);
     }
     if (!isValidSessionTimeoutMinutes(settings.sessionTimeoutMinutes)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a whole number of 1 or more for the session timeout." },
-        { status: 400 }
-      );
+      return fail("Enter a whole number of 1 or more for the session timeout.", 400);
     }
     if (!settings.passwordExpiryDays) {
-      return NextResponse.json({ success: false, error: "Password expiry is required." }, { status: 400 });
+      return fail("Password expiry is required.", 400);
     }
     if (!isValidPasswordExpiryDays(settings.passwordExpiryDays)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a whole number of 1 or more for the password expiry." },
-        { status: 400 }
-      );
+      return fail("Enter a whole number of 1 or more for the password expiry.", 400);
     }
     if (!settings.maxLoginAttempts) {
-      return NextResponse.json({ success: false, error: "Max login attempts is required." }, { status: 400 });
+      return fail("Max login attempts is required.", 400);
     }
     if (!isValidMaxLoginAttempts(settings.maxLoginAttempts)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a whole number of 1 or more for the max login attempts." },
-        { status: 400 }
-      );
+      return fail("Enter a whole number of 1 or more for the max login attempts.", 400);
     }
     if (settings.ipAllowlist && !isValidIpAllowlist(settings.ipAllowlist)) {
-      return NextResponse.json(
-        { success: false, error: "Enter one valid IP address or CIDR range per line." },
-        { status: 400 }
-      );
+      return fail("Enter one valid IP address or CIDR range per line.", 400);
     }
 
     const updated = await updateSecuritySettings(settings);
@@ -95,8 +85,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

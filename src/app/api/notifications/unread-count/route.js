@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { ok } from "@/lib/api";
 import { requireNotificationViewer, notificationErrorResponse } from "@/lib/auth/notificationViewer";
 import { getUnreadCount } from "@/lib/notifications";
 
@@ -8,7 +8,7 @@ export async function GET() {
 
   try {
     const unreadCount = await getUnreadCount(auth.viewer);
-    return NextResponse.json({ success: true, data: { unreadCount } });
+    return ok({ unreadCount });
   } catch (error) {
     return notificationErrorResponse(error);
   }

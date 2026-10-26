@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { searchOrders } from "@/lib/orders";
@@ -10,12 +10,12 @@ export async function GET(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   const q = new URL(request.url).searchParams.get("q")?.trim();
-  if (!q) return NextResponse.json({ success: true, data: [] });
+  if (!q) return ok([]);
 
   try {
     const data = await searchOrders(q);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

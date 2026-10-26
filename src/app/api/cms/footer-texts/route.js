@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { logAdminActivity } from "@/lib/notifications";
 import { FooterTextError, listFooterTexts, saveFooterTexts } from "@/lib/footerTexts";
@@ -9,13 +9,10 @@ import { invalidRequest, readJsonObject } from "@/lib/cmsApi";
 
 function failure(error) {
   if (error instanceof FooterTextError) {
-    return NextResponse.json(
-      { success: false, error: error.message, errors: error.errors || undefined },
-      { status: error.status }
-    );
+    return fail(error.message, error.status, { errors: error.errors || undefined });
   }
   console.error("Footer text request failed", error);
-  return NextResponse.json({ success: false, error: "That couldn't be done right now. Try again." }, { status: 500 });
+  return fail("That couldn't be done right now. Try again.", 500);
 }
 
 export async function GET() {
@@ -23,7 +20,7 @@ export async function GET() {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    return NextResponse.json({ success: true, data: await listFooterTexts() });
+    return ok(await listFooterTexts());
   } catch (error) {
     return failure(error);
   }
@@ -48,7 +45,7 @@ export async function PUT(request) {
       description: `saved the footer text for ${entries.length - 1} page${entries.length === 2 ? "" : "s"} and the default.`,
       severity: "info",
     });
-    return NextResponse.json({ success: true, data: entries });
+    return ok(entries);
   } catch (error) {
     return failure(error);
   }

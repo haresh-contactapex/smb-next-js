@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -12,9 +12,9 @@ export async function GET() {
 
   try {
     const data = await getCheckoutSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -23,7 +23,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       allowGuestCheckout: Boolean(payload.allowGuestCheckout),
@@ -35,16 +37,10 @@ export async function PUT(request) {
     };
 
     if (!isValidMinimumOrderAmount(settings.minimumOrderAmount)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a minimum order amount of 0 or more with up to two decimals." },
-        { status: 400 }
-      );
+      return fail("Enter a minimum order amount of 0 or more with up to two decimals.", 400);
     }
     if (!isValidReminderDelayHours(settings.reminderDelayHours)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a whole number of hours, 1 or more, for the reminder delay." },
-        { status: 400 }
-      );
+      return fail("Enter a whole number of hours, 1 or more, for the reminder delay.", 400);
     }
 
     const updated = await updateCheckoutSettings({
@@ -63,8 +59,8 @@ export async function PUT(request) {
       severity: "warning",
       metadata: { fields: Object.keys(settings) },
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

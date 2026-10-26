@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { getStaffUserById, updateStaffUser, deleteStaffUser, StaffUserError } from "@/lib/staffUsers";
@@ -6,14 +6,14 @@ import { logAdminActivity } from "@/lib/notifications";
 
 function errorResponse(error) {
   if (error instanceof StaffUserError) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error), field: error.field }, { status: error.status });
+    return fail(publicErrorMessage(error), error.status, { field: error.field });
   }
   console.error("Users API error", error);
-  return NextResponse.json({ success: false, error: "Something went wrong. Try again." }, { status: 500 });
+  return fail("Something went wrong. Try again.", 500);
 }
 
 function denied(auth) {
-  return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  return fail(auth.error, auth.status);
 }
 
 export async function GET(request, { params }) {
@@ -23,8 +23,8 @@ export async function GET(request, { params }) {
   try {
     const { id } = await params;
     const data = await getStaffUserById(id);
-    if (!data) return NextResponse.json({ success: false, error: "User not found." }, { status: 404 });
-    return NextResponse.json({ success: true, data });
+    if (!data) return fail("User not found.", 404);
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -37,7 +37,7 @@ export async function PUT(request, { params }) {
   try {
     const { id } = await params;
     const payload = await request.json().catch(() => null);
-    if (!payload) return NextResponse.json({ success: false, error: "Invalid request body." }, { status: 400 });
+    if (!payload) return fail("Invalid request body.", 400);
     const data = await updateStaffUser(id, payload, auth.user, auth.role);
     await logAdminActivity({
       actor: auth.user,
@@ -59,7 +59,7 @@ export async function PUT(request, { params }) {
         metadata: { userId: id, role: String(payload.role) },
       });
     }
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }
@@ -80,7 +80,7 @@ export async function DELETE(request, { params }) {
       title: "Admin user deleted",
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
     return errorResponse(error);
   }

@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server";
-import { fail } from "@/lib/api";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -14,11 +13,11 @@ export async function GET(request, { params }) {
   try {
     const customer = await getCustomerRecordById(params.id);
     if (!customer) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return fail("Not found", 404);
     }
-    return NextResponse.json({ success: true, data: customer });
+    return ok(customer);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -28,7 +27,9 @@ export async function PUT(request, { params }) {
   if (!isUuid(params.id)) return fail("Not found", 404);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
     const id = await updateCustomerRecord(params.id, payload);
     await logAdminActivity({
       actor: auth.user,
@@ -37,9 +38,9 @@ export async function PUT(request, { params }) {
       entityId: id,
       title: `Customer "${String(payload?.name || [payload?.firstName, payload?.lastName].filter(Boolean).join(" ") || payload?.email || "").slice(0, 80) || "untitled"}" updated`,
     });
-    return NextResponse.json({ success: true, data: { id } });
+    return ok({ id });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 400 });
+    return fail(publicErrorMessage(error), 400);
   }
 }
 
@@ -58,8 +59,8 @@ export async function DELETE(request, { params }) {
       title: "Customer deleted",
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { id: params.id } });
+    return ok({ id: params.id });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { duplicateAdminRole, AdminRoleError } from "@/lib/adminRoles";
@@ -7,7 +7,7 @@ import { logAdminActivity } from "@/lib/notifications";
 
 export async function POST(request, { params }) {
   const auth = await requireStaffPermission(MANAGE_ROLES_PERMISSION);
-  if (!auth.ok) return NextResponse.json({ success: false, error: auth.error }, { status: auth.status });
+  if (!auth.ok) return fail(auth.error, auth.status);
 
   try {
     const { id } = await params;
@@ -20,9 +20,9 @@ export async function POST(request, { params }) {
       title: `Role "${data?.name}" created (duplicate)`,
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data }, { status: 201 });
+    return ok(data, 201);
   } catch (error) {
     const status = error instanceof AdminRoleError ? error.status : 500;
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status });
+    return fail(publicErrorMessage(error), status);
   }
 }

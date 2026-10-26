@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -18,9 +18,9 @@ export async function GET() {
 
   try {
     const data = await getIntegrationsSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -29,7 +29,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       googleAnalyticsEnabled: Boolean(payload.googleAnalyticsEnabled),
@@ -44,65 +46,38 @@ export async function PUT(request) {
     };
 
     if (settings.googleAnalyticsEnabled && !settings.googleAnalyticsId) {
-      return NextResponse.json(
-        { success: false, error: "Enter your Measurement ID to enable Google Analytics." },
-        { status: 400 }
-      );
+      return fail("Enter your Measurement ID to enable Google Analytics.", 400);
     }
     if (settings.googleAnalyticsId && !isValidGoogleAnalyticsId(settings.googleAnalyticsId)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a valid Measurement ID, e.g. G-XXXXXXXXXX." },
-        { status: 400 }
-      );
+      return fail("Enter a valid Measurement ID, e.g. G-XXXXXXXXXX.", 400);
     }
 
     if (settings.metaPixelEnabled && !settings.metaPixelId) {
-      return NextResponse.json(
-        { success: false, error: "Enter your Pixel ID to enable Meta / Facebook Pixel." },
-        { status: 400 }
-      );
+      return fail("Enter your Pixel ID to enable Meta / Facebook Pixel.", 400);
     }
     if (settings.metaPixelId && !isValidMetaPixelId(settings.metaPixelId)) {
-      return NextResponse.json({ success: false, error: "Enter a valid numeric Pixel ID." }, { status: 400 });
+      return fail("Enter a valid numeric Pixel ID.", 400);
     }
 
     if (settings.mailchimpEnabled && !settings.mailchimpApiKey) {
-      return NextResponse.json(
-        { success: false, error: "Enter your API key to enable Mailchimp." },
-        { status: 400 }
-      );
+      return fail("Enter your API key to enable Mailchimp.", 400);
     }
     if (settings.mailchimpApiKey && !isValidMailchimpApiKey(settings.mailchimpApiKey)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a valid Mailchimp API key, e.g. {32 hex chars}-us21." },
-        { status: 400 }
-      );
+      return fail("Enter a valid Mailchimp API key, e.g. {32 hex chars}-us21.", 400);
     }
 
     if (settings.googleRecaptchaEnabled && !settings.googleRecaptchaSiteKey) {
-      return NextResponse.json(
-        { success: false, error: "Enter your Site Key to enable Google reCAPTCHA." },
-        { status: 400 }
-      );
+      return fail("Enter your Site Key to enable Google reCAPTCHA.", 400);
     }
     if (settings.googleRecaptchaSiteKey && !isValidGoogleRecaptchaSiteKey(settings.googleRecaptchaSiteKey)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a valid reCAPTCHA site key." },
-        { status: 400 }
-      );
+      return fail("Enter a valid reCAPTCHA site key.", 400);
     }
 
     if (settings.googleRecaptchaEnabled && !settings.googleRecaptchaSecretKey) {
-      return NextResponse.json(
-        { success: false, error: "Enter your Secret Key to enable Google reCAPTCHA." },
-        { status: 400 }
-      );
+      return fail("Enter your Secret Key to enable Google reCAPTCHA.", 400);
     }
     if (settings.googleRecaptchaSecretKey && !isValidGoogleRecaptchaSecretKey(settings.googleRecaptchaSecretKey)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a valid reCAPTCHA secret key." },
-        { status: 400 }
-      );
+      return fail("Enter a valid reCAPTCHA secret key.", 400);
     }
 
     const updated = await updateIntegrationsSettings(settings);
@@ -126,8 +101,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

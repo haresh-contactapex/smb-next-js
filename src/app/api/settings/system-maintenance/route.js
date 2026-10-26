@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -12,9 +12,9 @@ export async function GET() {
 
   try {
     const data = await getSystemMaintenanceSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -23,7 +23,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       maintenanceModeEnabled: Boolean(payload.maintenanceModeEnabled),
@@ -33,7 +35,7 @@ export async function PUT(request) {
 
     const result = validateSystemMaintenanceSettingsForm(settings);
     if (!result.valid) {
-      return NextResponse.json({ success: false, error: result.message }, { status: 400 });
+      return fail(result.message, 400);
     }
 
     const updated = await updateSystemMaintenanceSettings(settings);
@@ -57,8 +59,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

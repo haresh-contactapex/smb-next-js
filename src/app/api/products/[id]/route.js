@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
 import { isUuid } from "@/lib/shared/ids";
 import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { getProductById, updateProduct, deleteProduct } from "@/lib/products";
-import { fail, readJsonBody } from "@/lib/api";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { logAdminActivity } from "@/lib/notifications";
 
 const MAX_PRODUCT_BODY_BYTES = 5 * 1024 * 1024;
@@ -16,11 +15,11 @@ export async function GET(request, { params }) {
   try {
     const product = await getProductById(params.id);
     if (!product) {
-      return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
+      return fail("Not found", 404);
     }
-    return NextResponse.json({ success: true, data: product });
+    return ok(product);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -42,9 +41,9 @@ export async function PUT(request, { params }) {
       entityId: id,
       title: `Product "${String(payload?.name || payload?.title || params.id).slice(0, 80)}" updated`,
     });
-    return NextResponse.json({ success: true, data: { id } });
+    return ok({ id });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: error.status || 500 });
+    return fail(publicErrorMessage(error), error.status || 500);
   }
 }
 
@@ -63,8 +62,8 @@ export async function DELETE(request, { params }) {
       title: "Product deleted",
       severity: "warning",
     });
-    return NextResponse.json({ success: true, data: { id: params.id } });
+    return ok({ id: params.id });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

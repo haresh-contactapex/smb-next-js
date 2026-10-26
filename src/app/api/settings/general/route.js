@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { logAdminActivity } from "@/lib/notifications";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
@@ -14,9 +14,9 @@ export async function GET() {
 
   try {
     const data = await getGeneralSettings();
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
@@ -25,7 +25,9 @@ export async function PUT(request) {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
 
     const settings = {
       storeName: String(payload.storeName || "").trim(),
@@ -44,28 +46,25 @@ export async function PUT(request) {
     };
 
     if (!settings.storeName) {
-      return NextResponse.json({ success: false, error: "Store name is required." }, { status: 400 });
+      return fail("Store name is required.", 400);
     }
     if (!settings.logoUrl) {
-      return NextResponse.json({ success: false, error: "A store logo is required." }, { status: 400 });
+      return fail("A store logo is required.", 400);
     }
     if (!settings.faviconUrl) {
-      return NextResponse.json({ success: false, error: "A favicon is required." }, { status: 400 });
+      return fail("A favicon is required.", 400);
     }
     if (!isValidEmail(settings.storeEmail)) {
-      return NextResponse.json({ success: false, error: "Enter a valid store email address." }, { status: 400 });
+      return fail("Enter a valid store email address.", 400);
     }
     if (!settings.phone) {
-      return NextResponse.json({ success: false, error: "Phone number is required." }, { status: 400 });
+      return fail("Phone number is required.", 400);
     }
     if (!isValidUsPhone(settings.phone)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a valid 10-digit US phone number." },
-        { status: 400 }
-      );
+      return fail("Enter a valid 10-digit US phone number.", 400);
     }
     if (!settings.address) {
-      return NextResponse.json({ success: false, error: "Address is required." }, { status: 400 });
+      return fail("Address is required.", 400);
     }
 
     const hierarchyResult = validateLocationHierarchy({
@@ -75,7 +74,7 @@ export async function PUT(request) {
       postalCode: settings.zip,
     });
     if (!hierarchyResult.valid) {
-      return NextResponse.json({ success: false, error: hierarchyResult.message }, { status: 400 });
+      return fail(hierarchyResult.message, 400);
     }
 
     const updated = await updateGeneralSettings(settings);
@@ -99,8 +98,8 @@ export async function PUT(request) {
       metadata: { fields: Object.keys(settings) },
 
     });
-    return NextResponse.json({ success: true, data: updated });
+    return ok(updated);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }

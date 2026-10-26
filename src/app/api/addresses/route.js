@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { fail, ok, readJsonBody } from "@/lib/api";
 import { publicErrorMessage } from "@/lib/publicError";
 import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { getAddressesByUserId, upsertAddress, deleteAddress } from "@/lib/addresses";
@@ -11,28 +12,30 @@ const VALID_TYPES = new Set(["billing", "shipping"]);
 export async function GET() {
   const staffUser = await getCurrentStaffUser();
   if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+    return fail("Not signed in.", 401);
   }
 
   try {
     const data = await getAddressesByUserId(staffUser.id);
-    return NextResponse.json({ success: true, data });
+    return ok(data);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
 export async function PUT(request) {
   const staffUser = await getCurrentStaffUser();
   if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+    return fail("Not signed in.", 401);
   }
 
   try {
-    const payload = await request.json();
+    const body = await readJsonBody(request);
+    if (body.response) return body.response;
+    const payload = body.payload;
     const type = String(payload.type || "").toLowerCase();
     if (!VALID_TYPES.has(type)) {
-      return NextResponse.json({ success: false, error: "Address type must be billing or shipping." }, { status: 400 });
+      return fail("Address type must be billing or shipping.", 400);
     }
 
     const address = {
@@ -50,26 +53,17 @@ export async function PUT(request) {
     };
 
     if (!address.fullName || !address.addressLine1) {
-      return NextResponse.json(
-        { success: false, error: "Full name and street address are required." },
-        { status: 400 }
-      );
+      return fail("Full name and street address are required.", 400);
     }
     if (!isValidUsPhone(address.phone)) {
-      return NextResponse.json(
-        { success: false, error: "Enter a valid 10-digit US phone number." },
-        { status: 400 }
-      );
+      return fail("Enter a valid 10-digit US phone number.", 400);
     }
 
     if (!address.country) {
-      return NextResponse.json({ success: false, error: "Select a country.", field: "country" }, { status: 400 });
+      return fail("Select a country.", 400, { field: "country" });
     }
     if (!address.state || !address.city) {
-      return NextResponse.json(
-        { success: false, error: "State and city are required.", field: !address.state ? "state" : "city" },
-        { status: 400 }
-      );
+      return fail("State and city are required.", 400, { field: !address.state ? "state" : "city" });
     }
 
     // Only a United States address is checked (state, city and ZIP must agree and the
@@ -83,7 +77,7 @@ export async function PUT(request) {
         postalCode: address.zip,
       });
       if (!location.valid) {
-        return NextResponse.json({ success: false, error: location.message, field: location.field }, { status: 400 });
+        return fail(location.message, 400, { field: location.field });
       }
       const usLocation = validateUsLocation({
         country: address.country,
@@ -92,34 +86,34 @@ export async function PUT(request) {
         postalCode: address.zip,
       });
       if (!usLocation.valid) {
-        return NextResponse.json({ success: false, error: usLocation.message, field: usLocation.field }, { status: 400 });
+        return fail(usLocation.message, 400, { field: usLocation.field });
       }
       address.state = location.state;
       address.city = usLocation.city || location.city;
     }
 
     const saved = await upsertAddress(staffUser.id, type, address);
-    return NextResponse.json({ success: true, data: saved });
+    return ok(saved);
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
 
 export async function DELETE(request) {
   const staffUser = await getCurrentStaffUser();
   if (!staffUser) {
-    return NextResponse.json({ success: false, error: "Not signed in." }, { status: 401 });
+    return fail("Not signed in.", 401);
   }
 
   const type = new URL(request.url).searchParams.get("type")?.toLowerCase();
   if (!VALID_TYPES.has(type)) {
-    return NextResponse.json({ success: false, error: "Address type must be billing or shipping." }, { status: 400 });
+    return fail("Address type must be billing or shipping.", 400);
   }
 
   try {
     await deleteAddress(staffUser.id, type);
     return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json({ success: false, error: publicErrorMessage(error) }, { status: 500 });
+    return fail(publicErrorMessage(error), 500);
   }
 }
