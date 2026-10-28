@@ -162,15 +162,16 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
 
       {hasAbout && (
         <Section title="About Item">
-          <dl className="text-[16px] text-[#555555] space-y-1.5">
+          {/* Alternating row shading; the negative margin keeps the text where it was. */}
+          <dl className="-mx-3 text-[16px] text-[#555555]">
             {sku && (
-              <div>
+              <div className="rounded-md px-3 py-1.5 odd:bg-[#F8F8F8]">
                 <dt className="inline">SKU: </dt>
                 <dd className="inline text-gray-800 font-medium">{sku}</dd>
               </div>
             )}
             {product.attributes.map((attribute, index) => (
-              <div key={`${attribute.label}-${index}`}>
+              <div key={`${attribute.label}-${index}`} className="rounded-md px-3 py-1.5 odd:bg-[#F8F8F8]">
                 <dt className="inline">{attribute.label}: </dt>
                 <dd className="inline text-gray-800 font-medium">{attribute.value}</dd>
               </div>
