@@ -35,7 +35,103 @@ export default function ReviewsTable({ reviews, onSetStatus, onDelete, busyId, s
   }
 
   return (
-    <div className="overflow-x-auto custom-scroll -mx-1">
+    <>
+    <div className="md:hidden space-y-3">
+      {reviews.map((review) => {
+        const isBusy = review.id === busyId;
+        const isSelected = selectable && selection.has(review.id);
+        const rows = [
+          ["Review", <span key="r"><span className="block font-medium text-slate-700 dark:text-slate-200">{review.title}</span><span className="block text-slate-400">{review.content}</span></span>],
+          ["Product", review.productTitle || "—"],
+          ["Reviewer", <span key="u"><span className="block">{review.displayName}</span><span className="block text-[11px] text-slate-400 break-all system-field">{review.email}</span></span>],
+          ["Date", formatReviewDate(review.createdAt)],
+          [
+            "Status",
+            <span key="s" className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${STATUS_BADGE_CLASSES[review.status]}`}>
+              {STATUS_LABELS[review.status] || review.status}
+            </span>,
+          ],
+        ];
+        return (
+          <div
+            key={review.id}
+            className={`rounded-xl border border-slate-100 dark:border-white/10 p-3 shadow-card ${isSelected ? "bg-primary-50/60 dark:bg-white/5" : "bg-white dark:bg-darksurface"}`}
+          >
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-2 min-w-0">
+                {selectable && (
+                  <SelectCheckbox
+                    checked={isSelected}
+                    onChange={() => selection.toggle(review.id)}
+                    label={`Select ${review.title}`}
+                  />
+                )}
+                <StarRating rating={review.rating} />
+              </div>
+              <div className="inline-flex items-center gap-0.5">
+                <Can permission="reviews.approve">
+                  {review.status !== "APPROVED" && (
+                    <button
+                      type="button"
+                      title="Approve review"
+                      aria-label={`Approve review "${review.title}"`}
+                      onClick={() => onSetStatus?.(review, "APPROVED")}
+                      disabled={isBusy}
+                      className={`${ACTION_BUTTON} hover:bg-green-50 hover:text-success dark:hover:bg-green-500/10`}
+                    >
+                      <Icon name="check-circle" className="w-4 h-4" />
+                    </button>
+                  )}
+                  {review.status !== "REJECTED" && (
+                    <button
+                      type="button"
+                      title="Reject review"
+                      aria-label={`Reject review "${review.title}"`}
+                      onClick={() => onSetStatus?.(review, "REJECTED")}
+                      disabled={isBusy}
+                      className={`${ACTION_BUTTON} hover:bg-amber-50 hover:text-warning dark:hover:bg-amber-500/10`}
+                    >
+                      <Icon name="x-circle" className="w-4 h-4" />
+                    </button>
+                  )}
+                </Can>
+                <Can permission="reviews.edit">
+                  <Link
+                    href={`/admin/edit-review/${review.id}`}
+                    title="Edit review"
+                    aria-label={`Edit review "${review.title}"`}
+                    className={`${ACTION_BUTTON} hover:bg-slate-100 dark:hover:bg-white/5`}
+                  >
+                    <Icon name="edit-2" className="w-4 h-4" />
+                  </Link>
+                </Can>
+                <Can permission="reviews.delete">
+                  <button
+                    type="button"
+                    title="Delete review"
+                    aria-label={`Delete review "${review.title}"`}
+                    onClick={() => onDelete?.(review)}
+                    disabled={isBusy}
+                    className={`${ACTION_BUTTON} hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10`}
+                  >
+                    <Icon name="trash-2" className="w-4 h-4" />
+                  </button>
+                </Can>
+              </div>
+            </div>
+            <dl className="divide-y divide-slate-100 dark:divide-white/5 text-xs">
+              {rows.map(([label, value]) => (
+                <div key={label} className="flex items-start justify-between gap-3 py-2">
+                  <dt className="text-slate-400 shrink-0">{label}</dt>
+                  <dd className="text-right text-slate-500 dark:text-slate-400 min-w-0">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        );
+      })}
+    </div>
+    <div className="hidden md:block overflow-x-auto custom-scroll -mx-1">
       <table className="w-full text-sm min-w-[1040px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
@@ -157,5 +253,6 @@ export default function ReviewsTable({ reviews, onSetStatus, onDelete, busyId, s
         </tbody>
       </table>
     </div>
+    </>
   );
 }
