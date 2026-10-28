@@ -59,8 +59,8 @@ export default function CartPageLine({ item, product, loading = false, onVariant
   );
 
   return (
-    <li className="flex gap-4 py-8 first:pt-0 sm:gap-8">
-      <div className="w-[104px] flex-shrink-0 sm:w-[180px]">
+    <li className="flex flex-col gap-5 py-8 first:pt-0 sm:flex-row sm:gap-8">
+      <div className="w-full flex-shrink-0 sm:w-[180px]">
         {item.handle ? (
           <Link href={`/products/${item.handle}`} aria-label={item.title} tabIndex={-1}>
             {image}
@@ -70,7 +70,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
         )}
       </div>
 
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 sm:flex-1">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
             <h2 className="break-words text-[18px] font-bold uppercase leading-tight tracking-tight text-[#333333] sm:text-[26px]">

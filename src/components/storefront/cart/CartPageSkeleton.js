@@ -7,11 +7,11 @@ function Bar({ className = "" }) {
 
 function LineSkeleton() {
   return (
-    <li className="flex gap-4 py-8 first:pt-0 sm:gap-8">
-      <div className="w-[104px] flex-shrink-0 sm:w-[180px]">
+    <li className="flex flex-col gap-5 py-8 first:pt-0 sm:flex-row sm:gap-8">
+      <div className="w-full flex-shrink-0 sm:w-[180px]">
         <div className="shimmer aspect-square w-full rounded" />
       </div>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-0 sm:flex-1">
         <Bar className="h-5 w-4/5 sm:h-7" />
         <Bar className="mt-3 h-4 w-28 sm:h-5" />
         <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4 sm:mt-7">
