@@ -73,7 +73,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="text-[18px] font-bold uppercase leading-tight tracking-tight text-[#333333] sm:text-[26px]">
+            <h2 className="break-words text-[18px] font-bold uppercase leading-tight tracking-tight text-[#333333] sm:text-[26px]">
               {item.handle ? (
                 <Link href={`/products/${item.handle}`} className="transition-colors hover:text-[#ef9822]">
                   {item.title}

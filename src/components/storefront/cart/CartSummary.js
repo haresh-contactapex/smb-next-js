@@ -11,7 +11,7 @@ import { round2 } from "./cartHelpers";
 function Row({ label, children }) {
   return (
     <div className="flex items-baseline justify-between gap-4 text-[13px] uppercase text-[#555555]">
-      <dt>{label}</dt>
+      <dt className="min-w-0 break-words">{label}</dt>
       <dd className="flex-shrink-0 text-right normal-case">{children}</dd>
     </div>
   );
@@ -30,12 +30,12 @@ export default function CartSummary({ pricesIncludeTax = null }) {
   return (
     <aside
       aria-label="Order summary"
-      className="rounded bg-[#F8F8F8] p-6 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.18)] sm:p-8 lg:sticky lg:top-28"
+      className="min-w-0 rounded bg-[#F8F8F8] p-6 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.18)] sm:p-8 lg:sticky lg:top-28"
     >
       <ul className="space-y-3">
         {items.map((item) => (
           <li key={item.key} className="flex items-baseline justify-between gap-4 text-[13px] uppercase text-[#555555]">
-            <span className="min-w-0">
+            <span className="min-w-0 break-words">
               {item.title}
               {item.quantity > 1 && <span className="ml-1.5 text-gray-400">× {item.quantity}</span>}
               <EngravingLines engraving={item.engraving} className="mt-0.5 text-[12px] normal-case text-gray-400" />

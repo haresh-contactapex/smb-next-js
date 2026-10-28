@@ -27,7 +27,7 @@ export default function CartOptions({ active, onChange }) {
 
   return (
     <>
-      <div className="flex divide-x divide-gray-100 border-b border-gray-100">
+      <div className="flex min-w-0 divide-x divide-gray-100 border-b border-gray-100">
         {OPTIONS.map((option) => {
           const isActive = active === option.id;
           return (
@@ -37,7 +37,7 @@ export default function CartOptions({ active, onChange }) {
               onClick={() => onChange(isActive ? null : option.id)}
               aria-expanded={isActive}
               aria-controls={isActive ? panelId : undefined}
-              className={`relative flex flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium uppercase tracking-wider transition-colors hover:text-[#ef9822] ${
+              className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium uppercase tracking-wider transition-colors hover:text-[#ef9822] ${
                 isActive ? "bg-[#FFF8EE] text-[#ef9822]" : "text-[#555555]"
               }`}
             >

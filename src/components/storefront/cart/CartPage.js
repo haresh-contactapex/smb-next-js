@@ -62,8 +62,8 @@ export default function CartPage({ recommended = [], pricesIncludeTax = null }) 
           </Link>
         </div>
       ) : (
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px] xl:gap-16">
-          <div>
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[minmax(0,1fr)_420px] xl:gap-16">
+          <div className="min-w-0">
             <ul className="divide-y divide-gray-300 border-b border-gray-300">
               {items.map((item, index) => (
                 <CartPageLine
