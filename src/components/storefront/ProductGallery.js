@@ -23,7 +23,7 @@ function Thumb({ src, label, selected, onSelect }) {
       aria-label={label}
       aria-current={selected ? "true" : undefined}
       className={`block h-16 w-16 overflow-hidden rounded-sm border transition-colors sm:aspect-square sm:h-auto sm:w-full ${
-        selected ? "border-[#1c3b6a]" : "border-transparent hover:border-gray-300"
+        selected ? "border-gray-200" : "border-transparent hover:border-gray-300"
       } ${loaded ? "bg-[#F8F8F8]" : "shimmer"} ${FOCUS_RING}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
