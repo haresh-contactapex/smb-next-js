@@ -44,6 +44,7 @@ export const MIGRATIONS = [
   "docs/settings/integrations-table-only.sql",
   "docs/settings/notifications-table-only.sql",
   "docs/settings/system-maintenance-table-only.sql",
+  "docs/settings/social-media-table-only.sql",
   "docs/settings/admin-roles-table-only.sql",
   "docs/notifications/admin-notifications-table-only.sql",
 ];

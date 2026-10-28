@@ -52,6 +52,7 @@
     "db:migrate:security": "node scripts/migrate.mjs docs/settings/security-table-only.sql",
     "db:migrate:integrations": "node scripts/migrate.mjs docs/settings/integrations-table-only.sql",
     "db:migrate:notifications": "node scripts/migrate.mjs docs/settings/notifications-table-only.sql",
+    "db:migrate:social-media": "node scripts/migrate.mjs docs/settings/social-media-table-only.sql",
     "db:migrate:system-maintenance": "node scripts/migrate.mjs docs/settings/system-maintenance-table-only.sql",
     "db:migrate:admin-roles": "node scripts/migrate.mjs docs/settings/admin-roles-table-only.sql",
     "db:migrate:users-security": "node scripts/migrate.mjs docs/my-account/users-security-columns-only.sql",

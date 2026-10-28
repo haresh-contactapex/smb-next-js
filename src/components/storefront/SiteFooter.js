@@ -8,6 +8,7 @@ import { getFooterTextsByPath } from "@/lib/footerTexts";
 import { CMS_FOOTER_GROUPS } from "@/lib/cmsRules";
 import { hasPublishedBlogPosts } from "@/lib/blog";
 import { BLOG_INDEX_PATH } from "@/lib/blogRules";
+import { getFooterSocialLinks } from "@/lib/socialMediaSettings";
 
 // The Blog link sits in the Customer Service column between About Us and Contact (CMS
 // pages are ordered 10, 20, 30 ... there). It shows once the blog has a published post.
@@ -106,7 +107,7 @@ function FooterLink({ href, children }) {
 // Storefront footer: a rounded photo panel with the logo and link columns, then the store
 // blurb, city links, social icons, payment marks and copyright on white.
 // `columns` is [{ label, columns, pages: [{ slug, label }] }]; `texts` is { [page path]: [paragraph, ...] }.
-export function SiteFooterView({ columns, texts }) {
+export function SiteFooterView({ columns, texts, socialLinks = STORE_SOCIAL_LINKS }) {
   return (
     <footer className="bg-white text-[#555555]">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16 pb-10">
@@ -146,21 +147,23 @@ export function SiteFooterView({ columns, texts }) {
           </p>
         </div>
 
-        <ul className="mt-8 flex items-center justify-center gap-3" aria-label="Follow us">
-          {STORE_SOCIAL_LINKS.map((social) => (
-            <li key={social.label}>
-              <a
-                href={social.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={social.label}
-                className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4a4a4a] transition-colors hover:bg-[#ef9822]"
-              >
-                <span aria-hidden="true" className="block h-3.5 w-3.5 bg-white" style={maskStyle(social.icon)} />
-              </a>
-            </li>
-          ))}
-        </ul>
+        {socialLinks.length > 0 && (
+          <ul className="mt-8 flex items-center justify-center gap-3" aria-label="Follow us">
+            {socialLinks.map((social) => (
+              <li key={social.label}>
+                <a
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4a4a4a] transition-colors hover:bg-[#ef9822]"
+                >
+                  <span aria-hidden="true" className="block h-3.5 w-3.5 bg-white" style={maskStyle(social.icon)} />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
 
         <ul className="mt-5 flex flex-wrap items-center justify-center gap-1.5" aria-label="Accepted payments and shipping">
           {PAYMENT_MARKS.map((item) => (
@@ -192,6 +195,7 @@ export default async function SiteFooter() {
   // Read per request so a page published in the admin appears here straight away,
   // even on pages that would otherwise be prerendered.
   await connection();
-  const [columns, texts] = await Promise.all([loadFooterColumns(), getFooterTextsByPath()]);
-  return <SiteFooterView columns={columns} texts={texts} />;
+  const [columns, texts, socialLinks] = await Promise.all([loadFooterColumns(), getFooterTextsByPath(), getFooterSocialLinks()]);
+  // null: the settings could not be read, so keep the built-in links rather than drop the icons.
+  return <SiteFooterView columns={columns} texts={texts} socialLinks={socialLinks ?? STORE_SOCIAL_LINKS} />;
 }
