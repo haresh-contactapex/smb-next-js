@@ -9,6 +9,8 @@ import { useVariantImage } from "./VariantImageProvider";
 
 const FOCUS_RING = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef9822]";
 
+const STRIP_ARROW = `absolute left-1/2 z-10 hidden h-6 w-10 -translate-x-1/2 items-center justify-center rounded bg-white/95 text-[#333333] shadow transition-colors hover:text-[#ef9822] sm:flex ${FOCUS_RING}`;
+
 const ARROW = `absolute top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded bg-white/90 text-[#333333] shadow transition-colors hover:bg-white hover:text-[#ef9822] ${FOCUS_RING}`;
 
 // One small preview in the strip beside the main image.
@@ -20,7 +22,7 @@ function Thumb({ src, label, selected, onSelect }) {
       onClick={onSelect}
       aria-label={label}
       aria-current={selected ? "true" : undefined}
-      className={`block h-16 w-16 overflow-hidden rounded-sm border transition-colors sm:h-[72px] sm:w-[72px] xl:h-24 xl:w-24 ${
+      className={`block h-16 w-16 overflow-hidden rounded-sm border transition-colors sm:aspect-square sm:h-auto sm:w-full ${
         selected ? "border-[#1c3b6a]" : "border-transparent hover:border-gray-300"
       } ${loaded ? "bg-[#F8F8F8]" : "shimmer"} ${FOCUS_RING}`}
     >
@@ -92,6 +94,28 @@ export default function ProductGallery({ images, variantImages = [], title, ligh
     else if (left + width > list.scrollLeft + list.clientWidth) list.scrollLeft = left + width - list.clientWidth;
   }, [current]);
 
+  // The strip has no scrollbar; the up/down arrows scroll it, and show only where there is more to see.
+  const [canScroll, setCanScroll] = useState({ up: false, down: false });
+  const updateCanScroll = useCallback(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const up = list.scrollTop > 1;
+    const down = list.scrollTop + list.clientHeight < list.scrollHeight - 1;
+    setCanScroll((prev) => (prev.up === up && prev.down === down ? prev : { up, down }));
+  }, []);
+  useEffect(() => {
+    updateCanScroll();
+    const list = listRef.current;
+    if (!list || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(updateCanScroll);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [updateCanScroll, photos.length]);
+  function scrollStrip(direction) {
+    const list = listRef.current;
+    if (list) list.scrollBy({ top: direction * list.clientHeight * 0.75, behavior: "smooth" });
+  }
+
   if (!current) {
     return (
       <div className="w-full lg:w-[55%]">
@@ -110,18 +134,29 @@ export default function ProductGallery({ images, variantImages = [], title, ligh
     // ~70px) while the details column scrolls past; they leave with that column's end.
     <div className="flex w-full flex-col-reverse gap-3 self-start sm:flex-row sm:gap-4 lg:sticky lg:top-24 lg:w-[55%] xl:gap-5">
       {several && (
-        <div className="relative shrink-0 sm:w-[72px] xl:w-24">
+        <div className="relative shrink-0 sm:w-[78px] xl:w-[102px]">
           <ul
             ref={listRef}
             aria-label="Product photos"
-            className="relative flex gap-3 overflow-x-auto pb-1 [scrollbar-width:thin] sm:absolute sm:inset-0 sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto sm:pb-0"
+            className="relative flex gap-3 overflow-x-auto pb-1 [scrollbar-width:thin] sm:absolute sm:inset-0 sm:flex-col sm:overflow-x-hidden sm:overflow-y-auto sm:p-[3px] sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden"
+            onScroll={updateCanScroll}
           >
             {photos.map((src, i) => (
-              <li key={src} className="shrink-0">
+              <li key={src} className="shrink-0 sm:w-full">
                 <Thumb src={src} label={`Show image ${i + 1} of ${photos.length}`} selected={src === current} onSelect={() => choose(src)} />
               </li>
             ))}
           </ul>
+          {canScroll.up && (
+            <button type="button" onClick={() => scrollStrip(-1)} aria-label="Scroll thumbnails up" className={`${STRIP_ARROW} top-1`}>
+              <StoreIcon name="chevronUp" className="h-4 w-4" />
+            </button>
+          )}
+          {canScroll.down && (
+            <button type="button" onClick={() => scrollStrip(1)} aria-label="Scroll thumbnails down" className={`${STRIP_ARROW} bottom-1`}>
+              <StoreIcon name="chevronDown" className="h-4 w-4" />
+            </button>
+          )}
         </div>
       )}
 
