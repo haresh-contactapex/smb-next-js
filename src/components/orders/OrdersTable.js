@@ -36,7 +36,96 @@ export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvo
   }
 
   return (
-    <div className="overflow-x-auto custom-scroll -mx-1">
+    <>
+    <div className="md:hidden space-y-3">
+      {orders.map((order) => {
+        const cancellable = BULK_CANCELLABLE_STATUSES.includes(order.status);
+        const isSelected = selectable && selection.has(order.orderId);
+        const rows = [
+          ["Customer", <span key="c" className="font-medium text-slate-700 dark:text-slate-200">{order.customer}</span>],
+          ["Date", order.date],
+          ["Products", order.products],
+          ["Amount", <span key="a" className="font-semibold text-slate-700 dark:text-slate-200">{order.amount}</span>],
+          [
+            "Payment",
+            <span key="p" className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${BADGE_COLOR_CLASSES[order.paymentColor]}`}>
+              {order.payment}
+            </span>,
+          ],
+          [
+            "Status",
+            <span key="s" className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${BADGE_COLOR_CLASSES[order.statusColor]}`}>
+              {order.status}
+            </span>,
+          ],
+        ];
+        return (
+          <div
+            key={order.id}
+            className={`rounded-xl border border-slate-100 dark:border-white/10 p-3 shadow-card ${isSelected ? "bg-primary-50/60 dark:bg-white/5" : "bg-white dark:bg-darksurface"}`}
+          >
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-2 min-w-0">
+                {selectable && (
+                  <SelectCheckbox
+                    checked={isSelected}
+                    disabled={!cancellable}
+                    title={cancellable ? undefined : `${order.status} orders can't be cancelled from the list`}
+                    onChange={() => selection.toggle(order.orderId)}
+                    label={cancellable ? `Select order ${order.id}` : `Order ${order.id} can't be selected: it's ${order.status.toLowerCase()}`}
+                  />
+                )}
+                <span
+                  className={`w-8 h-8 rounded-full text-[11px] font-bold grid place-items-center shrink-0 ${AVATAR_COLOR_CLASSES[order.avatarColor]}`}
+                >
+                  {order.initials}
+                </span>
+                <span className="font-semibold text-primary-700 dark:text-accent-400 text-sm truncate">{order.id}</span>
+              </div>
+              <div className="inline-flex items-center gap-1">
+                <Link
+                  href={`/admin/orders/${order.orderId}`}
+                  title="View order"
+                  aria-label={`View order ${order.id}`}
+                  className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                >
+                  <Icon name="eye" className="w-4 h-4" />
+                </Link>
+                <Link
+                  href={`/admin/edit-order/${order.orderId}`}
+                  title="Edit order"
+                  className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                >
+                  <Icon name="edit-2" className="w-4 h-4" />
+                </Link>
+                <button
+                  type="button"
+                  title="Download invoice"
+                  aria-label={`Download invoice for ${order.id}`}
+                  disabled={downloadingId != null}
+                  onClick={() => onDownloadInvoice(order)}
+                  className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 disabled:opacity-50 disabled:hover:bg-transparent"
+                >
+                  <Icon
+                    name={downloadingId === order.orderId ? "refresh-cw" : "download"}
+                    className={`w-4 h-4 ${downloadingId === order.orderId ? "animate-spin motion-reduce:animate-none" : ""}`}
+                  />
+                </button>
+              </div>
+            </div>
+            <dl className="divide-y divide-slate-100 dark:divide-white/5 text-xs">
+              {rows.map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-3 py-2">
+                  <dt className="text-slate-400 shrink-0">{label}</dt>
+                  <dd className="text-right text-slate-500 dark:text-slate-400 min-w-0">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        );
+      })}
+    </div>
+    <div className="hidden md:block overflow-x-auto custom-scroll -mx-1">
       <table className="w-full text-sm min-w-[860px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
@@ -143,5 +232,6 @@ export default function OrdersTable({ orders, sort, onSortChange, onDownloadInvo
         </tbody>
       </table>
     </div>
+    </>
   );
 }
