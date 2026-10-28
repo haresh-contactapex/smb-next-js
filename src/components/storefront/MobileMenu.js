@@ -12,6 +12,15 @@ import { useSearch } from "./search/SearchProvider";
 export default function MobileMenu({ customer }) {
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [expanded, setExpanded] = useState(() => new Set());
+
+  function toggleGroup(label) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(label)) next.add(label);
+      return next;
+    });
+  }
   const { openSearch } = useSearch();
   const pathname = usePathname();
 
@@ -79,16 +88,40 @@ export default function MobileMenu({ customer }) {
         <nav className="flex flex-col px-6 pt-8 space-y-6 text-[16px] font-medium tracking-wide uppercase overflow-y-auto">
           {STORE_NAV_LINKS.map((link) => (
             <div key={link.label}>
-              <Link
-                href={link.href}
-                onClick={() => setOpen(false)}
-                aria-current={isCurrentPath(pathname, link.href) ? "page" : isCurrentLink(link, pathname) ? "true" : undefined}
-                className={`hover:text-[#ef9822] transition-colors whitespace-nowrap ${isCurrentLink(link, pathname) ? CURRENT_NAV_LINK : ""}`}
-              >
-                {link.label}
-              </Link>
+              <div className="flex items-center justify-between">
+                <Link
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={isCurrentPath(pathname, link.href) ? "page" : isCurrentLink(link, pathname) ? "true" : undefined}
+                  className={`hover:text-[#ef9822] transition-colors whitespace-nowrap ${isCurrentLink(link, pathname) ? CURRENT_NAV_LINK : ""}`}
+                >
+                  {link.label}
+                </Link>
+                {link.megaMenu && (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(link.label)}
+                    aria-expanded={expanded.has(link.label)}
+                    aria-label={`${expanded.has(link.label) ? "Collapse" : "Expand"} ${link.label}`}
+                    className="p-2 -mr-2 hover:text-[#ef9822] transition-colors"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className={`w-4 h-4 transition-transform duration-200 ${expanded.has(link.label) ? "rotate-180" : ""}`}
+                      aria-hidden="true"
+                    >
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               {/* The mega menu's items, so every category stays reachable without hover. */}
-              {link.megaMenu && (
+              {link.megaMenu && expanded.has(link.label) && (
                 <ul className="mt-3 ml-1 space-y-3 border-l border-gray-100 pl-4 text-[14px] font-normal normal-case tracking-normal text-[#777777]">
                   {link.megaMenu.columns.flat().map((item) => (
                     <li key={item.label}>
