@@ -82,7 +82,118 @@ export default function UsersTable({
   }
 
   return (
-    <div className="overflow-x-auto custom-scroll -mx-1">
+    <>
+    <div className="md:hidden space-y-3">
+      {users.map((user) => {
+        const busy = busyId === user.id;
+        const name = fullName(user);
+        const locked = isLocked(user);
+        const editBlocked = editBlockedReason(user, context);
+        const deleteBlocked = deleteBlockedReason(user, context);
+        const isSelf = user.id === context.currentUserId;
+        const isSelected = selectable && selectedIds.has(user.id);
+        const rows = [
+          [
+            "User",
+            <span key="n" className="inline-flex items-center gap-1.5 font-medium text-slate-700 dark:text-slate-200">
+              {name}
+              {isSelf && (
+                <span className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-500 dark:bg-white/5 dark:text-slate-400">
+                  You
+                </span>
+              )}
+            </span>,
+          ],
+          ["Email", <span key="e" className="break-all">{user.email}</span>],
+          ["Phone", user.phone || "—"],
+          ["Role", <RoleBadge key="r" user={user} />],
+          [
+            "2FA",
+            user.twoFactorEnabled ? (
+              <span key="t" className="text-success font-semibold">On</span>
+            ) : (
+              <span key="t" className="text-slate-400">Off</span>
+            ),
+          ],
+          [
+            "Status",
+            <span
+              key="s"
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
+                locked ? "bg-error/10 text-error" : "bg-success/10 text-success"
+              }`}
+            >
+              {locked ? "Locked" : "Active"}
+            </span>,
+          ],
+          ["Last Login", user.lastLoginAt ? formatDate(user.lastLoginAt) : "Never"],
+          ["Created", formatDate(user.createdAt)],
+        ];
+        return (
+          <div
+            key={user.id}
+            aria-busy={busy}
+            className={`rounded-xl border border-slate-100 dark:border-white/10 p-3 shadow-card ${isSelected ? "bg-primary-50/60 dark:bg-white/5" : "bg-white dark:bg-darksurface"}`}
+          >
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-2 min-w-0">
+                {selectable && (
+                  <SelectCheckbox
+                    checked={isSelected}
+                    disabled={Boolean(deleteBlocked)}
+                    title={deleteBlocked || undefined}
+                    onChange={() => onToggleSelect(user.id)}
+                    label={deleteBlocked ? `${name} can't be selected: ${deleteBlocked}` : `Select ${name}`}
+                  />
+                )}
+                {user.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.avatarUrl} alt="" className="w-8 h-8 rounded-xl object-cover shrink-0" />
+                ) : (
+                  <span className="w-8 h-8 rounded-xl grid place-items-center shrink-0 bg-primary-50 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400 text-xs font-bold">
+                    {initialsFor(user)}
+                  </span>
+                )}
+              </div>
+              <div className="inline-flex items-center gap-1">
+                {permissions.canEdit && (
+                  editBlocked ? (
+                    <span title={editBlocked} aria-label={`${name} can't be edited: ${editBlocked}`} className={`${ICON_BUTTON} opacity-40`}>
+                      <Icon name="edit-2" className="w-4 h-4" />
+                    </span>
+                  ) : (
+                    <Link href={`/admin/users/${user.id}/edit`} title="Edit user" aria-label={`Edit ${name}`} className={ICON_BUTTON}>
+                      <Icon name="edit-2" className="w-4 h-4" />
+                    </Link>
+                  )
+                )}
+                {permissions.canDelete && (
+                  <button
+                    type="button"
+                    title={deleteBlocked || "Delete user"}
+                    aria-label={deleteBlocked ? `${name} can't be deleted: ${deleteBlocked}` : `Delete ${name}`}
+                    onClick={() => onDelete(user)}
+                    disabled={busy || Boolean(deleteBlocked)}
+                    className={`${ICON_BUTTON} hover:!bg-red-50 hover:text-error dark:hover:!bg-red-500/10`}
+                  >
+                    <Icon name="trash-2" className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            <dl className="divide-y divide-slate-100 dark:divide-white/5 text-xs">
+              {rows.map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-3 py-2">
+                  <dt className="text-slate-400 shrink-0">{label}</dt>
+                  <dd className="text-right text-slate-500 dark:text-slate-400 min-w-0">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        );
+      })}
+    </div>
+    <div className="hidden md:block overflow-x-auto custom-scroll -mx-1">
       <table className={`w-full text-sm ${selectable ? "min-w-[1000px]" : "min-w-[960px]"}`}>
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
@@ -213,5 +324,6 @@ export default function UsersTable({
         </tbody>
       </table>
     </div>
+    </>
   );
 }
