@@ -43,7 +43,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
   const atLimit = item.quantity >= lineLimit(item);
   const stockLimited = atLimit && item.maxQuantity > 0 && item.quantity >= item.maxQuantity;
   const image = (
-    <div className={`aspect-square w-full rounded p-3 sm:p-4 ${item.image && !imageLoaded ? "shimmer" : "bg-[#FAFAFA]"}`}>
+    <div className={`aspect-[16/10] w-full rounded p-3 sm:aspect-square sm:p-4 ${item.image && !imageLoaded ? "shimmer" : "bg-[#FAFAFA]"}`}>
       {item.image ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -103,7 +103,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
 
         {loading && !product ? (
           // Same captions as the real pickers, with a shimmer where the select goes.
-          <div aria-hidden="true" className="mt-5 flex flex-wrap gap-x-8 gap-y-4 sm:mt-7">
+          <div aria-hidden="true" className="mt-5 flex flex-wrap justify-between gap-x-8 gap-y-4 sm:mt-7 sm:justify-start">
             {pickers.map((picker) => (
               <div key={picker.name}>
                 <span className="mb-1 block pl-3 text-[11px] font-semibold uppercase tracking-wider text-[#555555]">{picker.name}</span>
@@ -113,7 +113,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
           </div>
         ) : (
           pickers.length > 0 && (
-            <div className="mt-5 flex flex-wrap gap-x-8 gap-y-4 sm:mt-7">
+            <div className="mt-5 flex flex-wrap justify-between gap-x-8 gap-y-4 sm:mt-7 sm:justify-start">
               {pickers.map((picker) => (
                 <CartOptionSelect
                   key={picker.name}
