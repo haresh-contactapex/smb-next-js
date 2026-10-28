@@ -192,8 +192,8 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
                     <p id={`${fieldId}-label`} className="text-[16px] text-[#555555] mb-3">
                       {option.name}: <span className="text-gray-800 font-medium">{selected}</span>
                     </p>
-                    {/* Equal-width cells, so the swatches line up in columns however many fit on a row. */}
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-x-2 gap-y-4">
+                    {/* Fixed-width cells, flush with the heading on the left, so the swatches line up in columns however many fit on a row. */}
+                    <div className="grid grid-cols-[repeat(auto-fill,64px)] justify-between gap-y-4">
                       {option.values.map((value) => {
                         const checked = selected === value;
                         return (
