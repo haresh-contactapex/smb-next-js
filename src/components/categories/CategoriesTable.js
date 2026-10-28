@@ -28,7 +28,79 @@ export default function CategoriesTable({ categories, onDelete, deletingId, sort
   }
 
   return (
-    <div className="overflow-x-auto custom-scroll -mx-1">
+    <>
+    <div className="md:hidden space-y-3">
+      {categories.map((category) => {
+        const isDeleting = category.id === deletingId;
+        const rows = [
+          ["Category", <span key="n" className="font-medium text-slate-700 dark:text-slate-200">{category.name}</span>],
+          ["Slug", <span key="s" className="system-field">/{category.slug}</span>],
+          ["Parent", category.parentPath || "—"],
+          ["Products", category.productCount],
+          [
+            "Visibility",
+            <span key="v" className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${VISIBILITY_BADGE_CLASSES[category.visible]}`}>
+              {category.visible ? "Visible" : "Hidden"}
+            </span>,
+          ],
+        ];
+        return (
+          <div
+            key={category.id}
+            className="rounded-xl border border-slate-100 dark:border-white/10 p-3 shadow-card bg-white dark:bg-darksurface"
+          >
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
+              <span
+                className={`w-9 h-9 rounded-xl grid place-items-center shrink-0 ${SOFT_COLOR_CLASSES[category.imageColor]}`}
+              >
+                <Icon name="tag" className="w-4 h-4" />
+              </span>
+              <div className="inline-flex items-center gap-1">
+                <a
+                  href={`/collections/${encodeURIComponent(category.slug)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="View category on storefront"
+                  aria-label={`View ${category.name} on storefront`}
+                  className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                >
+                  <Icon name="eye" className="w-4 h-4" />
+                </a>
+                <Can permission="categories.edit">
+                  <Link
+                    href={`/admin/edit-category/${category.id}`}
+                    title="Edit category"
+                    className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                  >
+                    <Icon name="edit-2" className="w-4 h-4" />
+                  </Link>
+                </Can>
+                <Can permission="categories.delete">
+                  <button
+                    type="button"
+                    title="Delete category"
+                    onClick={() => onDelete?.(category)}
+                    disabled={isDeleting}
+                    className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Icon name="trash-2" className="w-4 h-4" />
+                  </button>
+                </Can>
+              </div>
+            </div>
+            <dl className="divide-y divide-slate-100 dark:divide-white/5 text-xs">
+              {rows.map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-3 py-2">
+                  <dt className="text-slate-400 shrink-0">{label}</dt>
+                  <dd className="text-right text-slate-500 dark:text-slate-400 min-w-0">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        );
+      })}
+    </div>
+    <div className="hidden md:block overflow-x-auto custom-scroll -mx-1">
       <table className="w-full text-sm min-w-[720px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
@@ -108,5 +180,6 @@ export default function CategoriesTable({ categories, onDelete, deletingId, sort
         </tbody>
       </table>
     </div>
+    </>
   );
 }
