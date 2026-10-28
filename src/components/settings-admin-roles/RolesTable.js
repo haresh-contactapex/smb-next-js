@@ -38,7 +38,90 @@ export default function RolesTable({ roles, modules, busyId, onDuplicate, onDele
   }
 
   return (
-    <div className="overflow-x-auto custom-scroll -mx-1">
+    <>
+    <div className="md:hidden space-y-3">
+      {roles.map((role) => {
+        const busy = busyId === role.id;
+        const blockedReason = deleteBlockedReason(role);
+        const nextStatus = role.status === "active" ? "inactive" : "active";
+        return (
+          <div
+            key={role.id}
+            aria-busy={busy}
+            className="rounded-xl border border-slate-100 dark:border-white/10 p-3 shadow-card bg-white dark:bg-darksurface"
+          >
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-9 h-9 rounded-xl grid place-items-center shrink-0 bg-primary-50 text-primary-600 dark:bg-accent-500/10 dark:text-accent-400">
+                  <Icon name={role.fullAccess ? "shield" : "users"} className="w-4 h-4" />
+                </span>
+                <span className="min-w-0">
+                  <Link
+                    href={`/admin/settings/admin-roles/${role.id}`}
+                    className="block font-medium text-sm text-slate-700 dark:text-slate-200 truncate"
+                  >
+                    {role.name}
+                  </Link>
+                  {role.isSystem && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                      <Icon name="lock" className="w-3 h-3" />
+                      System
+                    </span>
+                  )}
+                </span>
+              </div>
+              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold shrink-0 ${STATUS_BADGE_CLASSES[role.status]}`}>
+                {STATUS_LABELS[role.status] || role.status}
+              </span>
+            </div>
+            <dl className="divide-y divide-slate-100 dark:divide-white/5 text-xs">
+              {[
+                ["Description", role.description || "—"],
+                ["Users assigned", role.usersAssigned],
+                ["Permissions", <PermissionsSummary key="p" role={role} modules={modules} />],
+                ["Created", formatDate(role.createdAt)],
+                ["Updated", formatDate(role.updatedAt)],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-start justify-between gap-3 py-2">
+                  <dt className="text-slate-400 shrink-0">{label}</dt>
+                  <dd className="text-right text-slate-500 dark:text-slate-400 min-w-0">{value}</dd>
+                </div>
+              ))}
+            </dl>
+            <div className="flex items-center justify-end gap-1 pt-2 border-t border-slate-100 dark:border-white/5">
+              <Link href={`/admin/settings/admin-roles/${role.id}`} aria-label={`View ${role.name}`} className={ICON_BUTTON}>
+                <Icon name="eye" className="w-4 h-4" />
+              </Link>
+              <Link href={`/admin/settings/admin-roles/${role.id}/edit`} aria-label={`Edit ${role.name}`} className={ICON_BUTTON}>
+                <Icon name="edit-2" className="w-4 h-4" />
+              </Link>
+              <button type="button" aria-label={`Duplicate ${role.name}`} onClick={() => onDuplicate(role)} disabled={busy} className={ICON_BUTTON}>
+                <Icon name="copy" className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                aria-label={`${nextStatus === "active" ? "Activate" : "Deactivate"} ${role.name}`}
+                onClick={() => onToggleStatus(role, nextStatus)}
+                disabled={busy || role.isSystem}
+                className={`${ICON_BUTTON} ${nextStatus === "active" ? "hover:text-success" : "hover:text-warning"}`}
+              >
+                <Icon name={nextStatus === "active" ? "check-circle" : "x-circle"} className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                aria-label={blockedReason ? `${role.name} can't be deleted: ${blockedReason}` : `Delete ${role.name}`}
+                onClick={() => onDelete(role)}
+                disabled={busy || Boolean(blockedReason)}
+                className={`${ICON_BUTTON} hover:!bg-red-50 hover:text-error dark:hover:!bg-red-500/10`}
+              >
+                <Icon name={busy ? "refresh-cw" : "trash-2"} className={`w-4 h-4${busy ? " animate-spin" : ""}`} />
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+    <div className="hidden md:block overflow-x-auto custom-scroll -mx-1">
       <table className="w-full text-sm min-w-[1080px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
@@ -149,5 +232,6 @@ export default function RolesTable({ roles, modules, busyId, onDuplicate, onDele
         </tbody>
       </table>
     </div>
+    </>
   );
 }

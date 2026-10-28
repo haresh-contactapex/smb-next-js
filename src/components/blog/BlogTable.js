@@ -34,7 +34,104 @@ export default function BlogTable({ posts, emptyMessage = "No posts match your f
   const today = todayIso();
 
   return (
-    <div className="overflow-x-auto custom-scroll -mx-1">
+    <>
+    <div className="md:hidden space-y-3">
+      {posts.map((post) => {
+        const isDeleting = post.id === deletingId;
+        const status = displayStatus(post, today);
+        const path = blogPostPath(post.categorySlug, post.slug);
+        const isSelected = selectable && selection.has(post.id);
+        const rows = [
+          ["Post", <span key="t" className="font-medium text-slate-700 dark:text-slate-200">{post.title}</span>],
+          ["Path", <span key="p" className="break-all system-field">{path}</span>],
+          ["Category", post.category],
+          ["Author", post.author || "—"],
+          ["Date", formatBlogDate(post.publishedOn) || "—"],
+          [
+            "Status",
+            <span key="s" className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${STATUS_BADGE_CLASSES[status]}`}>
+              {STATUS_LABELS[status]}
+            </span>,
+          ],
+        ];
+        return (
+          <div
+            key={post.id}
+            className={`rounded-xl border border-slate-100 dark:border-white/10 p-3 shadow-card ${isSelected ? "bg-primary-50/60 dark:bg-white/5" : "bg-white dark:bg-darksurface"}`}
+          >
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-100 dark:border-white/5">
+              <div className="flex items-center gap-2 min-w-0">
+                {selectable && (
+                  <SelectCheckbox
+                    checked={isSelected}
+                    onChange={() => selection.toggle(post.id)}
+                    label={`Select ${post.title}`}
+                  />
+                )}
+                {post.featuredImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={post.featuredImageUrl}
+                    alt=""
+                    loading="lazy"
+                    className="w-9 h-9 rounded-xl object-cover shrink-0 bg-slate-100 dark:bg-darksurface2"
+                  />
+                ) : (
+                  <span className="w-9 h-9 rounded-xl grid place-items-center shrink-0 bg-primary-50 text-primary-600 dark:bg-white/5 dark:text-accent-400">
+                    <Icon name="image" className="w-4 h-4" />
+                  </span>
+                )}
+              </div>
+              <div className="inline-flex items-center gap-1">
+                {status === "published" && (
+                  <a
+                    href={path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title="View post on storefront"
+                    aria-label={`View ${post.title} on storefront`}
+                    className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                  >
+                    <Icon name="eye" className="w-4 h-4" />
+                  </a>
+                )}
+                <Can permission="blog.edit">
+                  <Link
+                    href={`/admin/blog/${post.id}/edit`}
+                    title="Edit post"
+                    aria-label={`Edit ${post.title}`}
+                    className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5"
+                  >
+                    <Icon name="edit-2" className="w-4 h-4" />
+                  </Link>
+                </Can>
+                <Can permission="blog.delete">
+                  <button
+                    type="button"
+                    title="Delete post"
+                    aria-label={`Delete ${post.title}`}
+                    onClick={() => onDelete?.(post)}
+                    disabled={isDeleting}
+                    className="w-8 h-8 grid place-items-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-error dark:hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    <Icon name="trash-2" className="w-4 h-4" />
+                  </button>
+                </Can>
+              </div>
+            </div>
+            <dl className="divide-y divide-slate-100 dark:divide-white/5 text-xs">
+              {rows.map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between gap-3 py-2">
+                  <dt className="text-slate-400 shrink-0">{label}</dt>
+                  <dd className="text-right text-slate-500 dark:text-slate-400 min-w-0">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        );
+      })}
+    </div>
+    <div className="hidden md:block overflow-x-auto custom-scroll -mx-1">
       <table className="w-full text-sm min-w-[900px]">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-wide text-slate-400 border-b border-slate-100 dark:border-white/5">
@@ -148,5 +245,6 @@ export default function BlogTable({ posts, emptyMessage = "No posts match your f
         </tbody>
       </table>
     </div>
+    </>
   );
 }

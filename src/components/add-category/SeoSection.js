@@ -18,7 +18,7 @@ export default function SeoSection({
       </div>
 
       <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-darksurface2/50 border border-slate-100 dark:border-white/5 mb-4">
-        <div className="text-xs text-slate-500 dark:text-slate-400 truncate">
+        <div className="text-xs text-slate-500 dark:text-slate-400 break-all sm:break-normal sm:truncate">
           https://www.shopmyband.com › collections › <span className="text-slate-700 dark:text-slate-200">{handle || "category-slug"}</span>
         </div>
         <div className="text-base font-semibold text-primary-600 dark:text-accent-400 truncate mt-0.5">
