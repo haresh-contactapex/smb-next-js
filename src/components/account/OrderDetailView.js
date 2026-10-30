@@ -85,8 +85,8 @@ export default function OrderDetailView({ order, moneyFormat }) {
           {hasItems ? (
             <ul className="mt-4 divide-y divide-gray-100">
               {order.items.map((item) => (
-                <li key={item.id} className="flex gap-4 py-4 first:pt-0 last:pb-0">
-                  <span className="grid h-[72px] w-[72px] flex-shrink-0 place-items-center overflow-hidden rounded-lg bg-[#FAFAFA]">
+                <li key={item.id} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:gap-4">
+                  <span className="flex h-24 w-full flex-shrink-0 items-center justify-center overflow-hidden sm:h-[72px] sm:w-[72px] rounded-lg bg-[#FAFAFA]">
                     {item.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={item.image} alt="" className="h-full w-full object-contain p-2 mix-blend-multiply" />
@@ -94,7 +94,7 @@ export default function OrderDetailView({ order, moneyFormat }) {
                       <StoreIcon name="box" className="h-6 w-6 text-gray-300" />
                     )}
                   </span>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 sm:flex-1">
                     <p className="text-[15px] font-semibold leading-snug text-[#333333]">
                       {item.handle ? (
                         <Link href={`/products/${item.handle}`} className="transition-colors hover:text-[#ef9822]">
@@ -106,11 +106,15 @@ export default function OrderDetailView({ order, moneyFormat }) {
                     </p>
                     {item.sku && <p className="mt-0.5 text-[12.5px] text-gray-400">SKU {item.sku}</p>}
                     <PersonalizationSummary engraving={item.engraving} className="mt-2 w-fit max-w-full" />
-                    <p className="mt-1 text-[13.5px] text-gray-500">
-                      Qty {item.quantity} × {money(item.unitPrice)}
-                    </p>
+                    {/* On a phone the line total sits under the title, where the full width is; from sm up it moves to the right edge. */}
+                    <div className="mt-1 flex items-baseline justify-between gap-3">
+                      <p className="text-[13.5px] text-gray-500">
+                        Qty {item.quantity} × {money(item.unitPrice)}
+                      </p>
+                      <p className="flex-shrink-0 text-[15px] font-semibold text-[#333333] sm:hidden">{money(item.lineTotal)}</p>
+                    </div>
                   </div>
-                  <p className="flex-shrink-0 text-[15px] font-semibold text-[#333333]">{money(item.lineTotal)}</p>
+                  <p className="hidden flex-shrink-0 text-[15px] font-semibold text-[#333333] sm:block">{money(item.lineTotal)}</p>
                 </li>
               ))}
             </ul>
