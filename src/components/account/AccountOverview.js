@@ -131,19 +131,22 @@ export default function AccountOverview({ customer, counts, recentOrders, wishli
               <li key={order.id}>
                 <Link
                   href={`/account/orders/${encodeURIComponent(order.orderNumber)}`}
-                  className={`${CARD} flex items-center gap-4 p-4 transition-shadow hover:shadow-[0_6px_28px_rgba(0,0,0,0.09)]`}
+                  className={`${CARD} flex flex-col gap-3 p-4 transition-shadow hover:shadow-[0_6px_28px_rgba(0,0,0,0.09)] sm:flex-row sm:items-center sm:gap-4`}
                 >
                   <OrderThumbs preview={order.preview || []} itemCount={order.itemCount} />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                      <span className="text-[15px] font-semibold text-[#333333]">Order #{order.orderNumber}</span>
-                      <OrderStatusBadge status={order.status} />
+                  {/* Under the pictures on a phone, beside them from sm up; the total stays on the right of the details. */}
+                  <span className="flex min-w-0 flex-1 items-start justify-between gap-3 sm:items-center">
+                    <span className="min-w-0">
+                      <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="text-[15px] font-semibold text-[#333333]">Order #{order.orderNumber}</span>
+                        <OrderStatusBadge status={order.status} />
+                      </span>
+                      <span className="mt-0.5 block text-[13px] text-gray-500">
+                        {formatDate(order.placedAt)} · {pluralize(order.itemCount, "item")}
+                      </span>
                     </span>
-                    <span className="mt-0.5 block text-[13px] text-gray-500">
-                      {formatDate(order.placedAt)} · {pluralize(order.itemCount, "item")}
-                    </span>
+                    <span className="flex-shrink-0 text-[15px] font-semibold text-[#333333]">{formatCurrency(order.total, order.currency, moneyFormat)}</span>
                   </span>
-                  <span className="flex-shrink-0 text-[15px] font-semibold text-[#333333]">{formatCurrency(order.total, order.currency, moneyFormat)}</span>
                 </Link>
               </li>
             ))}
