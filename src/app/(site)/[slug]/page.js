@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import Breadcrumb from "@/components/storefront/Breadcrumb";
 import CmsEmbeds from "@/components/storefront/CmsEmbeds";
 import { getPublishedCmsPage } from "@/lib/cms";
+import { utilityCssFor } from "@/lib/utilityCss";
 
 // Content pages written in the admin panel under CMS (About Us, Privacy Policy, Ring
 // Size Calculator ...). Next serves the storefront's own routes (/cart, /collections/...)
@@ -42,6 +43,9 @@ export default async function CmsContentPage({ params }) {
   const page = await loadPage(slug);
   if (!page) notFound();
 
+  // Tailwind classes typed into the page (ml-[40px], text-[#376d99]) get their CSS here, built from the page's own HTML.
+  const utilityCss = await utilityCssFor(page.contentHtml);
+  const styles = utilityCss && <style dangerouslySetInnerHTML={{ __html: utilityCss }} />;
   const embeds = page.contentHtml.includes("cms-embed-") && <CmsEmbeds target="cms-article" />;
 
   if (isLandingPage(page.contentHtml)) {
@@ -49,6 +53,7 @@ export default async function CmsContentPage({ params }) {
     const html = page.contentHtml.includes("<h1") ? page.contentHtml : page.contentHtml.replace(/<h2([ >])/, "<h1$1").replace("</h2>", "</h1>");
     return (
       <div className="w-full bg-white">
+        {styles}
         {!html.includes("<h1") && <h1 className="sr-only">{page.title}</h1>}
         <article id="cms-article" className="cms-wide" dangerouslySetInnerHTML={{ __html: html }} />
         {embeds}
@@ -58,6 +63,7 @@ export default async function CmsContentPage({ params }) {
 
   return (
     <div className="w-full bg-white">
+      {styles}
       {/* Heading band: the title with the breadcrumb under it. The rounded top
           corners match the curve the header uses into the announcement bar. */}
       <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] px-4 pt-10 sm:pt-14 pb-16 sm:pb-24">

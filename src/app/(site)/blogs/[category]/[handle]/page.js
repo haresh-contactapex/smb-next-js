@@ -4,6 +4,7 @@ import { getPublishedBlogPost } from "@/lib/blog";
 import BlogPostView from "@/components/storefront/blog/BlogPostView";
 import { blogPostPath } from "@/lib/blogRules";
 import { getSiteOrigin } from "@/lib/siteUrl";
+import { utilityCssFor } from "@/lib/utilityCss";
 
 // A blog post written in the admin panel under Blog (/blogs/<category>/<handle>, the
 // address the old store used). A draft, scheduled or unknown post is a 404; a post that
@@ -43,5 +44,5 @@ export default async function BlogPostPage({ params }) {
   if (!post) notFound();
   if (post.categorySlug !== category) permanentRedirect(blogPostPath(post.categorySlug, post.slug));
 
-  return <BlogPostView post={post} origin={await getSiteOrigin()} />;
+  return <BlogPostView post={post} origin={await getSiteOrigin()} utilityCss={await utilityCssFor(post.contentHtml)} />;
 }

@@ -22,7 +22,7 @@ import { BLOG_INDEX_PATH, blogCategoryPath, blogPostPath, formatBlogDate } from 
  * breadcrumb's and the category tag's links go to a different page (the blog index or
  * a category listing), so Next's own loading.js already covers those.
  */
-export default function BlogPostView({ post, origin = "" }) {
+export default function BlogPostView({ post, origin = "", utilityCss = "" }) {
   const { isPending, handleClick } = useBlogNavigation();
   const path = blogPostPath(post.categorySlug, post.slug);
   const date = formatBlogDate(post.publishedOn);
@@ -46,6 +46,8 @@ export default function BlogPostView({ post, origin = "" }) {
   return (
     <div className="w-full bg-white">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: structuredData }} />
+      {/* CSS for the Tailwind classes typed into the post body (see src/lib/utilityCss.js). */}
+      {utilityCss && <style dangerouslySetInnerHTML={{ __html: utilityCss }} />}
 
       {/* Breadcrumb band, half the height of the heading bands elsewhere that use the
           same rounded-corner curve (those anchor a title above their breadcrumb; this

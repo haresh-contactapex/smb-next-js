@@ -8,6 +8,8 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // src/lib/utilityCss.js runs Tailwind at request time for CMS/blog HTML; keep it out of the server bundle.
+  serverExternalPackages: ["tailwindcss", "postcss"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
