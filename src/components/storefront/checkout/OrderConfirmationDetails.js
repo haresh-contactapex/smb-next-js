@@ -137,17 +137,21 @@ export default function OrderConfirmationDetails({ orderNumber, total, currency,
           {items.length > 0 ? (
             <ul className="mt-6 space-y-5">
               {items.map((item) => (
-                <li key={item.id} className="flex items-start gap-4">
-                  <LineImage src={item.image} />
-                  <div className="min-w-0 flex-1">
+                <li key={item.id} className="flex flex-col gap-3 sm:flex-row sm:items-start sm:gap-4">
+                  {/* A full-width tile with the photo centered on a phone, the 80px square beside the details from sm up. */}
+                  <LineImage src={item.image} sizeClass="h-28 w-full sm:h-20 sm:w-20" />
+                  <div className="min-w-0 sm:flex-1">
                     <p className="text-[16px] font-semibold leading-snug text-[#222222]">{item.title}</p>
                     {item.sku && <p className="mt-1 text-[14px] text-[#777777]">SKU {item.sku}</p>}
                     <PersonalizationSummary engraving={item.engraving} className="mt-2 w-fit max-w-full" />
-                    <p className="mt-1.5 text-[14px] text-[#777777]">
-                      Qty: {item.quantity} × {money(item.unitPrice)}
-                    </p>
+                    <div className="mt-1.5 flex items-baseline justify-between gap-3">
+                      <p className="text-[14px] text-[#777777]">
+                        Qty: {item.quantity} × {money(item.unitPrice)}
+                      </p>
+                      <p className="flex-shrink-0 text-[16px] font-semibold text-[#222222] sm:hidden">{money(item.lineTotal)}</p>
+                    </div>
                   </div>
-                  <p className="flex-shrink-0 text-[16px] font-semibold text-[#222222]">{money(item.lineTotal)}</p>
+                  <p className="hidden flex-shrink-0 text-[16px] font-semibold text-[#222222] sm:block">{money(item.lineTotal)}</p>
                 </li>
               ))}
             </ul>

@@ -14,17 +14,18 @@ export function Row({ label, children }) {
   );
 }
 
-// A line's thumbnail: shimmer until the photo arrives, as on the product pages.
-export function LineImage({ src }) {
+// A line's thumbnail: shimmer until the photo arrives, as on the product pages. `sizeClass` sets
+// the tile's size (an 80px square by default).
+export function LineImage({ src, sizeClass = "h-20 w-20" }) {
   const { loaded, imageProps } = useImageLoaded();
 
   if (!src) {
     return (
-      <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-lg bg-[#F5F3EF] p-2 text-center text-[10px] text-gray-400">No image</div>
+      <div className={`flex ${sizeClass} flex-shrink-0 items-center justify-center rounded-lg bg-[#F5F3EF] p-2 text-center text-[10px] text-gray-400`}>No image</div>
     );
   }
   return (
-    <div className={`h-20 w-20 flex-shrink-0 rounded-lg p-2 ${loaded ? "bg-[#F5F3EF]" : "shimmer"}`}>
+    <div className={`${sizeClass} flex-shrink-0 rounded-lg p-2 ${loaded ? "bg-[#F5F3EF]" : "shimmer"}`}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         {...imageProps}
