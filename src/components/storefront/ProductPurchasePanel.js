@@ -146,7 +146,7 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
       <a
         href="#reviews"
         onClick={() => window.dispatchEvent(new Event(SHOW_REVIEWS_EVENT))}
-        className="mb-4 flex w-fit items-center gap-2 transition-opacity hover:opacity-80"
+        className="mb-8 flex w-fit items-center gap-2 transition-opacity hover:opacity-80"
       >
         {reviews.count > 0 ? (
           <>
