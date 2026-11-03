@@ -40,16 +40,36 @@ const HERO_COLUMNS = [
 
 const PERKS = ["Free shipping to US", "30-day return policy", "Free lifetime cleaning & inspection"];
 
+// `ratio` varies the tile heights so the row looks staggered, as in the design.
 const COLLECTIONS = [
-  { label: "Wedding Bands", href: "/women-wedding-bands", src: "/storefront/wedding-bands/hero.jpg" },
-  { label: "Classic Bands", href: "/collections/classic-bands", src: "/storefront/classic-bands/womens-classic-wedding-bands.jpg" },
+  {
+    label: "Wedding Bands",
+    href: "/women-wedding-bands",
+    src: "/storefront/wedding-bands/hero.jpg",
+    ratio: "aspect-[3/4]",
+    text: "Custom wedding bands for men and women, crafted in white, yellow and rose gold and platinum.",
+  },
+  {
+    label: "Classic Bands",
+    href: "/collections/classic-bands",
+    src: "/storefront/classic-bands/womens-classic-wedding-bands.jpg",
+    ratio: "aspect-[5/7]",
+    text: "Timeless plain and comfort-fit bands in polished, matte and brushed finishes.",
+  },
   {
     label: "Eternity Bands",
     href: "/collections/eternity-bands",
     src: "/storefront/anniversary-bands/womens-anniversary-bands.jpg",
+    ratio: "aspect-[11/14]",
     text: "Discover eternity bands featuring diamonds or gemstones that encircle the entire ring, creating a timeless symbol of everlasting love.",
   },
-  { label: "Anniversary Bands", href: "/collections/anniversary-bands", src: "/storefront/anniversary-bands/hero.jpg" },
+  {
+    label: "Anniversary Bands",
+    href: "/collections/anniversary-bands",
+    src: "/storefront/anniversary-bands/hero.jpg",
+    ratio: "aspect-[4/5]",
+    text: "Celebrate every milestone with diamond anniversary bands made to be worn for a lifetime.",
+  },
 ];
 
 const ASSURANCES = [
@@ -128,20 +148,20 @@ export default async function HomePage() {
           </h2>
           <p className="mt-2 text-xs sm:text-sm">From bespoke designs to beautifully crafted wedding bands.</p>
         </div>
-        <ul className="mt-8 sm:mt-10 flex snap-x gap-4 overflow-x-auto px-4 sm:px-8 pb-2 [scrollbar-width:none] lg:justify-center">
+        <ul className="mt-4 sm:mt-6 flex snap-x items-center gap-4 overflow-x-auto px-4 sm:px-8 py-8 [scrollbar-width:none] lg:justify-center">
           {COLLECTIONS.map((item) => (
             <li key={item.label} className="w-[72%] shrink-0 snap-start sm:w-[34%] lg:w-[22%]">
-              <Link href={item.href} className="group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-[#f3f1ee]">
+              <Link
+                href={item.href}
+                className={`group relative block ${item.ratio} overflow-hidden rounded-2xl bg-[#f3f1ee] transition-transform duration-500 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110`}
+              >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.src} alt="" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                {item.text ? (
-                  <span className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/60 via-black/10 to-transparent p-5 text-white">
-                    <span className="text-[26px] uppercase leading-tight" style={DISPLAY}>{item.label}</span>
-                    <span className="mt-2 text-xs leading-relaxed">{item.text}</span>
-                  </span>
-                ) : (
-                  <span className="sr-only">{item.label}</span>
-                )}
+                <img src={item.src} alt="" className="h-full w-full object-cover" />
+                {/* Hidden until hovered or focused; touch screens have no hover, so it is always shown there. */}
+                <span className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/70 via-black/25 to-black/10 p-5 text-white opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-focus-visible:opacity-100 [@media(hover:none)]:opacity-100">
+                  <span className="text-[26px] uppercase leading-tight" style={DISPLAY}>{item.label}</span>
+                  <span className="mt-2 text-xs leading-relaxed">{item.text}</span>
+                </span>
               </Link>
             </li>
           ))}
