@@ -16,11 +16,26 @@ const DISPLAY = { fontFamily: "var(--font-playfair), serif" };
 const SHOP_BUTTON =
   "inline-block bg-[#ef9822] hover:bg-[#d9861a] text-white text-xs font-semibold tracking-wide uppercase px-5 py-2.5 rounded-[3px] transition-colors";
 
-const HERO_PHOTOS = [
-  { src: "/storefront/wwb_top_banner.jpg", alt: "Stacked diamond wedding bands", position: "72% center" },
-  { src: "/storefront/classic-bands/hero.jpg", alt: "Couple wearing classic wedding bands" },
-  { src: "/storefront/anniversary-bands/hero.jpg", alt: "Anniversary bands" },
-  { src: "/storefront/wedding-bands/hero.jpg", alt: "Wedding bands" },
+// Two staggered columns bleeding off the hero's top, bottom and right edges. Positions
+// are percentages of the photo block (left/width) and of the hero height (top/height).
+const HERO_COLUMNS = [
+  {
+    left: "0%",
+    width: "43.7%",
+    photos: [
+      { src: "/storefront/wedding-band-new/hero.jpg", alt: "Hands wearing wedding bands", top: "0%", height: "9%", round: "rounded-b-2xl", position: "center 80%" },
+      { src: "/storefront/wedding-bands/hero.jpg", alt: "Woman wearing stacked wedding bands", top: "22.6%", height: "59.7%", round: "rounded-2xl", position: "60% center" },
+      { src: "/storefront/anniversary-bands/hero.jpg", alt: "Anniversary bands", top: "88%", height: "12%", round: "rounded-t-2xl", position: "center 30%" },
+    ],
+  },
+  {
+    left: "49.4%",
+    width: "50.6%",
+    photos: [
+      { src: "/storefront/wwb_top_banner.jpg", alt: "Hand holding stacked diamond bands", top: "0%", height: "37%", round: "rounded-b-2xl", position: "72% center" },
+      { src: "/storefront/classic-bands/hero.jpg", alt: "Couple wearing wedding bands", top: "42.5%", height: "57.5%", round: "rounded-t-2xl", position: "45% center" },
+    ],
+  },
 ];
 
 const PERKS = ["Free shipping to US", "30-day return policy", "Free lifetime cleaning & inspection"];
@@ -63,16 +78,16 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="max-w-[1500px] mx-auto px-4 sm:px-8 pt-6 sm:pt-10 fade-in-up">
-        <div className="grid items-center gap-8 lg:grid-cols-2">
-          <div className="max-w-xl">
-            <h1 className="text-[30px] sm:text-[40px] font-normal leading-[1.15] text-[#333333]" style={DISPLAY}>
-              A Lifetime of <span className="italic text-[#ef9822]">love,</span>
+      {/* Hero: text on the left; on large screens the photos fill the right 40% edge to edge. */}
+      <section className="relative overflow-hidden fade-in-up lg:h-[clamp(420px,49.5vw,760px)]">
+        <div className="px-4 sm:px-8 pt-10 pb-8 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:w-[56%] lg:items-center lg:pl-[7.4vw] lg:pr-[3vw] lg:py-0">
+          <div className="max-w-[560px]">
+            <h1 className="text-[28px] sm:text-[34px] lg:text-[clamp(26px,3.3vw,50px)] font-normal leading-[1.12] text-[#222222]" style={DISPLAY}>
+              A Lifetime of <span className="text-[1.15em] italic text-[#444444]">love.</span>
               <br />
               dedicated to creating custom wedding bands for men and women.
             </h1>
-            <p className="mt-6 text-xs sm:text-[13px] leading-relaxed">
+            <p className="mt-6 text-[13px] lg:text-[clamp(12px,1.1vw,16px)] leading-relaxed">
               Whether you&apos;re searching for classic diamond wedding bands, unique men&apos;s wedding bands, or gold wedding
               bands for women, Shop My Band has you covered. Our collection includes an array of stunning eternity bands, and
               more. If you&apos;re looking for a touch of luxury, we also offer rose gold wedding bands.
@@ -81,19 +96,23 @@ export default async function HomePage() {
               Shop Now
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4">
-            {HERO_PHOTOS.map((photo, index) => (
-              <div key={photo.src} className={`overflow-hidden rounded-2xl bg-[#f3f1ee] aspect-[4/5] ${index % 2 === 1 ? "mt-6 sm:mt-10" : ""}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" style={photo.position ? { objectPosition: photo.position } : undefined} />
-              </div>
-            ))}
-          </div>
+        </div>
+        <div className="relative h-[380px] sm:h-[460px] lg:absolute lg:inset-y-0 lg:right-0 lg:h-auto lg:w-[40.3%]">
+          {HERO_COLUMNS.map((column) => (
+            <div key={column.left} className="absolute inset-y-0" style={{ left: column.left, width: column.width }}>
+              {column.photos.map((photo) => (
+                <div key={photo.src} className={`absolute inset-x-0 overflow-hidden bg-[#f3f1ee] ${photo.round}`} style={{ top: photo.top, height: photo.height }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photo.src} alt={photo.alt} className="h-full w-full object-cover" style={{ objectPosition: photo.position }} />
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
       </section>
 
       {/* Perks strip */}
-      <section aria-label="Our promises" className="mt-10 sm:mt-14 bg-[#f4f5f6]">
+      <section aria-label="Our promises" className="bg-[#f4f5f6]">
         <ul className="max-w-[1500px] mx-auto flex flex-wrap items-center justify-center gap-x-12 gap-y-2 px-4 py-4 text-[11px] sm:text-xs uppercase tracking-wide text-[#555555]">
           {PERKS.map((perk) => (
             <li key={perk}>{perk}</li>
