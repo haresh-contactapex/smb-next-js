@@ -2,8 +2,11 @@ import Link from "next/link";
 import HomeHighlights from "@/components/storefront/home/HomeHighlights";
 import HomeNewsletter from "@/components/storefront/home/HomeNewsletter";
 import { listStorefrontProductsPage } from "@/lib/products";
+import { getHomePageContent } from "@/lib/homePage";
+import { COLLECTION_RATIOS, HERO_PHOTO_RATIOS } from "@/lib/shared/homePage";
 
-// Highlights read the live catalog, so never prerender at build time.
+// The page content is edited in the admin panel (CMS -> Home Page), and the highlights
+// read the live catalog, so never prerender at build time.
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -13,77 +16,20 @@ export const metadata = {
 };
 
 const DISPLAY = { fontFamily: "var(--font-playfair), serif" };
-const SHOP_BUTTON =
-  "inline-block bg-[#ef9822] hover:bg-[#d9861a] text-white text-xs font-semibold tracking-wide uppercase px-5 py-2.5 rounded-[3px] transition-colors";
 
-// Two photo columns that scroll vertically in opposite directions, endlessly. Each
+// The hero's photo columns scroll vertically in opposite directions, endlessly: each
 // column's list is rendered twice and the track slides by half its height (see
 // .hero-scroll-up / .hero-scroll-down in storefront.css), so the loop has no jump.
-const HERO_COLUMNS = [
-  {
-    direction: "up",
-    duration: "42s",
-    left: "0%",
-    width: "43.7%",
-    photos: [
-      { src: "/storefront/wedding-bands/hero.jpg", alt: "Hands wearing wedding bands", ratio: "aspect-[4/5]", position: "60% center" },
-      { src: "/storefront/wwb_top_banner.jpg", alt: "Hand holding stacked diamond bands", ratio: "aspect-[3/4]", position: "72% center" },
-      { src: "/storefront/wedding-band-new/hero.jpg", alt: "Hands wearing wedding bands", ratio: "aspect-square", position: "center" },
-    ],
-  },
-  {
-    direction: "down",
-    duration: "50s",
-    left: "49.4%",
-    width: "50.6%",
-    photos: [
-      { src: "/storefront/classic-bands/hero.jpg", alt: "Couple wearing wedding bands", ratio: "aspect-square", position: "45% center" },
-      { src: "/storefront/anniversary-bands/hero.jpg", alt: "Anniversary bands", ratio: "aspect-[4/5]", position: "center" },
-      { src: "/storefront/wwb_top_banner.jpg", alt: "Woman wearing stacked wedding bands", ratio: "aspect-[3/4]", position: "30% center" },
-    ],
-  },
+// `left`/`width` are percentages of the photo block; `seconds` is the time per photo.
+const HERO_LAYOUT = [
+  { key: "photosLeft", direction: "up", seconds: 14, left: "0%", width: "43.7%" },
+  { key: "photosRight", direction: "down", seconds: 16, left: "49.4%", width: "50.6%" },
 ];
 
-const PERKS = ["Free shipping to US", "30-day return policy", "Free lifetime cleaning & inspection"];
+const ASSURANCE_ICON_PATH = "/storefront/wedding-band-new/icons";
 
-// `ratio` varies the tile heights so the row looks staggered, as in the design.
-const COLLECTIONS = [
-  {
-    label: "Wedding Bands",
-    href: "/women-wedding-bands",
-    src: "/storefront/wedding-bands/hero.jpg",
-    ratio: "aspect-[3/4]",
-    text: "Custom wedding bands for men and women, crafted in white, yellow and rose gold and platinum.",
-  },
-  {
-    label: "Classic Bands",
-    href: "/collections/classic-bands",
-    src: "/storefront/classic-bands/womens-classic-wedding-bands.jpg",
-    ratio: "aspect-[5/7]",
-    text: "Timeless plain and comfort-fit bands in polished, matte and brushed finishes.",
-  },
-  {
-    label: "Eternity Bands",
-    href: "/collections/eternity-bands",
-    src: "/storefront/anniversary-bands/womens-anniversary-bands.jpg",
-    ratio: "aspect-[11/14]",
-    text: "Discover eternity bands featuring diamonds or gemstones that encircle the entire ring, creating a timeless symbol of everlasting love.",
-  },
-  {
-    label: "Anniversary Bands",
-    href: "/collections/anniversary-bands",
-    src: "/storefront/anniversary-bands/hero.jpg",
-    ratio: "aspect-[4/5]",
-    text: "Celebrate every milestone with diamond anniversary bands made to be worn for a lifetime.",
-  },
-];
-
-const ASSURANCES = [
-  { icon: "diamond", title: "Certified by GIA", text: "A guarantee of quality and authenticity, you can trust." },
-  { icon: "truck", title: "Free Shipping", text: "Ships across the United States at no additional cost." },
-  { icon: "heart", title: "30-Day Return Policy", text: "Satisfaction guaranteed or your money back is our promise." },
-  { icon: "shield", title: "Free Lifetime Cleaning & Inspection", text: "Professional services to maintain the safety and brilliance of your jewelry." },
-];
+const SHOP_BUTTON =
+  "inline-block bg-[#ef9822] hover:bg-[#d9861a] text-white text-xs font-semibold tracking-wide uppercase px-5 py-2.5 rounded-[3px] transition-colors";
 
 // A failed lookup leaves the highlights empty rather than taking the home page down.
 async function loadHighlights() {
@@ -100,7 +46,8 @@ async function loadHighlights() {
 }
 
 export default async function HomePage() {
-  const { mostLoved, newArrivals } = await loadHighlights();
+  const [content, { mostLoved, newArrivals }] = await Promise.all([getHomePageContent(), loadHighlights()]);
+  const { hero, perks, collections, story, assurances } = content;
 
   return (
     <>
@@ -109,32 +56,29 @@ export default async function HomePage() {
         <div className="px-4 sm:px-8 pt-10 pb-8 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:w-[56%] lg:items-center lg:pl-[7.4vw] lg:pr-[3vw] lg:py-0">
           <div className="max-w-[560px]">
             <h1 className="text-[28px] sm:text-[34px] lg:text-[clamp(26px,3.3vw,50px)] font-normal leading-[1.12] text-[#222222]" style={DISPLAY}>
-              A Lifetime of <span className="text-[1.15em] italic text-[#444444]">love.</span>
-              <br />
-              dedicated to creating custom wedding bands for men and women.
+              {hero.titleLead}
+              {hero.titleAccent && <span className="text-[1.15em] italic text-[#444444]"> {hero.titleAccent}</span>}
+              {(hero.titleLead || hero.titleAccent) && <br />}
+              {hero.title}
             </h1>
-            <p className="mt-6 text-[13px] lg:text-[clamp(12px,1.1vw,16px)] leading-relaxed">
-              Whether you&apos;re searching for classic diamond wedding bands, unique men&apos;s wedding bands, or gold wedding
-              bands for women, Shop My Band has you covered. Our collection includes an array of stunning eternity bands, and
-              more. If you&apos;re looking for a touch of luxury, we also offer rose gold wedding bands.
-            </p>
-            <Link href="/women-wedding-bands" className={`${SHOP_BUTTON} mt-6`}>
-              Shop Now
+            <p className="mt-6 whitespace-pre-line text-[13px] lg:text-[clamp(12px,1.1vw,16px)] leading-relaxed">{hero.intro}</p>
+            <Link href={hero.buttonHref} className={`${SHOP_BUTTON} mt-6`}>
+              {hero.buttonLabel}
             </Link>
           </div>
         </div>
         <div className="group/hero relative h-[380px] sm:h-[460px] lg:absolute lg:inset-y-0 lg:right-0 lg:h-auto lg:w-[40.3%]">
-          {HERO_COLUMNS.map((column) => (
-            <div key={column.left} className="absolute inset-y-0 overflow-hidden" style={{ left: column.left, width: column.width }}>
+          {HERO_LAYOUT.map((column) => (
+            <div key={column.key} className="absolute inset-y-0 overflow-hidden" style={{ left: column.left, width: column.width }}>
               <div
                 className={`hero-scroll-${column.direction} group-hover/hero:[animation-play-state:paused]`}
-                style={{ animationDuration: column.duration }}
+                style={{ animationDuration: `${hero[column.key].length * column.seconds}s` }}
               >
                 {[0, 1].map((copy) => (
                   <div key={copy} aria-hidden={copy === 1 ? "true" : undefined}>
-                    {column.photos.map((photo) => (
-                      <div key={photo.src + photo.position} className="pb-3 sm:pb-4">
-                        <div className={`${photo.ratio} overflow-hidden rounded-2xl bg-[#f3f1ee]`}>
+                    {hero[column.key].map((photo, index) => (
+                      <div key={index} className="pb-3 sm:pb-4">
+                        <div className={`${HERO_PHOTO_RATIOS[index % HERO_PHOTO_RATIOS.length]} overflow-hidden rounded-2xl bg-[#f3f1ee]`}>
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={photo.src} alt={copy === 1 ? "" : photo.alt} className="h-full w-full object-cover" style={{ objectPosition: photo.position }} />
                         </div>
@@ -151,8 +95,8 @@ export default async function HomePage() {
       {/* Perks strip */}
       <section aria-label="Our promises" className="bg-[#f4f5f6]">
         <ul className="max-w-[1500px] mx-auto flex flex-wrap items-center justify-center gap-x-12 gap-y-2 px-4 py-4 text-[11px] sm:text-xs uppercase tracking-wide text-[#555555]">
-          {PERKS.map((perk) => (
-            <li key={perk}>{perk}</li>
+          {perks.map((perk, index) => (
+            <li key={index}>{perk}</li>
           ))}
         </ul>
       </section>
@@ -166,11 +110,11 @@ export default async function HomePage() {
           <p className="mt-2 text-xs sm:text-sm">From bespoke designs to beautifully crafted wedding bands.</p>
         </div>
         <ul className="mt-4 sm:mt-6 flex snap-x items-center gap-4 overflow-x-auto px-4 sm:px-8 py-8 [scrollbar-width:none] lg:justify-center">
-          {COLLECTIONS.map((item) => (
-            <li key={item.label} className="w-[72%] shrink-0 snap-start sm:w-[34%] lg:w-[22%]">
+          {collections.map((item, index) => (
+            <li key={index} className="w-[72%] shrink-0 snap-start sm:w-[34%] lg:w-[22%]">
               <Link
                 href={item.href}
-                className={`group relative block ${item.ratio} overflow-hidden rounded-2xl bg-[#f3f1ee] transition-transform duration-500 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110`}
+                className={`group relative block ${COLLECTION_RATIOS[index % COLLECTION_RATIOS.length]} overflow-hidden rounded-2xl bg-[#f3f1ee] transition-transform duration-500 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={item.src} alt="" className="h-full w-full object-cover" />
@@ -196,29 +140,26 @@ export default async function HomePage() {
       {/* Our story */}
       <section className="max-w-[1500px] mx-auto px-4 sm:px-8 mt-16 sm:mt-24">
         <div className="relative grid items-center gap-8 md:grid-cols-[1.1fr_1fr]">
-          <p
-            aria-hidden="true"
-            className="hidden lg:block absolute -left-2 top-0 text-[80px] uppercase leading-none text-[#222222] [writing-mode:vertical-rl] rotate-180"
-            style={DISPLAY}
-          >
-            Since 2001
-          </p>
+          {story.since && (
+            <p
+              aria-hidden="true"
+              className="hidden lg:block absolute -left-2 top-0 text-[80px] uppercase leading-none text-[#222222] [writing-mode:vertical-rl] rotate-180"
+              style={DISPLAY}
+            >
+              {story.since}
+            </p>
+          )}
           <div className="overflow-hidden rounded-2xl bg-[#f3f1ee] lg:ml-24">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/storefront/wwb_top_banner.jpg" alt="Hand wearing stacked wedding bands" className="h-[280px] sm:h-[360px] w-full object-cover object-[75%_center]" />
+            <img src={story.imageSrc} alt={story.imageAlt} className="h-[280px] sm:h-[360px] w-full object-cover object-[75%_center]" />
           </div>
           <div className="max-w-lg">
-            <p className="text-xs sm:text-[13px] leading-relaxed">
-              shopmyband.com is a division of My Bridal Ring focused on custom wedding bands for men and women. My Bridal Ring
-              is a manufacturer based in the Los Angeles area for over 25 years. It is family owned and operated with over 60
-              years of combined experience from diamond manufacturing from rough diamonds to entire process of jewelry
-              manufacturing.
-            </p>
+            <p className="whitespace-pre-line text-xs sm:text-[13px] leading-relaxed">{story.text}</p>
             <h2 className="mt-4 text-[34px] sm:text-[44px] font-normal uppercase leading-none text-[#222222]" style={DISPLAY}>
-              Our Story
+              {story.heading}
             </h2>
-            <Link href="/women-wedding-bands" className={`${SHOP_BUTTON} mt-6`}>
-              Shop Now
+            <Link href={story.buttonHref} className={`${SHOP_BUTTON} mt-6`}>
+              {story.buttonLabel}
             </Link>
           </div>
         </div>
@@ -228,10 +169,10 @@ export default async function HomePage() {
       <section className="mt-16 sm:mt-24 bg-[#f4f3f1] py-10 sm:py-12">
         <div className="max-w-[1500px] mx-auto px-4 sm:px-8">
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {ASSURANCES.map((item) => (
-              <li key={item.title} className="flex items-start gap-3">
+            {assurances.map((item, index) => (
+              <li key={index} className="flex items-start gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`/storefront/wedding-band-new/icons/${item.icon}.svg`} alt="" aria-hidden="true" className="mt-0.5 h-8 w-8 shrink-0" />
+                <img src={`${ASSURANCE_ICON_PATH}/${item.icon}.svg`} alt="" aria-hidden="true" className="mt-0.5 h-8 w-8 shrink-0" />
                 <div>
                   <h3 className="text-[12px] font-semibold text-[#333333]">{item.title}</h3>
                   <p className="mt-0.5 text-[11px] leading-snug">{item.text}</p>
@@ -241,7 +182,7 @@ export default async function HomePage() {
           </ul>
           <div className="mt-12 text-center">
             <h2 className="text-[26px] sm:text-[34px] font-normal text-[#333333]" style={DISPLAY}>
-              Stay in the Loop for discounts and offers
+              {content.newsletterHeading}
             </h2>
             <HomeNewsletter />
           </div>
