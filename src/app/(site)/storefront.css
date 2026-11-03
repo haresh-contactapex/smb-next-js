@@ -424,3 +424,15 @@
   .cms-content table.cms-contact td { padding: 2.2rem 1.4rem; }
   .cms-content table.cms-contact td:last-child { border-left: 1px solid #ece8e2; border-top: 0; }
 }
+
+/* Home hero: photo columns that scroll vertically forever. The track holds the photo
+   list twice, so sliding it by half its height loops without a jump. */
+@keyframes hero-scroll-up { from { transform: translateY(0); } to { transform: translateY(-50%); } }
+@keyframes hero-scroll-down { from { transform: translateY(-50%); } to { transform: translateY(0); } }
+.hero-scroll-up,
+.hero-scroll-down { animation: linear infinite; will-change: transform; }
+.hero-scroll-up { animation-name: hero-scroll-up; }
+.hero-scroll-down { animation-name: hero-scroll-down; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-scroll-up, .hero-scroll-down { animation: none; }
+}
