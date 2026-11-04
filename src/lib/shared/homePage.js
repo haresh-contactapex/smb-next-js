@@ -4,10 +4,10 @@
 // See docs/storefront/home-page.md.
 
 export const ASSURANCE_ICONS = [
-  { value: "diamond", label: "Diamond" },
-  { value: "truck", label: "Delivery truck" },
-  { value: "heart", label: "Heart" },
-  { value: "shield", label: "Shield" },
+  { value: "diamond", label: "Certificate" },
+  { value: "truck", label: "Shipping box" },
+  { value: "heart", label: "Returns box" },
+  { value: "shield", label: "Cleaning" },
 ];
 
 // Shapes the home page cycles through, so the hero photos in a column differ in height.

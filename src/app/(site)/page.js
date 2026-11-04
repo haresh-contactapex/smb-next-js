@@ -26,7 +26,7 @@ const HERO_LAYOUT = [
   { key: "photosRight", direction: "down", seconds: 16, left: "52.5%", width: "47.5%" },
 ];
 
-const ASSURANCE_ICON_PATH = "/storefront/wedding-band-new/icons";
+const ASSURANCE_ICON_PATH = "/storefront/home/icons";
 
 const SHOP_BUTTON =
   "inline-block bg-[#ef9822] hover:bg-[#d9861a] text-white text-xs font-semibold tracking-wide uppercase px-9 py-3 rounded-lg transition-colors";
@@ -186,7 +186,7 @@ export default async function HomePage() {
             {assurances.map((item, index) => (
               <li key={index} className="flex items-start gap-3">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={`${ASSURANCE_ICON_PATH}/${item.icon}.svg`} alt="" aria-hidden="true" className="mt-0.5 h-8 w-8 shrink-0" />
+                <img src={`${ASSURANCE_ICON_PATH}/${item.icon}.png`} alt="" aria-hidden="true" className="h-9 w-10 shrink-0 object-contain" />
                 <div>
                   <h3 className="text-[12px] font-semibold text-[#333333]">{item.title}</h3>
                   <p className="mt-0.5 text-[11px] leading-snug">{item.text}</p>
