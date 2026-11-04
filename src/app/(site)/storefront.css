@@ -117,6 +117,7 @@
 .cms-content ul { list-style: disc; }
 .cms-content ol { list-style: decimal; }
 .cms-content li { margin: 0.3em 0; }
+.cms-content li::marker { color: #d4920a; }
 /* The editor writes list text inside a paragraph; keep the list as tight as plain items. */
 .cms-content li > p { margin: 0; }
 .cms-content a { color: #1c3b6a; text-decoration: underline; text-underline-offset: 2px; }
