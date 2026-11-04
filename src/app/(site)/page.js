@@ -157,7 +157,7 @@ export default async function HomePage() {
             <div className="max-w-lg">
               <p className="whitespace-pre-line text-xs sm:text-[13px] leading-relaxed">{story.text}</p>
               <h2
-                className="relative z-10 mt-10 sm:mt-12 text-[38px] sm:text-[clamp(44px,4.6vw,68px)] font-normal uppercase leading-none tracking-tight text-[#222222] md:-ml-[16%]"
+                className="relative z-10 mt-10 sm:mt-12 text-[38px] sm:text-[clamp(44px,4.6vw,68px)] font-normal uppercase leading-none tracking-tight text-[#222222] md:-ml-[22%]"
                 style={DISPLAY}
               >
                 {story.heading}
