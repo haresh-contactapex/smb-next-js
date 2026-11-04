@@ -22,8 +22,8 @@ const DISPLAY = { fontFamily: "var(--font-playfair), serif" };
 // .hero-scroll-up / .hero-scroll-down in storefront.css), so the loop has no jump.
 // `left`/`width` are percentages of the photo block; `seconds` is the time per photo.
 const HERO_LAYOUT = [
-  { key: "photosLeft", direction: "up", seconds: 14, left: "0%", width: "43.7%" },
-  { key: "photosRight", direction: "down", seconds: 16, left: "49.4%", width: "50.6%" },
+  { key: "photosLeft", direction: "up", seconds: 14, left: "0%", width: "47.5%" },
+  { key: "photosRight", direction: "down", seconds: 16, left: "52.5%", width: "47.5%" },
 ];
 
 const ASSURANCE_ICON_PATH = "/storefront/wedding-band-new/icons";
