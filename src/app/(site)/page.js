@@ -140,13 +140,19 @@ export default async function HomePage() {
       {/* Our story. "Since" text hugs the page's left edge; the heading overlaps the photo. */}
       <section className="relative mt-16 sm:mt-24">
         {story.since && (
-          <p
-            aria-hidden="true"
-            className="hidden lg:block absolute left-0 top-0 -translate-x-[6%] text-[clamp(64px,6.5vw,100px)] uppercase leading-[0.95] text-[#222222] [writing-mode:vertical-rl] rotate-180"
-            style={DISPLAY}
-          >
-            {story.since}
-          </p>
+          <div aria-hidden="true" className="hidden lg:flex absolute inset-y-0 left-0 items-center -translate-x-[6%]">
+            <p
+              className="text-center text-[clamp(64px,6.5vw,100px)] uppercase leading-[0.95] text-[#222222] [writing-mode:vertical-rl] rotate-180"
+              style={DISPLAY}
+            >
+              {/* One line per word ("Since" / "2001"), whatever the photo height. */}
+              {story.since.split(/\s+/).map((word, index) => (
+                <span key={index} className="block whitespace-nowrap">
+                  {word}
+                </span>
+              ))}
+            </p>
+          </div>
         )}
         <div className="max-w-[1500px] mx-auto px-4 sm:px-8">
           <div className="grid items-center gap-8 md:grid-cols-[1.1fr_1fr] lg:pl-[12vw]">
