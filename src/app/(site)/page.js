@@ -139,7 +139,7 @@ export default async function HomePage() {
 
       {/* Our story. The "Since" text sits inside the content container, a fixed distance from the photo; the heading overlaps the photo. */}
       <section className="mt-16 sm:mt-24">
-        <div className="max-w-[1100px] mx-auto px-4 sm:px-8">
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-8">
           <div
             className={`relative grid items-center gap-8 md:grid-cols-[1.1fr_1fr]${story.since ? " lg:pl-[calc(var(--since-size)*1.6+2rem)]" : ""}`}
             style={{ "--since-size": "clamp(44px,4.5vw,68px)" }}
@@ -161,10 +161,10 @@ export default async function HomePage() {
             )}
             <div className="overflow-hidden rounded-2xl bg-[#f3f1ee]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={story.imageSrc} alt={story.imageAlt} className="h-[280px] sm:h-[320px] w-full object-cover object-[75%_center]" />
+              <img src={story.imageSrc} alt={story.imageAlt} className="h-[280px] sm:h-[320px] md:h-auto md:aspect-[4/3] w-full object-cover object-[75%_center]" />
             </div>
-            <div className="max-w-[340px]">
-              <p className="whitespace-pre-line text-xs leading-relaxed">{story.text}</p>
+            <div className="max-w-[440px]">
+              <p className="whitespace-pre-line text-xs sm:text-[13px] leading-relaxed">{story.text}</p>
               <h2
                 className="relative z-10 mt-8 sm:mt-10 text-[32px] sm:text-[clamp(34px,3.4vw,50px)] font-normal uppercase leading-none tracking-tight text-[#222222] md:-ml-[22%]"
                 style={DISPLAY}
