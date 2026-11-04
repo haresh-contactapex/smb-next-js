@@ -132,6 +132,9 @@ export const adminPanelConfig = {
         { id: "add-post", label: "Add Post", href: "/admin/blog/new" },
       ],
     },
+    // Subscribers from the home page "Stay in the Loop" form. The "newsletter" id maps onto the
+    // Newsletter module in src/lib/permissions.js (View / Delete / Export); keep the id.
+    { type: "link", id: "newsletter", label: "Newsletter", icon: "mail", href: "/admin/newsletter" },
     { type: "link", id: "media", label: "Media", icon: "image", href: "/admin/media" },
     { type: "link", id: "reports", label: "Reports", icon: "bar-chart-2", href: "/admin/reports" },
     {

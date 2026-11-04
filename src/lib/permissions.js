@@ -112,6 +112,12 @@ export const KNOWN_MODULES = {
     actions: ["view", "create", "edit", "delete", "publish"],
     alwaysInclude: true,
   },
+  newsletter: {
+    label: "Newsletter",
+    singular: "Subscriber",
+    plural: "Subscribers",
+    actions: ["view", "delete", "export"],
+  },
   reports: {
     label: "Reports",
     singular: "Report",

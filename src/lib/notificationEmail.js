@@ -11,6 +11,8 @@
 //   buildProductQuestionConfirmationEmail(data) shopper: we got your question
 //   buildContactMessageAlertEmail(data)        store: a visitor used the Contact form
 //   buildContactMessageConfirmationEmail(data)  visitor: we got your message
+//   buildNewsletterWelcomeEmail(data)           subscriber: you're on the list
+//   buildNewsletterSubscriberAlertEmail(data)   store: someone subscribed to the newsletter
 //
 // Shared `data`: { storeName, supportEmail, shopUrl, logoSrc }.
 
@@ -171,5 +173,28 @@ export function buildContactMessageConfirmationEmail({ contact, ...data }) {
     detailsText: `Your message:\n${contact.message}`,
     button: data.shopUrl ? { label: "Visit the shop", url: data.shopUrl } : null,
     note: { lead: "Something to add?", html: "Just reply to this email." },
+  });
+}
+
+export function buildNewsletterWelcomeEmail(data) {
+  const { storeName, shopUrl } = data;
+  return render(data, {
+    subject: `You're subscribed to ${storeName} updates`,
+    heading: "You're on the list.",
+    intro: `Thanks for subscribing. We'll email you about discounts and offers from ${storeName}.`,
+    button: shopUrl ? { label: "Visit the shop", url: shopUrl } : null,
+    note: { lead: "Didn't sign up?", html: "Just reply to this email and we'll take you off the list." },
+  });
+}
+
+// `subscriber` is { email, createdAt }; the address came from a public form and is escaped by render().
+export function buildNewsletterSubscriberAlertEmail({ subscriber, adminUrl, ...data }) {
+  return render(data, {
+    subject: `New newsletter subscriber on ${data.storeName}`,
+    heading: "New newsletter subscriber.",
+    intro: `Someone just subscribed to ${data.storeName} discounts and offers from the home page.`,
+    facts: [["Email", subscriber.email]],
+    button: adminUrl ? { label: "View subscribers", url: adminUrl } : null,
+    note: { lead: "Automatic alert.", html: "You're getting this because a visitor joined the newsletter." },
   });
 }

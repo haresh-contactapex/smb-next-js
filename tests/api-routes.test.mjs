@@ -9,7 +9,7 @@ const apiRoot = fileURLToPath(new URL("../src/app/api/", import.meta.url));
 
 // The staff-facing endpoints. Customer, auth and storefront routes have their own helpers and
 // response shapes (see src/app/api/account/respond.js) and are not covered by these checks.
-const STAFF_AREAS = ["addresses", "admin-roles", "blog", "categories", "cms", "coupons", "customers", "media", "notifications", "orders", "products", "reports", "reviews", "settings", "users"];
+const STAFF_AREAS = ["addresses", "admin-roles", "blog", "categories", "cms", "coupons", "customers", "media", "newsletter-subscribers", "notifications", "orders", "products", "reports", "reviews", "settings", "users"];
 
 function routeFiles() {
   const found = [];

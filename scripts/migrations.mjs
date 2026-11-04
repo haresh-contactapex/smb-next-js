@@ -30,6 +30,7 @@ export const MIGRATIONS = [
   "docs/engraving/engraving-tables-only.sql",
   "docs/storefront/wishlist-table-only.sql",
   "docs/storefront/home-page-table-only.sql",
+  "docs/newsletter/newsletter-subscribers-table-only.sql",
   "docs/account/customer-account-tables-only.sql",
   "docs/settings/general-store-tables-only.sql",
   "docs/settings/orders-table-only.sql",

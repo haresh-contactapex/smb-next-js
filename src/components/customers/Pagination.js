@@ -14,7 +14,7 @@ function getPageNumbers(page, pageCount) {
   return items;
 }
 
-export default function Pagination({ page, pageCount, totalCount, pageSize, onPageChange, onPageSizeChange }) {
+export default function Pagination({ page, pageCount, totalCount, pageSize, onPageChange, onPageSizeChange, noun = "customers" }) {
   if (totalCount === 0) return null;
 
   const start = (page - 1) * pageSize + 1;
@@ -26,7 +26,7 @@ export default function Pagination({ page, pageCount, totalCount, pageSize, onPa
       <div className="flex flex-wrap items-center gap-4">
         <p className="text-xs text-slate-400">
           Showing <span className="font-medium text-slate-600 dark:text-slate-300">{start}–{end}</span> of{" "}
-          <span className="font-medium text-slate-600 dark:text-slate-300">{totalCount}</span> customers
+          <span className="font-medium text-slate-600 dark:text-slate-300">{totalCount}</span> {noun}
         </p>
         <label className="flex items-center gap-2 text-xs text-slate-400">
           Rows per page

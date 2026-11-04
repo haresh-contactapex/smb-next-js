@@ -6,6 +6,7 @@ import path from "path";
 import { buildNewOrderAlertEmail, buildOrderConfirmationEmail, buildOrderStatusEmail, buildRefundRequestAlertEmail } from "./orderEmail";
 import { buildCustomerWelcomeEmail, buildLoginOtpEmail, buildNewCustomerAlertEmail, buildPasswordResetEmail, buildProductQuestionAlertEmail, buildProductQuestionConfirmationEmail, buildStaffWelcomeEmail } from "./notificationEmail";
 import { buildContactMessageAlertEmail, buildContactMessageConfirmationEmail } from "./notificationEmail";
+import { buildNewsletterSubscriberAlertEmail, buildNewsletterWelcomeEmail } from "./notificationEmail";
 import { getSiteOrigin, isPublicOrigin } from "./siteUrl";
 
 const LOGO_CID = "shopmyband-logo";
@@ -207,6 +208,20 @@ export async function sendContactMessageAdminEmail({ to, storeName, contact }) {
 // `replyTo` (the store's support address) rather than the no-reply sender.
 export async function sendContactMessageConfirmationEmail({ to, storeName, contact, replyTo }) {
   return sendBrandedEmail(to, buildContactMessageConfirmationEmail, { storeName, contact }, { replyTo: replyTo || undefined });
+}
+
+// Sent to a visitor who joined the newsletter from the home page. Replies go to `replyTo` (the
+// store's address) rather than the no-reply sender.
+export async function sendNewsletterWelcomeEmail({ to, storeName, replyTo }) {
+  return sendBrandedEmail(to, buildNewsletterWelcomeEmail, { storeName }, { replyTo: replyTo || undefined });
+}
+
+// Sent to the store when someone subscribes — a "someone joined" notice like the new-customer
+// one. `subscriber` is { email } and is escaped by the template.
+export async function sendNewsletterSubscriberAlertEmail({ to, storeName, subscriber }) {
+  const origin = await getSiteOrigin();
+  const adminUrl = origin ? `${origin}/admin/newsletter` : null;
+  return sendBrandedEmail(to, buildNewsletterSubscriberAlertEmail, { storeName, subscriber, adminUrl });
 }
 
 // The logo travels inside order emails (an inline attachment the HTML points at with cid:), so it
