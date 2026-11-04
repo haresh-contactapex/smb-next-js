@@ -51,6 +51,8 @@ export const categorySlugFor = (name) => blogSlugify(name, 80);
 export const blogPostPath = (categorySlug, slug) => `/blogs/${categorySlug}/${slug}`;
 export const blogCategoryPath = (categorySlug) => `/blogs/${categorySlug}`;
 export const BLOG_INDEX_PATH = "/blog";
+/** The id of the element holding a post's body; the Tailwind CSS built from that body is scoped to it (src/lib/utilityCss.js). */
+export const BLOG_BODY_ID = "blog-article";
 
 export function blogSlugError(slug) {
   if (!slug) return "Enter a URL for the post.";

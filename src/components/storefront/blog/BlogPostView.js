@@ -7,7 +7,7 @@ import BlogShare from "./BlogShare";
 import BlogPostNav from "./BlogPostNav";
 import BlogPostSkeleton from "./BlogPostSkeleton";
 import useBlogNavigation from "./useBlogNavigation";
-import { BLOG_INDEX_PATH, blogCategoryPath, blogPostPath, formatBlogDate } from "@/lib/blogRules";
+import { BLOG_BODY_ID, BLOG_INDEX_PATH, blogCategoryPath, blogPostPath, formatBlogDate } from "@/lib/blogRules";
 
 /**
  * A blog post as the storefront shows it: breadcrumb, title, date, author and category,
@@ -112,7 +112,7 @@ export default function BlogPostView({ post, origin = "", utilityCss = "" }) {
           )}
 
           {/* The body was cleaned by the CMS allowlist sanitizer when saved and again when read. */}
-          <div className="cms-content blog-body mt-8" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
+          <div id={BLOG_BODY_ID} className="cms-content blog-body mt-8" dangerouslySetInnerHTML={{ __html: post.contentHtml }} />
 
           {(post.tags.length > 0 || origin) && (
             <div className="mt-10 flex flex-col gap-4 rounded border border-[#e5e7eb] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
