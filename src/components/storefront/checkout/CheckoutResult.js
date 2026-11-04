@@ -73,7 +73,7 @@ export default function CheckoutResult({ result }) {
         <StoreIcon name={outcome.placed ? "check" : "info"} className="h-8 w-8 [stroke-width:2.5]" />
       </span>
 
-      <h1 className="mt-8 text-[26px] font-semibold text-[#222222] sm:text-[30px]">{outcome.title}</h1>
+      <h1 className="mt-8 text-[28px] font-normal text-[#222222] sm:text-[34px]" style={{ fontFamily: "var(--font-display), serif" }}>{outcome.title}</h1>
       <p className="mt-3 max-w-[520px] text-[16px] text-[#555555]">{outcome.body}</p>
 
       {result.details ? (
