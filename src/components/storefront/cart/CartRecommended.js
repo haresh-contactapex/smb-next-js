@@ -20,7 +20,7 @@ export default function CartRecommended({ products }) {
       <h2
         id="cart-recommended-heading"
         className="mb-12 text-center text-[24px] font-normal text-[#333333] sm:text-[30px]"
-        style={{ fontFamily: "var(--font-playfair), serif" }}
+        style={{ fontFamily: "var(--font-display), serif" }}
       >
         Recommended Products
       </h2>

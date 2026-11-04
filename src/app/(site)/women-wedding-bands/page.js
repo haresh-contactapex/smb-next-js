@@ -48,7 +48,7 @@ export default async function WomenWeddingBandsPage() {
           <div className="text-center max-w-4xl mx-auto px-2">
             <h1
               className="text-[36px] sm:text-[46px] font-normal text-[#333333] mb-4 tracking-normal leading-tight"
-              style={{ fontFamily: "var(--font-playfair), serif" }}
+              style={{ fontFamily: "var(--font-display), serif" }}
             >
               Women Wedding Bands
             </h1>

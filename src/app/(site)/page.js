@@ -15,7 +15,7 @@ export const metadata = {
     "Classic diamond wedding bands, men's wedding bands, eternity bands and more. Custom wedding bands for men and women from Shop My Band.",
 };
 
-const DISPLAY = { fontFamily: "var(--font-playfair), serif" };
+const DISPLAY = { fontFamily: "var(--font-display), serif" };
 
 // The hero's photo columns scroll vertically in opposite directions, endlessly: each
 // column's list is rendered twice and the track slides by half its height (see
@@ -57,7 +57,7 @@ export default async function HomePage() {
           <div className="max-w-[560px]">
             <h1 className="text-[28px] sm:text-[34px] lg:text-[clamp(26px,3.3vw,50px)] font-normal leading-[1.12] text-[#222222]" style={DISPLAY}>
               {hero.titleLead}
-              {hero.titleAccent && <span className="text-[1.15em] italic text-[#444444]"> {hero.titleAccent}</span>}
+              {hero.titleAccent && <span className="text-[1.3em] leading-none text-[#444444]" style={{ fontFamily: "var(--font-script), cursive" }}> {hero.titleAccent}</span>}
               {(hero.titleLead || hero.titleAccent) && <br />}
               {hero.title}
             </h1>

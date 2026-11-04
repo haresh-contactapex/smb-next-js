@@ -128,7 +128,7 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
     <div className="w-full lg:w-[45%] flex flex-col pt-1 sm:pt-4 lg:pr-8">
       <h1
         className="text-[34px] sm:text-[40px] font-normal text-[#333333] tracking-normal leading-tight mb-1"
-        style={{ fontFamily: "var(--font-playfair), serif" }}
+        style={{ fontFamily: "var(--font-display), serif" }}
       >
         {product.title}
       </h1>

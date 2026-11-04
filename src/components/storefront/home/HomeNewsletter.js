@@ -6,7 +6,7 @@ import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvid
 import { normalizeNewsletterEmail, validateNewsletterEmail } from "@/lib/shared/newsletter";
 
 const SEND_FAILED = "We couldn't subscribe you right now. Please try again.";
-const DISPLAY = { fontFamily: "var(--font-playfair), serif" };
+const DISPLAY = { fontFamily: "var(--font-display), serif" };
 
 // What the visitor sees once the address is saved, in place of the form. `already` is true when
 // the address was on the list before, so the card never claims to have sent a welcome email then.

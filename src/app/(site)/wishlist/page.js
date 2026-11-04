@@ -13,7 +13,7 @@ export default function WishlistRoute() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16">
         <h1
           className="text-[34px] sm:text-[40px] font-normal text-[#333333] tracking-normal leading-tight mb-8"
-          style={{ fontFamily: "var(--font-playfair), serif" }}
+          style={{ fontFamily: "var(--font-display), serif" }}
         >
           My Wishlist
         </h1>

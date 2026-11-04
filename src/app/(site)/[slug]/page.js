@@ -69,7 +69,7 @@ export default async function CmsContentPage({ params }) {
       <div className="bg-[#faf7f2] rounded-t-[32px] sm:rounded-t-[50px] px-4 pt-10 sm:pt-14 pb-16 sm:pb-24">
         <h1
           className="mx-auto max-w-4xl text-center text-[30px] sm:text-[40px] font-normal text-[#333333] leading-tight"
-          style={{ fontFamily: "var(--font-playfair), serif" }}
+          style={{ fontFamily: "var(--font-display), serif" }}
         >
           {page.title}
         </h1>

@@ -84,7 +84,7 @@ export default function CartDrawer() {
         }`}
       >
         <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
-          <h2 id="cart-drawer-title" className="text-[20px] font-normal text-[#333333]" style={{ fontFamily: "var(--font-playfair), serif" }}>
+          <h2 id="cart-drawer-title" className="text-[20px] font-normal text-[#333333]" style={{ fontFamily: "var(--font-display), serif" }}>
             Shopping Cart{count > 0 && <span className="ml-1.5 text-[14px] text-gray-400">({count})</span>}
           </h2>
           <button

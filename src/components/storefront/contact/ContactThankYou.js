@@ -40,7 +40,7 @@ export default function ContactThankYou() {
         ref={headingRef}
         tabIndex={-1}
         className="mt-8 font-normal text-[#0f2252] outline-none"
-        style={{ fontFamily: "var(--font-playfair), serif", fontSize: "clamp(28px, 3.6vw, 38px)" }}
+        style={{ fontFamily: "var(--font-display), serif", fontSize: "clamp(28px, 3.6vw, 38px)" }}
       >
         {details?.firstName ? `Thank you, ${details.firstName}!` : "Thank you for getting in touch!"}
       </h1>

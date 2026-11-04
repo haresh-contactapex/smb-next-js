@@ -36,7 +36,7 @@ export default async function SearchPage({ searchParams }) {
       <div className="mx-auto max-w-2xl text-center fade-in-up">
         <h1
           className="mb-6 text-[36px] font-normal leading-tight tracking-normal text-[#333333] sm:text-[46px]"
-          style={{ fontFamily: "var(--font-playfair), serif" }}
+          style={{ fontFamily: "var(--font-display), serif" }}
         >
           Search
         </h1>

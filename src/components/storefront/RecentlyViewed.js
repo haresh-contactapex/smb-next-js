@@ -39,7 +39,7 @@ export default function RecentlyViewed({ current }) {
       <h2
         id="recently-viewed-heading"
         className="text-center text-[24px] sm:text-[30px] font-normal text-[#333333] mb-12"
-        style={{ fontFamily: "var(--font-playfair), serif" }}
+        style={{ fontFamily: "var(--font-display), serif" }}
       >
         Recently Viewed Products
       </h2>

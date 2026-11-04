@@ -8,7 +8,7 @@ export default function ProductNotFound() {
         <p className="text-xs sm:text-sm font-semibold tracking-[0.3em] uppercase text-[#d4920a] mb-4">Product not found</p>
         <h1
           className="text-[32px] sm:text-[44px] font-normal text-[#333333] leading-tight mb-4"
-          style={{ fontFamily: "var(--font-playfair), serif" }}
+          style={{ fontFamily: "var(--font-display), serif" }}
         >
           We couldn&apos;t find that band
         </h1>

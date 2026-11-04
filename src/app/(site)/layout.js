@@ -1,4 +1,4 @@
-import localFont from "next/font/local";
+import { Jomolhari, Birthstone_Bounce } from "next/font/google";
 import GoogleSansFont from "@/components/storefront/GoogleSansFont";
 import TopBar from "@/components/storefront/TopBar";
 import SiteHeader from "@/components/storefront/SiteHeader";
@@ -12,26 +12,33 @@ import SearchOverlay from "@/components/storefront/search/SearchOverlay";
 import { listShippingCountries } from "@/lib/storefrontCart";
 import "./storefront.css";
 
-// Self-hosted like Inter in the root layout (the Google Fonts "latin" variable file in src/fonts).
-const playfair = localFont({
-  src: "../../fonts/playfair-display-latin.woff2",
-  weight: "400 700",
-  style: "normal",
+// Jomolhari from Google Fonts; next/font downloads and self-hosts it at build time.
+const display = Jomolhari({
+  subsets: ["latin"],
+  weight: "400",
   display: "swap",
-  variable: "--font-playfair",
+  variable: "--font-display",
+});
+
+// Script face for the accent word in the home page hero ("love.").
+const script = Birthstone_Bounce({
+  subsets: ["latin"],
+  weight: "400",
+  display: "swap",
+  variable: "--font-script",
 });
 
 // Public storefront shell: announcement bar / header / main container / footer
 // as distinct bands. Always light — the admin dark-mode class on <html> doesn't apply here.
-// Google Sans is the base font; Playfair Display is the display font for headings
-// (applied inline via var(--font-playfair)).
+// Google Sans is the base font; Jomolhari is the display font for headings
+// (applied inline via var(--font-display)).
 // The cart provider wraps everything so the header icon, the product page's
 // Add to Cart and the slide-out drawer share one cart.
 export default function SiteLayout({ children }) {
   return (
     <div
       id="storefront-root"
-      className={`${playfair.variable} font-google-sans min-h-screen flex flex-col bg-white text-[#555555] text-[16px] overflow-x-clip`}
+      className={`${display.variable} ${script.variable} font-google-sans min-h-screen flex flex-col bg-white text-[#555555] text-[16px] overflow-x-clip`}
     >
       <GoogleSansFont />
       <CartProvider countries={listShippingCountries()}>

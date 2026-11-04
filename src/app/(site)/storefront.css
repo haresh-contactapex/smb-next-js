@@ -288,7 +288,7 @@
 }
 /* Her / Him landing page (the second Wedding Band page): a centered introduction, then two colour-blocked halves
    (picture card, label, title, text, button) with an "&" between them, then a row of four small linked cards. */
-.cms-content.cms-wide > h1:first-child { margin: 0 auto 1rem; padding-top: 3.5rem; max-width: 760px; color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: clamp(2.2rem, 4.5vw, 3.2rem); font-weight: 400; line-height: 1.15; text-align: center; }
+.cms-content.cms-wide > h1:first-child { margin: 0 auto 1rem; padding-top: 3.5rem; max-width: 760px; color: #333333; font-family: var(--font-display), Georgia, serif; font-size: clamp(2.2rem, 4.5vw, 3.2rem); font-weight: 400; line-height: 1.15; text-align: center; }
 .cms-content.cms-wide > h1:first-child + p { max-width: 760px; margin-bottom: 2.4rem; color: #666666; font-size: 15px; line-height: 1.8; text-align: center; }
 .cms-content table.cms-split,
 .cms-content table.cms-split tbody { display: block; width: 100%; margin: 0; }
@@ -300,17 +300,17 @@
 .cms-content table.cms-split td img { display: block; box-sizing: content-box; width: 340px; max-width: calc(100% - 16px); height: auto; margin: 0 auto; border: 8px solid #ffffff; box-shadow: 0 18px 40px rgba(60, 40, 30, 0.18); }
 .cms-content table.cms-split td > p:nth-child(2) { margin: 0; color: #8a6b5f; font-size: 12px; letter-spacing: 0.25em; text-transform: uppercase; }
 .cms-content table.cms-split td:last-child > p:nth-child(2) { color: #5b6670; }
-.cms-content table.cms-split h3 { margin: 0.4rem 0 0.7rem; color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: 34px; font-weight: 400; line-height: 1.2; }
+.cms-content table.cms-split h3 { margin: 0.4rem 0 0.7rem; color: #333333; font-family: var(--font-display), Georgia, serif; font-size: 34px; font-weight: 400; line-height: 1.2; }
 .cms-content table.cms-split td > p:nth-child(4) { max-width: 22rem; margin: 0 auto 1.5rem; color: #555555; font-size: 15px; line-height: 1.6; }
 .cms-content table.cms-split td > p:last-child { margin: auto 0 0; }
 .cms-content table.cms-split a.cms-btn { padding: 0.75em 1.9em; border-radius: 0; background-color: #333333; font-size: 13px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
 .cms-content table.cms-split a.cms-btn:hover { background-color: #d4920a; color: #1f1f1f; }
-.cms-content table.cms-split tbody::after { content: "&"; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background-color: #ffffff; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: 20px; font-style: italic; transform: translate(-50%, -50%); }
+.cms-content table.cms-split tbody::after { content: "&"; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background-color: #ffffff; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); color: #333333; font-family: var(--font-display), Georgia, serif; font-size: 20px; font-style: italic; transform: translate(-50%, -50%); }
 @media (max-width: 720px) {
   .cms-content table.cms-split tr { grid-template-columns: minmax(0, 1fr); }
   .cms-content table.cms-split tbody::after { display: none; }
 }
-.cms-content.cms-wide > h3 { margin: 3.5rem auto 1.8rem; color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: 26px; font-weight: 400; text-align: center; }
+.cms-content.cms-wide > h3 { margin: 3.5rem auto 1.8rem; color: #333333; font-family: var(--font-display), Georgia, serif; font-size: 26px; font-weight: 400; text-align: center; }
 /* Chips: the whole card is the link (the heading's link is stretched over it); "Shop" is drawn, not typed. */
 .cms-content table.cms-chips,
 .cms-content table.cms-chips tbody { display: block; width: 100%; max-width: 1180px; margin: 0 auto; }
@@ -342,7 +342,7 @@
 .cms-content table.cms-luxe-hero td:last-child { display: flex; flex-direction: column; justify-content: center; padding: 2.5rem clamp(1.5rem, 6vw, 5rem) 2.5rem clamp(1.5rem, 3vw, 2.4rem); }
 .cms-content p.cms-eyebrow { margin: 0 0 0.9rem; color: #d4920a; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
 .cms-content table.cms-luxe-hero h1,
-.cms-content table.cms-luxe-hero h2 { margin: 0 0 1.2rem; color: #0f2252; font-family: var(--font-playfair), serif; font-size: clamp(30px, 4.2vw, 46px); font-weight: 400; line-height: 1.08; }
+.cms-content table.cms-luxe-hero h2 { margin: 0 0 1.2rem; color: #0f2252; font-family: var(--font-display), serif; font-size: clamp(30px, 4.2vw, 46px); font-weight: 400; line-height: 1.08; }
 .cms-content table.cms-luxe-hero td:last-child p { margin: 0; color: #3a4256; font-size: 13px; line-height: 1.85; }
 .cms-content table.cms-luxe-hero td:last-child p.cms-eyebrow { margin-bottom: 0.9rem; color: #d4920a; font-size: 11px; line-height: 1.4; }
 .cms-content table.cms-luxe-hero td:last-child p:last-child { margin-top: 1.7rem; }
@@ -362,7 +362,7 @@
 .cms-content table.cms-luxe-tiles td { display: flex; flex-direction: column; align-items: center; padding: 0 0 1.9rem; border: 0; background-color: #fbf9f7; text-align: center; }
 .cms-content table.cms-luxe-tiles td > p:first-child { width: 100%; margin: 0; }
 .cms-content table.cms-luxe-tiles td img { display: block; width: 100%; height: auto; aspect-ratio: 306 / 156; object-fit: cover; margin: 0; }
-.cms-content table.cms-luxe-tiles h3 { margin: 1.4rem 1.2rem 0.6rem; color: #0f2252; font-family: var(--font-playfair), serif; font-size: 22px; font-weight: 400; line-height: 1.2; }
+.cms-content table.cms-luxe-tiles h3 { margin: 1.4rem 1.2rem 0.6rem; color: #0f2252; font-family: var(--font-display), serif; font-size: 22px; font-weight: 400; line-height: 1.2; }
 .cms-content table.cms-luxe-tiles td p { margin: 0 1.6rem 1.2rem; color: #3a4256; font-size: 12.5px; line-height: 1.9; }
 .cms-content table.cms-luxe-tiles td > p:first-child { margin: 0; }
 .cms-content table.cms-luxe-tiles td > p:last-child { margin: auto 0 0; padding-top: 0.6rem; }
@@ -408,7 +408,7 @@
 .cms-content table.cms-contact td:last-child { background-color: #ffffff; border: 1px solid #ece8e2; border-left: 0; }
 .cms-content table.cms-contact td > :first-child { margin-top: 0; }
 .cms-content table.cms-contact p.cms-eyebrow { margin: 0 0 0.8rem; color: #d4920a; }
-.cms-content table.cms-contact h2 { margin: 0 0 1rem; font-family: var(--font-playfair), serif; font-size: clamp(28px, 3.2vw, 36px); font-weight: 400; line-height: 1.12; }
+.cms-content table.cms-contact h2 { margin: 0 0 1rem; font-family: var(--font-display), serif; font-size: clamp(28px, 3.2vw, 36px); font-weight: 400; line-height: 1.12; }
 .cms-content table.cms-contact td:first-child h2 { color: #ffffff; }
 .cms-content table.cms-contact td:last-child h2 { margin-bottom: 1.2rem; color: #0f2252; font-size: clamp(24px, 2.6vw, 30px); }
 .cms-content table.cms-contact td:first-child p { margin: 0 0 1.5rem; font-size: 14px; line-height: 1.75; }
@@ -449,3 +449,6 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-scroll-up, .hero-scroll-down { animation: none; }
 }
+
+/* CMS content saved in the database before the font swap may still reference the old variable name. */
+#storefront-root { --font-playfair: var(--font-display); }

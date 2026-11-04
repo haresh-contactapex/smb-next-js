@@ -27,7 +27,7 @@ export default function ProductTabs({ descriptionHtml, reviews, handle, productT
   const baseId = useId();
   const [active, setActive] = useState(TABS[0].key);
   const tabRefs = useRef({});
-  const display = { fontFamily: "var(--font-playfair), serif" };
+  const display = { fontFamily: "var(--font-display), serif" };
 
   // Open the reviews tab for a shared "#reviews" link, and whenever the rating
   // summary above is clicked (the browser still scrolls here via its href).

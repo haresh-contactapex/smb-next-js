@@ -23,4 +23,4 @@ export const BTN_TEXT_DANGER = BTN_TEXT.replace("hover:text-[#d4920a]", "hover:t
 
 export const TEXT_LINK = "font-semibold text-[#333333] underline transition-colors hover:text-[#d4920a]";
 
-export const HEADING_FONT = { fontFamily: "var(--font-playfair), serif" };
+export const HEADING_FONT = { fontFamily: "var(--font-display), serif" };
