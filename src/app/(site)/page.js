@@ -137,30 +137,35 @@ export default async function HomePage() {
         <HomeHighlights mostLoved={mostLoved} newArrivals={newArrivals} />
       </section>
 
-      {/* Our story */}
-      <section className="max-w-[1500px] mx-auto px-4 sm:px-8 mt-16 sm:mt-24">
-        <div className="relative grid items-center gap-8 md:grid-cols-[1.1fr_1fr]">
-          {story.since && (
-            <p
-              aria-hidden="true"
-              className="hidden lg:block absolute -left-2 top-0 text-[80px] uppercase leading-none text-[#222222] [writing-mode:vertical-rl] rotate-180"
-              style={DISPLAY}
-            >
-              {story.since}
-            </p>
-          )}
-          <div className="overflow-hidden rounded-2xl bg-[#f3f1ee] lg:ml-24">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={story.imageSrc} alt={story.imageAlt} className="h-[280px] sm:h-[360px] w-full object-cover object-[75%_center]" />
-          </div>
-          <div className="max-w-lg">
-            <p className="whitespace-pre-line text-xs sm:text-[13px] leading-relaxed">{story.text}</p>
-            <h2 className="mt-4 text-[34px] sm:text-[44px] font-normal uppercase leading-none text-[#222222]" style={DISPLAY}>
-              {story.heading}
-            </h2>
-            <Link href={story.buttonHref} className={`${SHOP_BUTTON} mt-6`}>
-              {story.buttonLabel}
-            </Link>
+      {/* Our story. "Since" text hugs the page's left edge; the heading overlaps the photo. */}
+      <section className="relative mt-16 sm:mt-24">
+        {story.since && (
+          <p
+            aria-hidden="true"
+            className="hidden lg:block absolute left-0 top-0 -translate-x-[6%] text-[clamp(64px,6.5vw,100px)] uppercase leading-[0.95] text-[#222222] [writing-mode:vertical-rl] rotate-180"
+            style={DISPLAY}
+          >
+            {story.since}
+          </p>
+        )}
+        <div className="max-w-[1500px] mx-auto px-4 sm:px-8">
+          <div className="grid items-center gap-8 md:grid-cols-[1.1fr_1fr] lg:pl-[12vw]">
+            <div className="overflow-hidden rounded-2xl bg-[#f3f1ee]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={story.imageSrc} alt={story.imageAlt} className="h-[280px] sm:h-[360px] w-full object-cover object-[75%_center]" />
+            </div>
+            <div className="max-w-lg">
+              <p className="whitespace-pre-line text-xs sm:text-[13px] leading-relaxed">{story.text}</p>
+              <h2
+                className="relative z-10 mt-10 sm:mt-12 text-[38px] sm:text-[clamp(44px,4.6vw,68px)] font-normal uppercase leading-none tracking-tight text-[#222222] md:-ml-[16%]"
+                style={DISPLAY}
+              >
+                {story.heading}
+              </h2>
+              <Link href={story.buttonHref} className={`${SHOP_BUTTON} mt-8`}>
+                {story.buttonLabel}
+              </Link>
+            </div>
           </div>
         </div>
       </section>
