@@ -39,7 +39,8 @@ export async function subscribeToNewsletter({ payload, clientKey }) {
   if (problem) throw new NewsletterError(problem);
 
   // Only when Settings -> Security and Settings -> Integrations turn Google reCAPTCHA on.
-  const recaptcha = await checkRecaptchaIfEnabled(payload?.recaptchaToken);
+  const token = typeof payload?.recaptchaToken === "string" ? payload.recaptchaToken.slice(0, 4096) : "";
+  const recaptcha = await checkRecaptchaIfEnabled(token);
   if (recaptcha.required && !recaptcha.valid) {
     throw new NewsletterError("reCAPTCHA verification failed. Please try again.");
   }
