@@ -119,6 +119,8 @@
 .cms-content li { margin: 0.3em 0; }
 .cms-content li::marker,
 #cms-article li::marker { color: #d4920a; }
+/* Inside markers sized up in the page's own classes leave a wide gap before the text; pull the text in by half of it. */
+#cms-article ul.list-inside > li::first-letter { margin-left: -11px; }
 
 /* Tables written in the CMS editor with the slate border classes (Diamond Carat Weight) take the same look as the
    size-chart tables: dark header, light borders, zebra rows. The id beats the utility classes on the table. */
