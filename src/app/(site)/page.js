@@ -141,13 +141,13 @@ export default async function HomePage() {
       <section className="mt-16 sm:mt-24">
         <div className="max-w-[1500px] mx-auto px-4 sm:px-8">
           <div
-            className={`relative grid items-center gap-8 md:grid-cols-[1.1fr_1fr]${story.since ? " lg:pl-[calc(var(--since-size)*1.6+2rem)]" : ""}`}
+            className={`relative grid items-center gap-8 md:grid-cols-[1.1fr_1fr]${story.since ? " lg:pl-[calc(var(--since-size)*1.8+2rem)]" : ""}`}
             style={{ "--since-size": "clamp(44px,4.5vw,68px)" }}
           >
             {story.since && (
               <div aria-hidden="true" className="hidden lg:flex absolute inset-y-0 left-0 items-center">
                 <p
-                  className="text-center text-[length:var(--since-size)] uppercase leading-[0.8] text-[#222222] [writing-mode:vertical-rl] rotate-180"
+                  className="text-center text-[length:var(--since-size)] uppercase leading-[0.9] text-[#222222] [writing-mode:vertical-rl] rotate-180"
                   style={DISPLAY}
                 >
                   {/* One line per word ("Since" / "2001"), whatever the photo height. */}
