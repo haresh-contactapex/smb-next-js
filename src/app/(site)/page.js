@@ -114,7 +114,7 @@ export default async function HomePage() {
             <li key={index} className="w-[72%] shrink-0 snap-start sm:w-[34%] lg:w-[22%]">
               <Link
                 href={item.href}
-                className={`group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-[#f3f1ee] transition-transform duration-500 ease-out hover:z-10 hover:scale-105 focus-visible:z-10 focus-visible:scale-105`}
+                className={`group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-[#f3f1ee] transition-transform duration-500 ease-out hover:z-10 hover:scale-[1.08] focus-visible:z-10 focus-visible:scale-[1.08]`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={item.src} alt="" className="h-full w-full object-cover" />
