@@ -109,12 +109,12 @@ export default async function HomePage() {
           </h2>
           <p className="mt-2 text-xs sm:text-sm">From bespoke designs to beautifully crafted wedding bands.</p>
         </div>
-        <ul className="mt-4 sm:mt-6 flex snap-x items-center gap-4 overflow-x-auto px-4 sm:px-8 py-8 [scrollbar-width:none] lg:justify-center">
+        <ul className="mt-4 sm:mt-6 flex snap-x items-center gap-6 overflow-x-auto px-4 sm:px-8 py-8 [scrollbar-width:none] lg:justify-center">
           {collections.map((item, index) => (
             <li key={index} className="w-[72%] shrink-0 snap-start sm:w-[34%] lg:w-[22%]">
               <Link
                 href={item.href}
-                className={`group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-[#f3f1ee] transition-transform duration-500 ease-out hover:z-10 hover:scale-110 focus-visible:z-10 focus-visible:scale-110`}
+                className={`group relative block aspect-[3/4] overflow-hidden rounded-2xl bg-[#f3f1ee] transition-transform duration-500 ease-out hover:z-10 hover:scale-105 focus-visible:z-10 focus-visible:scale-105`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={item.src} alt="" className="h-full w-full object-cover" />
