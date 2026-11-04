@@ -137,33 +137,36 @@ export default async function HomePage() {
         <HomeHighlights mostLoved={mostLoved} newArrivals={newArrivals} />
       </section>
 
-      {/* Our story. "Since" text hugs the page's left edge; the heading overlaps the photo. */}
-      <section className="relative mt-16 sm:mt-24">
-        {story.since && (
-          <div aria-hidden="true" className="hidden lg:flex absolute inset-y-0 left-0 items-center -translate-x-[6%]">
-            <p
-              className="text-center text-[clamp(64px,6.5vw,100px)] uppercase leading-[0.95] text-[#222222] [writing-mode:vertical-rl] rotate-180"
-              style={DISPLAY}
-            >
-              {/* One line per word ("Since" / "2001"), whatever the photo height. */}
-              {story.since.split(/\s+/).map((word, index) => (
-                <span key={index} className="block whitespace-nowrap">
-                  {word}
-                </span>
-              ))}
-            </p>
-          </div>
-        )}
-        <div className="max-w-[1500px] mx-auto px-4 sm:px-8">
-          <div className="grid items-center gap-8 md:grid-cols-[1.1fr_1fr] lg:pl-[12vw]">
+      {/* Our story. The "Since" text sits inside the content container, a fixed distance from the photo; the heading overlaps the photo. */}
+      <section className="mt-16 sm:mt-24">
+        <div className="max-w-[1100px] mx-auto px-4 sm:px-8">
+          <div
+            className={`relative grid items-center gap-8 md:grid-cols-[1.1fr_1fr]${story.since ? " lg:pl-[calc(var(--since-size)*1.6+2rem)]" : ""}`}
+            style={{ "--since-size": "clamp(44px,4.5vw,68px)" }}
+          >
+            {story.since && (
+              <div aria-hidden="true" className="hidden lg:flex absolute inset-y-0 left-0 items-center">
+                <p
+                  className="text-center text-[length:var(--since-size)] uppercase leading-[0.8] text-[#222222] [writing-mode:vertical-rl] rotate-180"
+                  style={DISPLAY}
+                >
+                  {/* One line per word ("Since" / "2001"), whatever the photo height. */}
+                  {story.since.split(/\s+/).map((word, index) => (
+                    <span key={index} className="block whitespace-nowrap">
+                      {word}
+                    </span>
+                  ))}
+                </p>
+              </div>
+            )}
             <div className="overflow-hidden rounded-2xl bg-[#f3f1ee]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={story.imageSrc} alt={story.imageAlt} className="h-[280px] sm:h-[360px] w-full object-cover object-[75%_center]" />
+              <img src={story.imageSrc} alt={story.imageAlt} className="h-[280px] sm:h-[320px] w-full object-cover object-[75%_center]" />
             </div>
-            <div className="max-w-lg">
-              <p className="whitespace-pre-line text-xs sm:text-[13px] leading-relaxed">{story.text}</p>
+            <div className="max-w-[340px]">
+              <p className="whitespace-pre-line text-xs leading-relaxed">{story.text}</p>
               <h2
-                className="relative z-10 mt-10 sm:mt-12 text-[38px] sm:text-[clamp(44px,4.6vw,68px)] font-normal uppercase leading-none tracking-tight text-[#222222] md:-ml-[22%]"
+                className="relative z-10 mt-8 sm:mt-10 text-[32px] sm:text-[clamp(34px,3.4vw,50px)] font-normal uppercase leading-none tracking-tight text-[#222222] md:-ml-[22%]"
                 style={DISPLAY}
               >
                 {story.heading}
