@@ -44,8 +44,8 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal, a
                   disabled
                     ? "cursor-not-allowed border-[#EEEEEE] opacity-60"
                     : checked
-                      ? "cursor-pointer border-[#EF9822] bg-[#FCF9F3]"
-                      : "cursor-pointer border-[#E4E4E4] hover:border-[#EF9822]/60"
+                      ? "cursor-pointer border-[#d4920a] bg-[#FCF9F3]"
+                      : "cursor-pointer border-[#E4E4E4] hover:border-[#d4920a]/60"
                 }`}
               >
                 <input
@@ -55,7 +55,7 @@ export default function PaymentStep({ methods, selected, onSelect, orderTotal, a
                   checked={checked}
                   disabled={disabled}
                   onChange={() => onSelect(method.id)}
-                  className="mt-1 h-[18px] w-[18px] flex-shrink-0 accent-[#EF9822]"
+                  className="mt-1 h-[18px] w-[18px] flex-shrink-0 accent-[#d4920a]"
                 />
                 <span>
                   <span className="block text-[16px] font-semibold text-[#222222]">{method.label}</span>

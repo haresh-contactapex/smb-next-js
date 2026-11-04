@@ -17,7 +17,7 @@ import EngravingSection from "./engraving/EngravingSection";
 import { emptyEngravingValue, readEngravingValue } from "./engraving/engravingHelpers";
 import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
-const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#ef9822] transition-colors";
+const MINI_ACTION = "flex items-center gap-1.5 hover:text-[#d4920a] transition-colors";
 
 const Section = ProductSection;
 
@@ -209,11 +209,11 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
                             />
                             <span
                               style={{ background: metalColor(value) }}
-                              className={`w-[22px] h-[22px] rounded-full ring-1 ring-offset-2 transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-[#ef9822] ${
-                                checked ? "ring-gray-400" : "ring-transparent group-hover:ring-[#ef9822]"
+                              className={`w-[22px] h-[22px] rounded-full ring-1 ring-offset-2 transition-all peer-focus-visible:ring-2 peer-focus-visible:ring-[#d4920a] ${
+                                checked ? "ring-gray-400" : "ring-transparent group-hover:ring-[#d4920a]"
                               }`}
                             />
-                            <span className="max-w-[64px] text-center leading-tight text-[10px] text-gray-400 font-medium group-hover:text-[#ef9822] transition-colors">
+                            <span className="max-w-[64px] text-center leading-tight text-[10px] text-gray-400 font-medium group-hover:text-[#d4920a] transition-colors">
                               {value}
                             </span>
                           </label>
@@ -243,10 +243,10 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
                             className="peer sr-only"
                           />
                           <span
-                            className={`flex h-9 min-w-[36px] items-center justify-center rounded-[2px] border px-3 text-[14px] leading-tight transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#ef9822] peer-focus-visible:ring-offset-1 ${
+                            className={`flex h-9 min-w-[36px] items-center justify-center rounded-[2px] border px-3 text-[14px] leading-tight transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#d4920a] peer-focus-visible:ring-offset-1 ${
                               checked
                                 ? "border-[#1c3b6a] bg-[#1c3b6a] text-white"
-                                : "border-gray-300 text-[#555555] hover:border-[#ef9822] hover:text-[#ef9822]"
+                                : "border-gray-300 text-[#555555] hover:border-[#d4920a] hover:text-[#d4920a]"
                             }`}
                           >
                             {value}
@@ -273,7 +273,7 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
           type="button"
           onClick={addToCart}
           disabled={!canBuy}
-          className="flex-1 py-3 bg-white border border-gray-300 rounded text-[18px] font-semibold text-gray-800 hover:border-[#ef9822] hover:text-[#ef9822] transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          className="flex-1 py-3 bg-white border border-gray-300 rounded text-[18px] font-semibold text-gray-800 hover:border-[#d4920a] hover:text-[#d4920a] transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
           Add To Cart
         </button>
@@ -281,14 +281,14 @@ export default function ProductPurchasePanel({ product, reviews, supportEmail = 
           productId={product.id}
           variantId={variant?.id ?? null}
           title={product.title}
-          className="w-[48px] h-[53px] flex-shrink-0 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-[#ef9822] hover:border-[#ef9822] transition-colors disabled:pointer-events-none"
-          activeClassName="!text-[#ef9822] !border-[#ef9822]"
+          className="w-[48px] h-[53px] flex-shrink-0 flex items-center justify-center border border-gray-300 rounded text-gray-400 hover:text-[#d4920a] hover:border-[#d4920a] transition-colors disabled:pointer-events-none"
+          activeClassName="!text-[#d4920a] !border-[#d4920a]"
         />
         <button
           type="button"
           onClick={buyNow}
           disabled={!canBuy}
-          className="flex-1 py-3.5 bg-[#4A4A4A] rounded text-[18px] font-semibold text-white hover:bg-[#ef9822] transition-colors disabled:opacity-50 disabled:pointer-events-none"
+          className="flex-1 py-3.5 bg-[#4A4A4A] rounded text-[18px] font-semibold text-white hover:bg-[#d4920a] transition-colors disabled:opacity-50 disabled:pointer-events-none"
         >
           Buy Now
         </button>

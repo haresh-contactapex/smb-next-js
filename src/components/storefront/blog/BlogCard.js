@@ -30,12 +30,12 @@ export default function BlogCard({ post, priority = false }) {
       <div className="mt-4 flex flex-1 flex-col">
         <Link
           href={blogCategoryPath(post.categorySlug)}
-          className="relative z-10 w-fit text-[12px] font-medium uppercase tracking-wide text-[#ef9822] hover:underline"
+          className="relative z-10 w-fit text-[12px] font-medium uppercase tracking-wide text-[#d4920a] hover:underline"
         >
           {post.category}
         </Link>
         <h2 className="mt-1.5 text-[20px] font-normal leading-snug text-[#333333]">
-          <Link href={post.href} className="transition-colors group-hover:text-[#ef9822] after:absolute after:inset-0">
+          <Link href={post.href} className="transition-colors group-hover:text-[#d4920a] after:absolute after:inset-0">
             {post.title}
           </Link>
         </h2>
@@ -45,7 +45,7 @@ export default function BlogCard({ post, priority = false }) {
           {post.author ? `By ${post.author}` : null}
         </p>
         {post.excerpt && <p className="mt-3 line-clamp-3 text-[15px] leading-relaxed text-[#555555]">{post.excerpt}</p>}
-        <span className="mt-4 inline-flex w-fit items-center gap-1.5 text-[14px] font-medium text-[#333333] group-hover:text-[#ef9822]">
+        <span className="mt-4 inline-flex w-fit items-center gap-1.5 text-[14px] font-medium text-[#333333] group-hover:text-[#d4920a]">
           Read more
           <StoreIcon name="arrowRight" className="h-4 w-4" />
         </span>

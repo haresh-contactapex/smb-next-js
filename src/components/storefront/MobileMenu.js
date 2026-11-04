@@ -52,7 +52,7 @@ export default function MobileMenu({ customer }) {
         onClick={() => setOpen(true)}
         aria-label="Open menu"
         aria-expanded={open}
-        className="lg:hidden p-2 -ml-2 hover:text-[#ef9822] transition-colors flex-shrink-0"
+        className="lg:hidden p-2 -ml-2 hover:text-[#d4920a] transition-colors flex-shrink-0"
       >
         <StoreIcon name="menu" className="w-6 h-6" />
       </button>
@@ -80,7 +80,7 @@ export default function MobileMenu({ customer }) {
             type="button"
             onClick={() => setOpen(false)}
             aria-label="Close menu"
-            className="p-2 hover:text-[#ef9822] transition-colors rounded-full hover:bg-gray-50"
+            className="p-2 hover:text-[#d4920a] transition-colors rounded-full hover:bg-gray-50"
           >
             <StoreIcon name="close" className="w-6 h-6" />
           </button>
@@ -93,7 +93,7 @@ export default function MobileMenu({ customer }) {
                   href={link.href}
                   onClick={() => setOpen(false)}
                   aria-current={isCurrentPath(pathname, link.href) ? "page" : isCurrentLink(link, pathname) ? "true" : undefined}
-                  className={`hover:text-[#ef9822] transition-colors whitespace-nowrap ${isCurrentLink(link, pathname) ? CURRENT_NAV_LINK : ""}`}
+                  className={`hover:text-[#d4920a] transition-colors whitespace-nowrap ${isCurrentLink(link, pathname) ? CURRENT_NAV_LINK : ""}`}
                 >
                   {link.label}
                 </Link>
@@ -103,7 +103,7 @@ export default function MobileMenu({ customer }) {
                     onClick={() => toggleGroup(link.label)}
                     aria-expanded={expanded.has(link.label)}
                     aria-label={`${expanded.has(link.label) ? "Collapse" : "Expand"} ${link.label}`}
-                    className="p-2 -mr-2 hover:text-[#ef9822] transition-colors"
+                    className="p-2 -mr-2 hover:text-[#d4920a] transition-colors"
                   >
                     <svg
                       viewBox="0 0 24 24"
@@ -129,7 +129,7 @@ export default function MobileMenu({ customer }) {
                         href={item.href}
                         onClick={() => setOpen(false)}
                         aria-current={isCurrentPath(pathname, item.href) ? "page" : undefined}
-                        className={`hover:text-[#ef9822] transition-colors ${isCurrentPath(pathname, item.href) ? "font-medium text-[#ef9822]" : ""}`}
+                        className={`hover:text-[#d4920a] transition-colors ${isCurrentPath(pathname, item.href) ? "font-medium text-[#d4920a]" : ""}`}
                       >
                         {item.label}
                       </Link>
@@ -146,13 +146,13 @@ export default function MobileMenu({ customer }) {
               setOpen(false);
               openSearch();
             }}
-            className="hover:text-[#ef9822] flex items-center gap-3 transition-colors uppercase"
+            className="hover:text-[#d4920a] flex items-center gap-3 transition-colors uppercase"
           >
             <StoreIcon name="search" /> Search
           </button>
           {customer ? (
             <>
-              <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
+              <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#d4920a] flex items-center gap-3 transition-colors">
                 <StoreIcon name="user" /> My Account
               </Link>
               <button
@@ -165,7 +165,7 @@ export default function MobileMenu({ customer }) {
               </button>
             </>
           ) : (
-            <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#ef9822] flex items-center gap-3 transition-colors">
+            <Link href="/account" onClick={() => setOpen(false)} className="hover:text-[#d4920a] flex items-center gap-3 transition-colors">
               <StoreIcon name="user" /> Account
             </Link>
           )}

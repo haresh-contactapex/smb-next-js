@@ -17,7 +17,7 @@ const ADDITIONAL_INFO = [
 
 const TAB_BASE = "pb-3 text-[20px] sm:text-[24px] border-b-2 transition-colors";
 const TAB_ACTIVE = "font-medium text-gray-800 border-gray-800";
-const TAB_INACTIVE = "text-gray-400 hover:text-[#ef9822] border-transparent";
+const TAB_INACTIVE = "text-gray-400 hover:text-[#d4920a] border-transparent";
 
 // The rating line beside the title dispatches this to open the reviews tab.
 export const SHOW_REVIEWS_EVENT = "product-tabs:show-reviews";
@@ -85,7 +85,7 @@ export default function ProductTabs({ descriptionHtml, reviews, handle, productT
         <div role="tabpanel" id={`${baseId}-panel-info`} aria-labelledby={`${baseId}-tab-info`} hidden={active !== "info"} className="max-w-4xl">
           {descriptionHtml ? (
             <div
-              className="space-y-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-[#ef9822] [&_a]:underline [&_h1]:text-xl [&_h2]:text-xl [&_h3]:text-lg [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-gray-200 [&_blockquote]:pl-4"
+              className="space-y-3 [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 [&_a]:text-[#d4920a] [&_a]:underline [&_h1]:text-xl [&_h2]:text-xl [&_h3]:text-lg [&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold [&_blockquote]:border-l-2 [&_blockquote]:border-gray-200 [&_blockquote]:pl-4"
               dangerouslySetInnerHTML={{ __html: descriptionHtml }}
             />
           ) : (

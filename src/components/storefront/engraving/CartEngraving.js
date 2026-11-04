@@ -6,7 +6,7 @@ import EngravingLines from "./EngravingLines";
 import useEngravingConfig from "./useEngravingConfig";
 import { readEngravingValue, valueFromEngraving } from "./engravingHelpers";
 
-const LINK_BUTTON = "text-[13px] font-medium text-[#555555] underline transition-colors hover:text-[#ef9822] disabled:pointer-events-none disabled:opacity-50";
+const LINK_BUTTON = "text-[13px] font-medium text-[#555555] underline transition-colors hover:text-[#d4920a] disabled:pointer-events-none disabled:opacity-50";
 
 // The edit form for one line's engraving. It only mounts once the rules and fonts have arrived, so
 // its starting value can be worked out from them.
@@ -43,7 +43,7 @@ function EditForm({ item, config, onSave, onCancel }) {
         <button
           type="submit"
           disabled={blocked}
-          className="rounded bg-[#4A4A4A] px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#ef9822] disabled:pointer-events-none disabled:opacity-50"
+          className="rounded bg-[#4A4A4A] px-5 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#d4920a] disabled:pointer-events-none disabled:opacity-50"
         >
           Save engraving
         </button>

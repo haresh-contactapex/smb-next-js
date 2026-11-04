@@ -29,7 +29,7 @@ const HERO_LAYOUT = [
 const ASSURANCE_ICON_PATH = "/storefront/home/icons";
 
 const SHOP_BUTTON =
-  "inline-block bg-[#ef9822] hover:bg-[#d9861a] text-white text-xs font-semibold tracking-wide uppercase px-9 py-3 rounded-lg transition-colors";
+  "inline-block bg-[#d4920a] hover:bg-[#b87c06] text-white text-xs font-semibold tracking-wide uppercase px-9 py-3 rounded-lg transition-colors";
 
 // A failed lookup leaves the highlights empty rather than taking the home page down.
 async function loadHighlights() {

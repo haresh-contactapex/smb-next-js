@@ -22,7 +22,7 @@ export default function BlogPagination({ basePath, page, totalPages, onNavigate 
           onClick={onNavigate?.(href(page - 1))}
           rel="prev"
           aria-label="Previous page"
-          className={`${BASE} border-[#e5e7eb] text-[#333333] hover:border-[#ef9822] hover:text-[#ef9822]`}
+          className={`${BASE} border-[#e5e7eb] text-[#333333] hover:border-[#d4920a] hover:text-[#d4920a]`}
         >
           <StoreIcon name="chevronLeft" className="h-4 w-4" />
         </Link>
@@ -38,7 +38,7 @@ export default function BlogPagination({ basePath, page, totalPages, onNavigate 
             href={href(n)}
             onClick={onNavigate?.(href(n))}
             aria-label={`Page ${n}`}
-            className={`${BASE} border-[#e5e7eb] text-[#333333] hover:border-[#ef9822] hover:text-[#ef9822]`}
+            className={`${BASE} border-[#e5e7eb] text-[#333333] hover:border-[#d4920a] hover:text-[#d4920a]`}
           >
             {n}
           </Link>
@@ -50,7 +50,7 @@ export default function BlogPagination({ basePath, page, totalPages, onNavigate 
           onClick={onNavigate?.(href(page + 1))}
           rel="next"
           aria-label="Next page"
-          className={`${BASE} border-[#e5e7eb] text-[#333333] hover:border-[#ef9822] hover:text-[#ef9822]`}
+          className={`${BASE} border-[#e5e7eb] text-[#333333] hover:border-[#d4920a] hover:text-[#d4920a]`}
         >
           <StoreIcon name="chevronRight" className="h-4 w-4" />
         </Link>

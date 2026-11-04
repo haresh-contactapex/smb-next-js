@@ -56,7 +56,7 @@ export default function CartPage({ recommended = [], pricesIncludeTax = null }) 
           <p className="text-[16px] text-[#555555]">Your cart is empty.</p>
           <Link
             href="/women-wedding-bands"
-            className="rounded bg-[#4A4A4A] px-6 py-3 text-[14px] font-semibold text-white hover:bg-[#ef9822] transition-colors"
+            className="rounded bg-[#4A4A4A] px-6 py-3 text-[14px] font-semibold text-white hover:bg-[#d4920a] transition-colors"
           >
             Continue shopping
           </Link>

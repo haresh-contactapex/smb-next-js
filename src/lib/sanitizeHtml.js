@@ -62,7 +62,7 @@ const CMS_CLASSES = new Set([
 // A name is kept if it has no whitespace, quote, "<", backtick or backslash, and the value is escaped when
 // written (">" and "&" become entities that the browser reads back), so a class can never carry markup or
 // break out of the attribute. ">" and "&" are allowed because Tailwind arbitrary variants use them,
-// as in "[&>li::marker]:text-[#EF9822]".
+// as in "[&>li::marker]:text-[#d4920a]".
 const SAFE_CLASS_NAME = /^[^\s"'<`\\\u0000-\u001f]{1,150}$/;
 const MAX_CLASSES = 20;
 

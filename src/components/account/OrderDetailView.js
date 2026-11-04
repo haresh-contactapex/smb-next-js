@@ -51,7 +51,7 @@ export default function OrderDetailView({ order, moneyFormat }) {
 
   return (
     <>
-      <Link href="/account/orders" className="mb-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-gray-500 transition-colors hover:text-[#ef9822]">
+      <Link href="/account/orders" className="mb-4 inline-flex items-center gap-1.5 text-[14px] font-medium text-gray-500 transition-colors hover:text-[#d4920a]">
         <StoreIcon name="chevronLeft" className="h-4 w-4" />
         All orders
       </Link>
@@ -97,7 +97,7 @@ export default function OrderDetailView({ order, moneyFormat }) {
                   <div className="min-w-0 sm:flex-1">
                     <p className="text-[15px] font-semibold leading-snug text-[#333333]">
                       {item.handle ? (
-                        <Link href={`/products/${item.handle}`} className="transition-colors hover:text-[#ef9822]">
+                        <Link href={`/products/${item.handle}`} className="transition-colors hover:text-[#d4920a]">
                           {item.title}
                         </Link>
                       ) : (

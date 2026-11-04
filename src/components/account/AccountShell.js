@@ -53,7 +53,7 @@ export default function AccountShell({ customer, children }) {
 
             <div className="mt-4 flex items-center justify-between rounded-lg bg-[#FAFAFA] px-3.5 py-2.5 text-[13px]">
               <span className="inline-flex items-center gap-1.5 font-semibold text-[#333333]">
-                <StoreIcon name="star" className="h-4 w-4 text-[#ef9822]" />
+                <StoreIcon name="star" className="h-4 w-4 text-[#d4920a]" />
                 {tierLabel(customer.customerGroup)}
               </span>
               <span className="text-gray-500">
@@ -72,7 +72,7 @@ export default function AccountShell({ customer, children }) {
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={`flex items-center gap-2.5 whitespace-nowrap rounded-lg px-3.5 py-2.5 text-[14px] font-medium transition-colors lg:py-3 ${
-                        active ? "bg-[#4A4A4A] text-white" : "bg-white text-[#555555] ring-1 ring-inset ring-gray-200 hover:text-[#ef9822] lg:bg-transparent lg:ring-0 lg:hover:bg-[#FAFAFA]"
+                        active ? "bg-[#4A4A4A] text-white" : "bg-white text-[#555555] ring-1 ring-inset ring-gray-200 hover:text-[#d4920a] lg:bg-transparent lg:ring-0 lg:hover:bg-[#FAFAFA]"
                       }`}
                     >
                       <StoreIcon name={item.icon} className="h-[18px] w-[18px]" />

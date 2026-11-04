@@ -1,7 +1,7 @@
 import Link from "next/link";
 import StoreIcon from "../icons";
 
-const CIRCLE = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white transition-colors group-hover:bg-[#ef9822]";
+const CIRCLE = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#333333] text-white transition-colors group-hover:bg-[#d4920a]";
 
 /**
  * Links to the post before (older) and after (newer) this one in its category. Either
@@ -19,7 +19,7 @@ export default function BlogPostNav({ previous, next, onNavigate }) {
             href={previous.href}
             onClick={onNavigate?.(previous.href)}
             rel="prev"
-            className="group flex items-center gap-4 text-[#333333] hover:text-[#ef9822]"
+            className="group flex items-center gap-4 text-[#333333] hover:text-[#d4920a]"
           >
             <span className={CIRCLE}>
               <StoreIcon name="arrowRight" className="h-5 w-5 rotate-180" />
@@ -37,7 +37,7 @@ export default function BlogPostNav({ previous, next, onNavigate }) {
             href={next.href}
             onClick={onNavigate?.(next.href)}
             rel="next"
-            className="group flex items-center justify-end gap-4 text-right text-[#333333] hover:text-[#ef9822]"
+            className="group flex items-center justify-end gap-4 text-right text-[#333333] hover:text-[#d4920a]"
           >
             <span className="min-w-0">
               <span className="block text-[12px] uppercase tracking-wide text-[#888888]">Next post</span>

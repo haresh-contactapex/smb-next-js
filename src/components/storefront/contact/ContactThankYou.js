@@ -7,7 +7,7 @@ import { CONTACT_THANKS_STORAGE_KEY } from "./helpers";
 
 // The checkout confirmation's button, reused here for the same look and feel.
 const BUTTON =
-  "flex w-full items-center justify-center gap-2 rounded-lg bg-[#EF9822] px-6 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-[#D9850F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF9822]";
+  "flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4920a] px-6 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-[#b87c06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4920a]";
 
 // Where the Contact form sends a visitor after a successful submission. `details` (first name,
 // email, whether a confirmation copy went out) travels through sessionStorage rather than the
@@ -32,7 +32,7 @@ export default function ContactThankYou() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-1 flex-col items-center px-4 py-16 text-center sm:py-24">
-      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EF9822] text-white">
+      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-[#d4920a] text-white">
         <StoreIcon name="check" className="h-8 w-8 [stroke-width:2.5]" />
       </span>
 

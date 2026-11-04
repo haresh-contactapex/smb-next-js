@@ -86,7 +86,7 @@ function PreviewLayer({ item, image, loading, active, showImage }) {
         href={item.href}
         tabIndex={active ? undefined : -1}
         aria-label={`Shop ${item.label}`}
-        className="mt-3 block rounded-lg border border-[#dddddd] bg-white p-[9px] text-center text-[12px] text-[#222222] transition-colors hover:border-[#ef9822] hover:text-[#ef9822]"
+        className="mt-3 block rounded-lg border border-[#dddddd] bg-white p-[9px] text-center text-[12px] text-[#222222] transition-colors hover:border-[#d4920a] hover:text-[#d4920a]"
       >
         Shop now&nbsp; →
       </Link>
@@ -181,7 +181,7 @@ export default function NavMegaMenu({ link }) {
         aria-expanded={open}
         aria-controls={panelId}
         aria-current={isCurrentPath(pathname, link.href) ? "page" : sectionCurrent ? "true" : undefined}
-        className={`relative inline-flex items-center gap-1 whitespace-nowrap hover:text-[#ef9822] transition-colors ${open ? "text-[#ef9822]" : ""} ${
+        className={`relative inline-flex items-center gap-1 whitespace-nowrap hover:text-[#d4920a] transition-colors ${open ? "text-[#d4920a]" : ""} ${
           sectionCurrent ? CURRENT_NAV_LINK : ""
         } ${
           // Bridges the header padding between the link and the panel while open.
@@ -217,7 +217,7 @@ export default function NavMegaMenu({ link }) {
                       <BandIcon name={item.icon} />
                     </span>
                     <span>
-                      <strong className={`block text-[14px] font-semibold leading-[18px] ${index === currentIndex ? "text-[#ef9822]" : ""}`}>{item.label}</strong>
+                      <strong className={`block text-[14px] font-semibold leading-[18px] ${index === currentIndex ? "text-[#d4920a]" : ""}`}>{item.label}</strong>
                       {item.description && (
                         <small className={`mt-0.5 block text-[12px] leading-4 text-[#777777] ${link.megaMenu.fullDescriptions ? "" : "line-clamp-3"}`}>
                           {item.description}

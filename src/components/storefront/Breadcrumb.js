@@ -26,7 +26,7 @@ export default function Breadcrumb({ items, className = "max-w-[1600px] text-[16
               ) : (
                 <li>
                   {item.href ? (
-                    <Link href={item.href} className="transition-colors hover:text-[#ef9822]">
+                    <Link href={item.href} className="transition-colors hover:text-[#d4920a]">
                       {item.label}
                     </Link>
                   ) : (

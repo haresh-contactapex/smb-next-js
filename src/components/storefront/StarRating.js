@@ -39,7 +39,7 @@ function HalfStar({ className }) {
 export default function StarRating({ rating = 0, className = "w-[18px] h-[18px]" }) {
   const value = Math.max(0, Math.min(5, Math.round(rating * 2) / 2));
   return (
-    <span role="img" aria-label={`Rated ${rating ? rating.toFixed(1) : 0} out of 5`} className="flex text-[#ef9822]">
+    <span role="img" aria-label={`Rated ${rating ? rating.toFixed(1) : 0} out of 5`} className="flex text-[#d4920a]">
       {Array.from({ length: 5 }, (_, i) => {
         const fill = value - i;
         if (fill >= 1) return <FilledStar key={i} className={className} />;

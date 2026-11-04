@@ -10,7 +10,7 @@ import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvid
 // The soft orange circle every detail's icon sits in. Decorative: the text beside it says what it is.
 function IconBadge({ name }) {
   return (
-    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FEF1DD] text-[#EF9822]">
+    <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-[#FEF1DD] text-[#d4920a]">
       <StoreIcon name={name} className="h-[18px] w-[18px]" />
     </span>
   );
@@ -59,7 +59,7 @@ function AddressCard({ id, title, address, note }) {
     <Card id={id} title={title} className="!p-6">
       {note && (
         <p className="mt-3 flex items-start gap-2 rounded-lg bg-[#FCF9F3] px-3 py-2 text-[14px] text-[#555555]">
-          <StoreIcon name="check" className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#EF9822] [stroke-width:2.5]" />
+          <StoreIcon name="check" className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#d4920a] [stroke-width:2.5]" />
           {note}
         </p>
       )}

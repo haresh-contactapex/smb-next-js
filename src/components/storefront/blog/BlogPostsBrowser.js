@@ -33,7 +33,7 @@ export default function BlogPostsBrowser({ categories, activeSlug, basePath, res
             href={BLOG_INDEX_PATH}
             onClick={handleClick(BLOG_INDEX_PATH)}
             aria-current={activeSlug ? undefined : "page"}
-            className={`${CHIP} ${activeSlug ? "border-[#e5e7eb] text-[#555555] hover:border-[#ef9822] hover:text-[#ef9822]" : "border-[#333333] bg-[#333333] text-white"}`}
+            className={`${CHIP} ${activeSlug ? "border-[#e5e7eb] text-[#555555] hover:border-[#d4920a] hover:text-[#d4920a]" : "border-[#333333] bg-[#333333] text-white"}`}
           >
             All posts
           </Link>
@@ -45,7 +45,7 @@ export default function BlogPostsBrowser({ categories, activeSlug, basePath, res
                 href={href}
                 onClick={handleClick(href)}
                 aria-current={activeSlug === category.slug ? "page" : undefined}
-                className={`${CHIP} ${activeSlug === category.slug ? "border-[#333333] bg-[#333333] text-white" : "border-[#e5e7eb] text-[#555555] hover:border-[#ef9822] hover:text-[#ef9822]"}`}
+                className={`${CHIP} ${activeSlug === category.slug ? "border-[#333333] bg-[#333333] text-white" : "border-[#e5e7eb] text-[#555555] hover:border-[#d4920a] hover:text-[#d4920a]"}`}
               >
                 {category.name}
               </Link>

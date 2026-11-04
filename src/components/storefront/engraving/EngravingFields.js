@@ -107,7 +107,7 @@ export default function EngravingFields({ config, value, onChange, showHelp = tr
         spellCheck={false}
         aria-invalid={Boolean(error) || undefined}
         aria-describedby={`${hintId}${message ? ` ${errorId}` : ""}`}
-        className={`mt-1.5 block h-11 w-full rounded border px-3 text-[16px] text-[#333333] outline-none transition-colors placeholder:text-gray-300 focus:border-[#ef9822] focus:ring-1 focus:ring-[#ef9822] ${
+        className={`mt-1.5 block h-11 w-full rounded border px-3 text-[16px] text-[#333333] outline-none transition-colors placeholder:text-gray-300 focus:border-[#d4920a] focus:ring-1 focus:ring-[#d4920a] ${
           error ? "border-error bg-red-50" : "border-gray-300"
         }`}
       />
@@ -121,7 +121,7 @@ export default function EngravingFields({ config, value, onChange, showHelp = tr
           onClick={() => setFontsOpen((open) => !open)}
           aria-expanded={fontsOpen}
           aria-controls={fontsPanelId}
-          className="flex w-full items-center justify-between gap-3 rounded border border-gray-300 px-3 py-2.5 text-left transition-colors hover:border-[#ef9822] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#ef9822]"
+          className="flex w-full items-center justify-between gap-3 rounded border border-gray-300 px-3 py-2.5 text-left transition-colors hover:border-[#d4920a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d4920a]"
         >
           <span id={fontsLabelId} className={LABEL}>
             Font: <span className="font-normal text-gray-500">{font?.name}</span>
@@ -155,8 +155,8 @@ export default function EngravingFields({ config, value, onChange, showHelp = tr
                   className="peer sr-only"
                 />
                 <span
-                  className={`flex h-full min-h-[64px] flex-col items-center justify-center gap-0.5 rounded border px-2 py-2 text-center transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#ef9822] peer-focus-visible:ring-offset-1 ${
-                    checked ? "border-[#1c3b6a] bg-[#1c3b6a]/5 ring-1 ring-[#1c3b6a]" : "border-gray-300 hover:border-[#ef9822]"
+                  className={`flex h-full min-h-[64px] flex-col items-center justify-center gap-0.5 rounded border px-2 py-2 text-center transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-[#d4920a] peer-focus-visible:ring-offset-1 ${
+                    checked ? "border-[#1c3b6a] bg-[#1c3b6a]/5 ring-1 ring-[#1c3b6a]" : "border-gray-300 hover:border-[#d4920a]"
                   }`}
                 >
                   <span style={{ fontFamily: option.fontFamily }} className="block max-w-full truncate text-[22px] leading-tight text-[#333333]">

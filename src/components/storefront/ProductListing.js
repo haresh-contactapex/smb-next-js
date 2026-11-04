@@ -10,7 +10,7 @@ import { moneyInputWrap } from "@/lib/currency";
 import { DEFAULT_PRODUCT_SORT, PRODUCT_SORTS } from "@/lib/productSort";
 
 const PRICE_INPUT =
-  "w-full bg-gray-100 text-sm text-[#333333] text-right placeholder:text-gray-500 pl-7 pr-6 py-3 rounded-full focus:outline-none focus:ring-1 focus:ring-[#ef9822] transition-shadow " +
+  "w-full bg-gray-100 text-sm text-[#333333] text-right placeholder:text-gray-500 pl-7 pr-6 py-3 rounded-full focus:outline-none focus:ring-1 focus:ring-[#d4920a] transition-shadow " +
   // The up/down spinner would sit on the right edge, where the amount is aligned.
   "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
 
@@ -160,7 +160,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
   ];
   const GRID = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12 pt-6 sm:pt-8";
   const RETRY_BUTTON =
-    "mt-4 border border-[#ef9822] text-[#ef9822] hover:bg-[#ef9822] hover:text-white px-6 py-2 text-xs font-semibold tracking-wide uppercase rounded-md transition-colors";
+    "mt-4 border border-[#d4920a] text-[#d4920a] hover:bg-[#d4920a] hover:text-white px-6 py-2 text-xs font-semibold tracking-wide uppercase rounded-md transition-colors";
 
   let emptyMessage = "";
   if (loadError) emptyMessage = loadError;
@@ -179,15 +179,15 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
               aria-expanded={filtersOpen}
               aria-controls="filters-panel"
               onClick={() => setFiltersOpen((open) => !open)}
-              className="flex items-center gap-3 text-left cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822] rounded-md"
+              className="flex items-center gap-3 text-left cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d4920a] rounded-md"
             >
-              <span className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-[#333333] group-hover:text-[#ef9822] transition-colors">
+              <span className="flex items-center gap-3 text-sm font-semibold uppercase tracking-wide text-[#333333] group-hover:text-[#d4920a] transition-colors">
                 <svg aria-hidden="true" viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                   <path d="M4 6h16M7 12h10M10 18h4" />
                 </svg>
                 Filters
                 {activeFilterCount > 0 && (
-                  <span className="min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-[#ef9822] text-white text-[11px] font-semibold normal-case tracking-normal">
+                  <span className="min-w-5 h-5 px-1.5 inline-flex items-center justify-center rounded-full bg-[#d4920a] text-white text-[11px] font-semibold normal-case tracking-normal">
                     {activeFilterCount}
                     <span className="sr-only"> active</span>
                   </span>
@@ -206,7 +206,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                     onClick={chip.remove}
                     title={chip.label}
                     aria-label={`Remove filter: ${chip.label}`}
-                    className="inline-flex max-w-[12rem] sm:max-w-none items-center gap-2 rounded-full border border-gray-200 bg-gray-50 pl-3 pr-2 py-1 text-xs font-medium text-[#333333] hover:border-[#ef9822] hover:text-[#ef9822] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822]"
+                    className="inline-flex max-w-[12rem] sm:max-w-none items-center gap-2 rounded-full border border-gray-200 bg-gray-50 pl-3 pr-2 py-1 text-xs font-medium text-[#333333] hover:border-[#d4920a] hover:text-[#d4920a] transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d4920a]"
                   >
                     {chip.swatch && <span aria-hidden="true" style={{ background: chip.swatch }} className="w-3 h-3 shrink-0 rounded-full ring-1 ring-gray-300" />}
                     {/* On a phone a long name ends in an ellipsis; the swatch and × keep their size. */}
@@ -268,7 +268,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                   <span
                     style={{ background: metalColor(value) || OTHER_METAL_COLOR }}
                     className={`w-5 h-5 rounded-full ring-1 ring-offset-2 transition-all ${
-                      active ? "ring-[#ef9822]" : "ring-transparent group-hover:ring-gray-300"
+                      active ? "ring-[#d4920a]" : "ring-transparent group-hover:ring-gray-300"
                     }`}
                   />
                   <span aria-hidden="true" className="text-[11px] font-medium leading-tight">{metalLabel(value)}</span>
@@ -330,7 +330,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                   onClick={() => size === value && setSize("")}
                   className="custom-radio"
                 />
-                <span className="text-[#555555] group-hover:text-[#ef9822] transition-colors">{value}</span>
+                <span className="text-[#555555] group-hover:text-[#d4920a] transition-colors">{value}</span>
               </label>
             ))}
           </div>
@@ -342,7 +342,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs font-semibold uppercase tracking-wide text-[#ef9822] underline underline-offset-4 hover:text-[#d4850f] cursor-pointer"
+                  className="text-xs font-semibold uppercase tracking-wide text-[#d4920a] underline underline-offset-4 hover:text-[#b87c06] cursor-pointer"
                 >
                   Clear all filters
                 </button>
@@ -364,7 +364,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
               id="listing-sort"
               value={sort}
               onChange={(event) => setSort(event.target.value)}
-              className="appearance-none cursor-pointer rounded-md border border-gray-300 bg-white py-2.5 pl-4 pr-11 text-base sm:text-sm text-[#333333] hover:border-[#ef9822] focus:outline-none focus-visible:border-[#ef9822] focus-visible:ring-2 focus-visible:ring-[#ef9822]/40 transition-colors"
+              className="appearance-none cursor-pointer rounded-md border border-gray-300 bg-white py-2.5 pl-4 pr-11 text-base sm:text-sm text-[#333333] hover:border-[#d4920a] focus:outline-none focus-visible:border-[#d4920a] focus-visible:ring-2 focus-visible:ring-[#d4920a]/40 transition-colors"
             >
               {PRODUCT_SORTS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -427,7 +427,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
             </p>
             <div className="h-1 w-48 rounded-full bg-gray-100 overflow-hidden" aria-hidden="true">
               <div
-                className="h-full rounded-full bg-[#ef9822] transition-all duration-500"
+                className="h-full rounded-full bg-[#d4920a] transition-all duration-500"
                 style={{ width: `${Math.min(100, (products.length / Math.max(total, 1)) * 100)}%` }}
               />
             </div>
@@ -442,7 +442,7 @@ export default function ProductListing({ initialProducts, initialTotal, pageSize
                 onClick={loadError ? retry : loadMore}
                 disabled={loadingMore}
                 aria-busy={loadingMore}
-                className="mt-2 border border-[#ef9822] text-[#ef9822] hover:bg-[#ef9822] hover:text-white focus-visible:bg-[#ef9822] focus-visible:text-white px-10 py-3 text-sm font-semibold tracking-wide uppercase rounded-md transition-colors disabled:opacity-60 disabled:cursor-wait"
+                className="mt-2 border border-[#d4920a] text-[#d4920a] hover:bg-[#d4920a] hover:text-white focus-visible:bg-[#d4920a] focus-visible:text-white px-10 py-3 text-sm font-semibold tracking-wide uppercase rounded-md transition-colors disabled:opacity-60 disabled:cursor-wait"
               >
                 {loadingMore ? "Loading…" : loadError ? "Try again" : "Load more"}
               </button>

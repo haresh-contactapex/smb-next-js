@@ -92,7 +92,7 @@ export default function BlogPostView({ post, origin = "", utilityCss = "" }) {
             </p>
             <Link
               href={blogCategoryPath(post.categorySlug)}
-              className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wide text-[#ef9822] hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-wide text-[#d4920a] hover:underline"
             >
               <StoreIcon name="tag" className="h-4 w-4" />
               {post.category}

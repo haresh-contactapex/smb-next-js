@@ -131,7 +131,7 @@ textarea {
   }
   .dark .field-input:focus {
     background: #182142;
-    border-color: #d19d22;
+    border-color: #d4920a;
     box-shadow: 0 0 0 4px rgba(209, 157, 34, 0.1);
   }
 }
@@ -189,7 +189,7 @@ textarea {
   accent-color: #1c3b6a;
 }
 .dark .toggle-row input[type="checkbox"] {
-  accent-color: #d19d22;
+  accent-color: #d4920a;
 }
 
 .media-dropzone.drag-over {
@@ -197,7 +197,7 @@ textarea {
   background: rgba(28, 59, 106, 0.06);
 }
 .dark .media-dropzone.drag-over {
-  border-color: #d19d22;
+  border-color: #d4920a;
   background: rgba(209, 157, 34, 0.08);
 }
 

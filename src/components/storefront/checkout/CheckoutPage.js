@@ -175,7 +175,7 @@ export default function CheckoutPage({ settings, account = null }) {
         <p className="text-[16px] text-[#555555]">Add something to your cart to check out.</p>
         <Link
           href="/women-wedding-bands"
-          className="mt-2 rounded-lg bg-[#EF9822] px-7 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#D9850F]"
+          className="mt-2 rounded-lg bg-[#d4920a] px-7 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#b87c06]"
         >
           Continue shopping
         </Link>

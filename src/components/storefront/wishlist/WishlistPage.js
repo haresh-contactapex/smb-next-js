@@ -25,7 +25,7 @@ export default function WishlistPage({ gridClassName = "grid-cols-1 gap-x-6 gap-
         <p className="text-[16px] text-[#555555]">Your wishlist is empty. Tap the heart on any product to save it here.</p>
         <Link
           href="/women-wedding-bands"
-          className="rounded bg-[#4A4A4A] px-6 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-[#ef9822]"
+          className="rounded bg-[#4A4A4A] px-6 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-[#d4920a]"
         >
           Continue shopping
         </Link>
@@ -51,11 +51,11 @@ export default function WishlistPage({ gridClassName = "grid-cols-1 gap-x-6 gap-
       {!authenticated && (
         <p className="mb-8 rounded border border-gray-200 bg-[#FAFAFA] px-4 py-3 text-[14px] text-[#555555]">
           Your wishlist is saved on this device only.{" "}
-          <Link href="/login" className="font-semibold text-[#333333] underline transition-colors hover:text-[#ef9822]">
+          <Link href="/login" className="font-semibold text-[#333333] underline transition-colors hover:text-[#d4920a]">
             Sign in
           </Link>{" "}
           or{" "}
-          <Link href="/register" className="font-semibold text-[#333333] underline transition-colors hover:text-[#ef9822]">
+          <Link href="/register" className="font-semibold text-[#333333] underline transition-colors hover:text-[#d4920a]">
             create an account
           </Link>{" "}
           to keep it on every device.
@@ -68,7 +68,7 @@ export default function WishlistPage({ gridClassName = "grid-cols-1 gap-x-6 gap-
           <button
             type="button"
             onClick={retry}
-            className="rounded border border-gray-300 px-5 py-2 font-semibold text-[#333333] transition-colors hover:border-[#ef9822] hover:text-[#ef9822]"
+            className="rounded border border-gray-300 px-5 py-2 font-semibold text-[#333333] transition-colors hover:border-[#d4920a] hover:text-[#d4920a]"
           >
             Try again
           </button>

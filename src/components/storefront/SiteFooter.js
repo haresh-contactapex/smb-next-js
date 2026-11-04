@@ -90,7 +90,7 @@ function FooterGroup({ label, columns = 1, children }) {
 // A link to another site, opened in a new tab.
 function ExternalLink({ href, label }) {
   return (
-    <a href={href} target="_blank" rel="noopener noreferrer" className="underline-offset-2 transition-colors hover:text-[#ef9822] hover:underline">
+    <a href={href} target="_blank" rel="noopener noreferrer" className="underline-offset-2 transition-colors hover:text-[#d4920a] hover:underline">
       {label}
     </a>
   );
@@ -98,7 +98,7 @@ function ExternalLink({ href, label }) {
 
 function FooterLink({ href, children }) {
   return (
-    <Link href={href} className="font-medium text-white transition-colors hover:text-[#ef9822]">
+    <Link href={href} className="font-medium text-white transition-colors hover:text-[#d4920a]">
       {children}
     </Link>
   );
@@ -141,7 +141,7 @@ export function SiteFooterView({ columns, texts, socialLinks = STORE_SOCIAL_LINK
             {STORE_FOOTER_CITIES.map((city, index) => (
               <span key={city.slug}>
                 {index > 0 && <span aria-hidden="true"> | </span>}
-                <Link href={`/${city.slug}`} className="transition-colors hover:text-[#ef9822]">{city.label}</Link>
+                <Link href={`/${city.slug}`} className="transition-colors hover:text-[#d4920a]">{city.label}</Link>
               </span>
             ))}
           </p>
@@ -156,7 +156,7 @@ export function SiteFooterView({ columns, texts, socialLinks = STORE_SOCIAL_LINK
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4a4a4a] transition-colors hover:bg-[#ef9822]"
+                  className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4a4a4a] transition-colors hover:bg-[#d4920a]"
                 >
                   <span aria-hidden="true" className="block h-3.5 w-3.5 bg-white" style={maskStyle(social.icon)} />
                 </a>

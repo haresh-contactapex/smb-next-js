@@ -1,5 +1,5 @@
 // Class strings for the checkout page: soft bordered cards on white, with the
-// storefront's orange accent (#ef9822) as the highlight colour.
+// storefront's orange accent (#d4920a) as the highlight colour.
 export const CHECKOUT_CARD = "rounded-2xl border border-[#EEEEEE] bg-white shadow-[0_4px_24px_rgba(0,0,0,0.05)]";
 
 // The page frame and its two-column grid. The loading skeleton uses the same
@@ -11,7 +11,7 @@ export const CHECKOUT_GRID =
 export const CHECKOUT_LABEL = "mb-2 block text-[14px] font-medium text-[#333333]";
 
 export const CHECKOUT_FIELD_BOX =
-  "rounded-lg border border-[#E4E4E4] bg-white transition-colors hover:border-[#EF9822]/60 focus-within:border-[#EF9822] focus-within:ring-1 focus-within:ring-[#EF9822]";
+  "rounded-lg border border-[#E4E4E4] bg-white transition-colors hover:border-[#d4920a]/60 focus-within:border-[#d4920a] focus-within:ring-1 focus-within:ring-[#d4920a]";
 
 // A disabled field (the shipping address while it copies the billing one) is greyed and
 // loses the hover highlight, so it reads as read-only rather than broken.
@@ -21,4 +21,4 @@ export const CHECKOUT_FIELD = `w-full px-4 py-3.5 text-[15px] text-[#333333] pla
 export const CHECKOUT_FIELD_ERROR = "!border-error !bg-error/5";
 
 export const CHECKOUT_BUTTON =
-  "flex w-full items-center justify-center gap-2 rounded-lg bg-[#EF9822] px-6 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-[#D9850F] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF9822] disabled:pointer-events-none disabled:opacity-50";
+  "flex w-full items-center justify-center gap-2 rounded-lg bg-[#d4920a] px-6 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-[#b87c06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4920a] disabled:pointer-events-none disabled:opacity-50";

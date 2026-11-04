@@ -10,7 +10,7 @@ import WishlistButton from "./wishlist/WishlistButton";
 import SearchButton from "./search/SearchButton";
 import StoreIcon from "./icons";
 
-const iconButton = "hover:text-[#ef9822] transition-colors hover:scale-110 transform duration-300";
+const iconButton = "hover:text-[#d4920a] transition-colors hover:scale-110 transform duration-300";
 // Matches NavMegaMenu's close delay so a quick diagonal mouse move from the
 // icon to the panel doesn't close it mid-transit.
 const CLOSE_DELAY_MS = 150;
@@ -173,7 +173,7 @@ function AccountMenu({ customer, className = "" }) {
         <Link
           href="/account"
           onClick={() => setOpen(false)}
-          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-[#FAFAFA] hover:text-[#ef9822] transition-colors"
+          className="flex items-center gap-2.5 px-4 py-2.5 hover:bg-[#FAFAFA] hover:text-[#d4920a] transition-colors"
         >
           <StoreIcon name="user" className="h-4 w-4" /> My Account
         </Link>

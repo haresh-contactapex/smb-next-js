@@ -86,7 +86,7 @@ export default async function ProductPage({ params, searchParams }) {
     return (
       <p role="status" className="text-center py-24 px-4 text-sm">
         We couldn&apos;t load this product right now. Please try again shortly, or{" "}
-        <Link href="/women-wedding-bands" className="underline hover:text-[#ef9822]">
+        <Link href="/women-wedding-bands" className="underline hover:text-[#d4920a]">
           browse all wedding bands
         </Link>
         .

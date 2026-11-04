@@ -13,7 +13,7 @@ import { formatCurrency } from "@/lib/currency";
 function StatTile({ href, icon, label, value, hint }) {
   return (
     <Link href={href} className={`${CARD} group flex items-center gap-4 p-5 transition-shadow hover:shadow-[0_6px_28px_rgba(0,0,0,0.09)]`}>
-      <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-[#FAFAFA] text-[#555555] transition-colors group-hover:bg-[#ef9822]/15 group-hover:text-[#ef9822]">
+      <span className="grid h-11 w-11 flex-shrink-0 place-items-center rounded-full bg-[#FAFAFA] text-[#555555] transition-colors group-hover:bg-[#d4920a]/15 group-hover:text-[#d4920a]">
         <StoreIcon name={icon} className="h-5 w-5" />
       </span>
       <span className="min-w-0">
@@ -32,7 +32,7 @@ function SectionHeading({ id, title, href, linkLabel }) {
         {title}
       </h2>
       {href && (
-        <Link href={href} className="text-[13.5px] font-semibold text-[#333333] transition-colors hover:text-[#ef9822]">
+        <Link href={href} className="text-[13.5px] font-semibold text-[#333333] transition-colors hover:text-[#d4920a]">
           {linkLabel}
         </Link>
       )}
@@ -72,7 +72,7 @@ export default function AccountOverview({ customer, counts, recentOrders, wishli
           </p>
         </div>
         <div className="flex items-center gap-3 rounded-xl bg-[#FAFAFA] px-5 py-3.5">
-          <StoreIcon name="gift" className="h-6 w-6 text-[#ef9822]" />
+          <StoreIcon name="gift" className="h-6 w-6 text-[#d4920a]" />
           <div>
             <p className="text-[22px] font-semibold leading-none text-[#333333]">{customer.loyaltyPoints.toLocaleString("en-US")}</p>
             <p className="mt-0.5 text-[12px] text-gray-500">loyalty points</p>
@@ -94,11 +94,11 @@ export default function AccountOverview({ customer, counts, recentOrders, wishli
       </section>
 
       {todo.length > 0 && (
-        <section aria-labelledby="todo-title" className="rounded-2xl border border-[#ef9822]/40 bg-[#ef9822]/[0.06] p-5 sm:p-6">
+        <section aria-labelledby="todo-title" className="rounded-2xl border border-[#d4920a]/40 bg-[#d4920a]/[0.06] p-5 sm:p-6">
           <h2 id="todo-title" className="text-[16px] font-semibold text-[#333333]">
             Finish setting up your account
           </h2>
-          <ul className="mt-3 divide-y divide-[#ef9822]/20">
+          <ul className="mt-3 divide-y divide-[#d4920a]/20">
             {todo.map((item) => (
               <li key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
                 <span className="text-[14px] text-[#555555]">{item.text}</span>

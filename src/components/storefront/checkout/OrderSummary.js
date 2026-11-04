@@ -19,7 +19,7 @@ function TaxInfo({ children }) {
         type="button"
         aria-label="How tax is estimated"
         aria-describedby="checkout-tax-info"
-        className="rounded-full text-[#777777] transition-colors hover:text-[#EF9822] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#EF9822]"
+        className="rounded-full text-[#777777] transition-colors hover:text-[#d4920a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d4920a]"
       >
         <StoreIcon name="info" className="h-5 w-5" />
       </button>
@@ -72,7 +72,7 @@ export default function OrderSummary({ checkout, tax }) {
     <aside aria-label="Order summary" className={`${CHECKOUT_CARD} p-6 sm:p-8 lg:sticky lg:top-6`}>
       <div className="flex items-baseline justify-between gap-4">
         <h2 className="text-[22px] font-bold text-[#111111] sm:text-[24px]">Order Summary</h2>
-        <Link href="/cart" className="flex-shrink-0 text-[14px] text-[#555555] underline transition-colors hover:text-[#EF9822]">
+        <Link href="/cart" className="flex-shrink-0 text-[14px] text-[#555555] underline transition-colors hover:text-[#d4920a]">
           Edit Cart
         </Link>
       </div>

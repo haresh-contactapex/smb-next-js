@@ -37,16 +37,16 @@ export default function ContactStep({ contact, showSignIn = false, onChange, onC
       {showSignIn && (
         <div className="mb-6 rounded-lg bg-[#FAFAFA] px-4 py-3.5 text-[14px] text-[#555555]">
           <p className="flex items-center gap-2 font-semibold text-[#222222]">
-            <StoreIcon name="user" className="h-5 w-5 text-[#EF9822]" />
+            <StoreIcon name="user" className="h-5 w-5 text-[#d4920a]" />
             Checking out as a guest
           </p>
           <p className="mt-1">
             No account needed. Already have one?{" "}
-            <Link href="/login?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#EF9822]">
+            <Link href="/login?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#d4920a]">
               Sign in
             </Link>{" "}
             to fill in your details and use your saved addresses, or{" "}
-            <Link href="/register?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#EF9822]">
+            <Link href="/register?next=%2Fcheckout" className="font-semibold text-[#333333] underline transition-colors hover:text-[#d4920a]">
               create an account
             </Link>
             .
@@ -131,7 +131,7 @@ export default function ContactStep({ contact, showSignIn = false, onChange, onC
           type="checkbox"
           checked={contact.updates}
           onChange={(event) => update({ updates: event.target.checked })}
-          className="mt-0.5 h-5 w-5 flex-shrink-0 cursor-pointer rounded accent-[#EF9822]"
+          className="mt-0.5 h-5 w-5 flex-shrink-0 cursor-pointer rounded accent-[#d4920a]"
         />
         Keep me updated on order status and special offers
       </label>

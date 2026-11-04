@@ -41,7 +41,7 @@ export default function OrdersList({ data, counts, status, q, moneyFormat }) {
                     href={ordersHref({ status: filter.id, q })}
                     aria-current={active ? "page" : undefined}
                     className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[13.5px] font-medium transition-colors ${
-                      active ? "bg-[#4A4A4A] text-white" : "bg-white text-[#555555] ring-1 ring-inset ring-gray-200 hover:text-[#ef9822]"
+                      active ? "bg-[#4A4A4A] text-white" : "bg-white text-[#555555] ring-1 ring-inset ring-gray-200 hover:text-[#d4920a]"
                     }`}
                   >
                     {filter.label}
@@ -100,7 +100,7 @@ export default function OrdersList({ data, counts, status, q, moneyFormat }) {
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                   <h2 className="text-[16px] font-semibold text-[#333333]">
-                    <Link href={`/account/orders/${encodeURIComponent(order.orderNumber)}`} className="transition-colors hover:text-[#ef9822]">
+                    <Link href={`/account/orders/${encodeURIComponent(order.orderNumber)}`} className="transition-colors hover:text-[#d4920a]">
                       Order #{order.orderNumber}
                     </Link>
                   </h2>
@@ -118,7 +118,7 @@ export default function OrdersList({ data, counts, status, q, moneyFormat }) {
                 <Link
                   href={`/account/orders/${encodeURIComponent(order.orderNumber)}`}
                   aria-label={`View details of order ${order.orderNumber}`}
-                  className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#333333] transition-colors hover:text-[#ef9822]"
+                  className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-[#333333] transition-colors hover:text-[#d4920a]"
                 >
                   View details
                   <StoreIcon name="arrowRight" className="h-4 w-4" />

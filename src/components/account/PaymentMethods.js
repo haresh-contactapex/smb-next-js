@@ -129,7 +129,7 @@ export default function PaymentMethods({ initialMethods, addresses, acceptedMeth
                     <h2 className="text-[15px] font-semibold text-[#333333]">
                       {card.nickname || CARD_BRAND_LABELS[card.brand]} <span className="font-normal text-gray-500">ending in {card.last4}</span>
                     </h2>
-                    {card.isDefault && <span className={`${PILL} bg-[#ef9822]/15 text-[#a8620a]`}>Default</span>}
+                    {card.isDefault && <span className={`${PILL} bg-[#d4920a]/15 text-[#a8620a]`}>Default</span>}
                     {card.expired && <span className={`${PILL} bg-red-50 text-red-700`}>Expired</span>}
                     {soon && <span className={`${PILL} bg-amber-50 text-amber-800`}>Expires soon</span>}
                   </div>

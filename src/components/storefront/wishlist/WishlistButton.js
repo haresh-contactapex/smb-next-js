@@ -17,7 +17,7 @@ export default function WishlistButton({ className = "" }) {
       {shown > 0 && (
         <span
           aria-hidden="true"
-          className="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ef9822] text-white text-[10px] font-semibold leading-[18px] text-center"
+          className="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#d4920a] text-white text-[10px] font-semibold leading-[18px] text-center"
         >
           {shown > 99 ? "99+" : shown}
         </span>

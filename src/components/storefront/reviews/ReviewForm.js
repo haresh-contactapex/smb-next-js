@@ -194,7 +194,7 @@ export default function ReviewForm({ handle, onSent }) {
           ref={submitRef}
           type="submit"
           disabled={sending}
-          className="rounded bg-[#4A4A4A] px-8 py-3 text-[16px] font-semibold text-white transition-colors hover:bg-[#ef9822] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef9822] disabled:opacity-60"
+          className="rounded bg-[#4A4A4A] px-8 py-3 text-[16px] font-semibold text-white transition-colors hover:bg-[#d4920a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4920a] disabled:opacity-60"
         >
           {sending ? "Submitting…" : "Submit Review"}
         </button>

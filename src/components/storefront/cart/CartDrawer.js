@@ -92,7 +92,7 @@ export default function CartDrawer() {
             type="button"
             onClick={closeCart}
             aria-label="Close cart"
-            className="rounded-full p-2 hover:bg-gray-50 hover:text-[#ef9822] transition-colors"
+            className="rounded-full p-2 hover:bg-gray-50 hover:text-[#d4920a] transition-colors"
           >
             <StoreIcon name="close" className="w-6 h-6" />
           </button>
@@ -107,7 +107,7 @@ export default function CartDrawer() {
             <Link
               href="/women-wedding-bands"
               onClick={closeCart}
-              className="rounded bg-[#4A4A4A] px-6 py-3 text-[14px] font-semibold text-white hover:bg-[#ef9822] transition-colors"
+              className="rounded bg-[#4A4A4A] px-6 py-3 text-[14px] font-semibold text-white hover:bg-[#d4920a] transition-colors"
             >
               Continue shopping
             </Link>

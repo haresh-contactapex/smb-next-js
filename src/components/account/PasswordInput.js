@@ -29,7 +29,7 @@ export default function PasswordInput({ id, label, value, onChange, error, autoC
           onClick={() => setVisible((current) => !current)}
           aria-label={visible ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
           aria-pressed={visible}
-          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-2 text-gray-400 transition-colors hover:text-[#ef9822] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#EF9822]"
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-2 text-gray-400 transition-colors hover:text-[#d4920a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#d4920a]"
         >
           <StoreIcon name={visible ? "eyeSlash" : "eye"} className="h-5 w-5" />
         </button>

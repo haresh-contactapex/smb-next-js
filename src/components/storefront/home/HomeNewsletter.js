@@ -24,12 +24,12 @@ function SubscribedCard({ email, already, onReset }) {
   return (
     <div
       role="status"
-      className={`mx-auto mt-6 w-full max-w-md border border-[#e6dfd2] border-t-[3px] border-t-[#ef9822] bg-white px-6 py-7 text-center shadow-[0_8px_24px_rgba(51,51,51,0.06)] transition-all duration-500 ease-out motion-reduce:transition-none ${
+      className={`mx-auto mt-6 w-full max-w-md border border-[#e6dfd2] border-t-[3px] border-t-[#d4920a] bg-white px-6 py-7 text-center shadow-[0_8px_24px_rgba(51,51,51,0.06)] transition-all duration-500 ease-out motion-reduce:transition-none ${
         shown ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
       }`}
     >
       <span
-        className={`mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#ef9822] text-white transition-transform delay-150 duration-500 ease-out motion-reduce:transition-none ${
+        className={`mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#d4920a] text-white transition-transform delay-150 duration-500 ease-out motion-reduce:transition-none ${
           shown ? "scale-100" : "scale-50"
         }`}
       >
@@ -51,7 +51,7 @@ function SubscribedCard({ email, already, onReset }) {
           </>
         )}
       </p>
-      <button type="button" onClick={onReset} className="mt-4 text-xs font-semibold text-[#c77a12] underline underline-offset-4 transition-colors hover:text-[#ef9822]">
+      <button type="button" onClick={onReset} className="mt-4 text-xs font-semibold text-[#b87c06] underline underline-offset-4 transition-colors hover:text-[#d4920a]">
         Use a different email
       </button>
     </div>
@@ -139,7 +139,7 @@ export default function HomeNewsletter() {
         <button
           type="submit"
           disabled={submitting}
-          className="bg-[#ef9822] px-5 text-xs font-semibold text-white transition-colors hover:bg-[#d9861a] disabled:cursor-not-allowed disabled:opacity-70"
+          className="bg-[#d4920a] px-5 text-xs font-semibold text-white transition-colors hover:bg-[#b87c06] disabled:cursor-not-allowed disabled:opacity-70"
         >
           {submitting ? "Subscribing…" : "Subscribe"}
         </button>

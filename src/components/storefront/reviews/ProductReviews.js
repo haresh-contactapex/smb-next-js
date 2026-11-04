@@ -7,7 +7,7 @@ import ReviewForm from "./ReviewForm";
 const PAGE_SIZE = 6; // a multiple of 3, so the desktop grid never ends on a gap
 const STAR_ROWS = [5, 4, 3, 2, 1];
 const WRITE_BUTTON =
-  "rounded border border-gray-300 bg-white px-6 py-2.5 text-[16px] font-semibold text-gray-800 transition-colors hover:border-[#ef9822] hover:text-[#ef9822] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef9822]";
+  "rounded border border-gray-300 bg-white px-6 py-2.5 text-[16px] font-semibold text-gray-800 transition-colors hover:border-[#d4920a] hover:text-[#d4920a] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4920a]";
 const DISPLAY_FONT = { fontFamily: "var(--font-playfair), serif" };
 
 function percentOf(count, total) {

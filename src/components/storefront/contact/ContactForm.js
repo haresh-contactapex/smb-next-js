@@ -29,7 +29,7 @@ const CONTROL_OK = "border-[#e0e0e0] focus:border-[#333333] focus:shadow-[0_1px_
 const CONTROL_INVALID = "border-error focus:border-error focus:shadow-[0_1px_0_0_#dc2626]";
 
 const SUBMIT_BUTTON =
-  "inline-flex h-14 max-w-full items-center justify-center rounded-sm bg-[#ef9822] px-9 text-[13px] font-medium uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#d6830f] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef9822] disabled:opacity-60";
+  "inline-flex h-14 max-w-full items-center justify-center rounded-sm bg-[#d4920a] px-9 text-[13px] font-medium uppercase tracking-[0.16em] text-white transition-colors hover:bg-[#b87c06] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4920a] disabled:opacity-60";
 
 // Label (hidden), control with its icon at the right end, message underneath.
 function Field({ id, name, error, children }) {

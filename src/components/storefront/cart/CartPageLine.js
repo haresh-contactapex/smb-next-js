@@ -11,7 +11,7 @@ import useImageLoaded from "../useImageLoaded";
 import { lineLimit, optionChoices } from "./cartHelpers";
 
 const STEP_BUTTON =
-  "flex h-7 w-7 items-center justify-center text-[#555555] transition-colors hover:text-[#ef9822] disabled:pointer-events-none disabled:opacity-40";
+  "flex h-7 w-7 items-center justify-center text-[#555555] transition-colors hover:text-[#d4920a] disabled:pointer-events-none disabled:opacity-40";
 
 // One product line on the cart page: image, name, price, editable color and
 // size, quantity and remove. `product` ({ options, variants }) is what the
@@ -75,7 +75,7 @@ export default function CartPageLine({ item, product, loading = false, onVariant
           <div className="min-w-0">
             <h2 className="break-words text-[18px] font-bold uppercase leading-tight tracking-tight text-[#333333] sm:text-[26px]">
               {item.handle ? (
-                <Link href={`/products/${item.handle}`} className="transition-colors hover:text-[#ef9822]">
+                <Link href={`/products/${item.handle}`} className="transition-colors hover:text-[#d4920a]">
                   {item.title}
                 </Link>
               ) : (

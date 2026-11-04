@@ -37,15 +37,15 @@ export default function CartOptions({ active, onChange }) {
               onClick={() => onChange(isActive ? null : option.id)}
               aria-expanded={isActive}
               aria-controls={isActive ? panelId : undefined}
-              className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium uppercase tracking-wider transition-colors hover:text-[#ef9822] ${
-                isActive ? "bg-[#FFF8EE] text-[#ef9822]" : "text-[#555555]"
+              className={`relative flex min-w-0 flex-1 flex-col items-center gap-1 py-3 text-[11px] font-medium uppercase tracking-wider transition-colors hover:text-[#d4920a] ${
+                isActive ? "bg-[#FFF8EE] text-[#d4920a]" : "text-[#555555]"
               }`}
             >
               <StoreIcon name={option.icon} className="w-5 h-5" />
               {option.label}
               {hasContent[option.id] && (
                 <>
-                  <span aria-hidden="true" className="absolute top-2.5 left-1/2 ml-3 h-2 w-2 rounded-full bg-[#ef9822]" />
+                  <span aria-hidden="true" className="absolute top-2.5 left-1/2 ml-3 h-2 w-2 rounded-full bg-[#d4920a]" />
                   <span className="sr-only">(added)</span>
                 </>
               )}
@@ -64,7 +64,7 @@ export default function CartOptions({ active, onChange }) {
               type="button"
               onClick={() => onChange(null)}
               aria-label={`Close ${open.heading.toLowerCase()}`}
-              className="text-gray-400 hover:text-[#ef9822] transition-colors"
+              className="text-gray-400 hover:text-[#d4920a] transition-colors"
             >
               <StoreIcon name="close" className="w-5 h-5" />
             </button>

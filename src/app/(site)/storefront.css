@@ -30,9 +30,9 @@
   flex-shrink: 0;
 }
 
-.custom-radio:checked { border-color: #ef9822; }
+.custom-radio:checked { border-color: #d4920a; }
 
-.custom-radio:focus-visible { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #ef9822; }
+.custom-radio:focus-visible { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #d4920a; }
 
 .custom-radio:checked::after {
   content: "";
@@ -42,7 +42,7 @@
   transform: translate(-50%, -50%);
   width: 8px;
   height: 8px;
-  background-color: #ef9822;
+  background-color: #d4920a;
   border-radius: 50%;
 }
 
@@ -120,7 +120,7 @@
 /* The editor writes list text inside a paragraph; keep the list as tight as plain items. */
 .cms-content li > p { margin: 0; }
 .cms-content a { color: #1c3b6a; text-decoration: underline; text-underline-offset: 2px; }
-.cms-content a:hover { color: #ef9822; }
+.cms-content a:hover { color: #d4920a; }
 .cms-content a.cms-btn {
   display: inline-block;
   padding: 0.65em 1.8em;
@@ -291,7 +291,7 @@
 .cms-content table.cms-split td > p:nth-child(4) { max-width: 22rem; margin: 0 auto 1.5rem; color: #555555; font-size: 15px; line-height: 1.6; }
 .cms-content table.cms-split td > p:last-child { margin: auto 0 0; }
 .cms-content table.cms-split a.cms-btn { padding: 0.75em 1.9em; border-radius: 0; background-color: #333333; font-size: 13px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; }
-.cms-content table.cms-split a.cms-btn:hover { background-color: #ef9822; color: #1f1f1f; }
+.cms-content table.cms-split a.cms-btn:hover { background-color: #d4920a; color: #1f1f1f; }
 .cms-content table.cms-split tbody::after { content: "&"; position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: 54px; height: 54px; border-radius: 50%; background-color: #ffffff; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12); color: #333333; font-family: var(--font-playfair), Georgia, serif; font-size: 20px; font-style: italic; transform: translate(-50%, -50%); }
 @media (max-width: 720px) {
   .cms-content table.cms-split tr { grid-template-columns: minmax(0, 1fr); }
@@ -304,13 +304,13 @@
 .cms-content table.cms-chips { padding: 0 1.25rem; }
 .cms-content table.cms-chips tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
 .cms-content table.cms-chips td { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr); grid-template-rows: 1fr auto; align-items: center; column-gap: 1rem; padding: 1rem 1.2rem; border: 1px solid #e7e2da; background-color: #ffffff; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
-.cms-content table.cms-chips td:hover { border-color: #ef9822; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); }
+.cms-content table.cms-chips td:hover { border-color: #d4920a; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.07); }
 .cms-content table.cms-chips td > p:first-child { grid-row: 1 / 3; margin: 0; }
 .cms-content table.cms-chips img { display: block; width: 96px; height: auto; }
 .cms-content table.cms-chips h3 { align-self: end; margin: 0; font-size: 16px; font-weight: 500; line-height: 1.25; }
 .cms-content table.cms-chips h3 a { color: #333333; text-decoration: none; }
 .cms-content table.cms-chips h3 a::after { content: ""; position: absolute; inset: 0; }
-.cms-content table.cms-chips td::after { content: "Shop \2192"; grid-column: 2; align-self: start; margin-top: 0.15rem; color: #ef9822; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+.cms-content table.cms-chips td::after { content: "Shop \2192"; grid-column: 2; align-self: start; margin-top: 0.15rem; color: #d4920a; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
 @media (max-width: 900px) {
   .cms-content table.cms-chips tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -327,20 +327,20 @@
 .cms-content table.cms-luxe-hero td:first-child img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: cover; }
 .cms-content table.cms-luxe-hero td:first-child::after { content: ""; position: absolute; top: 0; right: 0; bottom: 0; width: 24%; background: linear-gradient(to right, rgba(248, 247, 243, 0), #f8f7f3); }
 .cms-content table.cms-luxe-hero td:last-child { display: flex; flex-direction: column; justify-content: center; padding: 2.5rem clamp(1.5rem, 6vw, 5rem) 2.5rem clamp(1.5rem, 3vw, 2.4rem); }
-.cms-content p.cms-eyebrow { margin: 0 0 0.9rem; color: #b8923a; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
+.cms-content p.cms-eyebrow { margin: 0 0 0.9rem; color: #d4920a; font-size: 11px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; }
 .cms-content table.cms-luxe-hero h1,
 .cms-content table.cms-luxe-hero h2 { margin: 0 0 1.2rem; color: #0f2252; font-family: var(--font-playfair), serif; font-size: clamp(30px, 4.2vw, 46px); font-weight: 400; line-height: 1.08; }
 .cms-content table.cms-luxe-hero td:last-child p { margin: 0; color: #3a4256; font-size: 13px; line-height: 1.85; }
-.cms-content table.cms-luxe-hero td:last-child p.cms-eyebrow { margin-bottom: 0.9rem; color: #b8923a; font-size: 11px; line-height: 1.4; }
+.cms-content table.cms-luxe-hero td:last-child p.cms-eyebrow { margin-bottom: 0.9rem; color: #d4920a; font-size: 11px; line-height: 1.4; }
 .cms-content table.cms-luxe-hero td:last-child p:last-child { margin-top: 1.7rem; }
 .cms-content a.cms-btn-gold,
 .cms-content a.cms-btn-gold-outline { display: inline-flex; align-items: center; font-size: 12px; font-weight: 500; letter-spacing: 0.16em; text-decoration: none; text-transform: uppercase; transition: background-color 0.2s ease, color 0.2s ease; }
 .cms-content a.cms-btn-gold::after,
 .cms-content a.cms-btn-gold-outline::after { content: "\2192"; margin-left: 0.9em; letter-spacing: 0; }
-.cms-content a.cms-btn-gold { padding: 1em 2em; background-color: #ef9822; color: #ffffff; }
-.cms-content a.cms-btn-gold:hover { background-color: #d6830f; color: #ffffff; }
-.cms-content a.cms-btn-gold-outline { padding: 0.85em 1.6em; border: 1px solid #ef9822; color: #ef9822; font-size: 10.5px; }
-.cms-content a.cms-btn-gold-outline:hover { background-color: #ef9822; color: #ffffff; }
+.cms-content a.cms-btn-gold { padding: 1em 2em; background-color: #d4920a; color: #ffffff; }
+.cms-content a.cms-btn-gold:hover { background-color: #b87c06; color: #ffffff; }
+.cms-content a.cms-btn-gold-outline { padding: 0.85em 1.6em; border: 1px solid #d4920a; color: #d4920a; font-size: 10.5px; }
+.cms-content a.cms-btn-gold-outline:hover { background-color: #d4920a; color: #ffffff; }
 /* Tiles: photo cards on a white page, three per row (two, then one on smaller screens). */
 .cms-content table.cms-luxe-tiles,
 .cms-content table.cms-luxe-tiles tbody { display: block; width: 100%; margin: 0; }
@@ -394,13 +394,13 @@
 .cms-content table.cms-contact td:first-child { background: linear-gradient(160deg, #14306f 0%, #0f2252 55%, #0b1a40 100%); color: #cfd8ee; }
 .cms-content table.cms-contact td:last-child { background-color: #ffffff; border: 1px solid #ece8e2; border-left: 0; }
 .cms-content table.cms-contact td > :first-child { margin-top: 0; }
-.cms-content table.cms-contact p.cms-eyebrow { margin: 0 0 0.8rem; color: #ef9822; }
+.cms-content table.cms-contact p.cms-eyebrow { margin: 0 0 0.8rem; color: #d4920a; }
 .cms-content table.cms-contact h2 { margin: 0 0 1rem; font-family: var(--font-playfair), serif; font-size: clamp(28px, 3.2vw, 36px); font-weight: 400; line-height: 1.12; }
 .cms-content table.cms-contact td:first-child h2 { color: #ffffff; }
 .cms-content table.cms-contact td:last-child h2 { margin-bottom: 1.2rem; color: #0f2252; font-size: clamp(24px, 2.6vw, 30px); }
 .cms-content table.cms-contact td:first-child p { margin: 0 0 1.5rem; font-size: 14px; line-height: 1.75; }
 .cms-content table.cms-contact td:first-child a { color: #ffffff; text-decoration: none; }
-.cms-content table.cms-contact td:first-child a:hover { color: #ef9822; }
+.cms-content table.cms-contact td:first-child a:hover { color: #d4920a; }
 .cms-content table.cms-contact p.cms-contact-phone,
 .cms-content table.cms-contact p.cms-contact-mail { position: relative; min-height: 2.8rem; padding-left: 3.7rem; font-size: 11px; letter-spacing: 0.16em; line-height: 1.5; text-transform: uppercase; }
 .cms-content table.cms-contact p.cms-contact-phone a,
@@ -408,12 +408,12 @@
 .cms-content table.cms-contact p.cms-contact-phone::before,
 .cms-content table.cms-contact p.cms-contact-mail::before { content: ""; position: absolute; top: 0; left: 0; width: 2.8rem; height: 2.8rem; border: 1px solid rgba(239, 152, 34, 0.7); border-radius: 50%; }
 .cms-content table.cms-contact p.cms-contact-phone::after,
-.cms-content table.cms-contact p.cms-contact-mail::after { content: ""; position: absolute; top: 0.75rem; left: 0.75rem; width: 1.3rem; height: 1.3rem; background-color: #ef9822; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
+.cms-content table.cms-contact p.cms-contact-mail::after { content: ""; position: absolute; top: 0.75rem; left: 0.75rem; width: 1.3rem; height: 1.3rem; background-color: #d4920a; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
 .cms-content table.cms-contact p.cms-contact-phone { --ico: url(/storefront/contact/icons/phone.svg); }
 .cms-content table.cms-contact p.cms-contact-mail { --ico: url(/storefront/contact/icons/mail.svg); }
 .cms-content table.cms-contact p.cms-social { font-size: 11px; letter-spacing: 0.16em; line-height: 1.5; text-transform: uppercase; }
 .cms-content table.cms-contact p.cms-social a { position: relative; display: inline-block; width: 2.6rem; height: 2.6rem; margin: 0.7rem 0.65rem 0 0; border: 1px solid rgba(255, 255, 255, 0.35); border-radius: 50%; font-size: 0; transition: background-color 0.2s ease, border-color 0.2s ease; }
-.cms-content table.cms-contact p.cms-social a:hover { border-color: #ef9822; background-color: #ef9822; }
+.cms-content table.cms-contact p.cms-social a:hover { border-color: #d4920a; background-color: #d4920a; }
 .cms-content table.cms-contact p.cms-social a::before { content: ""; position: absolute; top: 50%; left: 50%; width: 1.1rem; height: 1.1rem; transform: translate(-50%, -50%); background-color: #ffffff; -webkit-mask: var(--ico) center / contain no-repeat; mask: var(--ico) center / contain no-repeat; }
 .cms-content a.cms-social-facebook { --ico: url(/storefront/contact/icons/facebook.svg); }
 .cms-content a.cms-social-x { --ico: url(/storefront/contact/icons/x.svg); }

@@ -162,7 +162,7 @@ export default function BillingStep({
           <>
             <SavedAddressPicker section="billing" addresses={savedAddresses} address={billing} onPick={(patch) => change("billing", patch)} />
             <p className="-mt-2 mb-5 text-[13px] text-[#777777]">
-              <Link href="/account/addresses" className="font-medium text-[#444444] underline transition-colors hover:text-[#EF9822]">
+              <Link href="/account/addresses" className="font-medium text-[#444444] underline transition-colors hover:text-[#d4920a]">
                 Manage saved addresses
               </Link>
             </p>
@@ -185,7 +185,7 @@ export default function BillingStep({
             onClick={() => setShippingChoice(!shippingOpen)}
             aria-expanded={shippingOpen}
             aria-controls="checkout-shipping-fields"
-            className="flex w-full items-center gap-3 rounded text-left text-[16px] font-semibold text-[#222222] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#EF9822]"
+            className="flex w-full items-center gap-3 rounded text-left text-[16px] font-semibold text-[#222222] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4920a]"
           >
             <span>Shipping Address</span>
             <span aria-hidden="true" className="h-px flex-1 bg-[#EEEEEE]" />
@@ -197,13 +197,13 @@ export default function BillingStep({
             type="checkbox"
             checked={sameAsBilling}
             onChange={(event) => toggleSame(event.target.checked)}
-            className="mt-0.5 h-5 w-5 flex-shrink-0 cursor-pointer rounded accent-[#EF9822]"
+            className="mt-0.5 h-5 w-5 flex-shrink-0 cursor-pointer rounded accent-[#d4920a]"
           />
           Same as billing address
         </label>
         {!shippingOpen && shippingSummary && (
           <p className="-mt-2 flex items-start gap-2 text-[14px] text-[#777777]">
-            <StoreIcon name="mapPin" className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#EF9822]" />
+            <StoreIcon name="mapPin" className="mt-0.5 h-4 w-4 flex-shrink-0 text-[#d4920a]" />
             <span>
               Ships to: <span className="text-[#444444]">{shippingSummary}</span>
             </span>

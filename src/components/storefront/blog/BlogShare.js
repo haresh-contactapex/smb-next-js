@@ -32,7 +32,7 @@ export default function BlogShare({ url, title, image = "" }) {
               rel="noopener noreferrer"
               aria-label={`Share on ${network.label}`}
               title={`Share on ${network.label}`}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-[#333333] transition-colors hover:text-[#ef9822]"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#333333] transition-colors hover:text-[#d4920a]"
             >
               <svg viewBox="0 0 24 24" fill="currentColor" className="h-[18px] w-[18px]" aria-hidden="true">
                 <path d={network.path} />

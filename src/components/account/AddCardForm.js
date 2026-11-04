@@ -171,7 +171,7 @@ export default function AddCardForm({ addresses, isFirstCard, onSubmit, onCancel
         ) : (
           <p className="self-end pb-3 text-[13px] text-gray-500">
             Want a billing address on this card?{" "}
-            <Link href="/account/addresses" className="font-semibold text-[#333333] underline hover:text-[#ef9822]">
+            <Link href="/account/addresses" className="font-semibold text-[#333333] underline hover:text-[#d4920a]">
               Add an address
             </Link>{" "}
             first.
@@ -185,7 +185,7 @@ export default function AddCardForm({ addresses, isFirstCard, onSubmit, onCancel
             type="checkbox"
             checked={form.makeDefault}
             onChange={(event) => set("makeDefault", event.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 accent-[#ef9822]"
+            className="h-4 w-4 rounded border-gray-300 accent-[#d4920a]"
           />
           Make this my default card
         </label>

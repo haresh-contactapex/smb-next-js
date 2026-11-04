@@ -17,7 +17,7 @@ const CONTENT_WIDTH = PAGE.width - MARGIN * 2;
 const hex = (value) => rgb(...[1, 3, 5].map((i) => parseInt(value.slice(i, i + 2), 16) / 255));
 const COLORS = {
   navy: hex("#1c3b6a"),
-  gold: hex("#d19d22"),
+  gold: hex("#d4920a"),
   goldSoft: hex("#faedc9"),
   ink: hex("#1f2937"),
   muted: hex("#6b7280"),

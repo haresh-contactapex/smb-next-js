@@ -28,7 +28,7 @@ export default function HomeHighlights({ mostLoved, newArrivals }) {
             aria-selected={active === tab.key}
             aria-controls="highlights-panel"
             onClick={() => setActive(tab.key)}
-            className={`pb-0.5 transition-colors hover:text-[#ef9822] ${
+            className={`pb-0.5 transition-colors hover:text-[#d4920a] ${
               active === tab.key ? "border-b border-[#333333] text-[#333333]" : "text-[#777777]"
             }`}
           >
@@ -47,7 +47,7 @@ export default function HomeHighlights({ mostLoved, newArrivals }) {
         ) : (
           <p className="py-10 text-center text-sm">
             New designs are on their way.{" "}
-            <Link href="/women-wedding-bands" className="text-[#ef9822] underline">
+            <Link href="/women-wedding-bands" className="text-[#d4920a] underline">
               Browse all wedding bands
             </Link>
           </p>

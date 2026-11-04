@@ -7,11 +7,11 @@ import useImageLoaded from "./useImageLoaded";
 import { galleryPhotos } from "./galleryImages";
 import { useVariantImage } from "./VariantImageProvider";
 
-const FOCUS_RING = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ef9822]";
+const FOCUS_RING = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4920a]";
 
-const STRIP_ARROW = `absolute left-1/2 z-10 hidden h-6 w-10 -translate-x-1/2 items-center justify-center rounded bg-white/95 text-[#333333] shadow transition-colors hover:text-[#ef9822] sm:flex ${FOCUS_RING}`;
+const STRIP_ARROW = `absolute left-1/2 z-10 hidden h-6 w-10 -translate-x-1/2 items-center justify-center rounded bg-white/95 text-[#333333] shadow transition-colors hover:text-[#d4920a] sm:flex ${FOCUS_RING}`;
 
-const ARROW = `absolute top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded bg-white/90 text-[#333333] shadow transition-colors hover:bg-white hover:text-[#ef9822] ${FOCUS_RING}`;
+const ARROW = `absolute top-1/2 z-10 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded bg-white/90 text-[#333333] shadow transition-colors hover:bg-white hover:text-[#d4920a] ${FOCUS_RING}`;
 
 // One small preview in the strip beside the main image.
 function Thumb({ src, label, selected, onSelect }) {

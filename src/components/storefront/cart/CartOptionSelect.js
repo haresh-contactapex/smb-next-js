@@ -26,8 +26,8 @@ export default function CartOptionSelect({ name, value, choices, swatch = false,
         {name}
       </label>
       <div
-        className={`relative flex items-center gap-2.5 border-b border-gray-400 transition-colors focus-within:border-[#ef9822] hover:border-[#ef9822] ${
-          inset ? "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#ef9822]" : ""
+        className={`relative flex items-center gap-2.5 border-b border-gray-400 transition-colors focus-within:border-[#d4920a] hover:border-[#d4920a] ${
+          inset ? "has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#d4920a]" : ""
         }`}
       >
         {color && (
@@ -43,7 +43,7 @@ export default function CartOptionSelect({ name, value, choices, swatch = false,
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           className={`min-w-[4.5rem] cursor-pointer appearance-none bg-transparent py-2 pr-7 ${inset ? "pl-3" : ""} text-[13px] font-medium uppercase tracking-wide text-[#333333] focus:outline-none ${
-            inset ? "" : "focus-visible:ring-2 focus-visible:ring-[#ef9822]"
+            inset ? "" : "focus-visible:ring-2 focus-visible:ring-[#d4920a]"
           } disabled:cursor-default`}
         >
           {choices.map((choice) => (

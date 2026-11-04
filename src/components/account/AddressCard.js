@@ -13,10 +13,10 @@ export default function AddressCard({ address, busy, onEdit, onDelete, onMakeDef
     <li className={`${CARD} flex flex-col p-5`}>
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="inline-flex items-center gap-1.5 text-[16px] font-semibold text-[#333333]">
-          <StoreIcon name="mapPin" className="h-[18px] w-[18px] text-[#ef9822]" />
+          <StoreIcon name="mapPin" className="h-[18px] w-[18px] text-[#d4920a]" />
           {address.label}
         </h2>
-        {address.isDefaultShipping && <span className={`${PILL} bg-[#ef9822]/15 text-[#a8620a]`}>Default shipping</span>}
+        {address.isDefaultShipping && <span className={`${PILL} bg-[#d4920a]/15 text-[#a8620a]`}>Default shipping</span>}
         {address.isDefaultBilling && <span className={`${PILL} bg-blue-50 text-blue-800`}>Default billing</span>}
       </div>
 

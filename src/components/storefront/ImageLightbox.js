@@ -7,7 +7,7 @@ import useImageLoaded from "./useImageLoaded";
 
 const SWIPE_DISTANCE = 50;
 const ROUND_BUTTON =
-  "flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ef9822] focus-visible:ring-offset-2 focus-visible:ring-offset-black";
+  "flex items-center justify-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4920a] focus-visible:ring-offset-2 focus-visible:ring-offset-black";
 
 export function imageAlt(title, index) {
   return index === 0 ? title : `${title} – view ${index + 1}`;
@@ -143,7 +143,7 @@ export default function ImageLightbox({ images, title, startIndex = 0, onClose, 
         type="button"
         onClick={onClose}
         aria-label="Close image viewer"
-        className={`${ROUND_BUTTON} absolute top-4 right-4 sm:top-5 sm:right-8 w-11 h-11 sm:w-[50px] sm:h-[50px] bg-white text-black hover:bg-[#ef9822] hover:text-white`}
+        className={`${ROUND_BUTTON} absolute top-4 right-4 sm:top-5 sm:right-8 w-11 h-11 sm:w-[50px] sm:h-[50px] bg-white text-black hover:bg-[#d4920a] hover:text-white`}
       >
         <StoreIcon name="close" className="w-6 h-6" />
       </button>
@@ -154,7 +154,7 @@ export default function ImageLightbox({ images, title, startIndex = 0, onClose, 
             type="button"
             onClick={() => go(-1)}
             aria-label="Previous image"
-            className={`${ROUND_BUTTON} absolute top-1/2 -translate-y-1/2 left-2 sm:left-8 lg:left-[8%] w-11 h-11 sm:w-[50px] sm:h-[50px] bg-[#1a1a1a] text-white hover:bg-[#ef9822]`}
+            className={`${ROUND_BUTTON} absolute top-1/2 -translate-y-1/2 left-2 sm:left-8 lg:left-[8%] w-11 h-11 sm:w-[50px] sm:h-[50px] bg-[#1a1a1a] text-white hover:bg-[#d4920a]`}
           >
             <StoreIcon name="chevronLeft" className="w-5 h-5" />
           </button>
@@ -162,7 +162,7 @@ export default function ImageLightbox({ images, title, startIndex = 0, onClose, 
             type="button"
             onClick={() => go(1)}
             aria-label="Next image"
-            className={`${ROUND_BUTTON} absolute top-1/2 -translate-y-1/2 right-2 sm:right-8 lg:right-[8%] w-11 h-11 sm:w-[50px] sm:h-[50px] bg-[#1a1a1a] text-white hover:bg-[#ef9822]`}
+            className={`${ROUND_BUTTON} absolute top-1/2 -translate-y-1/2 right-2 sm:right-8 lg:right-[8%] w-11 h-11 sm:w-[50px] sm:h-[50px] bg-[#1a1a1a] text-white hover:bg-[#d4920a]`}
           >
             <StoreIcon name="chevronRight" className="w-5 h-5" />
           </button>

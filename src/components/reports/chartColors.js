@@ -2,7 +2,7 @@
 // the semantic tokens in tailwind.config.js and SOFT_COLOR_CLASSES.
 export const CHART_COLORS = {
   primary: "#1c3b6a",
-  accent: "#d19d22",
+  accent: "#d4920a",
   success: "#16a34a",
   warning: "#d97706",
   error: "#dc2626",

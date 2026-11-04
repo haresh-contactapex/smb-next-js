@@ -1,26 +1,26 @@
 <!--
   Not a page. Tailwind only builds the classes it finds in files under src/, so a class that is typed
-  only into the admin's HTML tab (an arbitrary value or variant such as [&>li::marker]:text-[#EF9822])
+  only into the admin's HTML tab (an arbitrary value or variant such as [&>li::marker]:text-[#d4920a])
   has no CSS on the site. List such classes here, one example per line, and they are built on the next
   deploy. Commit the file; nothing reads it at runtime.
 -->
 
 <!-- Bullet / number colour on a list -->
-<ul class="list-disc pl-5 [&>li::marker]:text-[#EF9822] mb-6"></ul>
-<ul class="list-disc pl-5 marker:text-[#EF9822] mb-6"></ul>
-<ol class="list-decimal pl-5 [&>li::marker]:text-[#EF9822] mb-6"></ol>
+<ul class="list-disc pl-5 [&>li::marker]:text-[#d4920a] mb-6"></ul>
+<ul class="list-disc pl-5 marker:text-[#d4920a] mb-6"></ul>
+<ol class="list-decimal pl-5 [&>li::marker]:text-[#d4920a] mb-6"></ol>
 
 <!-- Bullet / number size (the marker takes the font size of ::marker, not of the item text) -->
 <ul class="list-disc pl-5 [&>li::marker]:text-[22px] mb-6"></ul>
 <ul class="list-disc pl-5 marker:text-[22px] mb-6"></ul>
 <ul class="list-disc pl-5 marker:text-2xl mb-6"></ul>
 <ul
-  class="list-disc pl-5 [&>li::marker]:text-2xl [&>li::marker]:text-[#EF9822] mb-6"
+  class="list-disc pl-5 [&>li::marker]:text-2xl [&>li::marker]:text-[#d4920a] mb-6"
 ></ul>
 
 <!-- Drawn round bullet, any size and colour, same in every browser (no span needed). h-2.5 w-2.5 is a 10px dot -->
 <ul
-  class="list-none pl-0 mb-6 [&>li]:relative [&>li]:pl-6 [&>li]:before:absolute [&>li]:before:left-0 [&>li]:before:top-[0.6em] [&>li]:before:h-2.5 [&>li]:before:w-2.5 [&>li]:before:rounded-full [&>li]:before:bg-[#EF9822]"
+  class="list-none pl-0 mb-6 [&>li]:relative [&>li]:pl-6 [&>li]:before:absolute [&>li]:before:left-0 [&>li]:before:top-[0.6em] [&>li]:before:h-2.5 [&>li]:before:w-2.5 [&>li]:before:rounded-full [&>li]:before:bg-[#d4920a]"
 ></ul>
 
 <!-- Width, Spacing and Sizing -->

@@ -69,7 +69,7 @@ export default function CheckoutResult({ result }) {
 
   return (
     <div className="mx-auto flex w-full max-w-[1000px] flex-1 flex-col items-center px-4 py-16 text-center sm:py-24">
-      <span className={`flex h-16 w-16 items-center justify-center rounded-full ${outcome.placed ? "bg-[#EF9822] text-white" : "bg-[#F3F3F3] text-[#777777]"}`}>
+      <span className={`flex h-16 w-16 items-center justify-center rounded-full ${outcome.placed ? "bg-[#d4920a] text-white" : "bg-[#F3F3F3] text-[#777777]"}`}>
         <StoreIcon name={outcome.placed ? "check" : "info"} className="h-8 w-8 [stroke-width:2.5]" />
       </span>
 

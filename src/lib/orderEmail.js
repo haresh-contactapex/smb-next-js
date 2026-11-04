@@ -23,7 +23,7 @@
 // attributes, and every picture is an inline attachment (cid:). Rounded corners are a bonus elsewhere.
 
 const NAVY = "#1F3A6B";
-const ORANGE = "#EF9822";
+const ORANGE = "#d4920a";
 // Google Sans, as on the storefront. Mail clients that load web fonts (Apple Mail, iOS Mail)
 // show it through the stylesheet link below; Gmail and Outlook ignore web fonts and fall back to Arial.
 const FONT = "'Google Sans','Google Sans Text',Arial,Helvetica,sans-serif";
@@ -141,7 +141,7 @@ export function render(data, spec) {
 
   const logo = data.logoSrc
     ? `<img src="${escapeHtml(data.logoSrc)}" width="220" alt="${escapeHtml(storeName)}" style="display:block;width:220px;max-width:100%;height:auto;border:0;-ms-interpolation-mode:bicubic;">`
-    : `<span style="font-size:27px;color:#D9A02E;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span>`;
+    : `<span style="font-size:27px;color:#d4920a;font-family:Georgia,serif;">shop<i style="font-weight:bold;">my</i>band.com</span>`;
 
   const facts = spec.facts || [];
   const width = Math.floor(100 / (facts.length || 1));

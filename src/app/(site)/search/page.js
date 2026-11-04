@@ -50,12 +50,12 @@ export default async function SearchPage({ searchParams }) {
             aria-label="Search the store"
             autoComplete="off"
             enterKeyHint="search"
-            className="w-full rounded-md border border-gray-300 bg-white py-3 pl-4 pr-14 text-[16px] text-[#333333] transition-shadow placeholder:text-gray-400 focus:border-[#ef9822] focus:outline-none focus:ring-1 focus:ring-[#ef9822] [&::-webkit-search-cancel-button]:hidden"
+            className="w-full rounded-md border border-gray-300 bg-white py-3 pl-4 pr-14 text-[16px] text-[#333333] transition-shadow placeholder:text-gray-400 focus:border-[#d4920a] focus:outline-none focus:ring-1 focus:ring-[#d4920a] [&::-webkit-search-cancel-button]:hidden"
           />
           <button
             type="submit"
             aria-label="Search"
-            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-[#555555] transition-colors hover:text-[#ef9822]"
+            className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-[#555555] transition-colors hover:text-[#d4920a]"
           >
             <StoreIcon name="search" />
           </button>

@@ -47,7 +47,7 @@ export default function CartCoupon() {
   return (
     <div>
       {coupon && (
-        <div className="mb-3 flex items-center justify-between gap-3 rounded border border-[#ef9822]/40 bg-[#FFF8EE] px-3 py-2 text-[13px]">
+        <div className="mb-3 flex items-center justify-between gap-3 rounded border border-[#d4920a]/40 bg-[#FFF8EE] px-3 py-2 text-[13px]">
           <p className="min-w-0 break-words">
             <span className="font-semibold text-[#333333]">{coupon.code}</span>
             <span className="text-[#555555]"> · {describeCoupon(coupon, formatMoney)}</span>
@@ -56,7 +56,7 @@ export default function CartCoupon() {
             type="button"
             onClick={removeCoupon}
             aria-label={`Remove discount code ${coupon.code}`}
-            className="flex-shrink-0 font-medium text-gray-500 underline hover:text-[#ef9822] transition-colors"
+            className="flex-shrink-0 font-medium text-gray-500 underline hover:text-[#d4920a] transition-colors"
           >
             Remove
           </button>

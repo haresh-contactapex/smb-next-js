@@ -15,7 +15,7 @@ import { loadStripeJs } from "./stripeClient";
 const APPEARANCE = {
   theme: "stripe",
   variables: {
-    colorPrimary: "#EF9822",
+    colorPrimary: "#d4920a",
     colorText: "#333333",
     colorDanger: "#dc2626",
     fontFamily: "Google Sans, system-ui, sans-serif",

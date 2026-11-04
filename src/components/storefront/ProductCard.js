@@ -12,7 +12,7 @@ import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvid
 // so it is always shown there.
 const CART_CONTROL =
   "absolute bottom-3 right-3 sm:bottom-4 sm:right-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#333333] shadow-md " +
-  "hover:bg-[#ef9822] hover:text-white focus-visible:bg-[#ef9822] focus-visible:text-white transition duration-300 " +
+  "hover:bg-[#d4920a] hover:text-white focus-visible:bg-[#d4920a] focus-visible:text-white transition duration-300 " +
   "opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 focus-visible:opacity-100 focus-visible:translate-y-0 " +
   "[@media(hover:none)]:opacity-100 [@media(hover:none)]:translate-y-0";
 
@@ -53,8 +53,8 @@ export default function ProductCard({ product, delay = 0 }) {
         <WishlistHeart
           productId={product.id}
           title={product.title}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 hover:text-[#ef9822] transition-colors z-20"
-          activeClassName="text-[#ef9822]"
+          className="absolute top-3 right-3 sm:top-4 sm:right-4 hover:text-[#d4920a] transition-colors z-20"
+          activeClassName="text-[#d4920a]"
         />
         {addsDirectly ? (
           <button type="button" onClick={addToCart} aria-label={`Add ${product.title} to cart`} title="Add to cart" className={CART_CONTROL}>
@@ -92,7 +92,7 @@ export default function ProductCard({ product, delay = 0 }) {
         <h3 className="leading-tight text-sm font-[600]">
           <Link
             href={`/products/${product.handle}`}
-            className="after:absolute after:inset-0 after:z-[15] hover:text-[#ef9822] transition-colors"
+            className="after:absolute after:inset-0 after:z-[15] hover:text-[#d4920a] transition-colors"
           >
             {product.title}
           </Link>

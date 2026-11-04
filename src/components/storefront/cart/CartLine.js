@@ -9,7 +9,7 @@ import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvid
 import { lineLimit, round2 } from "./cartHelpers";
 
 const STEP_BUTTON =
-  "w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[#ef9822] transition-colors disabled:opacity-40 disabled:pointer-events-none";
+  "w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[#d4920a] transition-colors disabled:opacity-40 disabled:pointer-events-none";
 
 // One product line in the drawer: image, name, chosen options, price,
 // quantity stepper and remove button.
@@ -44,7 +44,7 @@ export default function CartLine({ item }) {
         <div className="flex items-start justify-between gap-3">
           <h3 className="text-[14px] font-semibold leading-tight text-[#333333]">
             {item.handle ? (
-              <Link href={`/products/${item.handle}`} onClick={closeCart} className="hover:text-[#ef9822] transition-colors">
+              <Link href={`/products/${item.handle}`} onClick={closeCart} className="hover:text-[#d4920a] transition-colors">
                 {item.title}
               </Link>
             ) : (

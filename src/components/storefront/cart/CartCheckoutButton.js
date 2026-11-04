@@ -12,7 +12,7 @@ export default function CartCheckoutButton({ label = "Checkout", className = "" 
     <Link
       href="/checkout"
       onClick={closeCart}
-      className={`block w-full rounded bg-[#4A4A4A] py-3.5 text-center text-[16px] font-semibold text-white transition-colors hover:bg-[#ef9822] ${className}`}
+      className={`block w-full rounded bg-[#4A4A4A] py-3.5 text-center text-[16px] font-semibold text-white transition-colors hover:bg-[#d4920a] ${className}`}
     >
       {label}
     </Link>

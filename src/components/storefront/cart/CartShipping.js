@@ -131,13 +131,13 @@ export default function CartShipping() {
               Shipping to {shipping.country}
               {shipping.zip ? `, ${shipping.zip}` : ""}
             </span>
-            <button type="button" onClick={clear} className="underline hover:text-[#ef9822] transition-colors">
+            <button type="button" onClick={clear} className="underline hover:text-[#d4920a] transition-colors">
               Clear
             </button>
           </p>
           <div className="space-y-2">
             {totals.rates.map((rate) => (
-              <label key={rate.id} className="flex cursor-pointer items-start gap-3 rounded border border-gray-200 px-3 py-2.5 text-[13px] hover:border-[#ef9822] transition-colors">
+              <label key={rate.id} className="flex cursor-pointer items-start gap-3 rounded border border-gray-200 px-3 py-2.5 text-[13px] hover:border-[#d4920a] transition-colors">
                 <input
                   type="radio"
                   name="cart-shipping-rate"

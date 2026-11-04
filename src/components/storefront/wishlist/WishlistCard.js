@@ -94,7 +94,7 @@ export default function WishlistCard({ item, product, loading }) {
     <div className="flex h-full flex-col">
       <Link href={href} aria-label={product.title} tabIndex={-1} className="relative mb-4 block aspect-square overflow-hidden rounded-md bg-[#FAFAFA]">
         {onSale && (
-          <span className="absolute left-3 top-3 z-10 rounded bg-[#ef9822] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">Sale</span>
+          <span className="absolute left-3 top-3 z-10 rounded bg-[#d4920a] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">Sale</span>
         )}
         {product.image ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -105,7 +105,7 @@ export default function WishlistCard({ item, product, loading }) {
       </Link>
 
       <h2 className="text-sm font-[600] leading-tight text-[#333333]">
-        <Link href={href} className="transition-colors hover:text-[#ef9822]">
+        <Link href={href} className="transition-colors hover:text-[#d4920a]">
           {product.title}
         </Link>
       </h2>
@@ -158,7 +158,7 @@ export default function WishlistCard({ item, product, loading }) {
           type="button"
           onClick={addToCart}
           disabled={!available}
-          className="w-full rounded bg-[#4A4A4A] py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#ef9822] disabled:pointer-events-none disabled:opacity-50"
+          className="w-full rounded bg-[#4A4A4A] py-3 text-[15px] font-semibold text-white transition-colors hover:bg-[#d4920a] disabled:pointer-events-none disabled:opacity-50"
         >
           {available ? "Add To Cart" : "Out of Stock"}
         </button>

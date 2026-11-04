@@ -115,7 +115,7 @@ export default function ProfileDetailsForm({ customer, notify }) {
             type="checkbox"
             checked={form.acceptsMarketing}
             onChange={(event) => set("acceptsMarketing", event.target.checked)}
-            className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 accent-[#ef9822]"
+            className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-gray-300 accent-[#d4920a]"
           />
           <span>
             <span className="font-medium text-[#333333]">Send me news and offers by email</span>

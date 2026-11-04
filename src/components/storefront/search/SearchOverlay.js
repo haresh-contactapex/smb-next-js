@@ -220,7 +220,7 @@ export default function SearchOverlay() {
         <button
           type="button"
           onClick={() => setAttempt((current) => current + 1)}
-          className="mt-3 rounded-md border border-[#ef9822] px-5 py-2 text-xs font-semibold uppercase tracking-wide text-[#ef9822] transition-colors hover:bg-[#ef9822] hover:text-white"
+          className="mt-3 rounded-md border border-[#d4920a] px-5 py-2 text-xs font-semibold uppercase tracking-wide text-[#d4920a] transition-colors hover:bg-[#d4920a] hover:text-white"
         >
           Try again
         </button>
@@ -250,7 +250,7 @@ export default function SearchOverlay() {
           href={searchPageUrl(result.query)}
           onClick={closeSearch}
           data-search-result
-          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#333333] transition-colors hover:text-[#ef9822]"
+          className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#333333] transition-colors hover:text-[#d4920a]"
         >
           View all {result.total} {result.total === 1 ? "result" : "results"} for “{result.query}”
           <StoreIcon name="arrowRight" className="h-4 w-4" />
@@ -282,9 +282,9 @@ export default function SearchOverlay() {
             action="/search"
             method="get"
             onSubmit={submit}
-            className="flex items-center gap-2 border-b-2 border-gray-200 transition-colors focus-within:border-[#ef9822] sm:gap-3"
+            className="flex items-center gap-2 border-b-2 border-gray-200 transition-colors focus-within:border-[#d4920a] sm:gap-3"
           >
-            <button type="submit" aria-label="Search" className="-ml-2 flex-shrink-0 p-2 text-[#555555] transition-colors hover:text-[#ef9822]">
+            <button type="submit" aria-label="Search" className="-ml-2 flex-shrink-0 p-2 text-[#555555] transition-colors hover:text-[#d4920a]">
               <StoreIcon name="search" className="h-6 w-6" />
             </button>
             <input
@@ -306,7 +306,7 @@ export default function SearchOverlay() {
               <button
                 type="button"
                 onClick={clear}
-                className="flex-shrink-0 px-1 text-xs font-semibold uppercase tracking-wide text-gray-500 transition-colors hover:text-[#ef9822]"
+                className="flex-shrink-0 px-1 text-xs font-semibold uppercase tracking-wide text-gray-500 transition-colors hover:text-[#d4920a]"
               >
                 Clear
               </button>
@@ -315,7 +315,7 @@ export default function SearchOverlay() {
               type="button"
               onClick={closeSearch}
               aria-label="Close search"
-              className="-mr-2 flex-shrink-0 rounded-full p-2 text-[#555555] transition-colors hover:bg-gray-50 hover:text-[#ef9822]"
+              className="-mr-2 flex-shrink-0 rounded-full p-2 text-[#555555] transition-colors hover:bg-gray-50 hover:text-[#d4920a]"
             >
               <StoreIcon name="close" className="h-6 w-6" />
             </button>

@@ -27,7 +27,7 @@ export default function RatingInput({ value, onChange, error, disabled = false, 
           </span>
           <div className="absolute inset-0 flex">
             {STARS.map((star) => (
-              <div key={star} className="flex h-8 w-8 rounded-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#ef9822]">
+              <div key={star} className="flex h-8 w-8 rounded-md has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-[#d4920a]">
                 {[star - 0.5, star].map((rating) => (
                   <label
                     key={rating}

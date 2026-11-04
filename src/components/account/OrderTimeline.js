@@ -43,7 +43,7 @@ export default function OrderTimeline({ order }) {
               )}
               <span
                 className={`relative z-10 grid h-9 w-9 place-items-center rounded-full text-[13px] font-semibold ${
-                  done ? "bg-[#4A4A4A] text-white" : active ? "bg-[#ef9822] text-white ring-4 ring-[#ef9822]/20" : "bg-gray-100 text-gray-400"
+                  done ? "bg-[#4A4A4A] text-white" : active ? "bg-[#d4920a] text-white ring-4 ring-[#d4920a]/20" : "bg-gray-100 text-gray-400"
                 }`}
               >
                 {done ? <StoreIcon name="check" className="h-[18px] w-[18px]" /> : index + 1}

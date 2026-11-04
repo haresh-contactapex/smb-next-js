@@ -84,7 +84,7 @@ export default function AddressForm({ address, isFirst, countries, onSubmit, onC
               onClick={() => update({ label })}
               aria-pressed={form.label === label}
               className={`rounded-full border px-4 py-1.5 text-[13px] font-semibold transition-colors ${
-                form.label === label ? "border-[#4A4A4A] bg-[#4A4A4A] text-white" : "border-gray-300 text-[#555555] hover:border-[#ef9822] hover:text-[#ef9822]"
+                form.label === label ? "border-[#4A4A4A] bg-[#4A4A4A] text-white" : "border-gray-300 text-[#555555] hover:border-[#d4920a] hover:text-[#d4920a]"
               }`}
             >
               {label}
@@ -161,7 +161,7 @@ export default function AddressForm({ address, isFirst, countries, onSubmit, onC
                 type="checkbox"
                 checked={form.makeDefaultShipping}
                 onChange={(event) => update({ makeDefaultShipping: event.target.checked })}
-                className="h-4 w-4 rounded border-gray-300 accent-[#ef9822]"
+                className="h-4 w-4 rounded border-gray-300 accent-[#d4920a]"
               />
               Use as my default shipping address
             </label>
@@ -172,7 +172,7 @@ export default function AddressForm({ address, isFirst, countries, onSubmit, onC
                 type="checkbox"
                 checked={form.makeDefaultBilling}
                 onChange={(event) => update({ makeDefaultBilling: event.target.checked })}
-                className="h-4 w-4 rounded border-gray-300 accent-[#ef9822]"
+                className="h-4 w-4 rounded border-gray-300 accent-[#d4920a]"
               />
               Use as my default billing address
             </label>

@@ -9,7 +9,7 @@ import { RESULTS_PAGE_SIZE, searchApiUrl } from "./searchHelpers";
 
 const GRID = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10 sm:gap-y-12";
 const BUTTON =
-  "border border-[#ef9822] text-[#ef9822] hover:bg-[#ef9822] hover:text-white focus-visible:bg-[#ef9822] focus-visible:text-white px-10 py-3 text-sm font-semibold tracking-wide uppercase rounded-md transition-colors disabled:opacity-60 disabled:cursor-wait";
+  "border border-[#d4920a] text-[#d4920a] hover:bg-[#d4920a] hover:text-white focus-visible:bg-[#d4920a] focus-visible:text-white px-10 py-3 text-sm font-semibold tracking-wide uppercase rounded-md transition-colors disabled:opacity-60 disabled:cursor-wait";
 
 // The matches for one search: the first page arrives from the server and
 // "Load more" fetches the rest from /api/storefront/search. The page keys this
@@ -61,7 +61,7 @@ export default function SearchResults({ query, initialProducts, initialTotal, fa
         <p className="mt-2 text-sm">Check the spelling, try a different word, or browse the collection.</p>
         <Link
           href="/women-wedding-bands"
-          className="mt-6 inline-block bg-[#ef9822] px-8 py-3 text-sm font-semibold uppercase tracking-wide text-white rounded-md transition-colors hover:bg-[#d9861a]"
+          className="mt-6 inline-block bg-[#d4920a] px-8 py-3 text-sm font-semibold uppercase tracking-wide text-white rounded-md transition-colors hover:bg-[#b87c06]"
         >
           Browse Wedding Bands
         </Link>
