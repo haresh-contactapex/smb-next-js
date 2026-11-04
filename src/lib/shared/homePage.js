@@ -10,9 +10,8 @@ export const ASSURANCE_ICONS = [
   { value: "shield", label: "Shield" },
 ];
 
-// Shapes the home page cycles through, so tiles of one row differ in height.
+// Shapes the home page cycles through, so the hero photos in a column differ in height.
 export const HERO_PHOTO_RATIOS = ["aspect-[4/5]", "aspect-[3/4]", "aspect-square"];
-export const COLLECTION_RATIOS = ["aspect-[3/4]", "aspect-[5/7]", "aspect-[11/14]", "aspect-[4/5]"];
 
 export const LIMITS = {
   heroPhotos: { min: 2, max: 8 },
