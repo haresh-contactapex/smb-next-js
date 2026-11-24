@@ -19,6 +19,7 @@ import {
   todayIso,
 } from "@/lib/blogRules";
 import { displayStatus, formatDateTime } from "./helpers";
+import CategoryCombobox from "./CategoryCombobox";
 
 const LABEL = "block text-[12px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5";
 const CARD = "bg-white dark:bg-darksurface border border-slate-200 dark:border-white/5 rounded-2xl shadow-card p-5 md:p-6";
@@ -182,24 +183,16 @@ export default function BlogSettingsSidebar({
             <label htmlFor="blog-category" className={LABEL}>
               Category
             </label>
-            <input
+            <CategoryCombobox
               id="blog-category"
-              type="text"
-              list="blog-category-list"
-              autoComplete="off"
               value={category}
+              onChange={onCategoryChange}
+              options={categories}
               maxLength={BLOG_CATEGORY_MAX}
-              onChange={(e) => onCategoryChange(e.target.value)}
               placeholder="e.g. Classic Bands"
-              aria-invalid={Boolean(categoryError)}
-              aria-describedby="blog-category-help"
-              className="field-input h-10"
+              invalid={Boolean(categoryError)}
+              describedBy="blog-category-help"
             />
-            <datalist id="blog-category-list">
-              {categories.map((option) => (
-                <option key={option.slug} value={option.name} />
-              ))}
-            </datalist>
             <p id="blog-category-help" className={helpClass(categoryError)}>
               {categoryError ||
                 `Pick an existing category or type a new one. It is part of the post's address${categorySlug ? `: ${blogCategoryPath(categorySlug)}/` : "."}`}
