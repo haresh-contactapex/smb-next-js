@@ -8,6 +8,7 @@ import SectionCard from "@/components/settings-shared/SectionCard";
 import SelectField from "@/components/settings-shared/SelectField";
 import TextField from "@/components/settings-shared/TextField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
+import Icon from "@/components/admin-panel/Icon";
 import Toast from "./Toast";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import { settingsPermission } from "@/lib/permissions";
@@ -20,16 +21,28 @@ import {
   validatePricingSettingsForm,
 } from "./helpers";
 
+function downloadCsv(filename, csvText) {
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 export default function PricingSettingsForm() {
   const { currency, formatMoney } = useGeneralSettings();
   // Bulk repricing rewrites every product, so it needs both permissions
   // (mirrors /api/settings/pricing/apply).
   const can = useCan();
   const canApply = can(settingsPermission("pricing", "edit")) && can("products.edit");
+  const canBackup = can("products.export");
   const [settings, setSettings] = useState(DEFAULT_PRICING_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [backingUp, setBackingUp] = useState(false);
+  const [backedUp, setBackedUp] = useState(false);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
 
@@ -113,6 +126,23 @@ export default function PricingSettingsForm() {
     loadSettings();
   }
 
+  async function handleBackup() {
+    setBackingUp(true);
+    try {
+      const res = await fetch("/api/products/export");
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to back up products");
+      downloadCsv(json.data.filename, json.data.csv);
+      setBackedUp(true);
+      const count = json.data.productCount;
+      showToast(`Backup complete — saved ${count} product${count === 1 ? "" : "s"} to ${json.data.filename}`);
+    } catch (error) {
+      showToast(error.message, "error");
+    } finally {
+      setBackingUp(false);
+    }
+  }
+
   async function handleApply() {
     const result = validatePricingSettingsForm(settings);
     setErrors(result.errors);
@@ -126,9 +156,10 @@ export default function PricingSettingsForm() {
     const directionWord = settings.adjustmentDirection === "decrease" ? "decrease" : "increase";
     const amountWord =
       settings.adjustmentType === "fixed" ? formatMoney(Number(settings.adjustmentValue)) : `${settings.adjustmentValue}%`;
+    const backupReminder = backedUp ? "" : " You haven't downloaded a CSV backup yet this session — recommended before an irreversible bulk change.";
     if (
       !window.confirm(
-        `This will ${directionWord} the price and compare-at price of every product, and every variant's price, by ${amountWord}. This cannot be undone. Continue?`
+        `This will ${directionWord} the price and compare-at price of every product, and every variant's price, by ${amountWord}. This cannot be undone.${backupReminder} Continue?`
       )
     ) {
       return;
@@ -166,6 +197,32 @@ export default function PricingSettingsForm() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
         <div className="lg:col-span-2 space-y-6">
+          {canBackup && (
+            <SectionCard title="Backup Products">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Download every product and variant as a CSV file before applying a bulk price change, so you have a
+                restore point if something needs to be undone.
+              </p>
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleBackup}
+                  disabled={backingUp}
+                  className="inline-flex items-center gap-2 px-4 h-9 rounded-xl border border-slate-200 dark:border-white/10 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <Icon name="download" className="w-4 h-4" />
+                  {backingUp ? "Backing up products…" : "Download CSV Backup"}
+                </button>
+                {backedUp && !backingUp && (
+                  <span className="inline-flex items-center gap-1 text-xs font-medium text-green-700 dark:text-green-400">
+                    <Icon name="check-circle" className="w-4 h-4" />
+                    Backed up this session
+                  </span>
+                )}
+              </div>
+            </SectionCard>
+          )}
+
           <SectionCard title="Price Adjustment">
             <TextField
               id="f-adjustment-value"
@@ -216,6 +273,7 @@ export default function PricingSettingsForm() {
             icon="percent"
             title="About Pricing Settings"
             points={[
+              "Download a CSV backup of all products first — it's your restore point if a bulk adjustment needs to be undone.",
               "Choose whether the adjustment applies as a percentage of the price or a fixed amount.",
               "Increase raises product prices; decrease lowers them.",
               "\"Apply to All Products\" immediately recalculates and overwrites the price and compare-at price of every product, plus the price of every variant that has its own — it cannot be undone.",

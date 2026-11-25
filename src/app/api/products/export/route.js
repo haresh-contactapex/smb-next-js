@@ -8,9 +8,9 @@ export async function GET() {
   if (!auth.ok) return permissionDeniedResponse(auth);
 
   try {
-    const csv = await exportProductsToCsv();
+    const { csv, productCount } = await exportProductsToCsv();
     const filename = `products-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    return ok({ csv, filename });
+    return ok({ csv, filename, productCount });
   } catch (error) {
     return fail(publicErrorMessage(error), 500);
   }

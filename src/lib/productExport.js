@@ -160,5 +160,5 @@ export async function exportProductsToCsv() {
   const columns = buildCsvColumns(attributeCount);
   const lines = [columns.join(","), ...productRows.map((row) => rowToCsvLine(columns, row))];
 
-  return lines.join("\r\n") + "\r\n";
+  return { csv: lines.join("\r\n") + "\r\n", productCount: summaries.length };
 }
