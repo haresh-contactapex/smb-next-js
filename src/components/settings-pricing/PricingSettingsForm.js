@@ -16,8 +16,10 @@ import {
   ADJUSTMENT_TYPES,
   ADJUSTMENT_DIRECTIONS,
   DEFAULT_PRICING_SETTINGS,
+  PRICING_SCOPES,
   toFormSettings,
   toSavePayload,
+  validateApplyScope,
   validatePricingSettingsForm,
 } from "./helpers";
 
@@ -45,6 +47,16 @@ export default function PricingSettingsForm() {
   const [backedUp, setBackedUp] = useState(false);
   const [errors, setErrors] = useState({});
   const [toast, setToast] = useState({ message: "", visible: false, variant: "success" });
+
+  // Who "Apply to All Products" rewrites — not part of the saved settings,
+  // just chosen right before applying (see validateApplyScope).
+  const [scope, setScope] = useState("all");
+  const [categoryIds, setCategoryIds] = useState([]);
+  const [categoryQuery, setCategoryQuery] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesError, setCategoriesError] = useState("");
+  const categoriesLoadedRef = useRef(false);
 
   const toastTimerRef = useRef(null);
   const adjustmentValueInputRef = useRef(null);
@@ -87,6 +99,35 @@ export default function PricingSettingsForm() {
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function loadCategories() {
+    setCategoriesLoading(true);
+    setCategoriesError("");
+    try {
+      const res = await fetch("/api/categories");
+      const json = await res.json();
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to load categories");
+      setCategories(Array.isArray(json.data) ? json.data : []);
+      categoriesLoadedRef.current = true;
+    } catch (error) {
+      setCategoriesError(error.message);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  }
+
+  // Categories are only needed once the admin chooses to scope by category —
+  // loaded the first time, not on every page visit.
+  function handleScopeChange(value) {
+    setScope(value);
+    if (value === "categories" && !categoriesLoadedRef.current && !categoriesLoading) {
+      loadCategories();
+    }
+  }
+
+  function toggleCategory(id) {
+    setCategoryIds((prev) => (prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id]));
+  }
 
   function setField(field, value) {
     setSettings((prev) => ({ ...prev, [field]: value }));
@@ -153,13 +194,27 @@ export default function PricingSettingsForm() {
       return;
     }
 
+    const scopeResult = validateApplyScope(scope, categoryIds);
+    if (!scopeResult.valid) {
+      showToast(scopeResult.message, "error");
+      return;
+    }
+
+    const selectedCategories = categories.filter((category) => categoryIds.includes(category.id));
+    const scopeWord =
+      scope === "categories"
+        ? `every product in ${selectedCategories.length} selected categor${selectedCategories.length === 1 ? "y" : "ies"} (${selectedCategories
+            .map((category) => category.name)
+            .join(", ")})`
+        : "every product";
+
     const directionWord = settings.adjustmentDirection === "decrease" ? "decrease" : "increase";
     const amountWord =
       settings.adjustmentType === "fixed" ? formatMoney(Number(settings.adjustmentValue)) : `${settings.adjustmentValue}%`;
     const backupReminder = backedUp ? "" : " You haven't downloaded a CSV backup yet this session — recommended before an irreversible bulk change.";
     if (
       !window.confirm(
-        `This will ${directionWord} the price and compare-at price of every product, and every variant's price, by ${amountWord}. This cannot be undone.${backupReminder} Continue?`
+        `This will ${directionWord} the price and compare-at price of ${scopeWord}, and the price of its variants, by ${amountWord}. This cannot be undone.${backupReminder} Continue?`
       )
     ) {
       return;
@@ -170,7 +225,11 @@ export default function PricingSettingsForm() {
       const res = await fetch("/api/settings/pricing/apply", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(toSavePayload(settings)),
+        body: JSON.stringify({
+          ...toSavePayload(settings),
+          scope,
+          categoryIds: scope === "categories" ? categoryIds : [],
+        }),
       });
       const json = await res.json();
       if (!res.ok || !json.success) throw new Error(json.error || "Failed to apply the price adjustment");
@@ -183,6 +242,16 @@ export default function PricingSettingsForm() {
       setApplying(false);
     }
   }
+
+  const categoryQueryLower = categoryQuery.trim().toLowerCase();
+  const filteredCategories = categories
+    .filter(
+      (category) =>
+        !categoryQueryLower ||
+        category.name.toLowerCase().includes(categoryQueryLower) ||
+        (category.parentPath || "").toLowerCase().includes(categoryQueryLower)
+    )
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
     <>
@@ -254,15 +323,97 @@ export default function PricingSettingsForm() {
             </div>
 
             {canApply && (
-              <div className="flex justify-end pt-2">
-                <button
-                  type="button"
-                  onClick={handleApply}
-                  disabled={loading || applying}
-                  className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
-                >
-                  {applying ? "Applying…" : "Apply to All Products"}
-                </button>
+              <div className="pt-2 border-t border-slate-100 dark:border-white/5 space-y-3">
+                <div>
+                  <label className="field-label">Apply To</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {PRICING_SCOPES.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => handleScopeChange(option.value)}
+                        disabled={loading}
+                        className={`h-9 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50 disabled:pointer-events-none ${
+                          scope === option.value
+                            ? "bg-primary-500 dark:bg-accent-500 text-white border-transparent"
+                            : "border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {scope === "categories" && (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={categoryQuery}
+                      onChange={(e) => setCategoryQuery(e.target.value)}
+                      placeholder="Search categories"
+                      className="field-input"
+                      disabled={categoriesLoading}
+                    />
+
+                    {categoriesError ? (
+                      <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">
+                        <span>{categoriesError}</span>
+                        <button type="button" onClick={loadCategories} className="font-semibold underline shrink-0">
+                          Retry
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="max-h-56 overflow-y-auto custom-scroll border border-slate-200 dark:border-white/10 rounded-xl divide-y divide-slate-100 dark:divide-white/5">
+                        {categoriesLoading ? (
+                          <p className="px-3 py-3 text-xs text-slate-400">Loading categories…</p>
+                        ) : filteredCategories.length > 0 ? (
+                          filteredCategories.map((category) => (
+                            <label
+                              key={category.id}
+                              className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={categoryIds.includes(category.id)}
+                                onChange={() => toggleCategory(category.id)}
+                                className="h-4 w-4 rounded border-slate-300 dark:border-white/20 text-primary-500 dark:text-accent-500 focus:ring-primary-400 dark:focus:ring-accent-500"
+                              />
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-sm text-slate-700 dark:text-slate-200 truncate">
+                                  {category.name}
+                                </span>
+                                {category.parentPath && (
+                                  <span className="block text-[11px] text-slate-400 truncate">{category.parentPath}</span>
+                                )}
+                              </span>
+                              <span className="text-xs text-slate-400 shrink-0">{category.productCount} products</span>
+                            </label>
+                          ))
+                        ) : (
+                          <p className="px-3 py-3 text-xs text-slate-400">
+                            {categories.length === 0 ? "There are no categories yet." : `No categories match "${categoryQuery.trim()}".`}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {categoryIds.length} {categoryIds.length === 1 ? "category" : "categories"} selected
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleApply}
+                    disabled={loading || applying}
+                    className="px-4 h-9 rounded-xl bg-primary-500 dark:bg-accent-500 hover:bg-primary-600 dark:hover:bg-accent-600 text-white text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 disabled:pointer-events-none"
+                  >
+                    {applying ? "Applying…" : scope === "categories" ? "Apply to Selected Categories" : "Apply to All Products"}
+                  </button>
+                </div>
               </div>
             )}
           </SectionCard>
@@ -276,7 +427,8 @@ export default function PricingSettingsForm() {
               "Download a CSV backup of all products first — it's your restore point if a bulk adjustment needs to be undone.",
               "Choose whether the adjustment applies as a percentage of the price or a fixed amount.",
               "Increase raises product prices; decrease lowers them.",
-              "\"Apply to All Products\" immediately recalculates and overwrites the price and compare-at price of every product, plus the price of every variant that has its own — it cannot be undone.",
+              "Choose \"All Products\" to reprice the whole catalog, or \"Specific Categories\" to pick one or more categories — a product counts if it's listed under any of them.",
+              "Applying immediately recalculates and overwrites the price and compare-at price of every matching product, plus the price of every variant that has its own — it cannot be undone.",
             ]}
           />
         </div>

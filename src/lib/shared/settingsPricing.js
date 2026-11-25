@@ -8,6 +8,15 @@ export const ADJUSTMENT_DIRECTIONS = [
   { value: "decrease", label: "Decrease" },
 ];
 
+// Who "Apply to All Products" actually rewrites: every product, or only
+// products in the chosen categories (a product counts if its primary
+// category or any other one it's listed under is selected — see
+// applyPriceAdjustmentToAllProducts in src/lib/pricing.js).
+export const PRICING_SCOPES = [
+  { value: "all", label: "All Products" },
+  { value: "categories", label: "Specific Categories" },
+];
+
 export const DEFAULT_PRICING_SETTINGS = {
   adjustmentValue: "0",
   adjustmentType: "percentage",
@@ -60,4 +69,13 @@ export function validatePricingSettingsForm(settings) {
     firstErrorField,
     message: firstErrorField ? errors[firstErrorField] : "",
   };
+}
+
+// The scope selector isn't part of the saved settings (toSavePayload above),
+// just an apply-time choice, so it's validated separately.
+export function validateApplyScope(scope, categoryIds) {
+  if (scope === "categories" && (!Array.isArray(categoryIds) || categoryIds.length === 0)) {
+    return { valid: false, message: "Select at least one category to apply the price change to." };
+  }
+  return { valid: true, message: "" };
 }

@@ -3,7 +3,10 @@ import { publicErrorMessage } from "@/lib/publicError";
 import { requireStaffPermission, permissionDeniedResponse } from "@/lib/auth/staffPermissions";
 import { roleHasPermission, settingsPermission } from "@/lib/permissions";
 import { applyPriceAdjustmentToAllProducts } from "@/lib/pricing";
-import { ADJUSTMENT_TYPES, ADJUSTMENT_DIRECTIONS, isValidAdjustmentValue } from "@/lib/shared/settingsPricing";
+import { ADJUSTMENT_TYPES, ADJUSTMENT_DIRECTIONS, PRICING_SCOPES, isValidAdjustmentValue } from "@/lib/shared/settingsPricing";
+import { parseUuidList } from "@/lib/shared/ids";
+
+const MAX_SCOPED_CATEGORIES = 200;
 
 export async function POST(request) {
   // Rewrites every product's price, so it needs product editing rights as
@@ -36,7 +39,25 @@ export async function POST(request) {
       return fail("Select a valid adjustment direction.", 400);
     }
 
-    const result = await applyPriceAdjustmentToAllProducts({ adjustmentValue, adjustmentType, adjustmentDirection });
+    const scope = String(payload.scope || "all").trim();
+    if (!PRICING_SCOPES.some((s) => s.value === scope)) {
+      return fail("Select a valid price change scope.", 400);
+    }
+
+    let categoryIds = null;
+    if (scope === "categories") {
+      categoryIds = parseUuidList(payload.categoryIds, { max: MAX_SCOPED_CATEGORIES });
+      if (!categoryIds) {
+        return fail("Select at least one category to apply the price change to.", 400);
+      }
+    }
+
+    const result = await applyPriceAdjustmentToAllProducts({
+      adjustmentValue,
+      adjustmentType,
+      adjustmentDirection,
+      categoryIds,
+    });
     return ok(result);
   } catch (error) {
     return fail(publicErrorMessage(error), 500);

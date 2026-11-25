@@ -48,10 +48,33 @@ async function bulkUpdateColumns(table, rows, columns) {
 // back to the product's price when read, so they need no row of their
 // own), and writes all the new values back. Variant compare-at price is
 // left untouched.
-export async function applyPriceAdjustmentToAllProducts({ adjustmentValue, adjustmentType, adjustmentDirection }) {
+//
+// `categoryIds` narrows this to products in those categories — a product
+// counts if its primary category (products.category_id) or any other one
+// it's listed under (product_categories) is in the list — same membership
+// rule as productsInCategoryTree() in src/lib/storefrontCart.js, but without
+// that one's sub-category recursion: only the categories actually selected
+// are matched. Pass null/empty (the default) to adjust every product.
+export async function applyPriceAdjustmentToAllProducts({
+  adjustmentValue,
+  adjustmentType,
+  adjustmentDirection,
+  categoryIds = null,
+}) {
   const adjust = (price) => calculateAdjustedPrice(price, adjustmentValue, adjustmentType, adjustmentDirection);
+  const scoped = Array.isArray(categoryIds) && categoryIds.length > 0;
 
-  const products = await sql`SELECT id, price, compare_at_price FROM products`;
+  const products = scoped
+    ? await sql`
+        SELECT DISTINCT p.id, p.price, p.compare_at_price
+        FROM products p
+        WHERE p.category_id = ANY(${categoryIds}::uuid[])
+           OR EXISTS (
+             SELECT 1 FROM product_categories pc
+             WHERE pc.product_id = p.id AND pc.category_id = ANY(${categoryIds}::uuid[])
+           )
+      `
+    : await sql`SELECT id, price, compare_at_price FROM products`;
   const productRows = products.map((product) => ({
     id: product.id,
     price: adjust(product.price),
@@ -62,7 +85,10 @@ export async function applyPriceAdjustmentToAllProducts({ adjustmentValue, adjus
     { name: "compare_at_price", cast: "decimal" },
   ]);
 
-  const variants = await sql`SELECT id, price FROM product_variants WHERE price IS NOT NULL`;
+  const productIds = products.map((product) => product.id);
+  const variants = scoped
+    ? await sql`SELECT id, price FROM product_variants WHERE price IS NOT NULL AND product_id = ANY(${productIds}::uuid[])`
+    : await sql`SELECT id, price FROM product_variants WHERE price IS NOT NULL`;
   const variantRows = variants.map((variant) => ({ id: variant.id, price: adjust(variant.price) }));
   const updatedVariantCount = await bulkUpdateColumns("product_variants", variantRows, [
     { name: "price", cast: "decimal" },
