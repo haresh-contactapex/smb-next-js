@@ -106,6 +106,30 @@ describe("database", { skip: !url && "TEST_DATABASE_URL is not set" }, () => {
     assert.equal(n, 0);
   });
 
+  test("setProductsStatus flips Active/Draft in bulk and keeps a product without a price from going Active", async () => {
+    const live = await products.createProduct(payload(unique(), [], { status: "ACTIVE" }));
+    const hidden = await products.createProduct(payload(unique(), [], { status: "DRAFT" }));
+    const noPrice = await products.createProduct(payload(unique(), [], { status: "DRAFT", pricing: { price: "0" } }));
+    const statusOf = async (id) => (await db.sql`SELECT status FROM products WHERE id = ${id}`)[0].status;
+
+    // Already-Draft products are not counted: only the live one changes.
+    const toDraft = await products.setProductsStatus([live, hidden], "DRAFT");
+    assert.deepEqual(toDraft, { updated: 1, skipped: 0, updatedIds: [live] });
+    assert.equal(await statusOf(live), "DRAFT");
+
+    const toActive = await products.setProductsStatus([live, hidden, noPrice], "ACTIVE");
+    assert.equal(toActive.updated, 2);
+    assert.equal(toActive.skipped, 1);
+    assert.deepEqual([...toActive.updatedIds].sort(), [live, hidden].sort());
+    assert.equal(await statusOf(live), "ACTIVE");
+    assert.equal(await statusOf(hidden), "ACTIVE");
+    assert.equal(await statusOf(noPrice), "DRAFT", "a product without a price must stay Draft");
+
+    assert.deepEqual(await products.setProductsStatus([live], "ACTIVE"), { updated: 0, skipped: 0, updatedIds: [] });
+    await assert.rejects(products.setProductsStatus([live], "ARCHIVED"), /Active or Draft/);
+    assert.equal(await statusOf(live), "ACTIVE");
+  });
+
   test("without the engraving column, 'inherit' saves and any other mode is refused", async () => {
     const rollback = new Error("roll back the test's DDL");
     await assert.rejects(

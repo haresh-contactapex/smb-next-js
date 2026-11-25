@@ -1,7 +1,7 @@
 import { sql, sqlQuery, withTransaction } from "./db";
 import { setProductEngravingMode } from "./engraving";
 import { normalizeEngravingMode } from "./engravingRules";
-import { validateProductPayload, describeProductErrors } from "./shared/product";
+import { validateProductPayload, describeProductErrors, LISTING_STATUSES } from "./shared/product";
 import { categoryPathsFromPayload, upsertCategoryPaths, upsertCollections, upsertTags } from "./productTaxonomy";
 
 // Writing products: validate, then store the row and all of its children in one transaction.
@@ -351,6 +351,31 @@ async function saveEngravingMode(id, payload) {
 
 export async function deleteProduct(id) {
   await sql`DELETE FROM products WHERE id = ${id}`;
+}
+
+// Flips the status of one or more products without touching anything else about them. Active needs
+// a price (the edit form enforces the same), so a product without one stays as it was and is
+// counted in `skipped`. `updatedIds` are the products whose status actually changed.
+export async function setProductsStatus(ids, status) {
+  if (!LISTING_STATUSES.includes(status)) throw new ProductError("Status must be Active or Draft.");
+  if (status === "DRAFT") {
+    const rows = await sql`
+      UPDATE products SET status = 'DRAFT', updated_at = now()
+      WHERE id = ANY(${ids}::uuid[]) AND status <> 'DRAFT'
+      RETURNING id
+    `;
+    return { updated: rows.length, skipped: 0, updatedIds: rows.map((row) => row.id) };
+  }
+  const rows = await sql`
+    UPDATE products SET status = 'ACTIVE', updated_at = now()
+    WHERE id = ANY(${ids}::uuid[]) AND status <> 'ACTIVE' AND price > 0
+    RETURNING id
+  `;
+  // Whatever is still not Active after the update is exactly the products that had no price.
+  const [{ count }] = await sql`
+    SELECT COUNT(*)::int AS count FROM products WHERE id = ANY(${ids}::uuid[]) AND status <> 'ACTIVE'
+  `;
+  return { updated: rows.length, skipped: count, updatedIds: rows.map((row) => row.id) };
 }
 
 // Removes several products in one statement and returns how many existed.

@@ -3,7 +3,7 @@
 //   productTaxonomy.js  categories, tags and collections (find-or-create)
 //   productQueries.js   the admin's list, search and edit-form reads
 //   productsStorefront.js  what the public storefront reads
-export { ProductError, createProduct, updateProduct, deleteProduct, deleteProducts } from "./productSave";
+export { ProductError, createProduct, updateProduct, deleteProduct, deleteProducts, setProductsStatus } from "./productSave";
 export { upsertCategoryPath, upsertTags, upsertCollections } from "./productTaxonomy";
 export { listProducts, searchProducts, getProductById } from "./productQueries";
 export * from "./productsStorefront";

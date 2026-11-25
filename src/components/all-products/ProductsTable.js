@@ -20,6 +20,38 @@ function SelectCheckbox({ checked, indeterminate = false, onChange, label }) {
   );
 }
 
+// The status badge; for staff who can edit it is a dropdown that switches Active/Draft in place.
+function StatusControl({ product, canChange, busy, onChange }) {
+  const badge = STATUS_BADGE_CLASSES[product.status];
+  if (!canChange) {
+    return (
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${badge}`}>
+        {product.status}
+      </span>
+    );
+  }
+  return (
+    <span className={`relative inline-flex items-center rounded-full ${badge}`}>
+      <select
+        value={product.status}
+        disabled={busy}
+        onChange={(e) => onChange(product, e.target.value)}
+        aria-label={`Status of ${product.title}`}
+        className="appearance-none cursor-pointer rounded-full bg-transparent text-inherit text-[11px] font-bold pl-2.5 pr-6 py-1 outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40 disabled:cursor-wait disabled:opacity-60"
+      >
+        {product.status === "Archived" && (
+          <option value="Archived" disabled className="bg-white text-slate-700 dark:bg-darksurface dark:text-slate-200">
+            Archived
+          </option>
+        )}
+        <option value="Active" className="bg-white text-slate-700 dark:bg-darksurface dark:text-slate-200">Active</option>
+        <option value="Draft" className="bg-white text-slate-700 dark:bg-darksurface dark:text-slate-200">Draft</option>
+      </select>
+      <Icon name="chevron-down" className="pointer-events-none absolute right-1.5 w-3 h-3" />
+    </span>
+  );
+}
+
 function SortableHeader({ label, sortKey, sort, onSortChange }) {
   const active = sort?.key === sortKey;
   const icon = active ? (sort.direction === "asc" ? "chevron-up" : "chevron-down") : "arrow-up-down";
@@ -47,9 +79,13 @@ export default function ProductsTable({
   selectedIds,
   onToggleSelect,
   onTogglePage,
+  onStatusChange,
+  statusBusyIds,
 }) {
   const { formatMoney } = useGeneralSettings();
-  const selectable = useCan()("products.delete") && Boolean(selectedIds);
+  const can = useCan();
+  const selectable = (can("products.delete") || can("products.edit")) && Boolean(selectedIds);
+  const canChangeStatus = can("products.edit") && Boolean(onStatusChange);
   const selectedOnPage = selectable ? products.filter((p) => selectedIds.has(p.id)).length : 0;
   const allOnPageSelected = products.length > 0 && selectedOnPage === products.length;
 
@@ -84,9 +120,13 @@ export default function ProductsTable({
           ["Inventory", <span key="i" className={STOCK_TEXT_CLASSES[stock.level]}>{stock.label}</span>],
           [
             "Status",
-            <span key="s" className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold ${STATUS_BADGE_CLASSES[product.status]}`}>
-              {product.status}
-            </span>,
+            <StatusControl
+              key="s"
+              product={product}
+              canChange={canChangeStatus}
+              busy={statusBusyIds?.has(product.id)}
+              onChange={onStatusChange}
+            />,
           ],
         ];
         return (
@@ -228,11 +268,12 @@ export default function ProductsTable({
                 </td>
                 <td className={`py-3 px-1 whitespace-nowrap ${STOCK_TEXT_CLASSES[stock.level]}`}>{stock.label}</td>
                 <td className="py-3 px-1">
-                  <span
-                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${STATUS_BADGE_CLASSES[product.status]}`}
-                  >
-                    {product.status}
-                  </span>
+                  <StatusControl
+                    product={product}
+                    canChange={canChangeStatus}
+                    busy={statusBusyIds?.has(product.id)}
+                    onChange={onStatusChange}
+                  />
                 </td>
                 <td className="py-3 px-1 text-right">
                   <div className="inline-flex items-center gap-1">

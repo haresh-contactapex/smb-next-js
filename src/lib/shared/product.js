@@ -5,6 +5,8 @@
 // Pure: no React, DOM or database access.
 
 export const PRODUCT_STATUSES = ["ACTIVE", "DRAFT", "ARCHIVED"];
+// What the product list's status controls can set (Archived is only ever set from the edit form).
+export const LISTING_STATUSES = ["ACTIVE", "DRAFT"];
 export const WEIGHT_UNITS = ["kg", "g", "lb", "oz"];
 
 export const MAX_TITLE_LENGTH = 255;

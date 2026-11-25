@@ -193,6 +193,26 @@ one pair), and `buildAttributes()` in `productImport.js` reads any
 `attributeN_label`/`attributeN_value` pair present in the header, so there is
 no fixed limit on import.
 
+## 7. Change status from the list (Active / Draft)
+
+On `/admin/all-products`, staff with `products.edit` get a status dropdown on every
+row, and a **Set Active** / **Set Draft** pair in the bar that appears once rows
+are selected (select-all-matching reaches rows on other pages). Both send
+`PATCH /api/products` with `{ ids: [uuid, ...], status: "ACTIVE" | "DRAFT" }`
+(a single row is a list of one), backed by `setProductsStatus()` in
+`src/lib/productSave.js`. It changes only `status` and `updated_at`, in one
+statement.
+
+- Making many products Active or Draft asks for confirmation first; a single
+  row changes at once.
+- **A product with no price cannot go Active** (the edit form enforces the same
+  rule). It stays as it was and the response reports it in `skipped`; the list
+  shows "N skipped: no price yet".
+- Products already in the target status are left alone and not counted.
+- Archived cannot be set here (the edit form does not offer it either; it comes
+  in through CSV import), but an Archived product can be moved to Active or
+  Draft from its dropdown.
+
 ## Data lifecycle today vs. with a backend
 
 | Step | Today (this app) | With the schema in `category-product-catalog-database-schema.md` |

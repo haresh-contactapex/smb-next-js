@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ProductsFilters from "./ProductsFilters";
 import ProductsTable from "./ProductsTable";
@@ -10,6 +10,14 @@ import Icon from "@/components/admin-panel/Icon";
 import useNavReselect from "@/components/admin-panel/useNavReselect";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import Toast from "./Toast";
+import StatusToast from "@/components/ui/Toast";
+import { useToast } from "@/components/ui/useToast";
+
+const NO_IDS = new Set();
+
+function plural(count, word) {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}
 
 function withoutId(set, id) {
   const next = new Set(set);
@@ -31,7 +39,14 @@ export default function ProductsListing({ products: initialProducts }) {
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const [deleteToast, setDeleteToast] = useState({ visible: false, message: "" });
+  const [statusBusyIds, setStatusBusyIds] = useState(NO_IDS);
+  const [bulkStatus, setBulkStatus] = useState(null);
+  const { toast: statusToast, showToast: showStatusToast, dismissToast: dismissStatusToast } = useToast();
+  // Synchronous guard: two quick changes must not send two overlapping requests.
+  const statusBusyRef = useRef(false);
   const can = useCan();
+  const canEdit = can("products.edit");
+  const canDelete = can("products.delete");
 
   // Clicking "All Products" in the sidebar while already here starts the list over, like a fresh visit.
   useNavReselect(() => {
@@ -60,6 +75,66 @@ export default function ProductsListing({ products: initialProducts }) {
     } finally {
       setDeletingProduct(null);
     }
+  }
+
+  // Sets `label` ("Active" or "Draft") on `list` (one or more products) and mirrors what the server
+  // actually changed. Products already in that status are left alone, and Active needs a price.
+  async function applyStatus(list, label) {
+    if (list.length === 0 || statusBusyRef.current) return;
+    statusBusyRef.current = true;
+    setStatusBusyIds(new Set(list.map((p) => p.id)));
+    try {
+      const res = await fetch("/api/products", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: list.map((p) => p.id), status: label }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) throw new Error(json.error || "Failed to update status.");
+      const { updated, skipped, updatedIds } = json.data;
+      const changed = new Set(updatedIds);
+      setProducts((prev) => prev.map((p) => (changed.has(p.id) ? { ...p, status: label } : p)));
+      setSelectedIds(list.length === 1 ? (prev) => withoutId(prev, list[0].id) : new Set());
+
+      const single = list.length === 1 ? `"${list[0].title}"` : null;
+      if (updated > 0) {
+        const note = skipped > 0 ? ` ${plural(skipped, "product")} skipped: no price yet.` : "";
+        showStatusToast(`${single ?? plural(updated, "product")} set to ${label}.${note}`);
+      } else if (skipped > 0) {
+        showStatusToast(
+          single
+            ? `${single} needs a price before it can be Active.`
+            : `${plural(skipped, "product")} skipped: add a price before making them Active.`,
+          "error"
+        );
+      } else {
+        showStatusToast(single ? `${single} is already ${label}.` : `Everything selected is already ${label}.`);
+      }
+      router.refresh();
+    } catch (error) {
+      showStatusToast(error.message, "error");
+    } finally {
+      statusBusyRef.current = false;
+      setStatusBusyIds(NO_IDS);
+      setBulkStatus(null);
+    }
+  }
+
+  function handleStatusChange(product, label) {
+    if (label === product.status) return;
+    return applyStatus([product], label);
+  }
+
+  function handleBulkStatus(label) {
+    const list = products.filter((p) => selectedIds.has(p.id));
+    if (list.length === 0 || statusBusyRef.current) return;
+    if (list.length > 1) {
+      const effect = label === "Active" ? "They'll appear on the storefront." : "They'll be hidden from the storefront.";
+      const what = list.length === products.length ? `ALL ${list.length} products` : plural(list.length, "selected product");
+      if (!window.confirm(`Set ${what} to ${label}? ${effect}`)) return;
+    }
+    setBulkStatus(label);
+    return applyStatus(list, label);
   }
 
   async function handleBulkDelete() {
@@ -200,7 +275,7 @@ export default function ProductsListing({ products: initialProducts }) {
             <RowsPerPageSelect pageSize={pageSize} onPageSizeChange={handlePageSizeChange} />
           </div>
         )}
-        {selectedIds.size > 0 && can("products.delete") && (
+        {selectedIds.size > 0 && (canEdit || canDelete) && (
           <div
             role="status"
             className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-3 px-4 py-2.5 rounded-xl bg-primary-50 dark:bg-white/5 border border-primary-100 dark:border-white/10 text-sm"
@@ -222,15 +297,35 @@ export default function ProductsListing({ products: initialProducts }) {
             >
               Clear selection
             </button>
-            <button
-              type="button"
-              onClick={handleBulkDelete}
-              disabled={bulkDeleting}
-              className="ml-auto inline-flex items-center gap-2 px-3.5 h-9 rounded-lg bg-error hover:opacity-90 text-white text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
-            >
-              <Icon name="trash-2" className="w-4 h-4" />
-              {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.size})`}
-            </button>
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              {canEdit &&
+                [
+                  ["Active", "check-circle", "text-success"],
+                  ["Draft", "eye-off", "text-info"],
+                ].map(([label, icon, iconColor]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => handleBulkStatus(label)}
+                    disabled={statusBusyIds.size > 0 || bulkDeleting}
+                    className="inline-flex items-center gap-2 px-3.5 h-9 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-darksurface text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <Icon name={icon} className={`w-4 h-4 ${iconColor}`} />
+                    {bulkStatus === label ? "Updating…" : `Set ${label}`}
+                  </button>
+                ))}
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={handleBulkDelete}
+                  disabled={bulkDeleting || statusBusyIds.size > 0}
+                  className="inline-flex items-center gap-2 px-3.5 h-9 rounded-lg bg-error hover:opacity-90 text-white text-xs font-semibold disabled:opacity-60 disabled:cursor-not-allowed transition-opacity"
+                >
+                  <Icon name="trash-2" className="w-4 h-4" />
+                  {bulkDeleting ? "Deleting…" : `Delete selected (${selectedIds.size})`}
+                </button>
+              )}
+            </div>
           </div>
         )}
         <ProductsTable
@@ -242,6 +337,8 @@ export default function ProductsListing({ products: initialProducts }) {
           selectedIds={selectedIds}
           onToggleSelect={handleToggleSelect}
           onTogglePage={handleTogglePage}
+          onStatusChange={handleStatusChange}
+          statusBusyIds={statusBusyIds}
         />
         <Pagination
           page={currentPage}
@@ -262,6 +359,7 @@ export default function ProductsListing({ products: initialProducts }) {
         message={deleteToast.message}
         onDismiss={() => setDeleteToast((t) => ({ ...t, visible: false }))}
       />
+      <StatusToast {...statusToast} onDismiss={dismissStatusToast} />
     </>
   );
 }
