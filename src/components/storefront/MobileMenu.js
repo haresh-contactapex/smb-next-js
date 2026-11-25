@@ -7,9 +7,11 @@ import StoreIcon from "./icons";
 import { CURRENT_NAV_LINK } from "./NavLink";
 import { STORE_NAV_LINKS, isCurrentLink, isCurrentPath } from "./navLinks";
 import { useSearch } from "./search/SearchProvider";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 // Hamburger button + slide-in drawer for < lg screens.
 export default function MobileMenu({ customer }) {
+  const { logoUrl, storeName } = useGeneralSettings();
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [expanded, setExpanded] = useState(() => new Set());
@@ -74,8 +76,8 @@ export default function MobileMenu({ customer }) {
         }`}
       >
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/storefront/logo.png" alt="shopmyband.com" className="h-5 object-contain" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image */}
+          <img src={logoUrl || "/storefront/logo.png"} alt={storeName || "shopmyband.com"} className="h-5 object-contain" />
           <button
             type="button"
             onClick={() => setOpen(false)}

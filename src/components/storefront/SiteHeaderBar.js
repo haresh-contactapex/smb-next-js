@@ -9,6 +9,7 @@ import CartButton from "./cart/CartButton";
 import WishlistButton from "./wishlist/WishlistButton";
 import SearchButton from "./search/SearchButton";
 import StoreIcon from "./icons";
+import { useGeneralSettings } from "@/components/providers/GeneralSettingsProvider";
 
 const iconButton = "hover:text-[#d4920a] transition-colors hover:scale-110 transform duration-300";
 // Matches NavMegaMenu's close delay so a quick diagonal mouse move from the
@@ -23,6 +24,7 @@ const CLOSE_DELAY_MS = 150;
 export default function SiteHeaderBar({ navLinks, customer }) {
   const headerRef = useRef(null);
   const [stuck, setStuck] = useState(false);
+  const { logoUrl, storeName } = useGeneralSettings();
 
   useEffect(() => {
     function checkStuck() {
@@ -56,8 +58,12 @@ export default function SiteHeaderBar({ navLinks, customer }) {
         <MobileMenu customer={customer} />
 
         <Link href="/" className="flex-1 lg:flex-none flex justify-center lg:justify-start flex-shrink-0" aria-label="shopmyband.com home">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/storefront/logo.png" alt="shopmyband.com" className="h-6 sm:h-7 lg:h-6 xl:h-7 2xl:h-8 object-contain" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image */}
+          <img
+            src={logoUrl || "/storefront/logo.png"}
+            alt={storeName || "shopmyband.com"}
+            className="h-6 sm:h-7 lg:h-6 xl:h-7 2xl:h-8 object-contain"
+          />
         </Link>
 
         <nav aria-label="Main" className="hidden lg:flex lg:space-x-3 xl:space-x-6 2xl:space-x-8 lg:text-[11px] xl:text-[13px] 2xl:text-[16px] font-medium tracking-wide uppercase flex-shrink">

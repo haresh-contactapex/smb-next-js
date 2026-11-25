@@ -9,6 +9,7 @@ import { CMS_FOOTER_GROUPS } from "@/lib/cmsRules";
 import { hasPublishedBlogPosts } from "@/lib/blog";
 import { BLOG_INDEX_PATH } from "@/lib/blogRules";
 import { getFooterSocialLinks } from "@/lib/socialMediaSettings";
+import { getGeneralSettings } from "@/lib/generalSettings";
 
 // The Blog link sits in the Customer Service column between About Us and Contact (CMS
 // pages are ordered 10, 20, 30 ... there). It shows once the blog has a published post.
@@ -107,7 +108,7 @@ function FooterLink({ href, children }) {
 // Storefront footer: a rounded photo panel with the logo and link columns, then the store
 // blurb, city links, social icons, payment marks and copyright on white.
 // `columns` is [{ label, columns, pages: [{ slug, label }] }]; `texts` is { [page path]: [paragraph, ...] }.
-export function SiteFooterView({ columns, texts, socialLinks = STORE_SOCIAL_LINKS }) {
+export function SiteFooterView({ columns, texts, socialLinks = STORE_SOCIAL_LINKS, logoUrl, storeName }) {
   return (
     <footer className="bg-white text-[#555555]">
       <div className="max-w-[1500px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16 pb-10">
@@ -116,7 +117,12 @@ export function SiteFooterView({ columns, texts, socialLinks = STORE_SOCIAL_LINK
           <div aria-hidden="true" className="absolute inset-0 bg-[#3d3d3d]/65" />
           <div className="relative px-6 pt-8 pb-10 sm:px-12 sm:pt-10 sm:pb-12 lg:px-20">
             <Link href="/" className="mx-auto block w-fit" aria-label="shopmyband.com home">
-              <img src="/storefront/logo.png" alt="shopmyband.com" className="h-7 sm:h-8 object-contain brightness-0 invert" />
+              {/* eslint-disable-next-line @next/next/no-img-element -- store-uploaded logo, not optimizable by next/image */}
+              <img
+                src={logoUrl || "/storefront/logo.png"}
+                alt={storeName || "shopmyband.com"}
+                className="h-7 sm:h-8 object-contain brightness-0 invert"
+              />
             </Link>
             <nav aria-label="Footer" className="mt-8 sm:mt-10 grid gap-8 text-xs sm:text-[13px] md:grid-cols-2 lg:grid-cols-[1fr_1.5fr_1.5fr] lg:gap-10">
               <FooterGroup label="Wedding Band Collection">
@@ -195,7 +201,20 @@ export default async function SiteFooter() {
   // Read per request so a page published in the admin appears here straight away,
   // even on pages that would otherwise be prerendered.
   await connection();
-  const [columns, texts, socialLinks] = await Promise.all([loadFooterColumns(), getFooterTextsByPath(), getFooterSocialLinks()]);
+  const [columns, texts, socialLinks, generalSettings] = await Promise.all([
+    loadFooterColumns(),
+    getFooterTextsByPath(),
+    getFooterSocialLinks(),
+    getGeneralSettings().catch(() => null),
+  ]);
   // null: the settings could not be read, so keep the built-in links rather than drop the icons.
-  return <SiteFooterView columns={columns} texts={texts} socialLinks={socialLinks ?? STORE_SOCIAL_LINKS} />;
+  return (
+    <SiteFooterView
+      columns={columns}
+      texts={texts}
+      socialLinks={socialLinks ?? STORE_SOCIAL_LINKS}
+      logoUrl={generalSettings?.logoUrl}
+      storeName={generalSettings?.storeName}
+    />
+  );
 }
