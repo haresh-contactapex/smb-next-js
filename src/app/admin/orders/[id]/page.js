@@ -15,7 +15,7 @@ import ViewOrderActions from "@/components/orders/ViewOrderActions";
 import { getOrderDetails } from "@/lib/orders";
 
 export const metadata = {
-  title: "Order details · Shop My Band Admin",
+  title: "Order details · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

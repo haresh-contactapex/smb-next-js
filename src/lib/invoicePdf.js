@@ -399,6 +399,6 @@ export async function buildInvoicePdf(invoice) {
   pdf.setTitle(clean(`Invoice ${invoice.orderNumber}`));
   pdf.setAuthor(clean(store.name));
   pdf.setCreator(clean(store.name));
-  pdf.setProducer("Shop My Band Admin");
+  pdf.setProducer("Shop Wedding Band Admin");
   return pdf.save();
 }

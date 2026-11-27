@@ -1,7 +1,7 @@
 import AddProductForm from "@/components/add-product/AddProductForm";
 
 export const metadata = {
-  title: "Add product · Shop My Band Admin",
+  title: "Add product · Shop Wedding Band Admin",
 };
 
 export default function AddProductPage() {

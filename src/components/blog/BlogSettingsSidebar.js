@@ -209,7 +209,7 @@ export default function BlogSettingsSidebar({
               value={author}
               maxLength={BLOG_AUTHOR_MAX}
               onChange={(e) => onAuthorChange(e.target.value)}
-              placeholder="e.g. Shop My Band Team"
+              placeholder="e.g. Shop Wedding Band Team"
               aria-invalid={Boolean(authorError)}
               aria-describedby="blog-author-help"
               className="field-input h-10"

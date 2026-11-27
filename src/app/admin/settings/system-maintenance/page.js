@@ -3,7 +3,7 @@ import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { BACKUP_PERMISSION } from "@/lib/permissions";
 
 export const metadata = {
-  title: "System & Maintenance · Shop My Band Admin",
+  title: "System & Maintenance · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

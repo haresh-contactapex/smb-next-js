@@ -5,7 +5,7 @@ import { listNewsletterSubscribers } from "@/lib/newsletter";
 import { computeNewsletterStats } from "@/components/newsletter/helpers";
 
 export const metadata = {
-  title: "Newsletter · Shop My Band Admin",
+  title: "Newsletter · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

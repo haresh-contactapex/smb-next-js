@@ -10,7 +10,7 @@ import GoogleSansFont from "@/components/storefront/GoogleSansFont";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Under Maintenance · Shop My Band",
+  title: "Under Maintenance · Shop Wedding Band",
 };
 
 async function loadGeneralSettings() {
@@ -34,7 +34,7 @@ export default async function MaintenancePage() {
   }
 
   const generalSettings = await loadGeneralSettings();
-  const storeName = generalSettings?.storeName || "Shop My Band";
+  const storeName = generalSettings?.storeName || "Shop Wedding Band";
   const logoUrl = generalSettings?.logoUrl;
   const message = maintenance.maintenanceMessage.trim() || "We'll be back soon — thanks for your patience!";
 

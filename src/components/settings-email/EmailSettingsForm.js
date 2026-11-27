@@ -216,7 +216,7 @@ export default function EmailSettingsForm() {
                 label="Sender Name"
                 value={settings.senderName}
                 onChange={(value) => setField("senderName", value)}
-                placeholder="Shop My Band"
+                placeholder="Shop Wedding Band"
                 error={errors.senderName}
                 inputRef={senderNameInputRef}
                 onEnter={handleSave}
@@ -290,7 +290,7 @@ export default function EmailSettingsForm() {
               rows={2}
               value={settings.emailFooterText}
               onChange={(value) => setField("emailFooterText", value)}
-              placeholder="© Shop My Band. All rights reserved."
+              placeholder="© Shop Wedding Band. All rights reserved."
               error={errors.emailFooterText}
               hint={`Optional. Added to the bottom of every email. Up to ${MAX_EMAIL_FOOTER_LENGTH} characters.`}
               inputRef={emailFooterTextInputRef}

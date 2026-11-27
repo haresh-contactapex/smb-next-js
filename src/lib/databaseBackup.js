@@ -117,7 +117,7 @@ export async function* generateDatabaseBackup({ isCancelled = () => false } = {}
   yield { type: "start", tables: tables.length, totalRows };
 
   yield chunk(
-    `-- Shop My Band database backup\n` +
+    `-- Shop Wedding Band database backup\n` +
       `-- Created: ${new Date().toISOString()}\n` +
       `-- Tables: ${tables.length}, rows: ${totalRows}\n` +
       `-- Restore into an EMPTY database:  psql "$DATABASE_URL" -f <this file>\n\n` +

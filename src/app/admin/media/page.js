@@ -3,7 +3,7 @@ import MediaLibrary from "@/components/media/MediaLibrary";
 import { listMedia } from "@/lib/media";
 
 export const metadata = {
-  title: "Media · Shop My Band Admin",
+  title: "Media · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

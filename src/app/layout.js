@@ -76,7 +76,7 @@ async function loadIntegrationsSettings() {
 // Storefront default; /admin overrides this in src/app/admin/layout.js.
 export async function generateMetadata() {
   const settings = await loadGeneralSettings();
-  const name = settings?.storeName || "Shop My Band";
+  const name = settings?.storeName || "Shop Wedding Band";
   return {
     title: `${name} | Wedding Bands`,
     description: `Shop wedding, anniversary, classic and eternity bands at ${name}.`,

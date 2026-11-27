@@ -1,5 +1,5 @@
 /**
- * Shop My Band admin panel configuration.
+ * Shop Wedding Band admin panel configuration.
  *
  * This is the ONE file a new project needs to replace to reuse the whole
  * src/components/admin-panel folder: brand, nav menu, header search fields,
@@ -13,7 +13,7 @@
  */
 export const adminPanelConfig = {
   brand: {
-    name: "Shop My Band",
+    name: "Shop Wedding Band",
     subtitle: "Admin Panel",
     icon: "gift",
     href: "/admin",
@@ -211,7 +211,7 @@ export const adminPanelConfig = {
   },
 
   footer: {
-    companyName: "Shop My Band",
+    companyName: "Shop Wedding Band",
     links: [],
   },
 };

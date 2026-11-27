@@ -53,13 +53,13 @@ export default async function WomenWeddingBandsPage() {
               Women Wedding Bands
             </h1>
             <p className="leading-relaxed mb-4 text-sm sm:text-[16px]">
-              Explore a stunning collection of women&apos;s wedding bands at Shop My Band.
+              Explore a stunning collection of women&apos;s wedding bands at Shop Wedding Band.
             </p>
             <p className="leading-relaxed max-w-4xl mx-auto hidden md:block text-sm sm:text-[16px]">
               Women&apos;s wedding bands are a significant symbol of commitment and love in marriage. These unique white gold,
               yellow gold, rose gold and platinum wedding bands for women are traditionally worn alongside the engagement
               ring. It symbolizes the eternal bond between partners. From traditional designs to modern and unique styles,
-              Shop My Band offers a wide range of options to suit individual tastes and preferences.
+              Shop Wedding Band offers a wide range of options to suit individual tastes and preferences.
             </p>
           </div>
 

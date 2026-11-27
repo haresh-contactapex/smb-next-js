@@ -6,7 +6,7 @@ import { listCmsPages } from "@/lib/cms";
 import { listCategories } from "@/lib/categories";
 
 export const metadata = {
-  title: "Footer Text · Shop My Band Admin",
+  title: "Footer Text · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

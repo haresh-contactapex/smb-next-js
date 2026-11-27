@@ -5,7 +5,7 @@ import { listCategories } from "@/lib/categories";
 import { computeCategoryStats, pickIconColor } from "@/components/categories/categoryHelpers";
 
 export const metadata = {
-  title: "Categories · Shop My Band Admin",
+  title: "Categories · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

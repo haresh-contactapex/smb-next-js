@@ -1,4 +1,4 @@
-# Deploying Shop My Band to cPanel (Phusion Passenger)
+# Deploying Shop Wedding Band to cPanel (Phusion Passenger)
 
 This is the exact procedure used to run the Next.js 15 admin panel and storefront on a cPanel server
 (`shopweddingband.com`), with the project living **inside `public_html`**. It also records every problem hit on the way, so the next deploy is a checklist rather than an

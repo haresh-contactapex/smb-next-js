@@ -4,7 +4,7 @@ import { getCurrentCustomer } from "@/lib/auth/customerSession";
 import { safeRedirectPath } from "@/lib/auth/redirect";
 
 export const metadata = {
-  title: "Create Account · Shop My Band",
+  title: "Create Account · Shop Wedding Band",
 };
 
 // Reads the session cookie, so it can't be prerendered.

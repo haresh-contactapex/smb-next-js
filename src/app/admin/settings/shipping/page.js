@@ -1,7 +1,7 @@
 import ShippingSettingsForm from "@/components/settings-shipping/ShippingSettingsForm";
 
 export const metadata = {
-  title: "Shipping · Shop My Band Admin",
+  title: "Shipping · Shop Wedding Band Admin",
 };
 
 export default function ShippingSettingsPage() {

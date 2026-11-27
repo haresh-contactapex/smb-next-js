@@ -143,7 +143,7 @@ export async function sendEmail({ to, subject, html, text, replyTo, attachments 
 async function sendBrandedEmail(to, build, data, { replyTo } = {}) {
   const shopUrl = await getSiteOrigin();
   const emailSettings = await getEmailSettings().catch(() => null);
-  const storeName = data.storeName || (await getGeneralSettings().catch(() => null))?.storeName || "Shop My Band";
+  const storeName = data.storeName || (await getGeneralSettings().catch(() => null))?.storeName || "Shop Wedding Band";
   const { logoSrc, attachments } = await loadEmailLogo(shopUrl);
   const { subject, html, text } = build({ ...data, storeName, shopUrl, logoSrc, supportEmail: emailSettings?.senderEmail || "" });
   return sendEmail({ to, subject, html, text, replyTo, attachments });

@@ -26,7 +26,7 @@ export const DEFAULT_HOME_PAGE = {
     titleAccent: "love.",
     title: "dedicated to creating custom wedding bands for men and women.",
     intro:
-      "Whether you're searching for classic diamond wedding bands, unique men's wedding bands, or gold wedding bands for women, Shop My Band has you covered. Our collection includes an array of stunning eternity bands, and more. If you're looking for a touch of luxury, we also offer rose gold wedding bands.",
+      "Whether you're searching for classic diamond wedding bands, unique men's wedding bands, or gold wedding bands for women, Shop Wedding Band has you covered. Our collection includes an array of stunning eternity bands, and more. If you're looking for a touch of luxury, we also offer rose gold wedding bands.",
     buttonLabel: "Shop Now",
     buttonHref: "/women-wedding-bands",
     photosLeft: [

@@ -1,7 +1,7 @@
 import DiscountsCouponsSettingsForm from "@/components/settings-discounts-coupons/DiscountsCouponsSettingsForm";
 
 export const metadata = {
-  title: "Discounts & Coupons · Shop My Band Admin",
+  title: "Discounts & Coupons · Shop Wedding Band Admin",
 };
 
 export default function DiscountsCouponsSettingsPage() {

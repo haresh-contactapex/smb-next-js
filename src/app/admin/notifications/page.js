@@ -1,7 +1,7 @@
 import NotificationsPage from "@/components/notifications/NotificationsPage";
 
 export const metadata = {
-  title: "Notifications · Shop My Band Admin",
+  title: "Notifications · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

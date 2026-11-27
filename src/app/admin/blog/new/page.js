@@ -3,7 +3,7 @@ import { getCurrentStaffUser } from "@/lib/auth/staffSession";
 import { listBlogCategories } from "@/lib/blog";
 
 export const metadata = {
-  title: "Add post · Shop My Band Admin",
+  title: "Add post · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

@@ -16,7 +16,7 @@ export async function generateMetadata({ params }) {
   if (!match) return { title: "Page not found | shopmyband.com" };
   return {
     title: `${match.name} | Blog | shopmyband.com`,
-    description: `${match.name} articles, guides and buying tips from Shop My Band.`,
+    description: `${match.name} articles, guides and buying tips from Shop Wedding Band.`,
   };
 }
 

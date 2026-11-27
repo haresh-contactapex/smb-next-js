@@ -1,7 +1,7 @@
 import EngravingSettingsForm from "@/components/settings-engraving/EngravingSettingsForm";
 
 export const metadata = {
-  title: "Engraving · Shop My Band Admin",
+  title: "Engraving · Shop Wedding Band Admin",
 };
 
 export default function EngravingSettingsPage() {

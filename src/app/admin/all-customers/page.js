@@ -5,7 +5,7 @@ import { listCustomers } from "@/lib/customers";
 import { computeCustomerStats } from "@/components/customers/customerHelpers";
 
 export const metadata = {
-  title: "All Customers · Shop My Band Admin",
+  title: "All Customers · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

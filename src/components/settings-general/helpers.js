@@ -3,7 +3,7 @@ import { validateLocationHierarchy } from "@/lib/validateAddress";
 import { getCityNames } from "@/data/locationData";
 
 export const DEFAULT_GENERAL_SETTINGS = {
-  storeName: "Shop My Band",
+  storeName: "Shop Wedding Band",
   logo: null,
   favicon: null,
   storeEmail: "hello@shopmyband.com",

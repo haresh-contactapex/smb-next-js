@@ -186,7 +186,7 @@ export function SiteFooterView({ columns, texts, socialLinks = STORE_SOCIAL_LINK
 
         <div className="mt-6 text-center text-[11px] sm:text-xs leading-relaxed text-[#333333]">
           <p>
-            © 2026 ShopMyBand.com, a division of <ExternalLink {...STORE_PARENT_SITE} />. All rights reserved.
+            © 2026 Shop Wedding Band, a division of <ExternalLink {...STORE_PARENT_SITE} />. All rights reserved.
           </p>
           <p>
             <ExternalLink {...STORE_DEVELOPER} /> by Apex Global Solutions

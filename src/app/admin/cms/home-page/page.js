@@ -4,7 +4,7 @@ import CmsProblem from "@/components/cms/CmsProblem";
 import { HomePageError, getHomePageForAdmin } from "@/lib/homePage";
 
 export const metadata = {
-  title: "Home Page · Shop My Band Admin",
+  title: "Home Page · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

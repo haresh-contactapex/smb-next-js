@@ -2,7 +2,7 @@ import AddCategoryForm from "@/components/add-category/AddCategoryForm";
 import { listCategories } from "@/lib/categories";
 
 export const metadata = {
-  title: "Add category · Shop My Band Admin",
+  title: "Add category · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

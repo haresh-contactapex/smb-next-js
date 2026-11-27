@@ -4,7 +4,7 @@ import CmsProblem from "@/components/cms/CmsProblem";
 import { CmsError, getCmsPageById } from "@/lib/cms";
 
 export const metadata = {
-  title: "Edit page · Shop My Band Admin",
+  title: "Edit page · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

@@ -76,7 +76,7 @@ export async function createOrderInvoicePdf(orderId) {
   const pdf = await buildInvoicePdf({
     ...invoice,
     store: {
-      name: general?.storeName || "Shop My Band",
+      name: general?.storeName || "Shop Wedding Band",
       legalName: store?.legalBusinessName || "",
       addressLines: [general?.address, cityLine, general?.country].filter(Boolean),
       email: general?.storeEmail || "",

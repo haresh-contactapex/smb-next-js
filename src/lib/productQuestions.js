@@ -29,7 +29,7 @@ const UNAVAILABLE = "We couldn't send your question right now. Please try again 
 async function loadStoreContact() {
   const [general, store] = await Promise.all([getGeneralSettings().catch(() => null), getStoreSettings().catch(() => null)]);
   return {
-    storeName: general?.storeName || "Shop My Band",
+    storeName: general?.storeName || "Shop Wedding Band",
     recipient: general?.storeEmail || store?.supportEmail || "",
   };
 }

@@ -2,7 +2,7 @@ import Link from "next/link";
 import Icon from "@/components/admin-panel/Icon";
 
 export const metadata = {
-  title: "Access Denied · Shop My Band Admin",
+  title: "Access Denied · Shop Wedding Band Admin",
 };
 
 // Middleware rewrites a page the staff member's role can't open to this one

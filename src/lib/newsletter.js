@@ -71,7 +71,7 @@ async function notifyNewSubscriber(subscriber) {
       return;
     }
     const [general, store] = await Promise.all([getGeneralSettings().catch(() => null), getStoreSettings().catch(() => null)]);
-    const storeName = general?.storeName || "Shop My Band";
+    const storeName = general?.storeName || "Shop Wedding Band";
     const recipient = general?.storeEmail || store?.supportEmail || "";
 
     await sendNewsletterWelcomeEmail({ to: subscriber.email, storeName, replyTo: recipient });

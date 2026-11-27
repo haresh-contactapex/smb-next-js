@@ -1,7 +1,7 @@
 import PaymentSettingsForm from "@/components/settings-payment/PaymentSettingsForm";
 
 export const metadata = {
-  title: "Payment · Shop My Band Admin",
+  title: "Payment · Shop Wedding Band Admin",
 };
 
 export default function PaymentSettingsPage() {

@@ -1,7 +1,7 @@
 import EditOrderForm from "@/components/orders/EditOrderForm";
 
 export const metadata = {
-  title: "Edit order · Shop My Band Admin",
+  title: "Edit order · Shop Wedding Band Admin",
 };
 
 export default function EditOrderPage({ params }) {

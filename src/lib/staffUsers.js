@@ -211,9 +211,9 @@ async function assertCanManageTarget(target, actorRole) {
 
 async function storeName() {
   try {
-    return (await getGeneralSettings())?.storeName || "Shop My Band";
+    return (await getGeneralSettings())?.storeName || "Shop Wedding Band";
   } catch {
-    return "Shop My Band";
+    return "Shop Wedding Band";
   }
 }
 

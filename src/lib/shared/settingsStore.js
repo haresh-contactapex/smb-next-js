@@ -4,7 +4,7 @@ import { isValidEmail } from "@/lib/shared/auth";
 export const BUSINESS_TYPES = ["Sole Proprietorship", "LLC", "Corporation", "Partnership", "Other"];
 
 export const DEFAULT_STORE_SETTINGS = {
-  legalBusinessName: "Shop My Band LLC",
+  legalBusinessName: "Shop Wedding Band LLC",
   businessType: "LLC",
   storeUrl: "https://shopmyband.com",
   taxId: "",

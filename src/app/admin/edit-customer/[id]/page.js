@@ -1,7 +1,7 @@
 import AddCustomerForm from "@/components/add-customer/AddCustomerForm";
 
 export const metadata = {
-  title: "Edit customer · Shop My Band Admin",
+  title: "Edit customer · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

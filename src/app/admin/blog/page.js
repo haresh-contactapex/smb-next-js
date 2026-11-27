@@ -4,7 +4,7 @@ import CmsProblem from "@/components/cms/CmsProblem";
 import { BlogError, listBlogPosts } from "@/lib/blog";
 
 export const metadata = {
-  title: "Blog Posts · Shop My Band Admin",
+  title: "Blog Posts · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

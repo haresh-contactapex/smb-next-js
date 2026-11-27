@@ -5,7 +5,7 @@ import { listProducts } from "@/lib/products";
 import { computeProductStats, pickIconColor } from "@/components/all-products/productHelpers";
 
 export const metadata = {
-  title: "All products · Shop My Band Admin",
+  title: "All products · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

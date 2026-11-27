@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 export const metadata = {
   title: "Custom Wedding Bands for Men and Women | shopmyband.com",
   description:
-    "Classic diamond wedding bands, men's wedding bands, eternity bands and more. Custom wedding bands for men and women from Shop My Band.",
+    "Classic diamond wedding bands, men's wedding bands, eternity bands and more. Custom wedding bands for men and women from Shop Wedding Band.",
 };
 
 const DISPLAY = { fontFamily: "var(--font-display), serif" };

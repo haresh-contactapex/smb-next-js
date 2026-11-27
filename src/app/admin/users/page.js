@@ -6,7 +6,7 @@ import { listAdminRoles, AdminRoleError } from "@/lib/adminRoles";
 import { roleHasPermission } from "@/lib/permissions";
 
 export const metadata = {
-  title: "All Users · Shop My Band Admin",
+  title: "All Users · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

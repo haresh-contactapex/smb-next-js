@@ -7,7 +7,7 @@ import { formatCompactCurrency, formatCurrency } from "@/lib/currency";
 // (e.g. a component rendered in isolation, such as a test) or the DB row
 // hasn't loaded — keeps every consumer safe to call unconditionally.
 export const GENERAL_SETTINGS_DEFAULTS = {
-  storeName: "Shop My Band",
+  storeName: "Shop Wedding Band",
   logoUrl: null,
   faviconUrl: null,
   currency: "USD",

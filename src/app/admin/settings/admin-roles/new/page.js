@@ -4,7 +4,7 @@ import { requireStaffPermission } from "@/lib/auth/staffPermissions";
 import { MANAGE_ROLES_PERMISSION } from "@/lib/permissions";
 
 export const metadata = {
-  title: "Add New Role · Shop My Band Admin",
+  title: "Add New Role · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

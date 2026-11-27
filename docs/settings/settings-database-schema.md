@@ -46,7 +46,7 @@ Backs the Settings → General page.
 | Column             | Type           | Constraints                      | Notes                                                    |
 | ------------------- | -------------- | ------------------------------------ | ------------------------------------------------------------- |
 | `id`                | `SMALLINT`     | PK, CHECK (`id = 1`)                  | Enforces a single row                                          |
-| `store_name`        | `VARCHAR(150)` | NOT NULL, DEFAULT `'Shop My Band'`    |                                                                 |
+| `store_name`        | `VARCHAR(150)` | NOT NULL, DEFAULT `'Shop Wedding Band'`    |                                                                 |
 | `logo_url`          | `TEXT`         | NULL                                  | "Logo" uploader; NULL when no file chosen                      |
 | `favicon_url`       | `TEXT`         | NULL                                  | "Favicon" uploader                                             |
 | `store_email`       | `VARCHAR(255)` | NOT NULL, DEFAULT `'hello@shopmyband.com'` | Validated client-side with `isValidEmail`                |

@@ -2,7 +2,7 @@ import CreateCouponForm from "@/components/create-coupon/CreateCouponForm";
 import { listCategories } from "@/lib/categories";
 
 export const metadata = {
-  title: "Edit coupon · Shop My Band Admin",
+  title: "Edit coupon · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

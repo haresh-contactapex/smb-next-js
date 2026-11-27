@@ -175,7 +175,7 @@ export default function AddCategoryForm({ categoryId, categories = [] }) {
   }
 
   const previewTitle =
-    category.seoTitle || `Shop My Band — ${category.title || "Category Title"}`;
+    category.seoTitle || `Shop Wedding Band — ${category.title || "Category Title"}`;
   const previewDesc =
     category.seoDescription ||
     "Add a meta description to see how your category listing will look in search engine results.";

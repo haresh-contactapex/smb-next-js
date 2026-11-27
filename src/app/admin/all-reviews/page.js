@@ -3,7 +3,7 @@ import ReviewsListing from "@/components/reviews/ReviewsListing";
 import { listReviews } from "@/lib/reviews";
 
 export const metadata = {
-  title: "All Reviews · Shop My Band Admin",
+  title: "All Reviews · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

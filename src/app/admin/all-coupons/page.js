@@ -5,7 +5,7 @@ import { listCoupons } from "@/lib/coupons";
 import { computeCouponStats } from "@/components/coupons/couponHelpers";
 
 export const metadata = {
-  title: "All Coupons · Shop My Band Admin",
+  title: "All Coupons · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

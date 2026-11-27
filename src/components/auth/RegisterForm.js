@@ -100,7 +100,7 @@ export default function RegisterForm({ next = "/account" }) {
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Join Shop My Band for faster checkout and order tracking."
+      subtitle="Join Shop Wedding Band for faster checkout and order tracking."
       footer={
         <>
           Already have an account?{" "}

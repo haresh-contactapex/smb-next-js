@@ -45,8 +45,8 @@ async function loadStaffRole(staffUser) {
 export async function generateMetadata() {
   const settings = await loadGeneralSettings();
   return {
-    title: settings?.storeName ? `${settings.storeName} — Admin Dashboard` : "Shop My Band — Admin Dashboard",
-    description: settings?.storeName ? `Admin dashboard for ${settings.storeName}` : "Admin dashboard for Shop My Band",
+    title: settings?.storeName ? `${settings.storeName} — Admin Dashboard` : "Shop Wedding Band — Admin Dashboard",
+    description: settings?.storeName ? `Admin dashboard for ${settings.storeName}` : "Admin dashboard for Shop Wedding Band",
     ...(settings?.faviconUrl ? { icons: { icon: settings.faviconUrl } } : {}),
   };
 }

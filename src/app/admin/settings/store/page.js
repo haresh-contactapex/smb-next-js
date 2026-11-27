@@ -1,7 +1,7 @@
 import StoreSettingsForm from "@/components/settings-store/StoreSettingsForm";
 
 export const metadata = {
-  title: "Store · Shop My Band Admin",
+  title: "Store · Shop Wedding Band Admin",
 };
 
 export default function StoreSettingsPage() {

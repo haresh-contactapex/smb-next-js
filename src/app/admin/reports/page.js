@@ -14,7 +14,7 @@ import { loadMoneyFormat } from "@/lib/moneyFormat";
 import { getReportsData } from "@/lib/reports";
 
 export const metadata = {
-  title: "Reports · Shop My Band Admin",
+  title: "Reports · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

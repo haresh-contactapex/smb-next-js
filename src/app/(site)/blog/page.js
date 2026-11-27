@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Blog | shopmyband.com",
-  description: "Wedding band guides, buying tips and style advice from Shop My Band.",
+  description: "Wedding band guides, buying tips and style advice from Shop Wedding Band.",
 };
 
 export default async function BlogIndexPage({ searchParams }) {

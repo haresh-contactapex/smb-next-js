@@ -5,7 +5,7 @@ import { listOrders } from "@/lib/orders";
 import { computeOrderStats } from "@/components/orders/orderHelpers";
 
 export const metadata = {
-  title: "Processing Orders · Shop My Band Admin",
+  title: "Processing Orders · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

@@ -1,7 +1,7 @@
 import AddReviewForm from "@/components/add-review/AddReviewForm";
 
 export const metadata = {
-  title: "Add review · Shop My Band Admin",
+  title: "Add review · Shop Wedding Band Admin",
 };
 
 export const dynamic = "force-dynamic";

@@ -30,7 +30,7 @@ BEGIN;
 -- ----------------------------------------------------------------------------
 CREATE TABLE general_settings (
     id               SMALLINT PRIMARY KEY CHECK (id = 1),
-    store_name       VARCHAR(150) NOT NULL DEFAULT 'Shop My Band',
+    store_name       VARCHAR(150) NOT NULL DEFAULT 'Shop Wedding Band',
     logo_url         TEXT,
     favicon_url      TEXT,
     store_email      VARCHAR(255) NOT NULL DEFAULT 'hello@shopmyband.com',

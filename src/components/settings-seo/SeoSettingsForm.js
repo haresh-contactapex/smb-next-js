@@ -54,7 +54,7 @@ export default function SeoSettingsForm() {
               label="Default Meta Title"
               value={settings.defaultMetaTitle}
               onChange={(value) => setField("defaultMetaTitle", value)}
-              placeholder="Shop My Band — Handcrafted Rings & Bands"
+              placeholder="Shop Wedding Band — Handcrafted Rings & Bands"
             />
             <TextAreaField
               id="f-default-meta-description"
