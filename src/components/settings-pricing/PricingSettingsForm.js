@@ -10,13 +10,14 @@ import TextField from "@/components/settings-shared/TextField";
 import InfoSidebar from "@/components/settings-shared/InfoSidebar";
 import Icon from "@/components/admin-panel/Icon";
 import Toast from "./Toast";
+import ApplyScopePicker from "./ApplyScopePicker";
+import MetalPricingCard from "./MetalPricingCard";
 import { useCan } from "@/components/providers/StaffPermissionsProvider";
 import { settingsPermission } from "@/lib/permissions";
 import {
   ADJUSTMENT_TYPES,
   ADJUSTMENT_DIRECTIONS,
   DEFAULT_PRICING_SETTINGS,
-  PRICING_SCOPES,
   toFormSettings,
   toSavePayload,
   validateApplyScope,
@@ -52,11 +53,7 @@ export default function PricingSettingsForm() {
   // just chosen right before applying (see validateApplyScope).
   const [scope, setScope] = useState("all");
   const [categoryIds, setCategoryIds] = useState([]);
-  const [categoryQuery, setCategoryQuery] = useState("");
   const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [categoriesError, setCategoriesError] = useState("");
-  const categoriesLoadedRef = useRef(false);
 
   const toastTimerRef = useRef(null);
   const adjustmentValueInputRef = useRef(null);
@@ -99,35 +96,6 @@ export default function PricingSettingsForm() {
     loadSettings();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function loadCategories() {
-    setCategoriesLoading(true);
-    setCategoriesError("");
-    try {
-      const res = await fetch("/api/categories");
-      const json = await res.json();
-      if (!res.ok || !json.success) throw new Error(json.error || "Failed to load categories");
-      setCategories(Array.isArray(json.data) ? json.data : []);
-      categoriesLoadedRef.current = true;
-    } catch (error) {
-      setCategoriesError(error.message);
-    } finally {
-      setCategoriesLoading(false);
-    }
-  }
-
-  // Categories are only needed once the admin chooses to scope by category —
-  // loaded the first time, not on every page visit.
-  function handleScopeChange(value) {
-    setScope(value);
-    if (value === "categories" && !categoriesLoadedRef.current && !categoriesLoading) {
-      loadCategories();
-    }
-  }
-
-  function toggleCategory(id) {
-    setCategoryIds((prev) => (prev.includes(id) ? prev.filter((existing) => existing !== id) : [...prev, id]));
-  }
 
   function setField(field, value) {
     setSettings((prev) => ({ ...prev, [field]: value }));
@@ -243,16 +211,6 @@ export default function PricingSettingsForm() {
     }
   }
 
-  const categoryQueryLower = categoryQuery.trim().toLowerCase();
-  const filteredCategories = categories
-    .filter(
-      (category) =>
-        !categoryQueryLower ||
-        category.name.toLowerCase().includes(categoryQueryLower) ||
-        (category.parentPath || "").toLowerCase().includes(categoryQueryLower)
-    )
-    .sort((a, b) => a.name.localeCompare(b.name));
-
   return (
     <>
       <PageToolbar
@@ -324,85 +282,14 @@ export default function PricingSettingsForm() {
 
             {canApply && (
               <div className="pt-2 border-t border-slate-100 dark:border-white/5 space-y-3">
-                <div>
-                  <label className="field-label">Apply To</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {PRICING_SCOPES.map((option) => (
-                      <button
-                        key={option.value}
-                        type="button"
-                        onClick={() => handleScopeChange(option.value)}
-                        disabled={loading}
-                        className={`h-9 rounded-xl text-xs font-semibold border transition-colors disabled:opacity-50 disabled:pointer-events-none ${
-                          scope === option.value
-                            ? "bg-primary-500 dark:bg-accent-500 text-white border-transparent"
-                            : "border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5"
-                        }`}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {scope === "categories" && (
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      value={categoryQuery}
-                      onChange={(e) => setCategoryQuery(e.target.value)}
-                      placeholder="Search categories"
-                      className="field-input"
-                      disabled={categoriesLoading}
-                    />
-
-                    {categoriesError ? (
-                      <div className="flex items-center justify-between gap-3 rounded-xl border border-red-200 dark:border-red-500/30 bg-red-50 dark:bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-300">
-                        <span>{categoriesError}</span>
-                        <button type="button" onClick={loadCategories} className="font-semibold underline shrink-0">
-                          Retry
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="max-h-56 overflow-y-auto custom-scroll border border-slate-200 dark:border-white/10 rounded-xl divide-y divide-slate-100 dark:divide-white/5">
-                        {categoriesLoading ? (
-                          <p className="px-3 py-3 text-xs text-slate-400">Loading categories…</p>
-                        ) : filteredCategories.length > 0 ? (
-                          filteredCategories.map((category) => (
-                            <label
-                              key={category.id}
-                              className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={categoryIds.includes(category.id)}
-                                onChange={() => toggleCategory(category.id)}
-                                className="h-4 w-4 rounded border-slate-300 dark:border-white/20 text-primary-500 dark:text-accent-500 focus:ring-primary-400 dark:focus:ring-accent-500"
-                              />
-                              <span className="min-w-0 flex-1">
-                                <span className="block text-sm text-slate-700 dark:text-slate-200 truncate">
-                                  {category.name}
-                                </span>
-                                {category.parentPath && (
-                                  <span className="block text-[11px] text-slate-400 truncate">{category.parentPath}</span>
-                                )}
-                              </span>
-                              <span className="text-xs text-slate-400 shrink-0">{category.productCount} products</span>
-                            </label>
-                          ))
-                        ) : (
-                          <p className="px-3 py-3 text-xs text-slate-400">
-                            {categories.length === 0 ? "There are no categories yet." : `No categories match "${categoryQuery.trim()}".`}
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {categoryIds.length} {categoryIds.length === 1 ? "category" : "categories"} selected
-                    </p>
-                  </div>
-                )}
+                <ApplyScopePicker
+                  scope={scope}
+                  onScopeChange={setScope}
+                  categoryIds={categoryIds}
+                  onCategoryIdsChange={setCategoryIds}
+                  onCategoriesLoaded={setCategories}
+                  disabled={loading}
+                />
 
                 <div className="flex justify-end">
                   <button
@@ -417,6 +304,16 @@ export default function PricingSettingsForm() {
               </div>
             )}
           </SectionCard>
+
+          {canApply && (
+            <MetalPricingCard
+              disabled={loading}
+              backedUp={backedUp}
+              formatMoney={formatMoney}
+              currencySymbol={getCurrencySymbol(currency)}
+              showToast={showToast}
+            />
+          )}
         </div>
 
         <div className="space-y-6">
@@ -429,6 +326,7 @@ export default function PricingSettingsForm() {
               "Increase raises product prices; decrease lowers them.",
               "Choose \"All Products\" to reprice the whole catalog, or \"Specific Categories\" to pick one or more categories — a product counts if it's listed under any of them.",
               "Applying immediately recalculates and overwrites the price and compare-at price of every matching product, plus the price of every variant that has its own — it cannot be undone.",
+              "\"Price Adjustment by Metal\" sets a separate adjustment for 14K, 18K and Platinum (all gold colors together) and applies them in one run. It changes variant prices and compare-at prices, and each product's own price follows its default variant's metal.",
             ]}
           />
         </div>
