@@ -8,7 +8,7 @@ import { useToast } from "@/components/ui/useToast";
 import SectionCard from "@/components/settings-shared/SectionCard";
 import TextAreaField from "@/components/settings-shared/TextAreaField";
 import ToggleField from "@/components/settings-shared/ToggleField";
-import { ALL_PAGES_PATH, FOOTER_TEXT_MAX, normalizeFooterTextsInput, PATH_HINT } from "@/lib/footerTextRules";
+import { ALL_PAGES_PATH, FOOTER_TEXT_MAX, HOME_PAGE_LABEL, HOME_PATH, normalizeFooterTextsInput, PATH_HINT } from "@/lib/footerTextRules";
 
 const NO_ERRORS = {};
 const DATALIST_ID = "footer-text-paths";
@@ -190,7 +190,7 @@ export default function FooterTextForm({ entries, suggestions = [] }) {
         {rows.map((row, index) => {
           const rowErrors = errors.rows?.[row.key] || NO_ERRORS;
           return (
-            <SectionCard key={row.key} title={row.path ? `Page ${row.path}` : `Page ${index + 1}`}>
+            <SectionCard key={row.key} title={row.path === HOME_PATH ? HOME_PAGE_LABEL : row.path ? `Page ${row.path}` : `Page ${index + 1}`}>
               <div>
                 <label className="field-label" htmlFor={`footer-text-path-${row.key}`}>Page address</label>
                 <input

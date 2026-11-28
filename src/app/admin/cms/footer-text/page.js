@@ -4,6 +4,7 @@ import CmsProblem from "@/components/cms/CmsProblem";
 import { FooterTextError, listFooterTexts } from "@/lib/footerTexts";
 import { listCmsPages } from "@/lib/cms";
 import { listCategories } from "@/lib/categories";
+import { HOME_PAGE_LABEL, HOME_PATH } from "@/lib/footerTextRules";
 
 export const metadata = {
   title: "Footer Text · Shop Wedding Band Admin",
@@ -11,11 +12,12 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
-// Page addresses offered while typing: published CMS pages and visible categories.
-// Only a convenience, so a failed lookup just offers none.
+// Page addresses offered while typing: the home page, published CMS pages and visible
+// categories. Only a convenience, so a failed lookup just offers the home page.
 async function loadSuggestions() {
   const [pages, categories] = await Promise.all([listCmsPages().catch(() => []), listCategories().catch(() => [])]);
   return [
+    { path: HOME_PATH, label: HOME_PAGE_LABEL },
     ...pages.filter((page) => page.status === "published").map((page) => ({ path: `/${page.slug}`, label: page.title })),
     ...categories.filter((category) => category.visible).map((category) => ({ path: `/collections/${category.slug}`, label: category.name })),
   ];

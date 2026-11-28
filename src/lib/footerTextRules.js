@@ -5,12 +5,16 @@
 // The path of the row that applies to every page without a row of its own.
 export const ALL_PAGES_PATH = "*";
 
+// The storefront home page. It has its own address, so it can show its own text.
+export const HOME_PATH = "/";
+export const HOME_PAGE_LABEL = "Home page";
+
 export const FOOTER_TEXT_MAX = 5000;
 export const FOOTER_TEXT_PATH_MAX = 200;
 export const FOOTER_TEXT_ENTRIES_MAX = 100;
 
 const PATH_PATTERN = /^\/([a-z0-9_-]+(\/[a-z0-9_-]+)*)?$/;
-export const PATH_HINT = "Enter a page address like /classic-bands or /collections/eternity-bands.";
+export const PATH_HINT = "Enter a page address like /classic-bands or /collections/eternity-bands. Use / for the home page.";
 
 // "https://shopmyband.com/Classic-Bands/?x=1#top" -> "/classic-bands". Returns the
 // address as typed (lowercased) when it isn't a valid page address, so the form can
